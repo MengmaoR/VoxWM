@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="1600" height="680" viewBox="0 0 1600 680" role="img"
+     aria-labelledby="figure-title figure-description">
+  <title id="figure-title">VoxEvolve — Self-Evolving Voxel World Models</title>
+  <desc id="figure-description">Proposed architecture. Latent Diffusion initializes and incrementally generates world content in a shared Voxel VAE latent space. Latent Reasoning evolves existing states from Z_0 to Z_t to Z_(t+1). At each time, the shared Voxel Decoder produces an explicit Voxel ID map, and the Voxel-to-Pixel Renderer observes that map using a camera. Neither the voxel map nor the RGB frame feeds back every frame. Saved explicit voxel regions are re-encoded on demand with the encoder of the same Voxel VAE. During training the encoder encodes ground-truth voxel maps; inference mainly maintains latent states. This is a design diagram, not an experimentally validated architecture.</desc>
+  <defs>
+    <style>
+      text { font-family: Arial, Helvetica, sans-serif; fill: #273342; }
+      .label { font-size: 22px; font-weight: 600; }
+      .operator { font-size: 20px; font-weight: 500; }
+      .small { font-size: 17px; }
+      .muted { fill: #717b86; }
+      .blue { color: #486f9f; }
+      .green { color: #4c7b5a; }
+      .purple { color: #8061a5; }
+      .orange { color: #ab743d; }
+      .teal { color: #39877f; }
+      .icon { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
+      .observation { fill: none; stroke: #8b95a0; stroke-width: 1.8; marker-end: url(#arrow-neutral); }
+      .evolution { fill: none; stroke: #39877f; stroke-width: 2.6; marker-end: url(#arrow-teal); }
+      .generation { fill: none; stroke: #ab743d; stroke-width: 2.2; marker-end: url(#arrow-orange); }
+      .local-generation { fill: none; stroke: #b68a60; stroke-width: 1.5; stroke-dasharray: 6 5; marker-end: url(#arrow-orange-small); }
+      .reencoding { fill: none; stroke: #9aa4ae; stroke-width: 1.4; stroke-dasharray: 5 5; marker-end: url(#arrow-gray-small); }
+    </style>
+    <marker id="arrow-neutral" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0 0 L8 4 L0 8 Z" fill="#8b95a0"/>
+    </marker>
+    <marker id="arrow-teal" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#39877f"/>
+    </marker>
+    <marker id="arrow-orange" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#ab743d"/>
+    </marker>
+    <marker id="arrow-orange-small" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0 0 L8 4 L0 8 Z" fill="#b68a60"/>
+    </marker>
+    <marker id="arrow-gray-small" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0 0 L8 4 L0 8 Z" fill="#9aa4ae"/>
+    </marker>
+
+    <!-- Reusable native line icons; no external images, fonts or scripts. -->
+    <g id="voxel-cube" class="icon">
+      <path d="M0 6 L10 0 L20 6 L10 12 Z M0 6 V18 L10 24 L20 18 V6 M10 12 V24"/>
+    </g>
+    <g id="voxel-map-icon" class="icon">
+      <use xlink:href="#voxel-cube" x="0" y="12"/>
+      <use xlink:href="#voxel-cube" x="20" y="12"/>
+      <use xlink:href="#voxel-cube" x="10" y="-6"/>
+    </g>
+    <g id="latent-icon" class="icon">
+      <path d="M2 10 L20 0 L38 10 L20 20 Z M2 10 V30 L20 40 L38 30 V10 M20 20 V40"/>
+      <path d="M11 5 L29 15 V35 M29 5 L11 15 V35 M2 20 L20 30 L38 20" opacity="0.7"/>
+      <circle cx="20" cy="20" r="2.2" fill="currentColor" stroke="none"/>
+    </g>
+    <g id="rgb-icon" class="icon">
+      <rect x="0" y="0" width="38" height="29" rx="3"/>
+      <circle cx="28" cy="8" r="2.5"/>
+      <path d="M5 23 L14 13 L21 20 L26 15 L33 23"/>
+    </g>
+    <g id="renderer-icon" class="icon">
+      <rect x="0" y="7" width="28" height="21" rx="3"/>
+      <path d="M7 7 L11 2 H20 L24 7 M28 12 L37 8 V27 L28 23"/>
+      <circle cx="14" cy="17.5" r="5"/>
+    </g>
+    <g id="diffusion-icon" class="icon">
+      <use xlink:href="#voxel-cube" x="0" y="10"/>
+      <use xlink:href="#voxel-cube" x="20" y="10"/>
+      <use xlink:href="#voxel-cube" x="10" y="-8"/>
+      <g transform="translate(51,-1) scale(0.65)">
+        <use xlink:href="#voxel-cube"/>
+      </g>
+      <path d="M59 23 V33 M54 28 H64"/>
+    </g>
+    <!-- Distinct from generation: occupancy propagates between adjacent cells. -->
+    <g id="reasoning-icon" class="icon">
+      <rect x="0" y="4" width="11" height="11" rx="1" fill="currentColor" fill-opacity="0.22"/>
+      <rect x="13" y="4" width="11" height="11" rx="1"/>
+      <path d="M30 9.5 H48 M44 5.5 L49 9.5 L44 13.5"/>
+      <rect x="55" y="4" width="11" height="11" rx="1" fill="currentColor" fill-opacity="0.22"/>
+      <rect x="68" y="4" width="11" height="11" rx="1" fill="currentColor" fill-opacity="0.22"/>
+    </g>
+  </defs>
+
+  <rect id="background" width="1600" height="680" fill="#ffffff"/>
+
+  <!-- Common representation space. No observation-to-state feedback edges. -->
+  <g id="shared-latent-space">
+    <rect x="325" y="406" width="1235" height="150" rx="14" fill="#f6f9fd" stroke="#c4d3e7" stroke-width="1.5"/>
+    <text x="925" y="545" text-anchor="middle" class="small" fill="#557399" style="fill:#557399">Shared Latent Space</text>
+  </g>
+
+  <!-- Three time columns share exactly the same row and column geometry. -->
+  <g id="time-0">
+    <g id="rgb-0">
+      <rect x="345" y="34" width="260" height="64" rx="9" fill="#f3eff9" stroke="#b6a2cf" stroke-width="1.5"/>
+      <use xlink:href="#rgb-icon" transform="translate(366,51)" class="purple"/>
+      <text x="425" y="74" class="label" style="fill:#503d68">RGB Frame <tspan font-style="italic">I</tspan><tspan baseline-shift="sub" font-size="15">0</tspan></text>
+    </g>
+    <g id="renderer-0">
+      <rect x="315" y="144" width="320" height="56" rx="9" fill="#faf8fc" stroke="#b6a2cf" stroke-width="1.5"/>
+      <use xlink:href="#renderer-icon" transform="translate(330,157) scale(0.8)" class="purple"/>
+      <text x="375" y="179" class="operator">Voxel-to-Pixel Renderer</text>
+      <path d="M475 144 V99" class="observation"/>
+      <text x="580" y="120" text-anchor="middle" class="small muted">Camera</text>
+      <path d="M580 125 V143" class="observation"/>
+    </g>
+    <g id="voxel-0">
+      <rect x="345" y="244" width="260" height="62" rx="9" fill="#edf4ee" stroke="#a3bca9" stroke-width="1.5"/>
+      <use xlink:href="#voxel-map-icon" transform="translate(365,260)" class="green"/>
+      <text x="425" y="282" class="label" style="fill:#31583d">Voxel Map <tspan font-style="italic">V</tspan><tspan baseline-shift="sub" font-size="15">0</tspan></text>
+      <path d="M475 244 V201" class="observation"/>
+    </g>
+    <g id="decoder-0">
+      <rect x="375" y="347" width="200" height="40" rx="7" fill="#f3f6fb" stroke="#b3c3d8" stroke-width="1.4"/>
+      <text x="475" y="373" text-anchor="middle" class="operator" style="fill:#4e6583">Voxel Decoder</text>
+      <path d="M475 347 V307" class="observation"/>
+      <path d="M475 444 V388" class="observation"/>
+    </g>
+    <g id="latent-0">
+      <rect x="345" y="444" width="260" height="70" rx="9" fill="#e9f1fb" stroke="#91acd0" stroke-width="1.6"/>
+      <use xlink:href="#latent-icon" transform="translate(373,459)" class="blue"/>
+      <text x="438" y="487" class="label" style="fill:#355d8c">Latent <tspan font-style="italic">Z</tspan><tspan baseline-shift="sub" font-size="15">0</tspan></text>
+    </g>
+  </g>
+
+  <g id="time-t">
+    <g id="rgb-t">
+      <rect x="795" y="34" width="260" height="64" rx="9" fill="#f3eff9" stroke="#b6a2cf" stroke-width="1.5"/>
+      <use xlink:href="#rgb-icon" transform="translate(816,51)" class="purple"/>
+      <text x="875" y="74" class="label" style="fill:#503d68">RGB Frame <tspan font-style="italic">I</tspan><tspan baseline-shift="sub" font-size="15">t</tspan></text>
+    </g>
+    <g id="renderer-t">
+      <rect x="765" y="144" width="320" height="56" rx="9" fill="#faf8fc" stroke="#b6a2cf" stroke-width="1.5"/>
+      <use xlink:href="#renderer-icon" transform="translate(780,157) scale(0.8)" class="purple"/>
+      <text x="825" y="179" class="operator">Voxel-to-Pixel Renderer</text>
+      <path d="M925 144 V99" class="observation"/>
+      <text x="1030" y="120" text-anchor="middle" class="small muted">Camera</text>
+      <path d="M1030 125 V143" class="observation"/>
+    </g>
+    <g id="voxel-t">
+      <rect x="795" y="244" width="260" height="62" rx="9" fill="#edf4ee" stroke="#a3bca9" stroke-width="1.5"/>
+      <use xlink:href="#voxel-map-icon" transform="translate(815,260)" class="green"/>
+      <text x="875" y="282" class="label" style="fill:#31583d">Voxel Map <tspan font-style="italic">V</tspan><tspan baseline-shift="sub" font-size="15">t</tspan></text>
+      <path d="M925 244 V201" class="observation"/>
+    </g>
+    <g id="decoder-t">
+      <rect x="825" y="347" width="200" height="40" rx="7" fill="#f3f6fb" stroke="#b3c3d8" stroke-width="1.4"/>
+      <text x="925" y="373" text-anchor="middle" class="operator" style="fill:#4e6583">Voxel Decoder</text>
+      <path d="M925 347 V307" class="observation"/>
+      <path d="M925 444 V388" class="observation"/>
+    </g>
+    <g id="latent-t">
+      <rect x="795" y="444" width="260" height="70" rx="9" fill="#e9f1fb" stroke="#91acd0" stroke-width="1.6"/>
+      <use xlink:href="#latent-icon" transform="translate(823,459)" class="blue"/>
+      <text x="888" y="487" class="label" style="fill:#355d8c">Latent <tspan font-style="italic">Z</tspan><tspan baseline-shift="sub" font-size="15">t</tspan></text>
+    </g>
+  </g>
+
+  <g id="time-t-plus-1">
+    <g id="rgb-t-plus-1">
+      <rect x="1245" y="34" width="260" height="64" rx="9" fill="#f3eff9" stroke="#b6a2cf" stroke-width="1.5"/>
+      <use xlink:href="#rgb-icon" transform="translate(1266,51)" class="purple"/>
+      <text x="1325" y="74" class="label" style="fill:#503d68">RGB Frame <tspan font-style="italic">I</tspan><tspan baseline-shift="sub" font-size="15">t+1</tspan></text>
+    </g>
+    <g id="renderer-t-plus-1">
+      <rect x="1215" y="144" width="320" height="56" rx="9" fill="#faf8fc" stroke="#b6a2cf" stroke-width="1.5"/>
+      <use xlink:href="#renderer-icon" transform="translate(1230,157) scale(0.8)" class="purple"/>
+      <text x="1275" y="179" class="operator">Voxel-to-Pixel Renderer</text>
+      <path d="M1375 144 V99" class="observation"/>
+      <text x="1480" y="120" text-anchor="middle" class="small muted">Camera</text>
+      <path d="M1480 125 V143" class="observation"/>
+    </g>
+    <g id="voxel-t-plus-1">
+      <rect x="1245" y="244" width="260" height="62" rx="9" fill="#edf4ee" stroke="#a3bca9" stroke-width="1.5"/>
+      <use xlink:href="#voxel-map-icon" transform="translate(1265,260)" class="green"/>
+      <text x="1325" y="282" class="label" style="fill:#31583d">Voxel Map <tspan font-style="italic">V</tspan><tspan baseline-shift="sub" font-size="15">t+1</tspan></text>
+      <path d="M1375 244 V201" class="observation"/>
+    </g>
+    <g id="decoder-t-plus-1">
+      <rect x="1275" y="347" width="200" height="40" rx="7" fill="#f3f6fb" stroke="#b3c3d8" stroke-width="1.4"/>
+      <text x="1375" y="373" text-anchor="middle" class="operator" style="fill:#4e6583">Voxel Decoder</text>
+      <path d="M1375 347 V307" class="observation"/>
+      <path d="M1375 444 V388" class="observation"/>
+    </g>
+    <g id="latent-t-plus-1">
+      <rect x="1245" y="444" width="260" height="70" rx="9" fill="#e9f1fb" stroke="#91acd0" stroke-width="1.6"/>
+      <use xlink:href="#latent-icon" transform="translate(1273,459)" class="blue"/>
+      <text x="1338" y="487" class="label" style="fill:#355d8c">Latent <tspan font-style="italic">Z</tspan><tspan baseline-shift="sub" font-size="15">t+1</tspan></text>
+    </g>
+  </g>
+
+  <!-- Generation and evolution have different operators, icons and edge types. -->
+  <g id="latent-diffusion">
+    <rect x="30" y="414" width="270" height="142" rx="11" fill="#f9f0e6" stroke="#c9a37d" stroke-width="1.6"/>
+    <use xlink:href="#diffusion-icon" transform="translate(132,435)" class="orange"/>
+    <text x="165" y="488" text-anchor="middle" class="label" style="fill:#82572e">Latent Diffusion</text>
+    <text x="165" y="513" text-anchor="middle" class="small" style="fill:#926e49">World Initialization</text>
+    <text x="165" y="537" text-anchor="middle" class="small" style="fill:#926e49">Incremental Generation</text>
+    <path d="M300 479 H344" class="generation"/>
+    <path d="M165 556 V579 H1290 V515" class="local-generation"/>
+    <text x="345" y="574" class="small" style="fill:#a07952">On-demand Local Generation</text>
+  </g>
+  <g id="latent-reasoning-0-to-t">
+    <use xlink:href="#reasoning-icon" transform="translate(660.5,418)" class="teal"/>
+    <text x="700" y="462" text-anchor="middle" class="operator" style="fill:#2c756e">Latent Reasoning</text>
+    <path d="M606 479 H794" class="evolution"/>
+    <text x="700" y="505" text-anchor="middle" class="small" style="fill:#4b837d">World Evolution</text>
+  </g>
+  <g id="latent-reasoning-t-to-t-plus-1">
+    <use xlink:href="#reasoning-icon" transform="translate(1110.5,418)" class="teal"/>
+    <text x="1150" y="462" text-anchor="middle" class="operator" style="fill:#2c756e">Latent Reasoning</text>
+    <path d="M1056 479 H1244" class="evolution"/>
+    <text x="1150" y="505" text-anchor="middle" class="small" style="fill:#4b837d">World Evolution</text>
+  </g>
+
+  <!-- The encoder and all three decoder instances are the same shared VAE. -->
+  <g id="vae-identity">
+    <text x="30" y="360" class="operator" style="fill:#5c728e">Shared Voxel VAE</text>
+    <text x="30" y="384" class="small muted">Encoder + Decoder</text>
+  </g>
+  <text x="30" y="282" class="small" style="fill:#61806a">Explicit Voxel IDs</text>
+
+  <!-- Small, on-demand persistence branch, not a per-frame feedback loop. -->
+  <g id="on-demand-reencoding">
+    <text x="570" y="610" class="small muted">On-demand Re-encoding</text>
+    <rect x="570" y="622" width="280" height="40" rx="7" fill="#fcfcfd" stroke="#c9ced4" stroke-width="1.2"/>
+    <text x="710" y="648" text-anchor="middle" class="small muted">Persistent Voxel Storage</text>
+    <path d="M851 642 H919" class="reencoding"/>
+    <rect x="920" y="622" width="260" height="40" rx="7" fill="#fafbfd" stroke="#bcc9d9" stroke-width="1.2"/>
+    <text x="1050" y="648" text-anchor="middle" class="small" style="fill:#718094">Shared VAE Encoder</text>
+    <path d="M1181 642 H1249" class="reencoding"/>
+    <rect x="1250" y="622" width="255" height="40" rx="7" fill="#fafbfd" stroke="#c9ced4" stroke-width="1.2"/>
+    <text x="1377.5" y="648" text-anchor="middle" class="small muted">Active Latent</text>
+    <path d="M1375 621 V515" class="reencoding"/>
+  </g>
+</svg>

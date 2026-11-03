@@ -1,0 +1,1 @@
+{"classes":"../classes.json","episodes":{"A":{"gt":"../A/gt","pred":"../A/pred-s","pred_xl":"../A/pred-xl"},"B":{"gt":"../B/gt","pred":"../B/pred-s","pred_xl":"../B/pred-xl"},"C":{"gt":"../C/gt","pred":"../C/pred-s","pred_xl":"../C/pred-xl"}}}
