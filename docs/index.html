@@ -80,9 +80,9 @@
           </div>
           <div id="world" aria-label="Interactive 3D voxel comparison"><span class="view-kind">Voxel</span><div id="labels"></div><div class="voxel-loading" id="voxelLoading">Loading voxel states…</div></div>
         <div class="videos">
-          <figure id="gtFig"><figcaption><span class="series-label gt">Ground Truth</span><span>Engine RGB</span></figcaption><video id="gtVideo" preload="auto" muted playsinline aria-label="Ground truth recorded RGB"></video></figure>
-          <figure id="sFig"><figcaption><span class="series-label s">PERSIST-S</span><span>Predicted RGB</span></figcaption><video id="sVideo" preload="auto" muted playsinline aria-label="PERSIST-S predicted RGB"></video></figure>
-          <figure id="xlFig"><figcaption><span class="series-label xl">PERSIST-XL</span><span>Predicted RGB</span></figcaption><video id="xlVideo" preload="auto" muted playsinline aria-label="PERSIST-XL predicted RGB"></video></figure>
+          <figure id="gtFig"><figcaption><span class="series-label gt">Ground Truth</span><span>Engine RGB</span></figcaption><video id="gtVideo" preload="metadata" poster="assets/posters/C-gt.jpg" muted playsinline aria-label="Ground truth recorded RGB"></video></figure>
+          <figure id="sFig"><figcaption><span class="series-label s">PERSIST-S</span><span>Predicted RGB</span></figcaption><video id="sVideo" preload="metadata" poster="assets/posters/C-s.jpg" muted playsinline aria-label="PERSIST-S predicted RGB"></video></figure>
+          <figure id="xlFig"><figcaption><span class="series-label xl">PERSIST-XL</span><span>Predicted RGB</span></figcaption><video id="xlVideo" preload="metadata" poster="assets/posters/C-xl.jpg" muted playsinline aria-label="PERSIST-XL predicted RGB"></video></figure>
         </div>
         <div class="transport" role="group" aria-label="Synchronized playback">
           <button id="play" class="play-button" title="Play / pause (Space)" aria-keyshortcuts="Space" disabled>Play</button>
@@ -148,6 +148,6 @@
   </main>
   <footer class="wrap site-footer"><a class="wordmark" href="#top">VoxEvolve</a><a href="#top">Back to top ↑</a></footer>
   <script type="module" src="world-motion.js?v=20261103"></script>
-  <script type="module" src="briefing.js?v=20261102-4"></script>
+  <script type="module" src="briefing.js?v=20261104-loading"></script>
 </body>
 </html>

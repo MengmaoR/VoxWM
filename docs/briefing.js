@@ -8,7 +8,7 @@ const METRICS = {
   connected:{title:'Source-connected Water vs. Time', unit:'Voxels', key:'source_connected_voxels'},
   basin:{title:'Water in Receiving Basin', unit:'Voxels', key:'water_in_pool'},
 };
-let reports, episode='C', frame=0, fps=24, series=[], metric='water';
+let reports, reportRequest, episode='C', frame=0, fps=24, series=[], metric='water';
 let plot={left:58,right:1080,top:25,bottom:222,max:1,frames:1};
 const fmt = n => n == null ? '—' : metric==='solid' ? `${n.toFixed(2)}%` : Math.round(n).toLocaleString('en-US');
 const svgElement = (tag,attrs,text) => {
@@ -18,7 +18,7 @@ const svgElement = (tag,attrs,text) => {
   return el;
 };
 const getReport = async name => {
-  const r=await fetch(new URL(name,ROOT),{cache:'no-store'});
+  const r=await fetch(new URL(name,ROOT));
   if(!r.ok)throw Error(`Unable to read ${name} (${r.status})`);
   return r.json();
 };
@@ -107,7 +107,7 @@ $('toggleStats').onclick=()=>{
   $('statistics').hidden=!expanded;
   $('experiment').classList.toggle('has-stats',expanded);
   $('toggleStats').setAttribute('aria-expanded',String(expanded));
-  renderChart();
+  loadReports().then(renderChart);
 };
 new ResizeObserver(()=>renderChart()).observe($('chart').parentElement);
 function selectEpisode(next){
@@ -118,14 +118,19 @@ function selectEpisode(next){
 document.addEventListener('briefing:loading',e=>selectEpisode(e.detail.episode));
 document.addEventListener('briefing:ready',e=>{fps=e.detail.fps;selectEpisode(e.detail.episode);});
 document.addEventListener('briefing:frame',e=>{frame=e.detail.frame;updateCursor();});
-await Promise.all([
-  (async()=>{
-    try{const [s,xl]=await Promise.all([getReport('comparison_s.json'),getReport('comparison_xl.json')]);reports={s,xl};selectEpisode($('episode').value);}
+function loadReports(){
+  return reportRequest??=(async()=>{
+    try{const [s,xl]=await Promise.all([getReport('comparison_s.json'),getReport('comparison_xl.json')]);reports={s,xl};episode=$('episode').value;fps=dataFor('gt').gt.fps||24;}
     catch(e){$('toggleStats').disabled=true;$('toggleStats').title=e.message;console.error(e);}
-  })(),
-  import('./viewer.js?v=20261102-3').catch(e=>{
+  })();
+}
+const viewerObserver=new IntersectionObserver(entries=>{
+  if(!entries.some(entry=>entry.isIntersecting))return;
+  viewerObserver.disconnect();
+  import('./viewer.js?v=20261104-loading').catch(e=>{
     $('status').className='error';$('status').textContent='Viewer unavailable: '+e.message;
     $('voxelLoading').textContent='The interactive viewer requires WebGL and local experiment files.';
     console.error(e);
-  }),
-]);
+  });
+},{rootMargin:'600px'});
+viewerObserver.observe($('experiment'));

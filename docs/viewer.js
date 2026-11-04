@@ -1,12 +1,12 @@
 // Adapted from experiments/controlled_ab/viewer/viewer.js (working tree, 2026-11-01).
 // ABV1 decoding, exposed-voxel rendering, static masks, and camera transforms are preserved.
-// This page adds English presentation and a shared, frame-seeking RGB/voxel/chart clock.
+// This page adds English presentation and a shared RGB/voxel/chart timeline.
 import * as THREE from 'three';
 import { OrbitControls } from './vendor/OrbitControls.js';
 import { cameraPose, cropOrigin, enuToViewer } from './camera_pose.js';
 const $=id=>document.getElementById(id);
 const DATA_VIEWER=new URL('./data/viewer/',import.meta.url);
-const getJSON=async path=>{const r=await fetch(new URL(path,DATA_VIEWER),{cache:'no-store'});if(!r.ok)throw Error(`${r.status}: ${path}`);return r.json();};
+const getJSON=async path=>{const r=await fetch(new URL(path,DATA_VIEWER));if(!r.ok)throw Error(`${r.status}: ${path}`);return r.json();};
 const PANE_KEYS=['gt','s','xl'];
 const SOURCE={
   gt:{label:'Ground Truth',video:'gtVideo',fig:'gtFig',check:'showGt',name:'GT'},
@@ -37,7 +37,7 @@ class VoxelStream {
 let manifest,classes,gt,predS,predXL,view,record,viewS,recS,viewXL,recXL;
 const videoIDs=['gtVideo','sVideo','xlVideo'];
 let displayedPoses=[];
-let t=0,playing=false,loadCounter=0,renderWidth=0,renderHeight=0;
+let t=0,playing=false,loadCounter=0,renderWidth=0,renderHeight=0,needsRender=true;
 const world=$('world');
 const renderer=new THREE.WebGLRenderer({antialias:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));world.appendChild(renderer.domElement);
@@ -45,6 +45,7 @@ renderer.setClearColor(0xeef2eb);
 const camera=new THREE.PerspectiveCamera(48,1,.1,400);
 camera.position.set(42,32,42);
 const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(0,-2,0);controls.enableDamping=true;
+controls.addEventListener('change',()=>{needsRender=true;});
 const geometry=new THREE.BoxGeometry(.98,.98,.98), matrix=new THREE.Matrix4();
 const scenes=[new THREE.Scene(),new THREE.Scene(),new THREE.Scene()];
 const solidMaterial=new THREE.MeshLambertMaterial({color:0xffffff});
@@ -176,6 +177,7 @@ function drawFrame(){
   $('labels').innerHTML=panes.map(kind=>`<span class="pane-label"><b class="series-label ${kind}">${SOURCE[kind].label}</b></span>`).join('');
   syncVideos();
   updateStats();
+  renderWorld();
 }
 
 let ready=false,presenting=false,pending=null,clockStart=0,clockFrame=0,visible=true;
@@ -190,19 +192,20 @@ function setControls(enabled){
   $('experiment').setAttribute('aria-busy',String(!enabled));
 }
 function mediaReady(video,event){
-  return new Promise((resolve,reject)=>{
-    const cleanup=()=>{video.removeEventListener(event,done);video.removeEventListener('error',fail);video.removeEventListener('emptied',done);};
+  return new Promise(resolve=>{
+    const cleanup=()=>{clearTimeout(timeout);video.removeEventListener(event,done);video.removeEventListener('error',done);video.removeEventListener('emptied',done);};
     const done=()=>{cleanup();resolve();};
-    const fail=()=>{cleanup();reject(Error('Unable to read recorded RGB: '+video.getAttribute('src')));};
-    video.addEventListener(event,done,{once:true});video.addEventListener('error',fail,{once:true});
-    if(event==='seeked')video.addEventListener('emptied',done,{once:true});
+    const timeout=setTimeout(done,2000);
+    video.addEventListener(event,done,{once:true});video.addEventListener('error',done,{once:true});
+    video.addEventListener('emptied',done,{once:true});
   });
 }
 async function alignVideos(frame){
   const seconds=frame/(record.fps||24);
   await Promise.all(videos().map(async v=>{
-    // A single frame clock seeks all three paused videos, preventing native-player drift.
-    if(Math.abs(v.currentTime-seconds)<1e-6&&!v.seeking&&v.readyState>=2)return;
+    if(v.readyState<1||v.error)return;
+    // Paused seeks and frame steps align all three recordings to the exact frame.
+    if(Math.abs(v.currentTime-seconds)<1e-6&&!v.seeking)return;
     const settled=mediaReady(v,'seeked');v.currentTime=seconds;await settled;
   }));
 }
@@ -214,15 +217,15 @@ async function presentFrame(value){
   try{
     while(pending){
       const request=pending;pending=null;
+      if(request.token!==loadCounter||!ready)continue;
+      t=request.frame;drawFrame();
       await alignVideos(request.frame);
       if(request.token!==loadCounter||!ready)continue;
-      if(pending)continue;
-      t=request.frame;drawFrame();
       if(t===gt.frames-1)pause();
     }
   }catch(e){error(e);}finally{presenting=false;}
 }
-function seek(value){pause();presentFrame(value);}
+function seek(value){pause();for(const v of videos())v.preload='auto';presentFrame(value);}
 async function loadEpisode(){
   pause();ready=false;pending=null;setControls(false);
   const token=++loadCounter,episode=$('episode').value;
@@ -232,6 +235,15 @@ async function loadEpisode(){
   const item=manifest.episodes[episode];
   if(!item)throw Error('This episode is unavailable.');
   emit('loading',{episode});
+  // Start native media loading alongside the voxel requests. A slow RGB stream
+  // must not hide the 3D state or keep the controls disabled.
+  for(const [key,kind] of [['gt','gt'],['pred','s'],['pred_xl','xl']]){
+    const v=$(SOURCE[kind].video);v.pause();v.preload='metadata';
+    v.poster=new URL(`assets/posters/${episode}-${kind}.jpg`,import.meta.url).href;
+    if(item[key])v.src=item[key]+'/rgb.mp4?v=faststart';
+    else v.removeAttribute('src');
+    v.load();
+  }
   const fetchStream=async folder=>{const r=await fetch(folder+'/voxels.bin');if(!r.ok)throw Error('Voxel stream unavailable: '+folder);return new VoxelStream(await r.arrayBuffer());};
   const optionalView=folder=>folder?fetch(folder+'/view.json').then(r=>r.ok?r.json():null):null;
   const values=await Promise.all([
@@ -243,13 +255,6 @@ async function loadEpisode(){
   if(token!==loadCounter)return;
   [gt,predS,predXL,view,record,viewS,recS,viewXL,recXL]=values;t=0;
   applyAvailability(predS,predXL);$('time').max=gt.frames-1;
-  await Promise.all([['gt','gtVideo'],['pred','sVideo'],['pred_xl','xlVideo']].map(async([key,id])=>{
-    const v=$(id);v.pause();
-    if(!item[key]){v.removeAttribute('src');v.load();return;}
-    v.src=item[key]+'/rgb.mp4';
-    if(v.readyState<2)await mediaReady(v,'loadeddata');
-  }));
-  if(token!==loadCounter)return;
   ready=true;setControls(true);$('voxelLoading').hidden=true;
   $('status').textContent=`${gt.frames} frames · ${record.fps||24} fps`;
   homeCamera();
@@ -263,17 +268,25 @@ $('restart').onclick=()=>seek(0);
 $('time').oninput=e=>seek(Number(e.target.value));
 $('play').onclick=()=>{
   if(!ready)return;
-  if(playing){pause();return;}
+  if(playing){pause();presentFrame(t);return;}
   clockFrame=t>=gt.frames-1?0:t;clockStart=performance.now();playing=true;$('play').textContent='Pause';
-  if(clockFrame!==t)presentFrame(clockFrame);
+  const token=loadCounter;
+  for(const v of videos()){
+    v.preload='auto';v.playbackRate=Number($('speed').value);
+    if(v.readyState>=1)v.currentTime=clockFrame/(record.fps||24);
+    // Native playback starts decoding immediately after the user's gesture and
+    // streams sequentially, instead of performing three random seeks per frame.
+    v.play().catch(e=>{if(token===loadCounter&&playing){pause();$('status').textContent='RGB playback unavailable: '+e.message;}});
+  }
 };
 for(const kind of PANE_KEYS)$(SOURCE[kind].check).onchange=()=>{syncPaneButton();if(ready)drawFrame();};
 for(const id of ['cut','highlight','showCamera'])$(id).addEventListener(id==='cut'?'input':'change',()=>{if(ready)drawFrame();});
+for(const id of videoIDs)$(id).addEventListener('loadedmetadata',()=>{if(ready&&!playing)presentFrame(t);});
 document.addEventListener('click',e=>{for(const id of ['paneMenu','viewOptions']){const menu=$(id);if(menu.open&&!menu.contains(e.target))menu.open=false;}});
 $('locateCamera').onclick=()=>{const p=displayedPoses.find(row=>row.pose)?.pose;if(!p)return;controls.target.fromArray(p.position);camera.position.copy(controls.target).add(new THREE.Vector3(8,6,8));controls.update();};
 $('resetView').onclick=homeCamera;
 $('episode').onchange=()=>loadEpisode().catch(error);
-$('speed').onchange=()=>{clockFrame=t;clockStart=performance.now();};
+$('speed').onchange=()=>{clockFrame=t;clockStart=performance.now();for(const v of videos())v.playbackRate=Number($('speed').value);};
 const experiment=$('experiment');
 function expandViewer(expanded){
   experiment.classList.toggle('is-expanded',expanded);
@@ -295,19 +308,28 @@ experiment.addEventListener('keydown',e=>{
 document.addEventListener('briefing:seek',e=>seek(e.detail));
 document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});
 new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;},{rootMargin:'200px'}).observe(world);
-function animate(now){
-  requestAnimationFrame(animate);
-  if(playing&&ready&&!presenting){
-    const next=Math.min(gt.frames-1,clockFrame+Math.floor((now-clockStart)/1000*(record.fps||24)*Number($('speed').value)));
-    if(next!==t)presentFrame(next);
-  }
-  if(!visible)return;
-  controls.update();
+function renderWorld(){
   const w=world.clientWidth,h=world.clientHeight;
+  if(!w||!h)return;
   if(w!==renderWidth||h!==renderHeight){renderer.setSize(w,h);renderWidth=w;renderHeight=h;}
   const n=Math.max(1,enabledPanes().length);camera.aspect=w/n/h;camera.updateProjectionMatrix();
   renderer.setScissorTest(true);
   for(let i=0;i<n;i++){const width=w/n;renderer.setViewport(i*width,0,width,h);renderer.setScissor(i*width,0,width,h);renderer.render(scenes[i],camera);}
+  needsRender=false;
+}
+function animate(now){
+  requestAnimationFrame(animate);
+  if(playing&&ready&&!presenting){
+    const master=$('gtVideo'),fps=record.fps||24;
+    const next=Math.min(gt.frames-1,master.readyState>=2?Math.floor(master.currentTime*fps+1e-3)
+      :master.error?clockFrame+Math.floor((now-clockStart)/1000*fps*Number($('speed').value)):t);
+    if(next!==t){t=next;drawFrame();}
+    for(const v of videos())if(v!==master&&v.readyState>=2&&!v.seeking&&Math.abs(v.currentTime-master.currentTime)>1/fps)v.currentTime=master.currentTime;
+    if(t===gt.frames-1)pause();
+  }
+  if(!visible)return;
+  controls.update();
+  if(needsRender||world.clientWidth!==renderWidth||world.clientHeight!==renderHeight)renderWorld();
 }
 requestAnimationFrame(animate);
 try{
