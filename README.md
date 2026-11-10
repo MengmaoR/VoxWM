@@ -1,0 +1,117 @@
+# VoxWM — 独立原生GT环境
+
+供新世界模型研发使用的干净数据入口。只有Craftium/Luanti/VoxeLibre、GT采集与真实视频；没有神经网络、权重、推理、旧Viewer或compare依赖，不需连接旧CoDL目录。
+
+目前只完成源码和轻量本地检查，**没有安装/编译引擎，没有执行真实两项测试**。开发仓库为 `https://github.com/MengmaoR/VoxWM.git`（master）。远端既有`docs/`展示页及数据完整保留，不属于GT模块的运行依赖。
+
+```text
+voxwm_gt/             引擎session、生成、游玩、录制、稀疏存储
+  scenes/test_a.lua   原Test A合成场景
+  scenes/native_world.lua  原生地图/用户voxel世界与同帧C++采集
+  assets/             本地类别表，不是模型资源
+scripts/setup_gt.sh   独立CPU环境安装（用户执行）
+scripts/test_a.py     原Test A真实GT和视频测试
+scripts/test_seed42.py 原生seed42真实GT和视频测试
+outputs/             用户运行后的数据，不入Git
+HANDOFF_PROMPT.md     给新对话的交接prompt
+```
+
+## 1. 安装（用户执行）
+
+从本目录执行，要求git、uv、CMake、make/C++编译器和原生图形/音视频库。脚本不执行sudo/brew、不修改旧环境。CPU仿真不要求CUDA；RGB仍需要图形栈，macOS使用原生窗口，Linux默认Mesa软件渲染。
+
+macOS系统依赖参考（已安装则无需重复）：
+
+```bash
+brew install cmake pkg-config sdl2 jpeg-turbo libpng freetype sqlite zstd luajit libogg libvorbis openal-soft curl gettext gmp
+```
+
+Ubuntu系统依赖参考（由用户手动执行）：
+
+```bash
+sudo apt-get install build-essential cmake pkg-config libsdl2-dev libgl1-mesa-dev libx11-dev libxi-dev libjpeg-dev libpng-dev libfreetype6-dev libsqlite3-dev libzstd-dev libluajit-5.1-dev libogg-dev libvorbis-dev libopenal-dev libcurl4-openssl-dev gettext libgmp-dev zlib1g-dev
+```
+
+```bash
+cd /Users/tianxj/Desktop/VoxWM
+bash scripts/setup_gt.sh
+```
+
+脚本直接clone固定版本Craftium及其原生submodules，在本目录创建Python3.11 `.venv`。无需PERSIST仓库或模型资源；原macOS PNG/OpenGL/OpenAL处理及Linux软件渲染保留。不要安装Craftium的`examples`依赖组。
+
+## 2. 两项真实测试（用户分别启动）
+
+原Test A：玩家不平移，以真实鼠标动作转约2.5圈，原树木/地下石层、3×3悬空水源、河道与池塘。保留seed42、48³、24FPS、640×360、FOV72、原停止规则；不固定为580帧，原生时序可能影响结束帧数。
+
+```bash
+.venv/bin/python scripts/test_a.py
+```
+
+原生seed42：不覆写地形、不建人工湖；原生v7地图和自然出生点，默认No-op录240帧，保留实际环境演化。
+
+```bash
+.venv/bin/python scripts/test_seed42.py
+```
+
+测试脚本真实调用引擎，生成后只检查voxel/track/video的长度、48³形状及Camera可用性。需要极短人工smoke时加`--max-frames 16 --output outputs/test_a_short`，短数据不等于完整Test A。所有输出目录必须不存在，不会覆盖旧输出。
+
+默认输出`outputs/test_a/`与`outputs/seed42/`，各自包含：
+
+- `voxels.bin`：uint16类别，首帧完整+后续稀疏增量，DeltaReader可无损重建。
+- `track.npz`：Camera、Action、native_action、真实Voxel Center/Origin、Player/Camera位置、方向、时间和帧号。
+- `rgb.mp4`、`initial_rgb.npy`：真实引擎RGB，24FPS；非AI合成视频。
+- `classes.json`、`classdict.json`、`nodes.json`、`record.json`及引擎日志。
+
+```python
+from voxwm_gt.storage import DeltaReader
+r = DeltaReader('outputs/test_a/voxels.bin')
+voxel_t = r.frame(10)
+```
+
+## 3. 通用生成与实际游玩
+
+```bash
+# 原生地图，可换seed、mapgen、帧数和真实动作策略
+.venv/bin/python -m voxwm_gt generate --scene procedural --seed 42 --max-frames 240 --policy rotate --output outputs/native_rotate
+# 用本地NPY给定动作：整数[T,4]，每行是一个真实引擎transition；最多保存T+1帧
+.venv/bin/python -m voxwm_gt generate --scene procedural --seed 42 --actions actions.npy --max-frames 241 --output outputs/native_actions
+# 交互游玩；同一录制器同步保存观测，不指定output则只玩
+.venv/bin/python -m voxwm_gt play --scene procedural --seed 42 --output outputs/play_seed42
+.venv/bin/python -m voxwm_gt play --scene test_a
+```
+
+在“VoxWM GT”窗口用WASD移动、空格跳跃、Shift潜行、Ctrl加速、方向键转头；Tab切换鼠标捕获，左键挖掘、右键放置，按住1–9并右键选择物品槽，Esc退出。操作均通过实际引擎动作执行；没有逐帧绝对轨迹。引擎临时世界在退出后清理，若要保留本次数据需指定`--output`。
+
+可用`GTSession`接自己的控制策略：
+
+```python
+import numpy as np
+from voxwm_gt.session import GTSession
+with GTSession(scene='procedural', seed=42) as session:
+    rgb, info = session.rgb, session.info
+    rgb, reward, terminated, truncated, info = session.step(np.zeros(4, dtype=np.int64))
+```
+
+## 4. 指定合成voxel数据
+
+`--scene custom --world scene.npz`将用户给定初态写入真实游戏，再由原生物理演化；不模拟自己的流体。NPZ格式：
+
+- `voxels`：整数[X,Y,Z]，轴按Luanti引擎(x,y,z)，值索引node_names。
+- `node_names`：一维Unicode节点名，例如air、mcl_core:dirt、mcl_core:water_source。
+- `node_param2`：可选，一维且与node_names等长，默认0。
+- `origin_engine`：3个整数，voxels[0,0,0]的引擎节点坐标。
+- `spawn_engine`：3个数，合法玩家初始位置；场景应提供支撑/空间。
+- `look_degrees`：可选[yaw,pitch]，默认[0,0]，引擎角度。
+
+```bash
+.venv/bin/python -m voxwm_gt generate --scene custom --world scene.npz --seed 42 --output outputs/custom_gt
+.venv/bin/python -m voxwm_gt play --scene custom --world scene.npz --output outputs/custom_play
+```
+
+原生地图和自定义世界保留真实物理；只对原Test A使用其水流稳定+旋转结束的停止条件。自定义世界不自动裁掉模型未知类别，遇到新node/param2会追加类别并记录。
+
+## 5. 坐标与迁移边界
+
+每份RGB、Voxel、Center、Camera来自同一引擎观测包。使用`get_voxel_data_cpp`，官方wrapper转ENU(x,z,y)，49³按right-crop变为48³。Camera仍保存10D表示：位置`(cam_pos-(obs_voxel_center-.5))/48`，真实crop origin独立为`obs_voxel_center-24-.5`，不从玩家位置推测Center。
+
+来源和许可见THIRD_PARTY.md。没有迁移B/C场景、baseline模型、推理/评价、网页、旧结果、旧虚拟环境或Git历史。本目录已接入VoxWM GitHub，保留其原有历史和docs内容，不继承旧CoDL的Git历史。新架构与训练由用户后续独立定义。

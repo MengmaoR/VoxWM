@@ -1,0 +1,12 @@
+.venv/
+third_party/
+outputs/
+runs/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.DS_Store
+.env
+*.pt
+*.pth
+*.safetensors

@@ -1,0 +1,8 @@
+# Standalone native GT. No Torch, CUDA, or model weights.
+numpy==1.26.4
+gymnasium==0.29.1
+pygame==2.6.1
+PyYAML==6.0.2
+av==13.1.0
+setuptools==75.6.0
+pybind11==2.13.1
