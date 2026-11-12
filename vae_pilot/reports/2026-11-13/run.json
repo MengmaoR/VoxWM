@@ -1,0 +1,12 @@
+{
+  "date": "2026-11-13",
+  "native_engine": true,
+  "seed": 191664964,
+  "command": ".venv/bin/python -m vae_pilot --output outputs/vae_native_pilot_20261113_final --max-worlds 1 --sites-per-world 4 --site-seconds 24 --sample-seconds 0.25 --fire-ignite-after-seconds 3 --wall-seconds 210 --snapshot-cap 256",
+  "dataset": "outputs/vae_native_pilot_20261113_final/dataset.sqlite",
+  "setup_log": "runs/vae_pilot_setup/setup.log",
+  "native_log": "runs/vae_pilot_setup/pilot_final.log",
+  "craftium_commit": "ca8b2762aea46d10a88c53f6411ff1f0dbdf3b49",
+  "voxe_libre_commit": "178c71b1e7d6ec35c0d9c481c55eb306d6f330bc",
+  "full_200k_started": false
+}

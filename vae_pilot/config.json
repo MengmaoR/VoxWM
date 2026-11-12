@@ -1,0 +1,116 @@
+{
+  "quotas": {
+    "ordinary": 100000,
+    "water": 25000,
+    "lava": 25000,
+    "fire": 25000,
+    "vegetation": 25000
+  },
+  "chunk_size": 16,
+  "clip_states": 8,
+  "min_clip_states": 5,
+  "sample_seconds": 1.0,
+  "site_seconds": 60.0,
+  "sites_per_world": 8,
+  "horizontal_range": 2048,
+  "seed": 42,
+  "split_percent": [
+    80,
+    10,
+    10
+  ],
+  "fire_ignite_after_seconds": 20.0,
+  "allow_ignition": true,
+  "change_bins": [
+    16,
+    256
+  ],
+  "biome_groups": {
+    "IcePlainsSpikes": [
+      "IcePlainsSpikes"
+    ],
+    "ColdTaiga": [
+      "ColdTaiga"
+    ],
+    "MegaTaiga": [
+      "MegaTaiga"
+    ],
+    "MegaSpruceTaiga": [
+      "MegaSpruceTaiga"
+    ],
+    "ExtremeHills": [
+      "ExtremeHills",
+      "ExtremeHillsM",
+      "ExtremeHills+"
+    ],
+    "StoneBeach": [
+      "StoneBeach"
+    ],
+    "IcePlains": [
+      "IcePlains"
+    ],
+    "Plains": [
+      "Plains"
+    ],
+    "SunflowerPlains": [
+      "SunflowerPlains"
+    ],
+    "Taiga": [
+      "Taiga"
+    ],
+    "Forest": [
+      "Forest"
+    ],
+    "FlowerForest": [
+      "FlowerForest"
+    ],
+    "BirchForest": [
+      "BirchForest",
+      "BirchForestM"
+    ],
+    "Desert": [
+      "Desert"
+    ],
+    "RoofedForest": [
+      "RoofedForest"
+    ],
+    "Mesa": [
+      "Mesa"
+    ],
+    "MesaBryce": [
+      "MesaBryce"
+    ],
+    "MesaPlateauF": [
+      "MesaPlateauF",
+      "MesaPlateauFM"
+    ],
+    "Savanna": [
+      "Savanna",
+      "SavannaM"
+    ],
+    "Jungle": [
+      "Jungle",
+      "JungleM"
+    ],
+    "JungleEdge": [
+      "JungleEdge",
+      "JungleEdgeM"
+    ],
+    "MangroveSwamp": [
+      "MangroveSwamp"
+    ],
+    "Swampland": [
+      "Swampland"
+    ],
+    "MushroomIsland": [
+      "MushroomIsland",
+      "MushroomIslandShore"
+    ],
+    "BambooJungle": [
+      "BambooJungle",
+      "BambooJungleM",
+      "BambooJungleEdge",
+      "BambooJungleEdgeM"
+    ]
+  }
+}

@@ -115,3 +115,14 @@ with GTSession(scene='procedural', seed=42) as session:
 每份RGB、Voxel、Center、Camera来自同一引擎观测包。使用`get_voxel_data_cpp`，官方wrapper转ENU(x,z,y)，49³按right-crop变为48³。Camera仍保存10D表示：位置`(cam_pos-(obs_voxel_center-.5))/48`，真实crop origin独立为`obs_voxel_center-24-.5`，不从玩家位置推测Center。
 
 来源和许可见THIRD_PARTY.md。没有迁移B/C场景、baseline模型、推理/评价、网页、旧结果、旧虚拟环境或Git历史。本目录已接入VoxWM GitHub，保留其原有历史和docs内容，不继承旧CoDL的Git历史。新架构与训练由用户后续独立定义。
+
+
+## VAE 200K Pilot Dataset
+
+新增独立[原生16³采集流程](vae_pilot/README.md)，固定Ordinary100K、Water/Lava/Fire/Vegetation各25K。支持随机世界、25类biome均衡、原生动态发现、5–8状态change-progress clips、按world seed拆分及实际产出统计；不包含VAE训练。
+
+2026-11-13已安装独立CPU环境并完成有界真实小测试：1世界/4位置，137 snapshots（Ordinary89、Water48，6个8状态水流clip）；其余三类有效产出为0。真实统计见[本次报告](vae_pilot/reports/2026-11-13/report.md)，不能据此承诺完整200K的可达性或成本。未运行200K或GPU。
+
+```bash
+.venv/bin/python -m vae_pilot --output outputs/vae_pilot --max-worlds 1 --sites-per-world 4 --site-seconds 24 --sample-seconds 0.25 --fire-ignite-after-seconds 3 --wall-seconds 210 --snapshot-cap 256
+```

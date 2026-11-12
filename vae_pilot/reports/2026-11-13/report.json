@@ -1,0 +1,418 @@
+{
+  "status": "completed",
+  "error": null,
+  "collector_ok": true,
+  "quotas_met": false,
+  "snapshot_count": 137,
+  "counts": {
+    "fire": 0,
+    "lava": 0,
+    "ordinary": 89,
+    "vegetation": 0,
+    "water": 48
+  },
+  "quotas": {
+    "fire": 25000,
+    "lava": 25000,
+    "ordinary": 100000,
+    "vegetation": 25000,
+    "water": 25000
+  },
+  "worlds_attempted": 1,
+  "sites_observed": 4,
+  "observation_simulated_seconds": 96.35686374083161,
+  "engine_simulated_seconds": 99.37854605913162,
+  "world_wall_seconds": 133.8298807090614,
+  "latest_command_wall_seconds": 133.85161662497558,
+  "dynamic": {
+    "water": {
+      "natural_changed_trajectories": 9,
+      "observed_chunk_trajectories": 108,
+      "natural_discovery_rate_per_chunk_visit": 0.08333333333333333,
+      "sites_with_native_presence": 4,
+      "valid_clips": 6,
+      "saved_snapshots": 48,
+      "natural_valid_trajectories": 6,
+      "natural_saved_snapshots": 48,
+      "ignition_seeded_saved_snapshots": 0,
+      "valid_snapshot_yield_per_world": 48.0,
+      "valid_snapshot_yield_per_observation_second": 0.4981482183677571,
+      "distinct_states": {
+        "count": 9,
+        "min": 2,
+        "p50": 11.0,
+        "p90": 16.400000000000002,
+        "max": 22
+      },
+      "sampled_state_count_histogram": {
+        "0": 3,
+        "8": 6
+      },
+      "cumulative_voxel_updates": {
+        "count": 9,
+        "min": 11,
+        "p50": 26.0,
+        "p90": 617.2,
+        "max": 634
+      },
+      "change_band_histogram": {
+        "medium": 5,
+        "large": 3,
+        "small": 1
+      },
+      "valid_change_band_histogram": {
+        "large": 3,
+        "medium": 3
+      },
+      "ignition_seeded_trajectories": 0,
+      "invalid_or_duplicate_limited_clips": 3
+    },
+    "lava": {
+      "natural_changed_trajectories": 0,
+      "observed_chunk_trajectories": 108,
+      "natural_discovery_rate_per_chunk_visit": 0.0,
+      "sites_with_native_presence": 2,
+      "valid_clips": 0,
+      "saved_snapshots": 0,
+      "natural_valid_trajectories": 0,
+      "natural_saved_snapshots": 0,
+      "ignition_seeded_saved_snapshots": 0,
+      "valid_snapshot_yield_per_world": 0.0,
+      "valid_snapshot_yield_per_observation_second": 0.0,
+      "distinct_states": {
+        "count": 0,
+        "min": null,
+        "p50": null,
+        "p90": null,
+        "max": null
+      },
+      "sampled_state_count_histogram": {},
+      "cumulative_voxel_updates": {
+        "count": 0,
+        "min": null,
+        "p50": null,
+        "p90": null,
+        "max": null
+      },
+      "change_band_histogram": {},
+      "valid_change_band_histogram": {},
+      "ignition_seeded_trajectories": 0,
+      "invalid_or_duplicate_limited_clips": 0
+    },
+    "fire": {
+      "natural_changed_trajectories": 0,
+      "observed_chunk_trajectories": 108,
+      "natural_discovery_rate_per_chunk_visit": 0.0,
+      "sites_with_native_presence": 1,
+      "valid_clips": 0,
+      "saved_snapshots": 0,
+      "natural_valid_trajectories": 0,
+      "natural_saved_snapshots": 0,
+      "ignition_seeded_saved_snapshots": 0,
+      "valid_snapshot_yield_per_world": 0.0,
+      "valid_snapshot_yield_per_observation_second": 0.0,
+      "distinct_states": {
+        "count": 1,
+        "min": 2,
+        "p50": 2.0,
+        "p90": 2.0,
+        "max": 2
+      },
+      "sampled_state_count_histogram": {
+        "0": 1
+      },
+      "cumulative_voxel_updates": {
+        "count": 1,
+        "min": 1,
+        "p50": 1.0,
+        "p90": 1.0,
+        "max": 1
+      },
+      "change_band_histogram": {
+        "small": 1
+      },
+      "valid_change_band_histogram": {},
+      "ignition_seeded_trajectories": 1,
+      "invalid_or_duplicate_limited_clips": 1
+    },
+    "vegetation": {
+      "natural_changed_trajectories": 0,
+      "observed_chunk_trajectories": 108,
+      "natural_discovery_rate_per_chunk_visit": 0.0,
+      "sites_with_native_presence": 4,
+      "valid_clips": 0,
+      "saved_snapshots": 0,
+      "natural_valid_trajectories": 0,
+      "natural_saved_snapshots": 0,
+      "ignition_seeded_saved_snapshots": 0,
+      "valid_snapshot_yield_per_world": 0.0,
+      "valid_snapshot_yield_per_observation_second": 0.0,
+      "distinct_states": {
+        "count": 0,
+        "min": null,
+        "p50": null,
+        "p90": null,
+        "max": null
+      },
+      "sampled_state_count_histogram": {},
+      "cumulative_voxel_updates": {
+        "count": 0,
+        "min": null,
+        "p50": null,
+        "p90": null,
+        "max": null
+      },
+      "change_band_histogram": {},
+      "valid_change_band_histogram": {},
+      "ignition_seeded_trajectories": 0,
+      "invalid_or_duplicate_limited_clips": 0
+    }
+  },
+  "ordinary_biome_counts": {
+    "FlowerForest": 6,
+    "Forest": 27,
+    "JungleEdge": 25,
+    "MegaTaiga": 19,
+    "Plains": 12
+  },
+  "ordinary_biome_targets": {
+    "BambooJungle": {
+      "count": 0,
+      "target": 4000,
+      "shortfall": 4000,
+      "estimated_additional_worlds": null
+    },
+    "BirchForest": {
+      "count": 0,
+      "target": 4000,
+      "shortfall": 4000,
+      "estimated_additional_worlds": null
+    },
+    "ColdTaiga": {
+      "count": 0,
+      "target": 4000,
+      "shortfall": 4000,
+      "estimated_additional_worlds": null
+    },
+    "Desert": {
+      "count": 0,
+      "target": 4000,
+      "shortfall": 4000,
+      "estimated_additional_worlds": null
+    },
+    "ExtremeHills": {
+      "count": 0,
+      "target": 4000,
+      "shortfall": 4000,
+      "estimated_additional_worlds": null
+    },
+    "FlowerForest": {
+      "count": 6,
+      "target": 4000,
+      "shortfall": 3994,
+      "estimated_additional_worlds": 666
+    },
+    "Forest": {
+      "count": 27,
+      "target": 4000,
+      "shortfall": 3973,
+      "estimated_additional_worlds": 148
+    },
+    "IcePlains": {
+      "count": 0,
+      "target": 4000,
+      "shortfall": 4000,
+      "estimated_additional_worlds": null
+    },
+    "IcePlainsSpikes": {
+      "count": 0,
+      "target": 4000,
+      "shortfall": 4000,
+      "estimated_additional_worlds": null
+    },
+    "Jungle": {
+      "count": 0,
+      "target": 4000,
+      "shortfall": 4000,
+      "estimated_additional_worlds": null
+    },
+    "JungleEdge": {
+      "count": 25,
+      "target": 4000,
+      "shortfall": 3975,
+      "estimated_additional_worlds": 159
+    },
+    "MangroveSwamp": {
+      "count": 0,
+      "target": 4000,
+      "shortfall": 4000,
+      "estimated_additional_worlds": null
+    },
+    "MegaSpruceTaiga": {
+      "count": 0,
+      "target": 4000,
+      "shortfall": 4000,
+      "estimated_additional_worlds": null
+    },
+    "MegaTaiga": {
+      "count": 19,
+      "target": 4000,
+      "shortfall": 3981,
+      "estimated_additional_worlds": 210
+    },
+    "Mesa": {
+      "count": 0,
+      "target": 4000,
+      "shortfall": 4000,
+      "estimated_additional_worlds": null
+    },
+    "MesaBryce": {
+      "count": 0,
+      "target": 4000,
+      "shortfall": 4000,
+      "estimated_additional_worlds": null
+    },
+    "MesaPlateauF": {
+      "count": 0,
+      "target": 4000,
+      "shortfall": 4000,
+      "estimated_additional_worlds": null
+    },
+    "MushroomIsland": {
+      "count": 0,
+      "target": 4000,
+      "shortfall": 4000,
+      "estimated_additional_worlds": null
+    },
+    "Plains": {
+      "count": 12,
+      "target": 4000,
+      "shortfall": 3988,
+      "estimated_additional_worlds": 333
+    },
+    "RoofedForest": {
+      "count": 0,
+      "target": 4000,
+      "shortfall": 4000,
+      "estimated_additional_worlds": null
+    },
+    "Savanna": {
+      "count": 0,
+      "target": 4000,
+      "shortfall": 4000,
+      "estimated_additional_worlds": null
+    },
+    "StoneBeach": {
+      "count": 0,
+      "target": 4000,
+      "shortfall": 4000,
+      "estimated_additional_worlds": null
+    },
+    "SunflowerPlains": {
+      "count": 0,
+      "target": 4000,
+      "shortfall": 4000,
+      "estimated_additional_worlds": null
+    },
+    "Swampland": {
+      "count": 0,
+      "target": 4000,
+      "shortfall": 4000,
+      "estimated_additional_worlds": null
+    },
+    "Taiga": {
+      "count": 0,
+      "target": 4000,
+      "shortfall": 4000,
+      "estimated_additional_worlds": null
+    }
+  },
+  "raw_biome_counts": {
+    "FlowerForest": 1,
+    "FlowerForest_ocean": 1,
+    "Forest": 9,
+    "Forest_deep_ocean": 9,
+    "Forest_ocean": 9,
+    "JungleEdge": 16,
+    "JungleEdge_ocean": 9,
+    "MegaTaiga": 7,
+    "MegaTaiga_deep_ocean": 30,
+    "MegaTaiga_ocean": 30,
+    "Plains": 4,
+    "Plains_ocean": 4,
+    "SunflowerPlains": 4,
+    "SunflowerPlains_ocean": 4
+  },
+  "terrain_counts": {
+    "subsurface": 57,
+    "surface": 41,
+    "underground": 39
+  },
+  "height_distribution": {
+    "count": 137,
+    "min": -24.0,
+    "p50": -8.0,
+    "p90": 8.0,
+    "max": 24.0
+  },
+  "split_counts": {
+    "train": 137
+  },
+  "unsupported_configured_biomes": [],
+  "estimates": {
+    "fire": {
+      "target": 25000,
+      "observed": 0,
+      "shortfall": 25000,
+      "estimated_additional_worlds": null,
+      "estimated_additional_simulated_seconds": null,
+      "estimated_additional_wall_seconds": null
+    },
+    "lava": {
+      "target": 25000,
+      "observed": 0,
+      "shortfall": 25000,
+      "estimated_additional_worlds": null,
+      "estimated_additional_simulated_seconds": null,
+      "estimated_additional_wall_seconds": null
+    },
+    "ordinary": {
+      "target": 100000,
+      "observed": 89,
+      "shortfall": 99911,
+      "estimated_additional_worlds": 1123,
+      "estimated_additional_simulated_seconds": 111602.10722440481,
+      "estimated_additional_wall_seconds": 150290.95603627595
+    },
+    "vegetation": {
+      "target": 25000,
+      "observed": 0,
+      "shortfall": 25000,
+      "estimated_additional_worlds": null,
+      "estimated_additional_simulated_seconds": null,
+      "estimated_additional_wall_seconds": null
+    },
+    "water": {
+      "target": 25000,
+      "observed": 48,
+      "shortfall": 24952,
+      "estimated_additional_worlds": 520,
+      "estimated_additional_simulated_seconds": 51676.84395074844,
+      "estimated_additional_wall_seconds": 69591.53796871193
+    }
+  },
+  "estimated_additional_worlds_for_all_quotas_and_biomes": null,
+  "zero_yield_categories": [
+    "fire",
+    "lava",
+    "vegetation"
+  ],
+  "notes": [
+    "Rates are observations from this bounded search, not promises of eventual quota completion.",
+    "Natural discoveries are changed fixed world-chunk trajectories / all observed chunk visits; seeded fire is separate.",
+    "A null estimate means insufficient measured yield; zero observed events do not prove the event is impossible.",
+    "Exact node+param2 content equality prevents duplicate snapshots; no content hashes or artificial states.",
+    "Dynamic clip length 5..8 is unrelated to the VAE optimizer batch size.",
+    "Engine stepping time excludes the initial reset warmup; measured wall time includes initialization."
+  ]
+}
