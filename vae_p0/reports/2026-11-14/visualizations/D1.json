@@ -1,0 +1,254 @@
+{
+  "category": "D1",
+  "standard_clip": true,
+  "states": [
+    {
+      "progress": 0,
+      "world_seed": 191664964,
+      "chunk_origin": [
+        80,
+        1984,
+        -16
+      ],
+      "chunk_index": [
+        5,
+        124,
+        -1
+      ],
+      "axes": "ENU",
+      "biome": "MegaTaiga_ocean",
+      "surface_biome": "MegaTaiga",
+      "biome_group": "MegaTaiga",
+      "biome_transition": false,
+      "stratum": "shallow_underground",
+      "surface_height": 1.0,
+      "height": -8.0,
+      "air_fraction": 0.270751953125,
+      "solid_fraction": 0.729248046875,
+      "timestamp": 31.487657893449068,
+      "simulation_step": 624,
+      "engine_us": 2141383544473,
+      "wall_time_unix": 1794663540,
+      "split": "train",
+      "craftium_commit": "ca8b2762aea46d10a88c53f6411ff1f0dbdf3b49",
+      "voxelibre_commit": "178c71b1e7d6ec35c0d9c481c55eb306d6f330bc"
+    },
+    {
+      "progress": 91,
+      "world_seed": 191664964,
+      "chunk_origin": [
+        80,
+        1984,
+        -16
+      ],
+      "chunk_index": [
+        5,
+        124,
+        -1
+      ],
+      "axes": "ENU",
+      "biome": "MegaTaiga_ocean",
+      "surface_biome": "MegaTaiga",
+      "biome_group": "MegaTaiga",
+      "biome_transition": false,
+      "stratum": "shallow_underground",
+      "surface_height": 1.0,
+      "height": -8.0,
+      "air_fraction": 0.24853515625,
+      "solid_fraction": 0.75146484375,
+      "timestamp": 32.05523989349604,
+      "simulation_step": 636,
+      "engine_us": 2141384280593,
+      "wall_time_unix": 1794663540,
+      "split": "train",
+      "craftium_commit": "ca8b2762aea46d10a88c53f6411ff1f0dbdf3b49",
+      "voxelibre_commit": "178c71b1e7d6ec35c0d9c481c55eb306d6f330bc"
+    },
+    {
+      "progress": 186,
+      "world_seed": 191664964,
+      "chunk_origin": [
+        80,
+        1984,
+        -16
+      ],
+      "chunk_index": [
+        5,
+        124,
+        -1
+      ],
+      "axes": "ENU",
+      "biome": "MegaTaiga_ocean",
+      "surface_biome": "MegaTaiga",
+      "biome_group": "MegaTaiga",
+      "biome_transition": false,
+      "stratum": "shallow_underground",
+      "surface_height": 1.0,
+      "height": -8.0,
+      "air_fraction": 0.2265625,
+      "solid_fraction": 0.7734375,
+      "timestamp": 33.06597188860178,
+      "simulation_step": 658,
+      "engine_us": 2141385291654,
+      "wall_time_unix": 1794663541,
+      "split": "train",
+      "craftium_commit": "ca8b2762aea46d10a88c53f6411ff1f0dbdf3b49",
+      "voxelibre_commit": "178c71b1e7d6ec35c0d9c481c55eb306d6f330bc"
+    },
+    {
+      "progress": 280,
+      "world_seed": 191664964,
+      "chunk_origin": [
+        80,
+        1984,
+        -16
+      ],
+      "chunk_index": [
+        5,
+        124,
+        -1
+      ],
+      "axes": "ENU",
+      "biome": "MegaTaiga_ocean",
+      "surface_biome": "MegaTaiga",
+      "biome_group": "MegaTaiga",
+      "biome_transition": false,
+      "stratum": "shallow_underground",
+      "surface_height": 1.0,
+      "height": -8.0,
+      "air_fraction": 0.20458984375,
+      "solid_fraction": 0.79541015625,
+      "timestamp": 34.08820488676429,
+      "simulation_step": 680,
+      "engine_us": 2141386313930,
+      "wall_time_unix": 1794663542,
+      "split": "train",
+      "craftium_commit": "ca8b2762aea46d10a88c53f6411ff1f0dbdf3b49",
+      "voxelibre_commit": "178c71b1e7d6ec35c0d9c481c55eb306d6f330bc"
+    },
+    {
+      "progress": 371,
+      "world_seed": 191664964,
+      "chunk_origin": [
+        80,
+        1984,
+        -16
+      ],
+      "chunk_index": [
+        5,
+        124,
+        -1
+      ],
+      "axes": "ENU",
+      "biome": "MegaTaiga_ocean",
+      "surface_biome": "MegaTaiga",
+      "biome_group": "MegaTaiga",
+      "biome_transition": false,
+      "stratum": "shallow_underground",
+      "surface_height": 1.0,
+      "height": -8.0,
+      "air_fraction": 0.182861328125,
+      "solid_fraction": 0.817138671875,
+      "timestamp": 35.0925648920238,
+      "simulation_step": 702,
+      "engine_us": 2141387319822,
+      "wall_time_unix": 1794663543,
+      "split": "train",
+      "craftium_commit": "ca8b2762aea46d10a88c53f6411ff1f0dbdf3b49",
+      "voxelibre_commit": "178c71b1e7d6ec35c0d9c481c55eb306d6f330bc"
+    },
+    {
+      "progress": 460,
+      "world_seed": 191664964,
+      "chunk_origin": [
+        80,
+        1984,
+        -16
+      ],
+      "chunk_index": [
+        5,
+        124,
+        -1
+      ],
+      "axes": "ENU",
+      "biome": "MegaTaiga_ocean",
+      "surface_biome": "MegaTaiga",
+      "biome_group": "MegaTaiga",
+      "biome_transition": false,
+      "stratum": "shallow_underground",
+      "surface_height": 1.0,
+      "height": -8.0,
+      "air_fraction": 0.161376953125,
+      "solid_fraction": 0.838623046875,
+      "timestamp": 36.11963189020753,
+      "simulation_step": 724,
+      "engine_us": 2141388346652,
+      "wall_time_unix": 1794663544,
+      "split": "train",
+      "craftium_commit": "ca8b2762aea46d10a88c53f6411ff1f0dbdf3b49",
+      "voxelibre_commit": "178c71b1e7d6ec35c0d9c481c55eb306d6f330bc"
+    },
+    {
+      "progress": 547,
+      "world_seed": 191664964,
+      "chunk_origin": [
+        80,
+        1984,
+        -16
+      ],
+      "chunk_index": [
+        5,
+        124,
+        -1
+      ],
+      "axes": "ENU",
+      "biome": "MegaTaiga_ocean",
+      "surface_biome": "MegaTaiga",
+      "biome_group": "MegaTaiga",
+      "biome_transition": false,
+      "stratum": "shallow_underground",
+      "surface_height": 1.0,
+      "height": -8.0,
+      "air_fraction": 0.14013671875,
+      "solid_fraction": 0.85986328125,
+      "timestamp": 37.13492888957262,
+      "simulation_step": 746,
+      "engine_us": 2141389362205,
+      "wall_time_unix": 1794663545,
+      "split": "train",
+      "craftium_commit": "ca8b2762aea46d10a88c53f6411ff1f0dbdf3b49",
+      "voxelibre_commit": "178c71b1e7d6ec35c0d9c481c55eb306d6f330bc"
+    },
+    {
+      "progress": 633,
+      "world_seed": 191664964,
+      "chunk_origin": [
+        80,
+        1984,
+        -16
+      ],
+      "chunk_index": [
+        5,
+        124,
+        -1
+      ],
+      "axes": "ENU",
+      "biome": "MegaTaiga_ocean",
+      "surface_biome": "MegaTaiga",
+      "biome_group": "MegaTaiga",
+      "biome_transition": false,
+      "stratum": "shallow_underground",
+      "surface_height": 1.0,
+      "height": -8.0,
+      "air_fraction": 0.119140625,
+      "solid_fraction": 0.880859375,
+      "timestamp": 38.06192388758063,
+      "simulation_step": 766,
+      "engine_us": 2141390288943,
+      "wall_time_unix": 1794663546,
+      "split": "train",
+      "craftium_commit": "ca8b2762aea46d10a88c53f6411ff1f0dbdf3b49",
+      "voxelibre_commit": "178c71b1e7d6ec35c0d9c481c55eb306d6f330bc"
+    }
+  ]
+}

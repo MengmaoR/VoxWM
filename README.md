@@ -2,7 +2,7 @@
 
 供新世界模型研发使用的干净数据入口。只有Craftium/Luanti/VoxeLibre、GT采集与真实视频；没有神经网络、权重、推理、旧Viewer或compare依赖，不需连接旧CoDL目录。
 
-目前只完成源码和轻量本地检查，**没有安装/编译引擎，没有执行真实两项测试**。开发仓库为 `https://github.com/MengmaoR/VoxWM.git`（master）。远端既有`docs/`展示页及数据完整保留，不属于GT模块的运行依赖。
+已安装/编译独立 CPU 原生环境，并已执行有界 VAE 数据试采；Test A/seed42 的专用完整视频测试仍由用户手动启动。开发仓库为 `https://github.com/MengmaoR/VoxWM.git`（master）。远端既有`docs/`展示页及数据完整保留，不属于GT模块的运行依赖。
 
 ```text
 voxwm_gt/             引擎session、生成、游玩、录制、稀疏存储
@@ -117,9 +117,18 @@ with GTSession(scene='procedural', seed=42) as session:
 来源和许可见THIRD_PARTY.md。没有迁移B/C场景、baseline模型、推理/评价、网页、旧结果、旧虚拟环境或Git历史。本目录已接入VoxWM GitHub，保留其原有历史和docs内容，不继承旧CoDL的Git历史。新架构与训练由用户后续独立定义。
 
 
-## VAE 200K Pilot Dataset
+## 当前 VAE P0 数据闭环
 
-新增独立[原生16³采集流程](vae_pilot/README.md)，固定Ordinary100K、Water/Lava/Fire/Vegetation各25K。支持随机世界、25类biome均衡、原生动态发现、5–8状态change-progress clips、按world seed拆分及实际产出统计；不包含VAE训练。
+以 [2026-11-13 数据协议](https://drive.google.com/file/d/1TxzLSq71INFWbKi5hFO9fxvtucb6RphA/view) 为准；实现和格式见 [vae_p0/README.md](vae_p0/README.md)，真实结果见 [VAE_P0_RESULTS.md](VAE_P0_RESULTS.md)：**NO-GO**，26 个合格 snapshots（Ordinary10 / Water8 / Fire8），Lava0 / Vegetation0；不能启动正式200K。固定世界 16³、Combined Token `(Node Name,raw param2)`、独立 raw light、真实时间/模拟步、5–8 个 distinct-state 变化进度采样，Zarr+Zstd/Parquet。没有神经网络或 200K 自动任务。
+
+```bash
+uv pip install --python .venv/bin/python -r vae_p0/requirements.txt
+.venv/bin/python -m vae_p0 --output outputs/vae_p0_new --wall-seconds 720
+```
+
+## 旧采集试跑（新数据协议前）
+
+历史[原生16³试采](vae_pilot/README.md)使用独立 node/param2，尚未满足当前 Combined-Token 协议；其 `--full` 不可作为当前正式生成入口。旧目标为固定Ordinary100K、Water/Lava/Fire/Vegetation各25K。支持随机世界、25类biome均衡、原生动态发现、5–8状态change-progress clips、按world seed拆分及实际产出统计；不包含VAE训练。
 
 2026-11-13已安装独立CPU环境并完成有界真实小测试：1世界/4位置，137 snapshots（Ordinary89、Water48，6个8状态水流clip）；其余三类有效产出为0。真实统计见[本次报告](vae_pilot/reports/2026-11-13/report.md)，不能据此承诺完整200K的可达性或成本。未运行200K或GPU。
 

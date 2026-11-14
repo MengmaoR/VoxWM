@@ -4,7 +4,9 @@ local world=mt.get_worldpath()
 local seed=tonumber(mt.settings:get("fixed_map_seed")) or 42
 math.randomseed(seed);mt.set_mapgen_setting("seed",tostring(seed),true)
 local ready,armed,started=false,false,false
-local elapsed,last_request=0,0
+local elapsed,last_request,simulation_step=0,0,0
+local p0_path=mt.settings:get("vae_p0_script")
+local p0=p0_path and dofile(mt.get_modpath("craftium_env").."/"..p0_path) or nil
 local region={surface_y=0}
 local radius={x=24,y=24,z=24}
 local function read(name)
@@ -21,6 +23,7 @@ local function biome(p)
 end
 local function reply(request,data)
     data.request_id=request.request_id;data.sim_time=elapsed;data.game_time=mt.get_gametime()
+    data.simulation_step=simulation_step
     data.engine_us=mt.get_us_time();data.wall_time_unix=os.time();write("pilot_response.json",data)
 end
 local function visit(request,player)
@@ -98,7 +101,7 @@ mt.register_on_joinplayer(function(player)
     mt.emerge_area(vector.subtract(p,32),vector.add(p,32),function(_,_,n)if n==0 and not ready then ready=true;marker("gt_ready") end end)
 end)
 mt.register_globalstep(function(dtime)
-    elapsed=elapsed+dtime
+    elapsed=elapsed+dtime;simulation_step=simulation_step+1
     local player=mt.get_connected_players()[1];if not player then return end
     player:hud_set_flags({crosshair=false,basic_debug=false,chat=false})
     if ready and not armed and read("gt_arm") then player:set_look_horizontal(0);player:set_look_vertical(0);armed=true end
@@ -124,7 +127,8 @@ mt.register_globalstep(function(dtime)
             local request=assert(mt.parse_json(text))
             if request.request_id>last_request then
                 last_request=request.request_id
-                if request.kind=="visit" then visit(request,player)
+                if p0 and request.kind:sub(1,3)=="p0_" then p0.handle(request,player,reply,elapsed,simulation_step)
+                elseif request.kind=="visit" then visit(request,player)
                 elseif request.kind=="ignite" then ignite(request,player)
                 elseif request.kind=="sample" then sample(request)
                 else error("Unknown pilot command") end

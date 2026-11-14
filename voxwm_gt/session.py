@@ -56,7 +56,7 @@ class GTSession:
     supplied by get_voxel_data_cpp, never estimated from player position.
     """
     def __init__(self, scene='test_a', seed=42, renderer='auto', craftium_dir=DEFAULT_CRAFTIUM,
-                 world_file=None, mapgen='v7', scene_script=None, native_settings=None, image_size=(640,360)):
+                 world_file=None, mapgen='v7', scene_script=None, native_settings=None, image_size=(640,360), scene_assets=()):
         self.scene,self.seed,self.renderer=scene,seed,renderer
         self.craftium_dir=Path(craftium_dir).resolve()
         self.world_file=Path(world_file).resolve() if world_file else None
@@ -64,6 +64,7 @@ class GTSession:
         self.scene_script=Path(scene_script).resolve() if scene_script else None
         self.native_settings=dict(native_settings or {})
         self.image_size=image_size
+        self.scene_assets=tuple(Path(p) for p in scene_assets)
         self.env=None; self.work=None
         self.elapsed=0.
 
@@ -78,6 +79,7 @@ class GTSession:
             folder=Path(self.work.name)/'scene'
             prepare_template(folder,self.craftium_dir,self.scene,self.world_file)
             if self.scene_script: shutil.copy2(self.scene_script,folder/"mods/craftium_env/init.lua")
+            for asset in self.scene_assets: shutil.copy2(asset,folder/"mods/craftium_env"/asset.name)
             mode,environment=renderer_config(self.renderer)
             name='Craftium/OpenWorldCreative-v0' if self.scene=='procedural' else 'Craftium/OpenWorldDataset-v0'
             kwargs=copy.deepcopy(gym.spec(name).kwargs)

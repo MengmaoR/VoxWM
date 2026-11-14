@@ -1,0 +1,37 @@
+{
+  "category": "D2",
+  "standard_clip": false,
+  "states": [
+    {
+      "progress": 0,
+      "world_seed": 191664964,
+      "chunk_origin": [
+        -272,
+        1472,
+        -32
+      ],
+      "chunk_index": [
+        -17,
+        92,
+        -2
+      ],
+      "axes": "ENU",
+      "biome": "Forest_deep_ocean",
+      "surface_biome": "Forest",
+      "biome_group": "Forest",
+      "biome_transition": false,
+      "stratum": "deep",
+      "surface_height": 1.0,
+      "height": -24.0,
+      "air_fraction": 0.0,
+      "solid_fraction": 1.0,
+      "timestamp": 41.222096871584654,
+      "simulation_step": 832,
+      "engine_us": 2141393460652,
+      "wall_time_unix": 1794663550,
+      "split": "train",
+      "craftium_commit": "ca8b2762aea46d10a88c53f6411ff1f0dbdf3b49",
+      "voxelibre_commit": "178c71b1e7d6ec35c0d9c481c55eb306d6f330bc"
+    }
+  ]
+}

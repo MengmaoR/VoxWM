@@ -1,0 +1,1407 @@
+{
+  "world_seed": 191664964,
+  "build": {
+    "craftium": "ca8b2762aea46d10a88c53f6411ff1f0dbdf3b49",
+    "voxelibre": "178c71b1e7d6ec35c0d9c481c55eb306d6f330bc"
+  },
+  "status": "completed",
+  "trials": [
+    {
+      "category": "D1",
+      "attempt": 0,
+      "repair_reason": null,
+      "candidate_nodes_examined": 255,
+      "selected_candidate": {
+        "air_neighbors": 0.0,
+        "fuel_neighbors": 0.0,
+        "ignition_mode": "natural",
+        "node_name": "mcl_core:water_source",
+        "pos": {
+          "x": 85.0,
+          "y": -5.0,
+          "z": 1994.0
+        }
+      },
+      "planned_observation_seconds": 24,
+      "event_trajectory_id": "191664964/D1/attempt0",
+      "valid_clip": true,
+      "ignition_mode": "natural",
+      "ignitions": 0,
+      "status": "valid_clip",
+      "sampled_states": 8,
+      "event_id": "191664964/D1/attempt0/80,1984,-16",
+      "observed_seconds": 6.574265994131565,
+      "wall_seconds": 9.277928541880101,
+      "chunks": [
+        {
+          "chunk_origin": [
+            64,
+            1984,
+            -16
+          ],
+          "observations": 72,
+          "consecutive_identical": 71,
+          "light_only_changes": 0,
+          "distinct_states": 1,
+          "sampled_states": 0,
+          "cumulative_target_changes": 0,
+          "unique_changed_positions": 0,
+          "net_token_difference": 0,
+          "native_target_additions": 0,
+          "selected_progress": [],
+          "selected_timestamps": [],
+          "selected_steps": []
+        },
+        {
+          "chunk_origin": [
+            64,
+            1984,
+            0
+          ],
+          "observations": 72,
+          "consecutive_identical": 71,
+          "light_only_changes": 0,
+          "distinct_states": 1,
+          "sampled_states": 0,
+          "cumulative_target_changes": 0,
+          "unique_changed_positions": 0,
+          "net_token_difference": 0,
+          "native_target_additions": 0,
+          "selected_progress": [],
+          "selected_timestamps": [],
+          "selected_steps": []
+        },
+        {
+          "chunk_origin": [
+            64,
+            2000,
+            -16
+          ],
+          "observations": 72,
+          "consecutive_identical": 71,
+          "light_only_changes": 0,
+          "distinct_states": 1,
+          "sampled_states": 0,
+          "cumulative_target_changes": 0,
+          "unique_changed_positions": 0,
+          "net_token_difference": 0,
+          "native_target_additions": 0,
+          "selected_progress": [],
+          "selected_timestamps": [],
+          "selected_steps": []
+        },
+        {
+          "chunk_origin": [
+            64,
+            2000,
+            0
+          ],
+          "observations": 72,
+          "consecutive_identical": 71,
+          "light_only_changes": 0,
+          "distinct_states": 1,
+          "sampled_states": 0,
+          "cumulative_target_changes": 0,
+          "unique_changed_positions": 0,
+          "net_token_difference": 0,
+          "native_target_additions": 0,
+          "selected_progress": [],
+          "selected_timestamps": [],
+          "selected_steps": []
+        },
+        {
+          "chunk_origin": [
+            80,
+            1984,
+            -16
+          ],
+          "observations": 72,
+          "consecutive_identical": 64,
+          "light_only_changes": 0,
+          "distinct_states": 8,
+          "sampled_states": 8,
+          "cumulative_target_changes": 633,
+          "unique_changed_positions": 621,
+          "net_token_difference": 621,
+          "native_target_additions": 621,
+          "selected_progress": [
+            0,
+            91,
+            186,
+            280,
+            371,
+            460,
+            547,
+            633
+          ],
+          "selected_timestamps": [
+            31.487657893449068,
+            32.05523989349604,
+            33.06597188860178,
+            34.08820488676429,
+            35.0925648920238,
+            36.11963189020753,
+            37.13492888957262,
+            38.06192388758063
+          ],
+          "selected_steps": [
+            624,
+            636,
+            658,
+            680,
+            702,
+            724,
+            746,
+            766
+          ]
+        },
+        {
+          "chunk_origin": [
+            80,
+            1984,
+            0
+          ],
+          "observations": 72,
+          "consecutive_identical": 71,
+          "light_only_changes": 0,
+          "distinct_states": 1,
+          "sampled_states": 0,
+          "cumulative_target_changes": 0,
+          "unique_changed_positions": 0,
+          "net_token_difference": 0,
+          "native_target_additions": 0,
+          "selected_progress": [],
+          "selected_timestamps": [],
+          "selected_steps": []
+        },
+        {
+          "chunk_origin": [
+            80,
+            2000,
+            -16
+          ],
+          "observations": 72,
+          "consecutive_identical": 64,
+          "light_only_changes": 0,
+          "distinct_states": 8,
+          "sampled_states": 8,
+          "cumulative_target_changes": 30,
+          "unique_changed_positions": 30,
+          "net_token_difference": 30,
+          "native_target_additions": 30,
+          "selected_progress": [
+            0,
+            6,
+            11,
+            16,
+            20,
+            24,
+            27,
+            30
+          ],
+          "selected_timestamps": [
+            31.487657893449068,
+            32.05523989349604,
+            33.06597188860178,
+            34.08820488676429,
+            35.0925648920238,
+            36.11963189020753,
+            37.13492888957262,
+            38.06192388758063
+          ],
+          "selected_steps": [
+            624,
+            636,
+            658,
+            680,
+            702,
+            724,
+            746,
+            766
+          ]
+        },
+        {
+          "chunk_origin": [
+            80,
+            2000,
+            0
+          ],
+          "observations": 72,
+          "consecutive_identical": 71,
+          "light_only_changes": 0,
+          "distinct_states": 1,
+          "sampled_states": 0,
+          "cumulative_target_changes": 0,
+          "unique_changed_positions": 0,
+          "net_token_difference": 0,
+          "native_target_additions": 0,
+          "selected_progress": [],
+          "selected_timestamps": [],
+          "selected_steps": []
+        }
+      ]
+    },
+    {
+      "category": "D2",
+      "attempt": 0,
+      "repair_reason": null,
+      "candidate_nodes_examined": 1,
+      "selected_candidate": {
+        "air_neighbors": 0.0,
+        "fuel_neighbors": 0.0,
+        "ignition_mode": "natural",
+        "node_name": "mcl_core:lava_source",
+        "pos": {
+          "x": -250.0,
+          "y": -15.0,
+          "z": 1486.0
+        }
+      },
+      "planned_observation_seconds": 32,
+      "event_trajectory_id": "191664964/D2/attempt0",
+      "valid_clip": false,
+      "ignition_mode": "natural",
+      "ignitions": 0,
+      "status": "insufficient_distinct_states",
+      "sampled_states": 0,
+      "event_id": "191664964/D2/attempt0/-272,1472,-32",
+      "observed_seconds": 32.021420903503895,
+      "wall_seconds": 35.799300875049084,
+      "chunks": [
+        {
+          "chunk_origin": [
+            -272,
+            1472,
+            -32
+          ],
+          "observations": 337,
+          "consecutive_identical": 336,
+          "light_only_changes": 0,
+          "distinct_states": 1,
+          "sampled_states": 0,
+          "cumulative_target_changes": 0,
+          "unique_changed_positions": 0,
+          "net_token_difference": 0,
+          "native_target_additions": 0,
+          "selected_progress": [],
+          "selected_timestamps": [],
+          "selected_steps": []
+        },
+        {
+          "chunk_origin": [
+            -272,
+            1472,
+            -16
+          ],
+          "observations": 337,
+          "consecutive_identical": 336,
+          "light_only_changes": 0,
+          "distinct_states": 1,
+          "sampled_states": 0,
+          "cumulative_target_changes": 0,
+          "unique_changed_positions": 0,
+          "net_token_difference": 0,
+          "native_target_additions": 0,
+          "selected_progress": [],
+          "selected_timestamps": [],
+          "selected_steps": []
+        },
+        {
+          "chunk_origin": [
+            -272,
+            1488,
+            -32
+          ],
+          "observations": 337,
+          "consecutive_identical": 336,
+          "light_only_changes": 0,
+          "distinct_states": 1,
+          "sampled_states": 0,
+          "cumulative_target_changes": 0,
+          "unique_changed_positions": 0,
+          "net_token_difference": 0,
+          "native_target_additions": 0,
+          "selected_progress": [],
+          "selected_timestamps": [],
+          "selected_steps": []
+        },
+        {
+          "chunk_origin": [
+            -272,
+            1488,
+            -16
+          ],
+          "observations": 337,
+          "consecutive_identical": 336,
+          "light_only_changes": 0,
+          "distinct_states": 1,
+          "sampled_states": 0,
+          "cumulative_target_changes": 0,
+          "unique_changed_positions": 0,
+          "net_token_difference": 0,
+          "native_target_additions": 0,
+          "selected_progress": [],
+          "selected_timestamps": [],
+          "selected_steps": []
+        },
+        {
+          "chunk_origin": [
+            -256,
+            1472,
+            -32
+          ],
+          "observations": 337,
+          "consecutive_identical": 336,
+          "light_only_changes": 0,
+          "distinct_states": 1,
+          "sampled_states": 0,
+          "cumulative_target_changes": 0,
+          "unique_changed_positions": 0,
+          "net_token_difference": 0,
+          "native_target_additions": 0,
+          "selected_progress": [],
+          "selected_timestamps": [],
+          "selected_steps": []
+        },
+        {
+          "chunk_origin": [
+            -256,
+            1472,
+            -16
+          ],
+          "observations": 337,
+          "consecutive_identical": 336,
+          "light_only_changes": 0,
+          "distinct_states": 1,
+          "sampled_states": 0,
+          "cumulative_target_changes": 0,
+          "unique_changed_positions": 0,
+          "net_token_difference": 0,
+          "native_target_additions": 0,
+          "selected_progress": [],
+          "selected_timestamps": [],
+          "selected_steps": []
+        },
+        {
+          "chunk_origin": [
+            -256,
+            1488,
+            -32
+          ],
+          "observations": 337,
+          "consecutive_identical": 336,
+          "light_only_changes": 0,
+          "distinct_states": 1,
+          "sampled_states": 0,
+          "cumulative_target_changes": 0,
+          "unique_changed_positions": 0,
+          "net_token_difference": 0,
+          "native_target_additions": 0,
+          "selected_progress": [],
+          "selected_timestamps": [],
+          "selected_steps": []
+        },
+        {
+          "chunk_origin": [
+            -256,
+            1488,
+            -16
+          ],
+          "observations": 337,
+          "consecutive_identical": 336,
+          "light_only_changes": 0,
+          "distinct_states": 1,
+          "sampled_states": 0,
+          "cumulative_target_changes": 0,
+          "unique_changed_positions": 0,
+          "net_token_difference": 0,
+          "native_target_additions": 0,
+          "selected_progress": [],
+          "selected_timestamps": [],
+          "selected_steps": []
+        }
+      ]
+    },
+    {
+      "category": "D3",
+      "attempt": 0,
+      "repair_reason": null,
+      "candidate_nodes_examined": 227,
+      "selected_candidate": {
+        "above": {
+          "x": -265.0,
+          "y": 15.0,
+          "z": 1459.0
+        },
+        "air_neighbors": 1.0,
+        "fuel_neighbors": 2.0,
+        "ignition_mode": "controlled_random",
+        "node_name": "mcl_core:leaves",
+        "pos": {
+          "x": -265.0,
+          "y": 16.0,
+          "z": 1459.0
+        }
+      },
+      "planned_observation_seconds": 45,
+      "event_trajectory_id": "191664964/D3/attempt0",
+      "valid_clip": true,
+      "ignition_mode": "controlled_random",
+      "ignitions": 1,
+      "ignition_result": {
+        "engine_us": 2141426587944.0,
+        "game_time": 73.0,
+        "position": {
+          "x": -265.0,
+          "y": 15.0,
+          "z": 1459.0
+        },
+        "request_id": 435.0,
+        "sim_time": 73.72699777781963,
+        "simulation_step": 1509.0,
+        "status": "ignited",
+        "wall_time_unix": 1794663583.0
+      },
+      "status": "valid_clip",
+      "sampled_states": 8,
+      "event_id": "191664964/D3/attempt0/-272,1456,16",
+      "observed_seconds": 12.537797942757607,
+      "wall_seconds": 13.26327299978584,
+      "chunks": [
+        {
+          "chunk_origin": [
+            -288,
+            1440,
+            0
+          ],
+          "observations": 125,
+          "consecutive_identical": 124,
+          "light_only_changes": 1,
+          "distinct_states": 1,
+          "sampled_states": 0,
+          "cumulative_target_changes": 0,
+          "unique_changed_positions": 0,
+          "net_token_difference": 0,
+          "native_target_additions": 0,
+          "selected_progress": [],
+          "selected_timestamps": [],
+          "selected_steps": []
+        },
+        {
+          "chunk_origin": [
+            -288,
+            1440,
+            16
+          ],
+          "observations": 125,
+          "consecutive_identical": 124,
+          "light_only_changes": 5,
+          "distinct_states": 1,
+          "sampled_states": 0,
+          "cumulative_target_changes": 0,
+          "unique_changed_positions": 0,
+          "net_token_difference": 0,
+          "native_target_additions": 0,
+          "selected_progress": [],
+          "selected_timestamps": [],
+          "selected_steps": []
+        },
+        {
+          "chunk_origin": [
+            -288,
+            1456,
+            0
+          ],
+          "observations": 125,
+          "consecutive_identical": 124,
+          "light_only_changes": 1,
+          "distinct_states": 1,
+          "sampled_states": 0,
+          "cumulative_target_changes": 0,
+          "unique_changed_positions": 0,
+          "net_token_difference": 0,
+          "native_target_additions": 0,
+          "selected_progress": [],
+          "selected_timestamps": [],
+          "selected_steps": []
+        },
+        {
+          "chunk_origin": [
+            -288,
+            1456,
+            16
+          ],
+          "observations": 125,
+          "consecutive_identical": 124,
+          "light_only_changes": 6,
+          "distinct_states": 1,
+          "sampled_states": 0,
+          "cumulative_target_changes": 0,
+          "unique_changed_positions": 0,
+          "net_token_difference": 0,
+          "native_target_additions": 0,
+          "selected_progress": [],
+          "selected_timestamps": [],
+          "selected_steps": []
+        },
+        {
+          "chunk_origin": [
+            -272,
+            1440,
+            0
+          ],
+          "observations": 125,
+          "consecutive_identical": 124,
+          "light_only_changes": 1,
+          "distinct_states": 1,
+          "sampled_states": 0,
+          "cumulative_target_changes": 0,
+          "unique_changed_positions": 0,
+          "net_token_difference": 0,
+          "native_target_additions": 0,
+          "selected_progress": [],
+          "selected_timestamps": [],
+          "selected_steps": []
+        },
+        {
+          "chunk_origin": [
+            -272,
+            1440,
+            16
+          ],
+          "observations": 125,
+          "consecutive_identical": 124,
+          "light_only_changes": 7,
+          "distinct_states": 1,
+          "sampled_states": 0,
+          "cumulative_target_changes": 0,
+          "unique_changed_positions": 0,
+          "net_token_difference": 0,
+          "native_target_additions": 0,
+          "selected_progress": [],
+          "selected_timestamps": [],
+          "selected_steps": []
+        },
+        {
+          "chunk_origin": [
+            -272,
+            1456,
+            0
+          ],
+          "observations": 125,
+          "consecutive_identical": 122,
+          "light_only_changes": 2,
+          "distinct_states": 3,
+          "sampled_states": 0,
+          "cumulative_target_changes": 2,
+          "unique_changed_positions": 1,
+          "net_token_difference": 1,
+          "native_target_additions": 1,
+          "selected_progress": [],
+          "selected_timestamps": [],
+          "selected_steps": []
+        },
+        {
+          "chunk_origin": [
+            -272,
+            1456,
+            16
+          ],
+          "observations": 125,
+          "consecutive_identical": 117,
+          "light_only_changes": 1,
+          "distinct_states": 8,
+          "sampled_states": 8,
+          "cumulative_target_changes": 22,
+          "unique_changed_positions": 10,
+          "net_token_difference": 9,
+          "native_target_additions": 10,
+          "selected_progress": [
+            0,
+            3,
+            6,
+            10,
+            13,
+            18,
+            19,
+            22
+          ],
+          "selected_timestamps": [
+            73.63031577691436,
+            74.0018577799201,
+            79.1883047632873,
+            80.09443775936961,
+            82.00951075926423,
+            83.09214275330305,
+            84.03630974143744,
+            86.16811371967196
+          ],
+          "selected_steps": [
+            1507,
+            1515,
+            1611,
+            1629,
+            1671,
+            1695,
+            1715,
+            1757
+          ]
+        }
+      ]
+    },
+    {
+      "category": "D4",
+      "attempt": 0,
+      "repair_reason": null,
+      "candidate_nodes_examined": 235,
+      "selected_candidate": {
+        "air_neighbors": 4.0,
+        "fuel_neighbors": 2.0,
+        "ignition_mode": "natural",
+        "node_name": "mcl_core:vine",
+        "pos": {
+          "x": 823.0,
+          "y": 12.0,
+          "z": -1240.0
+        },
+        "subtype": "vine"
+      },
+      "planned_observation_seconds": 65,
+      "event_trajectory_id": "191664964/D4/attempt0",
+      "valid_clip": false,
+      "ignition_mode": "natural",
+      "ignitions": 0,
+      "status": "insufficient_native_growth_states",
+      "sampled_states": 0,
+      "event_id": "191664964/D4/attempt0/816,-1248,16",
+      "observed_seconds": 65.07650882005692,
+      "wall_seconds": 65.5666710420046,
+      "chunks": [
+        {
+          "chunk_origin": [
+            800,
+            -1248,
+            0
+          ],
+          "observations": 688,
+          "consecutive_identical": 687,
+          "light_only_changes": 0,
+          "distinct_states": 1,
+          "sampled_states": 0,
+          "cumulative_target_changes": 0,
+          "unique_changed_positions": 0,
+          "net_token_difference": 0,
+          "native_target_additions": 0,
+          "selected_progress": [],
+          "selected_timestamps": [],
+          "selected_steps": [],
+          "diagnostic_sampled_states": 0,
+          "diagnostic_selected_progress": [],
+          "diagnostic_selected_timestamps": [],
+          "diagnostic_selected_steps": []
+        },
+        {
+          "chunk_origin": [
+            800,
+            -1248,
+            16
+          ],
+          "observations": 688,
+          "consecutive_identical": 687,
+          "light_only_changes": 0,
+          "distinct_states": 1,
+          "sampled_states": 0,
+          "cumulative_target_changes": 0,
+          "unique_changed_positions": 0,
+          "net_token_difference": 0,
+          "native_target_additions": 0,
+          "selected_progress": [],
+          "selected_timestamps": [],
+          "selected_steps": [],
+          "diagnostic_sampled_states": 0,
+          "diagnostic_selected_progress": [],
+          "diagnostic_selected_timestamps": [],
+          "diagnostic_selected_steps": []
+        },
+        {
+          "chunk_origin": [
+            800,
+            -1232,
+            0
+          ],
+          "observations": 688,
+          "consecutive_identical": 687,
+          "light_only_changes": 0,
+          "distinct_states": 1,
+          "sampled_states": 0,
+          "cumulative_target_changes": 0,
+          "unique_changed_positions": 0,
+          "net_token_difference": 0,
+          "native_target_additions": 0,
+          "selected_progress": [],
+          "selected_timestamps": [],
+          "selected_steps": [],
+          "diagnostic_sampled_states": 0,
+          "diagnostic_selected_progress": [],
+          "diagnostic_selected_timestamps": [],
+          "diagnostic_selected_steps": []
+        },
+        {
+          "chunk_origin": [
+            800,
+            -1232,
+            16
+          ],
+          "observations": 688,
+          "consecutive_identical": 687,
+          "light_only_changes": 0,
+          "distinct_states": 1,
+          "sampled_states": 0,
+          "cumulative_target_changes": 0,
+          "unique_changed_positions": 0,
+          "net_token_difference": 0,
+          "native_target_additions": 0,
+          "selected_progress": [],
+          "selected_timestamps": [],
+          "selected_steps": [],
+          "diagnostic_sampled_states": 0,
+          "diagnostic_selected_progress": [],
+          "diagnostic_selected_timestamps": [],
+          "diagnostic_selected_steps": []
+        },
+        {
+          "chunk_origin": [
+            816,
+            -1248,
+            0
+          ],
+          "observations": 688,
+          "consecutive_identical": 683,
+          "light_only_changes": 0,
+          "distinct_states": 2,
+          "sampled_states": 0,
+          "cumulative_target_changes": 1,
+          "unique_changed_positions": 1,
+          "net_token_difference": 4,
+          "native_target_additions": 0,
+          "selected_progress": [],
+          "selected_timestamps": [],
+          "selected_steps": [],
+          "diagnostic_sampled_states": 0,
+          "diagnostic_selected_progress": [],
+          "diagnostic_selected_timestamps": [],
+          "diagnostic_selected_steps": []
+        },
+        {
+          "chunk_origin": [
+            816,
+            -1248,
+            16
+          ],
+          "observations": 688,
+          "consecutive_identical": 683,
+          "light_only_changes": 0,
+          "distinct_states": 4,
+          "sampled_states": 0,
+          "cumulative_target_changes": 4,
+          "unique_changed_positions": 4,
+          "net_token_difference": 5,
+          "native_target_additions": 0,
+          "selected_progress": [],
+          "selected_timestamps": [],
+          "selected_steps": [],
+          "diagnostic_sampled_states": 0,
+          "diagnostic_selected_progress": [],
+          "diagnostic_selected_timestamps": [],
+          "diagnostic_selected_steps": []
+        },
+        {
+          "chunk_origin": [
+            816,
+            -1232,
+            0
+          ],
+          "observations": 688,
+          "consecutive_identical": 686,
+          "light_only_changes": 0,
+          "distinct_states": 2,
+          "sampled_states": 0,
+          "cumulative_target_changes": 1,
+          "unique_changed_positions": 1,
+          "net_token_difference": 1,
+          "native_target_additions": 1,
+          "selected_progress": [],
+          "selected_timestamps": [],
+          "selected_steps": [],
+          "diagnostic_sampled_states": 0,
+          "diagnostic_selected_progress": [],
+          "diagnostic_selected_timestamps": [],
+          "diagnostic_selected_steps": []
+        },
+        {
+          "chunk_origin": [
+            816,
+            -1232,
+            16
+          ],
+          "observations": 688,
+          "consecutive_identical": 687,
+          "light_only_changes": 0,
+          "distinct_states": 1,
+          "sampled_states": 0,
+          "cumulative_target_changes": 0,
+          "unique_changed_positions": 0,
+          "net_token_difference": 0,
+          "native_target_additions": 0,
+          "selected_progress": [],
+          "selected_timestamps": [],
+          "selected_steps": [],
+          "diagnostic_sampled_states": 0,
+          "diagnostic_selected_progress": [],
+          "diagnostic_selected_timestamps": [],
+          "diagnostic_selected_steps": []
+        }
+      ]
+    },
+    {
+      "category": "D2",
+      "attempt": 1,
+      "repair_reason": "Inspect deeper native cave layers (64/128 below surface) and require a flowable edge.",
+      "candidate_nodes_examined": 14,
+      "selected_candidate": null,
+      "planned_observation_seconds": 48,
+      "event_trajectory_id": "191664964/D2/attempt1",
+      "valid_clip": false,
+      "status": "no_natural_candidate",
+      "wall_seconds": 4.850468750111759,
+      "observed_seconds": 0
+    },
+    {
+      "category": "D4",
+      "attempt": 1,
+      "repair_reason": "Reject mature/blocked bamboo; prefer supported vines with free growth space; longer unchanged native ABMs.",
+      "candidate_nodes_examined": 204,
+      "selected_candidate": {
+        "air_neighbors": 5.0,
+        "fuel_neighbors": 1.0,
+        "ignition_mode": "natural",
+        "node_name": "mcl_core:vine",
+        "pos": {
+          "x": 861.0,
+          "y": 14.0,
+          "z": -1232.0
+        },
+        "subtype": "vine"
+      },
+      "planned_observation_seconds": 140,
+      "event_trajectory_id": "191664964/D4/attempt1",
+      "valid_clip": false,
+      "ignition_mode": "natural",
+      "ignitions": 0,
+      "status": "insufficient_native_growth_states",
+      "sampled_states": 0,
+      "event_id": "191664964/D4/attempt1/848,-1248,0",
+      "observed_seconds": 92.5604597479105,
+      "wall_seconds": 93.03552104183473,
+      "chunks": [
+        {
+          "chunk_origin": [
+            848,
+            -1248,
+            0
+          ],
+          "observations": 992,
+          "consecutive_identical": 979,
+          "light_only_changes": 0,
+          "distinct_states": 8,
+          "sampled_states": 0,
+          "cumulative_target_changes": 11,
+          "unique_changed_positions": 11,
+          "net_token_difference": 16,
+          "native_target_additions": 0,
+          "selected_progress": [],
+          "selected_timestamps": [],
+          "selected_steps": [],
+          "diagnostic_sampled_states": 8,
+          "diagnostic_selected_progress": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            6,
+            9,
+            11
+          ],
+          "diagnostic_selected_timestamps": [
+            156.5493625253439,
+            161.18398452550173,
+            173.15555752441287,
+            201.11580044403672,
+            209.17811641842127,
+            213.14912539348006,
+            241.16865329444408,
+            249.1098222732544
+          ],
+          "diagnostic_selected_steps": [
+            3237,
+            3337,
+            3597,
+            4199,
+            4373,
+            4453,
+            5057,
+            5219
+          ]
+        },
+        {
+          "chunk_origin": [
+            848,
+            -1248,
+            16
+          ],
+          "observations": 992,
+          "consecutive_identical": 987,
+          "light_only_changes": 0,
+          "distinct_states": 5,
+          "sampled_states": 0,
+          "cumulative_target_changes": 5,
+          "unique_changed_positions": 5,
+          "net_token_difference": 5,
+          "native_target_additions": 0,
+          "selected_progress": [],
+          "selected_timestamps": [],
+          "selected_steps": [],
+          "diagnostic_sampled_states": 5,
+          "diagnostic_selected_progress": [
+            0,
+            1,
+            2,
+            4,
+            5
+          ],
+          "diagnostic_selected_timestamps": [
+            156.5493625253439,
+            161.18398452550173,
+            165.18114653229713,
+            189.17692449688911,
+            225.1089603714645
+          ],
+          "diagnostic_selected_steps": [
+            3237,
+            3337,
+            3425,
+            3943,
+            4711
+          ]
+        },
+        {
+          "chunk_origin": [
+            848,
+            -1232,
+            0
+          ],
+          "observations": 992,
+          "consecutive_identical": 987,
+          "light_only_changes": 0,
+          "distinct_states": 3,
+          "sampled_states": 0,
+          "cumulative_target_changes": 2,
+          "unique_changed_positions": 2,
+          "net_token_difference": 4,
+          "native_target_additions": 0,
+          "selected_progress": [],
+          "selected_timestamps": [],
+          "selected_steps": [],
+          "diagnostic_sampled_states": 0,
+          "diagnostic_selected_progress": [],
+          "diagnostic_selected_timestamps": [],
+          "diagnostic_selected_steps": []
+        },
+        {
+          "chunk_origin": [
+            848,
+            -1232,
+            16
+          ],
+          "observations": 992,
+          "consecutive_identical": 986,
+          "light_only_changes": 0,
+          "distinct_states": 6,
+          "sampled_states": 0,
+          "cumulative_target_changes": 5,
+          "unique_changed_positions": 5,
+          "net_token_difference": 5,
+          "native_target_additions": 0,
+          "selected_progress": [],
+          "selected_timestamps": [],
+          "selected_steps": [],
+          "diagnostic_sampled_states": 6,
+          "diagnostic_selected_progress": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "diagnostic_selected_timestamps": [
+            156.5493625253439,
+            169.17741053178906,
+            173.15555752441287,
+            189.17692449688911,
+            221.15178337693214,
+            249.1098222732544
+          ],
+          "diagnostic_selected_steps": [
+            3237,
+            3511,
+            3597,
+            3943,
+            4625,
+            5219
+          ]
+        },
+        {
+          "chunk_origin": [
+            864,
+            -1248,
+            0
+          ],
+          "observations": 992,
+          "consecutive_identical": 984,
+          "light_only_changes": 0,
+          "distinct_states": 2,
+          "sampled_states": 0,
+          "cumulative_target_changes": 1,
+          "unique_changed_positions": 1,
+          "net_token_difference": 7,
+          "native_target_additions": 0,
+          "selected_progress": [],
+          "selected_timestamps": [],
+          "selected_steps": [],
+          "diagnostic_sampled_states": 0,
+          "diagnostic_selected_progress": [],
+          "diagnostic_selected_timestamps": [],
+          "diagnostic_selected_steps": []
+        },
+        {
+          "chunk_origin": [
+            864,
+            -1248,
+            16
+          ],
+          "observations": 992,
+          "consecutive_identical": 989,
+          "light_only_changes": 0,
+          "distinct_states": 3,
+          "sampled_states": 0,
+          "cumulative_target_changes": 3,
+          "unique_changed_positions": 3,
+          "net_token_difference": 3,
+          "native_target_additions": 0,
+          "selected_progress": [],
+          "selected_timestamps": [],
+          "selected_steps": [],
+          "diagnostic_sampled_states": 0,
+          "diagnostic_selected_progress": [],
+          "diagnostic_selected_timestamps": [],
+          "diagnostic_selected_steps": []
+        },
+        {
+          "chunk_origin": [
+            864,
+            -1232,
+            0
+          ],
+          "observations": 992,
+          "consecutive_identical": 989,
+          "light_only_changes": 0,
+          "distinct_states": 1,
+          "sampled_states": 0,
+          "cumulative_target_changes": 0,
+          "unique_changed_positions": 0,
+          "net_token_difference": 4,
+          "native_target_additions": 0,
+          "selected_progress": [],
+          "selected_timestamps": [],
+          "selected_steps": [],
+          "diagnostic_sampled_states": 0,
+          "diagnostic_selected_progress": [],
+          "diagnostic_selected_timestamps": [],
+          "diagnostic_selected_steps": []
+        },
+        {
+          "chunk_origin": [
+            864,
+            -1232,
+            16
+          ],
+          "observations": 992,
+          "consecutive_identical": 991,
+          "light_only_changes": 0,
+          "distinct_states": 1,
+          "sampled_states": 0,
+          "cumulative_target_changes": 0,
+          "unique_changed_positions": 0,
+          "net_token_difference": 0,
+          "native_target_additions": 0,
+          "selected_progress": [],
+          "selected_timestamps": [],
+          "selected_steps": [],
+          "diagnostic_sampled_states": 0,
+          "diagnostic_selected_progress": [],
+          "diagnostic_selected_timestamps": [],
+          "diagnostic_selected_steps": []
+        }
+      ],
+      "provisional_selected_states": 8
+    }
+  ],
+  "ordinary_count": 10,
+  "protocol": "VoxWM_VAE_PILOT_DATA_PROTOCOL_2026-11-13.md",
+  "full_200k_started": false,
+  "gpu_training": false,
+  "verified_native_nodes": 327680,
+  "native_chunks_read": 17752,
+  "missing_chunks": 0,
+  "wall_seconds": 262.4286654579919,
+  "roundtrip_voxels_checked": 72712192,
+  "vocabulary_K": 128,
+  "visualizations": {
+    "Ordinary": "visualizations/Ordinary.png",
+    "D1": "visualizations/D1.png",
+    "D2": "visualizations/D2.png",
+    "D3": "visualizations/D3.png",
+    "D4": "visualizations/D4.png"
+  },
+  "client_reported_elapsed_seconds": 188.80217590741813,
+  "raw_observation_source": "outputs/vae_p0_20261114_native",
+  "initialization_failure": "First startup stopped before collection because Lua loaded a plugin outside the Mod directory (64.53s, zero snapshots); fixed by copying it into the scene Mod. Failure output is preserved in outputs/vae_p0_20261114.",
+  "qualification_note": "The provisional 8-state D4 sequence contained only native vine losses (0 new vegetation positions), not growth. Its 8 states are diagnostic only, excluded from this final dataset. A neighboring Chunk in D4 attempt 0 had one native vine addition but only 2 distinct states, below the 5-state minimum. No further native simulation was run after the one bounded D4 repair.",
+  "verdict": "NO-GO",
+  "counts": {
+    "Ordinary": 10,
+    "D1": 8,
+    "D2": 0,
+    "D3": 8,
+    "D4": 0
+  },
+  "total_snapshots": 26,
+  "categories": {
+    "D1": {
+      "snapshots": 8,
+      "attempts": 1,
+      "valid_clips": 1,
+      "valid_attempt_fraction": 1.0,
+      "native_candidates_found": 1,
+      "candidate_encounter_fraction": 1.0,
+      "natural_fire_trials": null,
+      "controlled_ignitions": 0,
+      "observed_simulation_seconds": 6.574265994131565,
+      "wall_seconds": 9.277928541880101,
+      "snapshots_per_simulation_hour": 4380.717182071421,
+      "snapshots_per_wall_hour": 3104.1411744009724,
+      "valid_clips_per_simulation_hour": 547.5896477589276,
+      "consecutive_identical_fraction": 0.9618055555555556,
+      "selected_clip_lengths": [
+        8
+      ],
+      "cumulative_changes": [
+        633
+      ],
+      "unique_changed_positions": [
+        621
+      ],
+      "net_token_differences": [
+        621
+      ],
+      "max_distinct_states_with_native_additions": 8,
+      "distinct_states_per_observed_chunk": [
+        1,
+        1,
+        1,
+        1,
+        8,
+        1,
+        8,
+        1
+      ],
+      "post_intervention_addition_events_lower_bound": [
+        621
+      ]
+    },
+    "D2": {
+      "snapshots": 0,
+      "attempts": 2,
+      "valid_clips": 0,
+      "valid_attempt_fraction": 0.0,
+      "native_candidates_found": 1,
+      "candidate_encounter_fraction": 0.5,
+      "natural_fire_trials": null,
+      "controlled_ignitions": 0,
+      "observed_simulation_seconds": 32.021420903503895,
+      "wall_seconds": 40.64976962516084,
+      "snapshots_per_simulation_hour": 0.0,
+      "snapshots_per_wall_hour": 0.0,
+      "valid_clips_per_simulation_hour": 0.0,
+      "consecutive_identical_fraction": 0.9970326409495549,
+      "selected_clip_lengths": [],
+      "cumulative_changes": [],
+      "unique_changed_positions": [],
+      "net_token_differences": [],
+      "max_distinct_states_with_native_additions": 0,
+      "distinct_states_per_observed_chunk": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "post_intervention_addition_events_lower_bound": []
+    },
+    "D3": {
+      "snapshots": 8,
+      "attempts": 1,
+      "valid_clips": 1,
+      "valid_attempt_fraction": 1.0,
+      "native_candidates_found": 1,
+      "candidate_encounter_fraction": 1.0,
+      "natural_fire_trials": 0,
+      "controlled_ignitions": 1,
+      "observed_simulation_seconds": 12.537797942757607,
+      "wall_seconds": 13.26327299978584,
+      "snapshots_per_simulation_hour": 2297.0540864902173,
+      "snapshots_per_wall_hour": 2171.409726729219,
+      "valid_clips_per_simulation_hour": 287.13176081127716,
+      "consecutive_identical_fraction": 0.983,
+      "selected_clip_lengths": [
+        8
+      ],
+      "cumulative_changes": [
+        22
+      ],
+      "unique_changed_positions": [
+        10
+      ],
+      "net_token_differences": [
+        9
+      ],
+      "max_distinct_states_with_native_additions": 8,
+      "distinct_states_per_observed_chunk": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        3,
+        8
+      ],
+      "post_intervention_addition_events_lower_bound": [
+        9
+      ]
+    },
+    "D4": {
+      "snapshots": 0,
+      "attempts": 2,
+      "valid_clips": 0,
+      "valid_attempt_fraction": 0.0,
+      "native_candidates_found": 2,
+      "candidate_encounter_fraction": 1.0,
+      "natural_fire_trials": null,
+      "controlled_ignitions": 0,
+      "observed_simulation_seconds": 157.63696856796741,
+      "wall_seconds": 158.60219208383933,
+      "snapshots_per_simulation_hour": 0.0,
+      "snapshots_per_wall_hour": 0.0,
+      "valid_clips_per_simulation_hour": 0.0,
+      "consecutive_identical_fraction": 0.9954613095238095,
+      "selected_clip_lengths": [],
+      "cumulative_changes": [],
+      "unique_changed_positions": [],
+      "net_token_differences": [],
+      "max_distinct_states_with_native_additions": 2,
+      "distinct_states_per_observed_chunk": [
+        1,
+        1,
+        1,
+        1,
+        2,
+        4,
+        2,
+        1,
+        8,
+        5,
+        3,
+        6,
+        2,
+        3,
+        1,
+        1
+      ],
+      "post_intervention_addition_events_lower_bound": []
+    }
+  },
+  "extraction_passed": true,
+  "ordinary_biome_counts": {
+    "Plains": 4,
+    "JungleEdge": 4,
+    "BirchForest": 2
+  },
+  "ordinary_stratum_counts": {
+    "surface": 4,
+    "air": 2,
+    "shallow_underground": 2,
+    "deep": 2
+  },
+  "ordinary_transition_count": 4,
+  "major_biome_groups_covered": 3,
+  "major_biome_groups_target": 25,
+  "successful_chunk_change_bins": {
+    "large(>=256)": 1,
+    "medium(16..255)": 1
+  },
+  "estimates_200k": {
+    "Ordinary": {
+      "target": 100000,
+      "observed": 10,
+      "remaining": 99990,
+      "linear_world_equivalents": 10000,
+      "linear_simulation_hours": null
+    },
+    "D1": {
+      "target": 25000,
+      "observed": 8,
+      "remaining": 24992,
+      "linear_world_equivalents": 3125,
+      "linear_simulation_hours": 5.706828119905873
+    },
+    "D2": {
+      "target": 25000,
+      "observed": 0,
+      "remaining": 25000,
+      "linear_world_equivalents": null,
+      "linear_simulation_hours": null
+    },
+    "D3": {
+      "target": 25000,
+      "observed": 8,
+      "remaining": 24992,
+      "linear_world_equivalents": 3125,
+      "linear_simulation_hours": 10.883505158643755
+    },
+    "D4": {
+      "target": 25000,
+      "observed": 0,
+      "remaining": 25000,
+      "linear_world_equivalents": null,
+      "linear_simulation_hours": null
+    }
+  },
+  "estimate_limitation": "One known seed and previously discovered candidate hints; linear extrapolations are not a collection forecast. Zero yield => no estimate.",
+  "recommended_next_step": "User reviews P0 before any 200K collection; do not use the older separate-node/param2 collector as a protocol-compliant dataset."
+}

@@ -1,0 +1,254 @@
+{
+  "category": "D3",
+  "standard_clip": true,
+  "states": [
+    {
+      "progress": 0,
+      "world_seed": 191664964,
+      "chunk_origin": [
+        -272,
+        1456,
+        16
+      ],
+      "chunk_index": [
+        -17,
+        91,
+        1
+      ],
+      "axes": "ENU",
+      "biome": "Forest",
+      "surface_biome": "Forest",
+      "biome_group": "Forest",
+      "biome_transition": false,
+      "stratum": "elevated",
+      "surface_height": 11.0,
+      "height": 24.0,
+      "air_fraction": 0.8896484375,
+      "solid_fraction": 0.1103515625,
+      "timestamp": 73.63031577691436,
+      "simulation_step": 1507,
+      "engine_us": 2141426531722,
+      "wall_time_unix": 1794663583,
+      "split": "train",
+      "craftium_commit": "ca8b2762aea46d10a88c53f6411ff1f0dbdf3b49",
+      "voxelibre_commit": "178c71b1e7d6ec35c0d9c481c55eb306d6f330bc"
+    },
+    {
+      "progress": 3,
+      "world_seed": 191664964,
+      "chunk_origin": [
+        -272,
+        1456,
+        16
+      ],
+      "chunk_index": [
+        -17,
+        91,
+        1
+      ],
+      "axes": "ENU",
+      "biome": "Forest",
+      "surface_biome": "Forest",
+      "biome_group": "Forest",
+      "biome_transition": false,
+      "stratum": "elevated",
+      "surface_height": 11.0,
+      "height": 24.0,
+      "air_fraction": 0.889404296875,
+      "solid_fraction": 0.110595703125,
+      "timestamp": 74.0018577799201,
+      "simulation_step": 1515,
+      "engine_us": 2141426896675,
+      "wall_time_unix": 1794663583,
+      "split": "train",
+      "craftium_commit": "ca8b2762aea46d10a88c53f6411ff1f0dbdf3b49",
+      "voxelibre_commit": "178c71b1e7d6ec35c0d9c481c55eb306d6f330bc"
+    },
+    {
+      "progress": 6,
+      "world_seed": 191664964,
+      "chunk_origin": [
+        -272,
+        1456,
+        16
+      ],
+      "chunk_index": [
+        -17,
+        91,
+        1
+      ],
+      "axes": "ENU",
+      "biome": "Forest",
+      "surface_biome": "Forest",
+      "biome_group": "Forest",
+      "biome_transition": false,
+      "stratum": "elevated",
+      "surface_height": 11.0,
+      "height": 24.0,
+      "air_fraction": 0.889404296875,
+      "solid_fraction": 0.110595703125,
+      "timestamp": 79.1883047632873,
+      "simulation_step": 1611,
+      "engine_us": 2141432243511,
+      "wall_time_unix": 1794663588,
+      "split": "train",
+      "craftium_commit": "ca8b2762aea46d10a88c53f6411ff1f0dbdf3b49",
+      "voxelibre_commit": "178c71b1e7d6ec35c0d9c481c55eb306d6f330bc"
+    },
+    {
+      "progress": 10,
+      "world_seed": 191664964,
+      "chunk_origin": [
+        -272,
+        1456,
+        16
+      ],
+      "chunk_index": [
+        -17,
+        91,
+        1
+      ],
+      "axes": "ENU",
+      "biome": "Forest",
+      "surface_biome": "Forest",
+      "biome_group": "Forest",
+      "biome_transition": false,
+      "stratum": "elevated",
+      "surface_height": 11.0,
+      "height": 24.0,
+      "air_fraction": 0.8896484375,
+      "solid_fraction": 0.1103515625,
+      "timestamp": 80.09443775936961,
+      "simulation_step": 1629,
+      "engine_us": 2141433243028,
+      "wall_time_unix": 1794663589,
+      "split": "train",
+      "craftium_commit": "ca8b2762aea46d10a88c53f6411ff1f0dbdf3b49",
+      "voxelibre_commit": "178c71b1e7d6ec35c0d9c481c55eb306d6f330bc"
+    },
+    {
+      "progress": 13,
+      "world_seed": 191664964,
+      "chunk_origin": [
+        -272,
+        1456,
+        16
+      ],
+      "chunk_index": [
+        -17,
+        91,
+        1
+      ],
+      "axes": "ENU",
+      "biome": "Forest",
+      "surface_biome": "Forest",
+      "biome_group": "Forest",
+      "biome_transition": false,
+      "stratum": "elevated",
+      "surface_height": 11.0,
+      "height": 24.0,
+      "air_fraction": 0.889892578125,
+      "solid_fraction": 0.110107421875,
+      "timestamp": 82.00951075926423,
+      "simulation_step": 1671,
+      "engine_us": 2141435150543,
+      "wall_time_unix": 1794663591,
+      "split": "train",
+      "craftium_commit": "ca8b2762aea46d10a88c53f6411ff1f0dbdf3b49",
+      "voxelibre_commit": "178c71b1e7d6ec35c0d9c481c55eb306d6f330bc"
+    },
+    {
+      "progress": 18,
+      "world_seed": 191664964,
+      "chunk_origin": [
+        -272,
+        1456,
+        16
+      ],
+      "chunk_index": [
+        -17,
+        91,
+        1
+      ],
+      "axes": "ENU",
+      "biome": "Forest",
+      "surface_biome": "Forest",
+      "biome_group": "Forest",
+      "biome_transition": false,
+      "stratum": "elevated",
+      "surface_height": 11.0,
+      "height": 24.0,
+      "air_fraction": 0.8896484375,
+      "solid_fraction": 0.1103515625,
+      "timestamp": 83.09214275330305,
+      "simulation_step": 1695,
+      "engine_us": 2141436236160,
+      "wall_time_unix": 1794663592,
+      "split": "train",
+      "craftium_commit": "ca8b2762aea46d10a88c53f6411ff1f0dbdf3b49",
+      "voxelibre_commit": "178c71b1e7d6ec35c0d9c481c55eb306d6f330bc"
+    },
+    {
+      "progress": 19,
+      "world_seed": 191664964,
+      "chunk_origin": [
+        -272,
+        1456,
+        16
+      ],
+      "chunk_index": [
+        -17,
+        91,
+        1
+      ],
+      "axes": "ENU",
+      "biome": "Forest",
+      "surface_biome": "Forest",
+      "biome_group": "Forest",
+      "biome_transition": false,
+      "stratum": "elevated",
+      "surface_height": 11.0,
+      "height": 24.0,
+      "air_fraction": 0.889892578125,
+      "solid_fraction": 0.110107421875,
+      "timestamp": 84.03630974143744,
+      "simulation_step": 1715,
+      "engine_us": 2141437196874,
+      "wall_time_unix": 1794663593,
+      "split": "train",
+      "craftium_commit": "ca8b2762aea46d10a88c53f6411ff1f0dbdf3b49",
+      "voxelibre_commit": "178c71b1e7d6ec35c0d9c481c55eb306d6f330bc"
+    },
+    {
+      "progress": 22,
+      "world_seed": 191664964,
+      "chunk_origin": [
+        -272,
+        1456,
+        16
+      ],
+      "chunk_index": [
+        -17,
+        91,
+        1
+      ],
+      "axes": "ENU",
+      "biome": "Forest",
+      "surface_biome": "Forest",
+      "biome_group": "Forest",
+      "biome_transition": false,
+      "stratum": "elevated",
+      "surface_height": 11.0,
+      "height": 24.0,
+      "air_fraction": 0.8896484375,
+      "solid_fraction": 0.1103515625,
+      "timestamp": 86.16811371967196,
+      "simulation_step": 1757,
+      "engine_us": 2141439367969,
+      "wall_time_unix": 1794663595,
+      "split": "train",
+      "craftium_commit": "ca8b2762aea46d10a88c53f6411ff1f0dbdf3b49",
+      "voxelibre_commit": "178c71b1e7d6ec35c0d9c481c55eb306d6f330bc"
+    }
+  ]
+}
