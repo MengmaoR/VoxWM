@@ -1,0 +1,12 @@
+{
+  "observation_seconds": {"D1": 60, "D2": 180, "D3": 120, "D4": 600},
+  "plant_windows": [600, 1200, 1800],
+  "capture_seconds": {"D1": 0.25, "D2": 0.5, "D3": 0.5, "D4": 1.0},
+  "delayed_natural_seconds": 120,
+  "candidate_budget_per_subtype": 256,
+  "parallel_candidates": 20,
+  "fire_candidate_count": 20,
+  "fire_probability": 0.1,
+  "fire_spacing_voxels": 3,
+  "controlled_d2_scene_ratios": {"ordinary": 0.7, "path_2_4": 0.2, "immediate": 0.1}
+}

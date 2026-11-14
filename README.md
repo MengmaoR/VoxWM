@@ -117,7 +117,17 @@ with GTSession(scene='procedural', seed=42) as session:
 来源和许可见THIRD_PARTY.md。没有迁移B/C场景、baseline模型、推理/评价、网页、旧结果、旧虚拟环境或Git历史。本目录已接入VoxWM GitHub，保留其原有历史和docs内容，不继承旧CoDL的Git历史。新架构与训练由用户后续独立定义。
 
 
-## 当前 VAE P0 数据闭环
+## 当前 VAE P1 动态采集实现
+
+[运行手册](vae_p1/README.md) · [实现与检查报告](vae_p1/IMPLEMENTATION_REPORT.md)。**仅代码与合成 Dry Run 已完成，P1 原生行为和产出尚未验证。** Fresh/Delayed Natural 使用独立世界；Controlled Initialization 只改初态，之后仍是原生物理。包含水、岩浆/水接触、火焰和竹/甘蔗/藤蔓；保留 Combined Token、raw light、固定16³及真实时间。
+
+```bash
+.venv/bin/python -m unittest vae_p1.test_p1
+.venv/bin/python -m vae_p1 --dry-run --output outputs/p1_dry
+# 真实原生实验只由用户按手册显式加 --native 和 --wall-seconds 启动。
+```
+
+## 历史 VAE P0 数据闭环
 
 以 [2026-11-13 数据协议](https://drive.google.com/file/d/1TxzLSq71INFWbKi5hFO9fxvtucb6RphA/view) 为准；实现和格式见 [vae_p0/README.md](vae_p0/README.md)，真实结果见 [VAE_P0_RESULTS.md](VAE_P0_RESULTS.md)：**NO-GO**，26 个合格 snapshots（Ordinary10 / Water8 / Fire8），Lava0 / Vegetation0；不能启动正式200K。固定世界 16³、Combined Token `(Node Name,raw param2)`、独立 raw light、真实时间/模拟步、5–8 个 distinct-state 变化进度采样，Zarr+Zstd/Parquet。没有神经网络或 200K 自动任务。
 

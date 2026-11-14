@@ -1,12 +1,11 @@
 # VoxWM 当前状态
 
-2026-11-14：**VAE P0 / NO-GO**。真实固定世界坐标 16³、Combined Token 和 raw light 采集闭环已实现；尚未打通全部四类动态，不进入 200K。
+2026-11-15：**VAE P1 / IMPLEMENTED — NATIVE NOT YET RUN**。
 
-- 权威：Drive `VoxWM_VAE_PILOT_DATA_PROTOCOL_2026-11-13.md` 数据协议优先于 11 月 12 日 Manifest；实现 `vae_p0/`，结果 `VAE_P0_RESULTS.md`。
-- 实际原生 CPU 测试：seed 191664964，墙钟 262.43 秒；最终 26 snapshots：Ordinary 10、D1 Water 8（1 clip）、D2 Lava 0、D3 Fire 8（1 clip，单次随机点火后原生传播）、D4 Vegetation 0。
-- 327,680 节点与原生世界逐项核对；72,712,192 voxel 编码/解码比对通过；观察到的 Combined Vocabulary K=128。Ordinary 覆盖 3/25 biome 分组；实际地层 surface4、air2、shallow2、deep2，未取得 elevated 样本。
-- D2/D4 各执行一次有界修复后停止。D4 的 8 状态衰退片段不算生长；另一 Chunk 只观察到一次藤蔓新增、2 状态，未达最低5状态。失败诊断完整保留，不能用它们补配额。
-- 本地最终数据 `outputs/vae_p0_20261114_final/`；原始试采和启动失败副本保留于 outputs/，日志在 `runs/vae_p0/`。仓库仅提交轻量统计和 PNG/GIF/JSON；旧 `vae_pilot/` 报告保留但不代表新协议 200K 入口。
-- 独立原生 GT/Test A/seed42/游玩入口保留；既有 docs/ 和旧 CoDL 未修改。未运行 200K 或 GPU 训练。
+- 活动代码 `vae_p1/`；当前用户 P1 Implementation prompt 是本轮实施依据。已读取11/12 Manifest、11/13协议；指定11/14 P1协议未在可访问Drive中找到，按prompt授权回退，不声称已读。
+- 已实现Fresh/Delayed Natural独立实例配对、物理候选筛选和分层随机选点、单次Controlled初始化、有界20点随机点火、竹/甘蔗/藤蔓长窗口、接触证据、固定Chunk/CombinedToken/raw light、原始增量轨迹与独立短事件池。
+- 已通过无游戏的14项Unit Tests、语法/CLI检查、18场景合成Dry Run。96个合成标准snapshots仅用于验证导出，不是原生数据成果；原生产出率与实际墙钟成本均未测量。详见 `vae_p1/IMPLEMENTATION_REPORT.md`。
+- P0代码、数据、报告全部保留：P0 NO-GO，Ordinary10 / Water8 / Fire8 / Lava0 / Vegetation0；不能据此启动200K。`VAE_P0_RESULTS.md`未改。
+- 旧CoDL和docs/未修改。未启动任何P1原生长窗口、200K或GPU训练。
 
-唯一下一步：用户审阅 NO-GO 报告，决定是否另行授权针对自然岩浆流和竹/藤生长的有限采集研究。本轮停止，不自动追加实验或更改配额。
+唯一下一步：用户按 `vae_p1/README.md` 选择有限预算手动运行真实P1，检查候选、初始化、原生事件和单位场景产出后决定后续采集。

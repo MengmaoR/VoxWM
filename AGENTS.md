@@ -9,9 +9,12 @@
 - 保持C++ `get_voxel_data_cpp` 同帧Voxel/param2/Center，经原wrapper转ENU，49³ right-crop至48³。Camera中心来自真实观测Center，不从玩家位置推测。
 - GT可本地CPU运行，RGB需要本地图形栈或Linux Mesa；不依赖Torch/CUDA/模型权重。模型推理/训练由用户手动在服务器执行。
 - Codex默认仅实现代码、语法/CLI及必要极小合成检查，不自动安装大型环境、运行真实游戏GT或训练。真实两项测试脚本由用户手动运行。
-- 当前 VAE 数据权威为 Drive `VoxWM_VAE_PILOT_DATA_PROTOCOL_2026-11-13.md`，数据规则优先于 11 月 12 日 Manifest。活动最小闭环在 `vae_p0/`；`vae_pilot/` 是旧表示试采历史，仅复用原生接口和 biome/split 工具，禁止把其旧 `--full` 当作新协议 200K 入口。
+- 历史 P0 数据权威为 Drive `VoxWM_VAE_PILOT_DATA_PROTOCOL_2026-11-13.md`，数据规则优先于 11 月 12 日 Manifest。历史最小闭环在 `vae_p0/`；`vae_pilot/` 是旧表示试采历史，仅复用原生接口和 biome/split 工具，禁止把其旧 `--full` 当作新协议 200K 入口。
 - 固定世界坐标 16³；单一 Combined Token=VocabularyID(Node Name,raw param2)，uint16；raw light 单独保存且不作模型输入。P0 通过原生 VoxelManip 同帧读取节点/light/param2，不能用 Camera 推断 Chunk 原点。
-- 当前任务授权有上限的 CPU 原生 P0：每个失败类别最多一次明确有界修复，不自动启动 200K。Ordinary100K、D1–D4 各25K的配额不改；不足5不同状态不算动态clip，不靠重复帧、人工流体或植物补齐；Fire单次随机点火和点火前状态需记录。全部报告只写实测值。
+- P0 历史执行边界为有上限的 CPU 原生小采集：每个失败类别最多一次明确有界修复，不自动启动 200K。Ordinary100K、D1–D4 各25K的配额不改；不足5不同状态不算动态clip，不靠重复帧、人工流体或植物补齐；Fire单次随机点火和点火前状态需记录。全部报告只写实测值。
+- 当前活动实现为 `vae_p1/`：以用户 P1 Implementation prompt 为本轮可访问权威，指定的 2026-11-14 Drive P1 协议未检索到，不得声称已读。P1 明确允许一次受控 Source/幼株初始化及有界多点火、加入甘蔗；这些新规则仅覆盖 P1，不回写 P0。
+- P1 复用 P0 正确的 token/light/固定坐标接口，保留干预前后与原生轨迹；干预变化不计原生演化。标准 clip 仍5–8状态，2–4状态另存 aux，不自动进入 VAE 标准池。A/B 必须是独立世界实例，保留同 seed/位置与真实时间。
+- 当前 Codex 只做 P1 代码、无游戏 Unit Tests 和合成 Dry Run；不自动执行长窗口原生实验、200K 或训练。真实运行由用户手动 `--native` 并指定墙钟预算，结果未实测前必须写 INCONCLUSIVE。
 - 新架构依据用户后续提供的方案实现，不从旧baseline或展示动效推导既定架构，不自动启动模型开发。
 - 当前唯一开发远端为 `https://github.com/MengmaoR/VoxWM.git`，分支master。远端既有`docs/`展示页及数据完整保留，不主动修改或部署。每次编码前先安全保留本地改动并`git pull --ff-only`，只向这个远端正常提交/推送；不向旧CoDL仓库或其他展示站仓库推送，不强推。
 - 本地检查只做一轮，原则上总计不超过30秒，不为了测试安装大型依赖。交付说明实际执行和未执行的内容。
