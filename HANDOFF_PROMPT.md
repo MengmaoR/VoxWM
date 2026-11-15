@@ -1,5 +1,7 @@
 # VoxWM — 新架构研发交接
 
+> 历史迁入交接。当前活动工作已切换到 `vae_data/` Unified Collection；必须以 AGENTS.md、PROJECT_STATE.md 和 VAE_DATA_COLLECTION_PROTOCOL.md 的最新状态为准。以下不是当前生产采集协议。
+
 你将在一个独立的新GitHub仓库研发我们自己的Voxel World Model。
 
 工作目录：`/Users/tianxj/Desktop/VoxWM`。

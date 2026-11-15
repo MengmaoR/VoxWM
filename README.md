@@ -1,4 +1,23 @@
-# VoxWM — 独立原生GT环境
+# VoxWM — Voxel-Only VAE Data Collection
+
+当前活动入口是 **`vae_data/` 统一原生采集系统**：Broad Discovery → Scene Index → 独立重建 / Early Replay → 可选干预 → Native Collection。固定世界坐标16³，Combined Token `(Node Name, raw param2)`，light辅助保存；不包含模型或训练。
+
+[当前采集协议](VAE_DATA_COLLECTION_PROTOCOL.md) · [运行 / 数据格式 / Resume](vae_data/README.md) · [真实原生结果](vae_data/NATIVE_VALIDATION_RESULTS.md) · [Drive 当前 Markdown](https://drive.google.com/file/d/1NFM1Cb3os2yesAQgBk8VzM6vMmcj1eg8/view)。最新用户指令优先，其次当前采集协议；11/12 Manifest 的架构不变，旧 P0/P1 规则仅作为历史。
+
+**2026-11-15：实现已完成，原生整体验证 INCONCLUSIVE，200K 尚未就绪。** 真实标准样本 Ordinary12 / Water62 / Fire21；Lava仅2个辅助状态；4株天然竹子修剪正确，但约601秒未再生长。实体/掉落/实体改Voxel均为0；三次重建有初态差异，报告不将其伪装成相同初态。
+
+```bash
+# 已有 CPU 原生环境；首次安装见下方。以下命令不会自动进入200K。
+uv pip install --python .venv/bin/python -r vae_p0/requirements.txt
+.venv/bin/python -m vae_data discover --dataset outputs/vae_dataset --world-count 20 --sites-per-world 8 --wall-seconds 1800
+.venv/bin/python -m vae_data status --dataset outputs/vae_dataset
+# 有界真实集成验证，用户明确启动
+.venv/bin/python -m vae_data validate --dataset outputs/unified_validation --wall-seconds 900
+```
+
+当前采集全局禁止非技术实体和掉落，在独立临时引擎 overlay 中执行。依赖临时实体的 falling-node 场景被明确排除并隔离，不发布为冻结物理的数据。旧 `voxwm_gt/` 保留原始交互/视频工具与共享引擎接口；其历史生成命令不具备新的Voxel-only数据合同，不能替代当前采集入口。
+
+以下保留独立GT环境的安装和历史使用方法；P0/P1/pilot及 `docs/` 不覆盖、不删除。
 
 供新世界模型研发使用的干净数据入口。只有Craftium/Luanti/VoxeLibre、GT采集与真实视频；没有神经网络、权重、推理、旧Viewer或compare依赖，不需连接旧CoDL目录。
 
@@ -117,15 +136,9 @@ with GTSession(scene='procedural', seed=42) as session:
 来源和许可见THIRD_PARTY.md。没有迁移B/C场景、baseline模型、推理/评价、网页、旧结果、旧虚拟环境或Git历史。本目录已接入VoxWM GitHub，保留其原有历史和docs内容，不继承旧CoDL的Git历史。新架构与训练由用户后续独立定义。
 
 
-## 当前 VAE P1 动态采集实现
+## 历史 VAE P1
 
-[运行手册](vae_p1/README.md) · [实现与检查报告](vae_p1/IMPLEMENTATION_REPORT.md)。**仅代码与合成 Dry Run 已完成，P1 原生行为和产出尚未验证。** Fresh/Delayed Natural 使用独立世界；Controlled Initialization 只改初态，之后仍是原生物理。包含水、岩浆/水接触、火焰和竹/甘蔗/藤蔓；保留 Combined Token、raw light、固定16³及真实时间。
-
-```bash
-.venv/bin/python -m unittest vae_p1.test_p1
-.venv/bin/python -m vae_p1 --dry-run --output outputs/p1_dry
-# 真实原生实验只由用户按手册显式加 --native 和 --wall-seconds 启动。
-```
+[历史运行手册](vae_p1/README.md) · [原实现报告](vae_p1/IMPLEMENTATION_REPORT.md)。旧 P1 的14项 Unit Tests 和18场景 Synthetic Dry Run不是本轮Native结果；其固定20点火、人工幼株初始化等规则已被当前协议替代。原代码、报告和输出全部保留，不作为正式200K入口。
 
 ## 历史 VAE P0 数据闭环
 

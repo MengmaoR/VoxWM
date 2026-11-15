@@ -1,0 +1,17 @@
+==> Creating Minetest run directory: /var/folders/rw/t1pzb7zd5871nj_3sdfq1hdh0000gn/T/voxwm-gt-xkiule3o/minetest-run-5113bf4e-bff8-44ce-98f7-6204dc3e6581
+discovered 191664964 {'x': 80, 'z': 1984, 'depth': 0} scenes 12 plants {'bamboo': 0, 'reeds': 0, 'vine': 0}
+discovered 191664964 {'x': 96, 'z': 1936, 'depth': 0} scenes 12 plants {'bamboo': 0, 'reeds': 0, 'vine': 0}
+discovered 191664964 {'x': 800, 'z': -1232, 'depth': 0} scenes 12 plants {'bamboo': 4, 'reeds': 0, 'vine': 22}
+discovered 191664964 {'x': -288, 'z': 1456, 'depth': 0} scenes 12 plants {'bamboo': 0, 'reeds': 4, 'vine': 0}
+discovered 191664964 {'x': -256, 'z': 1472, 'depth': 32} scenes 12 plants {'bamboo': 0, 'reeds': 0, 'vine': 0}
+NATIVE Ordinary complete None
+==> Creating Minetest run directory: /var/folders/rw/t1pzb7zd5871nj_3sdfq1hdh0000gn/T/voxwm-gt-7yapu0hc/minetest-run-121abe86-f33c-4c9a-b192-90581f91a938
+NATIVE D1 complete 1478
+==> Creating Minetest run directory: /var/folders/rw/t1pzb7zd5871nj_3sdfq1hdh0000gn/T/voxwm-gt-431ssxj1/minetest-run-0a0d7c38-d1c2-4251-9f08-ce11de64eca3
+NATIVE D1 complete 394
+==> Creating Minetest run directory: /var/folders/rw/t1pzb7zd5871nj_3sdfq1hdh0000gn/T/voxwm-gt-y8wcq638/minetest-run-88f25214-c3f4-443c-ab77-31433474379f
+NATIVE D2 complete 3
+==> Creating Minetest run directory: /var/folders/rw/t1pzb7zd5871nj_3sdfq1hdh0000gn/T/voxwm-gt-efnqzmcl/minetest-run-3873b879-c895-4041-8826-bf170ff3a2eb
+NATIVE D3 complete 229
+==> Creating Minetest run directory: /var/folders/rw/t1pzb7zd5871nj_3sdfq1hdh0000gn/T/voxwm-gt-ehhq4zw9/minetest-run-85b74916-36f2-462b-8145-e329271098db
+Native report: outputs/vae_unified_verified_20261115/NATIVE_VALIDATION_RESULTS.md

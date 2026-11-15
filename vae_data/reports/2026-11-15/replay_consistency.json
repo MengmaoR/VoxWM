@@ -1,0 +1,264 @@
+{
+  "scene_id": "848e71946dfd4e23dc2e",
+  "repeats": 3,
+  "matching_chunks": [
+    "-288,1456,-16",
+    "-288,1456,0",
+    "-288,1456,16",
+    "-288,1472,-16",
+    "-288,1472,0",
+    "-288,1472,16",
+    "-272,1456,-16",
+    "-272,1472,-16",
+    "-272,1472,16"
+  ],
+  "varying_chunks": [
+    "-272,1456,0",
+    "-272,1456,16",
+    "-272,1472,0"
+  ],
+  "spatial_initial_state_reproduced": false,
+  "exact_temporal_trajectory_reproduced": false,
+  "initial_hashes": [
+    {
+      "-288,1456,-16": "6e038996daf3e8315ee4fb99df7b59dfdb16f5ed4c2e8517823dd00dbe8cf686",
+      "-288,1456,0": "2dffd20a69369858ae7f834d8c9def3db980c5c1d3080abc1a3f0b7c0ff73cf6",
+      "-288,1456,16": "0e52468194fe06bc1017acc6e5d2d2b6453e100f9dcaf192dc5ac857014cda5f",
+      "-288,1472,-16": "5ded72ee1eae700802f457fa0332e09f2626960c7b6f63e1b5bab294c42c08bf",
+      "-288,1472,0": "1751f5ab16d47a20c1cd94721a1b96affb1957421d19e7b0dbbbb78ca2274e3b",
+      "-288,1472,16": "0e52468194fe06bc1017acc6e5d2d2b6453e100f9dcaf192dc5ac857014cda5f",
+      "-272,1456,-16": "9e560caa5aaea6952975d8ddc53361cf429da3b26bc396660bcdcc8df52ca999",
+      "-272,1456,0": "dc8586bca9c1c84ed591255b034e9742475a8442345383bbd29c1663f084b903",
+      "-272,1456,16": "71ebb619a2602e05877a20c001a7ae5626c717439c8de62b3dc2471ba10ed4f5",
+      "-272,1472,-16": "a9ba6aa390e3ffad8e15c200a4d4c9f37e0cb9af11b59a81fc09f8b34b9b6cde",
+      "-272,1472,0": "6a8576827f00f592b2584bee8778c79820a555a28d64a5406372e1405f9f4fe4",
+      "-272,1472,16": "0e52468194fe06bc1017acc6e5d2d2b6453e100f9dcaf192dc5ac857014cda5f"
+    },
+    {
+      "-288,1456,-16": "6e038996daf3e8315ee4fb99df7b59dfdb16f5ed4c2e8517823dd00dbe8cf686",
+      "-288,1456,0": "2dffd20a69369858ae7f834d8c9def3db980c5c1d3080abc1a3f0b7c0ff73cf6",
+      "-288,1456,16": "0e52468194fe06bc1017acc6e5d2d2b6453e100f9dcaf192dc5ac857014cda5f",
+      "-288,1472,-16": "5ded72ee1eae700802f457fa0332e09f2626960c7b6f63e1b5bab294c42c08bf",
+      "-288,1472,0": "1751f5ab16d47a20c1cd94721a1b96affb1957421d19e7b0dbbbb78ca2274e3b",
+      "-288,1472,16": "0e52468194fe06bc1017acc6e5d2d2b6453e100f9dcaf192dc5ac857014cda5f",
+      "-272,1456,-16": "9e560caa5aaea6952975d8ddc53361cf429da3b26bc396660bcdcc8df52ca999",
+      "-272,1456,0": "81b10d9b55b8cdfc621fa2afeeafaaf788450dc8beff74a706e548bcf36e398f",
+      "-272,1456,16": "8c7dfd4ccd3a93be96dd1f4e42147f3c13fdc7682d8d1df2343b0d04c80a2044",
+      "-272,1472,-16": "a9ba6aa390e3ffad8e15c200a4d4c9f37e0cb9af11b59a81fc09f8b34b9b6cde",
+      "-272,1472,0": "b7cca43ffb7adb9986e22615955062fddd0361a1515015030eb01674121b1aeb",
+      "-272,1472,16": "0e52468194fe06bc1017acc6e5d2d2b6453e100f9dcaf192dc5ac857014cda5f"
+    },
+    {
+      "-288,1456,-16": "6e038996daf3e8315ee4fb99df7b59dfdb16f5ed4c2e8517823dd00dbe8cf686",
+      "-288,1456,0": "2dffd20a69369858ae7f834d8c9def3db980c5c1d3080abc1a3f0b7c0ff73cf6",
+      "-288,1456,16": "0e52468194fe06bc1017acc6e5d2d2b6453e100f9dcaf192dc5ac857014cda5f",
+      "-288,1472,-16": "5ded72ee1eae700802f457fa0332e09f2626960c7b6f63e1b5bab294c42c08bf",
+      "-288,1472,0": "1751f5ab16d47a20c1cd94721a1b96affb1957421d19e7b0dbbbb78ca2274e3b",
+      "-288,1472,16": "0e52468194fe06bc1017acc6e5d2d2b6453e100f9dcaf192dc5ac857014cda5f",
+      "-272,1456,-16": "9e560caa5aaea6952975d8ddc53361cf429da3b26bc396660bcdcc8df52ca999",
+      "-272,1456,0": "edbec94642ccc2d81acc1f89d6c7501eedfc59652d05538c87d1f59fa4776b4c",
+      "-272,1456,16": "1a9a7058384106e3ba3415d303ed392e1fee0d2192804172b8ef655c3a53d586",
+      "-272,1472,-16": "a9ba6aa390e3ffad8e15c200a4d4c9f37e0cb9af11b59a81fc09f8b34b9b6cde",
+      "-272,1472,0": "8567b245350f4af79071a8c0b035eeb8b08dd646e54fa3750d41782fec61f8f3",
+      "-272,1472,16": "0e52468194fe06bc1017acc6e5d2d2b6453e100f9dcaf192dc5ac857014cda5f"
+    }
+  ],
+  "differences": [
+    {
+      "origin": "-272,1456,0",
+      "pairs": [
+        {
+          "replay": 1,
+          "changed_voxels": 53,
+          "node_name_changes": 53,
+          "param2_only_changes": 0,
+          "transitions": [
+            {
+              "before": "air",
+              "after": "mcl_core:leaves",
+              "param2_before": 0,
+              "param2_after": 0,
+              "count": 33
+            },
+            {
+              "before": "mcl_core:leaves",
+              "after": "air",
+              "param2_before": 0,
+              "param2_after": 0,
+              "count": 19
+            },
+            {
+              "before": "mcl_core:tree",
+              "after": "mcl_core:leaves",
+              "param2_before": 0,
+              "param2_after": 0,
+              "count": 1
+            }
+          ]
+        },
+        {
+          "replay": 2,
+          "changed_voxels": 58,
+          "node_name_changes": 58,
+          "param2_only_changes": 0,
+          "transitions": [
+            {
+              "before": "mcl_core:leaves",
+              "after": "air",
+              "param2_before": 0,
+              "param2_after": 0,
+              "count": 40
+            },
+            {
+              "before": "air",
+              "after": "mcl_core:leaves",
+              "param2_before": 0,
+              "param2_after": 0,
+              "count": 17
+            },
+            {
+              "before": "mcl_core:tree",
+              "after": "mcl_core:leaves",
+              "param2_before": 0,
+              "param2_after": 0,
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "origin": "-272,1456,16",
+      "pairs": [
+        {
+          "replay": 1,
+          "changed_voxels": 8,
+          "node_name_changes": 8,
+          "param2_only_changes": 0,
+          "transitions": [
+            {
+              "before": "mcl_core:leaves",
+              "after": "air",
+              "param2_before": 0,
+              "param2_after": 0,
+              "count": 6
+            },
+            {
+              "before": "air",
+              "after": "mcl_core:leaves",
+              "param2_before": 0,
+              "param2_after": 0,
+              "count": 1
+            },
+            {
+              "before": "mcl_core:tree",
+              "after": "mcl_core:leaves",
+              "param2_before": 3,
+              "param2_after": 0,
+              "count": 1
+            }
+          ]
+        },
+        {
+          "replay": 2,
+          "changed_voxels": 83,
+          "node_name_changes": 83,
+          "param2_only_changes": 0,
+          "transitions": [
+            {
+              "before": "air",
+              "after": "mcl_core:leaves",
+              "param2_before": 0,
+              "param2_after": 0,
+              "count": 44
+            },
+            {
+              "before": "mcl_core:leaves",
+              "after": "air",
+              "param2_before": 0,
+              "param2_after": 0,
+              "count": 35
+            },
+            {
+              "before": "mcl_core:tree",
+              "after": "mcl_core:leaves",
+              "param2_before": 1,
+              "param2_after": 0,
+              "count": 1
+            },
+            {
+              "before": "mcl_core:tree",
+              "after": "mcl_core:leaves",
+              "param2_before": 3,
+              "param2_after": 0,
+              "count": 1
+            },
+            {
+              "before": "mcl_core:leaves",
+              "after": "mcl_core:tree",
+              "param2_before": 0,
+              "param2_after": 3,
+              "count": 1
+            },
+            {
+              "before": "mcl_core:tree",
+              "after": "mcl_core:leaves",
+              "param2_before": 2,
+              "param2_after": 0,
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "origin": "-272,1472,0",
+      "pairs": [
+        {
+          "replay": 1,
+          "changed_voxels": 11,
+          "node_name_changes": 11,
+          "param2_only_changes": 0,
+          "transitions": [
+            {
+              "before": "air",
+              "after": "mcl_core:leaves",
+              "param2_before": 0,
+              "param2_after": 0,
+              "count": 6
+            },
+            {
+              "before": "mcl_core:leaves",
+              "after": "air",
+              "param2_before": 0,
+              "param2_after": 0,
+              "count": 5
+            }
+          ]
+        },
+        {
+          "replay": 2,
+          "changed_voxels": 4,
+          "node_name_changes": 4,
+          "param2_only_changes": 0,
+          "transitions": [
+            {
+              "before": "mcl_core:leaves",
+              "after": "air",
+              "param2_before": 0,
+              "param2_after": 0,
+              "count": 2
+            },
+            {
+              "before": "air",
+              "after": "mcl_core:leaves",
+              "param2_before": 0,
+              "param2_after": 0,
+              "count": 2
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

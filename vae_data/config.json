@@ -1,0 +1,48 @@
+{
+  "quotas": {
+    "Ordinary": 100000,
+    "D1": 25000,
+    "D2": 25000,
+    "D3": 25000,
+    "D4": 25000
+  },
+  "mapgen": "v7",
+  "max_ordinary_seed_fraction": 0.05,
+  "ordinary_biome_target": 4000,
+  "ordinary_strata": [
+    "surface",
+    "shallow_underground",
+    "deep",
+    "deep_cave",
+    "air",
+    "elevated"
+  ],
+  "observation_seconds": {
+    "D1": 60,
+    "D2": 180,
+    "D3": 120,
+    "D4": 1800
+  },
+  "plant_windows": [
+    600,
+    1200,
+    1800
+  ],
+  "capture_seconds": {
+    "D1": 0.2,
+    "D2": 0.25,
+    "D3": 0.25,
+    "D4": 2.0
+  },
+  "source_count_range": [
+    1,
+    4
+  ],
+  "attached_weight": 0.9,
+  "source_spacing": 4,
+  "fire_probability": 0.1,
+  "fire_spacing": 3,
+  "fire_candidate_budget": 64,
+  "plant_settle_seconds": 5,
+  "stable_seconds": 15
+}

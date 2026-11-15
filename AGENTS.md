@@ -1,20 +1,17 @@
 # VoxWM 执行守则
 
-本目录是独立的新架构研发工作区。目前仅迁入原生GT环境，尚无新的世界模型实现或训练结果。
+当前活动任务是 Voxel-Only Unified VAE Data Collection，代码 `vae_data/`。本文件定义实施边界，科研数据细则由 [当前协议](VAE_DATA_COLLECTION_PROTOCOL.md) 定义。
 
-- 科研和效率优先：最小实现、简单可读，不增加哈希审计、预检平台、复杂服务、重复测试或无关重构。
-- `/Users/tianxj/Desktop/CoDL` 是已完成baseline的旧项目，只读参考；不修改、不提交、不推送那个仓库，不把旧执行守则当作新科学任务。
-- 仅继承GT环境、真实采集、Test A合成场景和必要CPU动作/类别工具；不带入旧模型、推理、Viewer、compare、结果、权重、历史实验及Git历史。
-- 支持Test A、原生seed地图和用户自定义voxel场景。真实物理交给Craftium/Luanti/VoxeLibre，禁止用脚本伪造逐帧物理或绝对玩家轨迹。
-- 保持C++ `get_voxel_data_cpp` 同帧Voxel/param2/Center，经原wrapper转ENU，49³ right-crop至48³。Camera中心来自真实观测Center，不从玩家位置推测。
-- GT可本地CPU运行，RGB需要本地图形栈或Linux Mesa；不依赖Torch/CUDA/模型权重。模型推理/训练由用户手动在服务器执行。
-- Codex默认仅实现代码、语法/CLI及必要极小合成检查，不自动安装大型环境、运行真实游戏GT或训练。真实两项测试脚本由用户手动运行。
-- 历史 P0 数据权威为 Drive `VoxWM_VAE_PILOT_DATA_PROTOCOL_2026-11-13.md`，数据规则优先于 11 月 12 日 Manifest。历史最小闭环在 `vae_p0/`；`vae_pilot/` 是旧表示试采历史，仅复用原生接口和 biome/split 工具，禁止把其旧 `--full` 当作新协议 200K 入口。
-- 固定世界坐标 16³；单一 Combined Token=VocabularyID(Node Name,raw param2)，uint16；raw light 单独保存且不作模型输入。P0 通过原生 VoxelManip 同帧读取节点/light/param2，不能用 Camera 推断 Chunk 原点。
-- P0 历史执行边界为有上限的 CPU 原生小采集：每个失败类别最多一次明确有界修复，不自动启动 200K。Ordinary100K、D1–D4 各25K的配额不改；不足5不同状态不算动态clip，不靠重复帧、人工流体或植物补齐；Fire单次随机点火和点火前状态需记录。全部报告只写实测值。
-- 当前活动实现为 `vae_p1/`：以用户 P1 Implementation prompt 为本轮可访问权威，指定的 2026-11-14 Drive P1 协议未检索到，不得声称已读。P1 明确允许一次受控 Source/幼株初始化及有界多点火、加入甘蔗；这些新规则仅覆盖 P1，不回写 P0。
-- P1 复用 P0 正确的 token/light/固定坐标接口，保留干预前后与原生轨迹；干预变化不计原生演化。标准 clip 仍5–8状态，2–4状态另存 aux，不自动进入 VAE 标准池。A/B 必须是独立世界实例，保留同 seed/位置与真实时间。
-- 当前 Codex 只做 P1 代码、无游戏 Unit Tests 和合成 Dry Run；不自动执行长窗口原生实验、200K 或训练。真实运行由用户手动 `--native` 并指定墙钟预算，结果未实测前必须写 INCONCLUSIVE。
-- 新架构依据用户后续提供的方案实现，不从旧baseline或展示动效推导既定架构，不自动启动模型开发。
-- 当前唯一开发远端为 `https://github.com/MengmaoR/VoxWM.git`，分支master。远端既有`docs/`展示页及数据完整保留，不主动修改或部署。每次编码前先安全保留本地改动并`git pull --ff-only`，只向这个远端正常提交/推送；不向旧CoDL仓库或其他展示站仓库推送，不强推。
-- 本地检查只做一轮，原则上总计不超过30秒，不为了测试安装大型依赖。交付说明实际执行和未执行的内容。
+- 权威顺序：最新用户指令 > [Drive 当前 Markdown](https://drive.google.com/file/d/1NFM1Cb3os2yesAQgBk8VzM6vMmcj1eg8/view) / 仓库同步协议 > 未被覆盖的11/12 VAE Manifest。11/13及旧P1规则是历史，不自动恢复固定20火点、人工种植或旧raw Node ID正式采集。
+- 科研与效率优先：实现简单可读，不建平台、复杂服务、冗余预检或无关重构。仅执行与改动相关的一轮快速检查；通常不超过30秒，不为检查安装大依赖。当前用户明确授权有墙钟上限的真实CPU原生集成验证，此例外不授权200K或训练。
+- 全项目研究对象仅为Voxel Nodes。禁止Mobs/NPC/Animals、Dropped Items及实体引起的Voxel变化。技术采集Player不可见、静止且无环境交互，不进入数据。新采集必须从原生入口阻止实体，不靠导出过滤。
+- `vae_data`在临时builtin overlay中提前封闭实体/物品API和刷怪笼实体辅助路径，实际检查实体、掉落与实体变更数。Falling Node依赖临时实体，明确排除：出现该请求即隔离整个rollout，不能把被阻止的物理转移当作正常稳定数据。原始引擎源码不修改。
+- 原生物理交给Craftium/Luanti/VoxeLibre，不写逐帧流体/生长轨迹，不调用grow、不改ABM概率、不改植物高度metadata。D4仅发现天然竹/甘蔗/藤蔓后原生挖掘修剪，保留根/附着源；纯Decay不是Growth；不能按成熟度/隐含上限预筛。
+- 使用Discovery Index、全新独立世界重建和早期原生回调。区分Spatial Reconstruction与Temporal Replay，不称Python就绪后的状态为mapgen t=0；初态不同必须实报。每个rollout保留种子、版本/配置、固定坐标、初态hash、干预RNG/phase和实际模拟时间/步。
+- 固定世界对齐16³ ENU Chunk，不从Camera估计原点。单一uint16 Combined Token=(Node Name,raw param2)，全局append-only词表且精确roundtrip。uint8 light辅助保存，不输入VAE。同seed全部场景属于同一split。
+- 配额保持Ordinary100K、D1–D4各25K。Ordinary均衡25主要biome与地形/种子，不用容易场景填缺额。动态标准5–8不同状态、变化进度采样、初终态仅一次；真实2–4状态独立aux，禁止重复补齐或Synthetic Fixture冒充原生。
+- 保留原始lossless增量轨迹，干预前/后、settling、native演化分相。植物观察600/1200/1800秒可延长，但有显式墙钟限额；不因单株成熟或得到8状态而停止整个群落。流体/火可在实测不变窗口后停止，不声称此后永无变化。
+- 当前CPU采集无需Torch/CUDA/权重。GPU模型推理/训练与正式200K只由用户明确启动。未实测不写成功，失败或产出不足写INCONCLUSIVE/NO-GO，不虚构速度或成本，不无限追求绿色检查。
+- `vae_p0/`、`vae_p1/`、`vae_pilot/`、既有GT工具、所有历史结果/日志与`docs/`保留。旧工具不是新合同的正式采集入口。旧CoDL仓库只读，不修改、不提交、不推送；不从旧PERSIST baseline推导既定新模型架构。
+- 唯一开发远端为 `MengmaoR/VoxWM`，master。每次编码前先保留用户未提交工作并 `git pull --ff-only`。正常commit/push，不强推、不重写历史，不修改展示站部署/共享权限。
+- 完成后交付实际检查、真实测量和未验证项；停止，等待用户决定正式采集或模型研发。
