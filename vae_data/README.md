@@ -1,101 +1,93 @@
-# Unified VAE Data Collection
+# VAE 100K — 1K Shard Generator
 
-Current implementation: `vae_data/`. Historical `vae_p0/`, `vae_p1/`, `vae_pilot/` are preserved; the old raw Node ID generator is not the 200K entry. Authority: [VAE_DATA_COLLECTION_PROTOCOL.md](../VAE_DATA_COLLECTION_PROTOCOL.md) / [current Drive Markdown](https://drive.google.com/file/d/1NFM1Cb3os2yesAQgBk8VzM6vMmcj1eg8/view), mirroring the latest Unified Collection request. The old P0 Drive protocol remains historical. VAE architecture is unchanged.
+当前入口：`python -m vae_data` → `vae_data/sharded/`。仅生成数据，无模型/训练器/DataLoader。依据[当前协议](../VAE_DATA_COLLECTION_PROTOCOL.md) / [Drive Markdown](https://drive.google.com/file/d/1NFM1Cb3os2yesAQgBk8VzM6vMmcj1eg8/view)。旧200K代码、结果与日志保留；[旧README](LEGACY_UNIFIED_README.md)中的命令需使用 `python -m vae_data.legacy_entry`，不是当前生产格式。
 
-Run from the VoxWM repository root with the existing Python3.11 CPU environment (`scripts/setup_gt.sh`, then `uv pip install --python .venv/bin/python -r vae_p0/requirements.txt`). No Torch/CUDA/weights are needed. macOS uses its native graphics stack; Linux may add `--renderer software`. Original simulator source is not modified: the runtime builtin overlay is temporary.
+**当前原生结果为INCONCLUSIVE**：本轮8次有限尝试，D1成功2条，D2/D3未达到五状态，D4未成功。JSON响应交接错误已做原子写修复，但没有追加native运行；详见[实测与检查报告](SHARDED_RESULTS.md)。1K/100K正式采集、完整25群落吞吐均未实跑，不把CLI存在当作已验证产能。
 
-## Small checks
+## 服务器环境（用户手动执行）
 
-```bash
-.venv/bin/python -m unittest vae_data.tests.test_unified vae_p1.test_p1
-luajit vae_data/tests/entity_boundary.lua
-# REAL native integration; explicit hard total wall limit, never 200K
-.venv/bin/python -m vae_data validate --dataset outputs/unified_validation --wall-seconds 900
-```
-
-Native validation uses previously measured natural locations as transparent discovery hints, not handcrafted scenes. It records all failures and never fills missing native outcomes with fixtures. Native findings and limits are in the repository's `vae_data/NATIVE_VALIDATION_RESULTS.md` after the task run.
-
-## Discovery → Replay → Collection
+从VoxWM仓库根目录操作。已有环境无需重新安装；CPU仿真，无Torch/CUDA/模型权重。
 
 ```bash
-# Low-cost scan: multiple sites per world, no long per-candidate wait
-.venv/bin/python -m vae_data discover --dataset outputs/vae_dataset \
-  --world-count 100 --sites-per-world 16 --wall-seconds 7200
-.venv/bin/python -m vae_data status --dataset outputs/vae_dataset
+git pull --ff-only origin master
+# 仅首次新服务器安装；系统依赖见根README。脚本不自动sudo。
+bash scripts/setup_gt.sh
+uv pip install --python .venv/bin/python -r vae_p0/requirements.txt
 ```
 
-Inspect scene IDs and their full JSON metadata:
+Linux示例使用 `--renderer software`，macOS可改为 `--renderer auto`。不改变原生液体/火规则，不做时钟加速。
+
+## 生成指定一个1K片
+
+```bash
+.venv/bin/python -m vae_data generate \
+  --dataset outputs/vae_100k --shard 0 --count 1 --workers 1 \
+  --max-attempts 5000 --wall-seconds 7200 --renderer software
+```
+
+`shard`索引0..99。每片硬配额：Static500，四动态各125；每类25条五状态链。Static每群落20条，8/4/4/4。D4是水岩浆固化，不是植物；子类型A/B/C每片8/8/9轮换。动态中心连续2个模拟秒无目标变化即停止，不能为了过测延长。未达到配额只保留partial和缺口，不READY、不替代类别。
+
+## 连续多片 / 多CPU workers
+
+```bash
+# 生成 shard_0010 .. shard_0013，最多4个独立CPU世界并行
+.venv/bin/python -m vae_data generate \
+  --dataset outputs/vae_100k --shard 10 --count 4 --workers 4 \
+  --max-attempts 5000 --wall-seconds 14400 --renderer software
+```
+
+Worker按片独占目录与锁；Native世界/临时引擎独立；全局词表用短锁追加ID。只需要一个命令调度同一批片；相同片被另一个进程占用时明确失败，避免并发写入。
+
+## 中断恢复
+
+```bash
+.venv/bin/python -m vae_data generate \
+  --dataset outputs/vae_100k --shard 10 --count 4 --workers 4 --resume \
+  --max-attempts 5000 --wall-seconds 14400 --renderer software
+```
+
+Ctrl-C会停止本命令拥有的worker和引擎进程；已提交数据可恢复。已READY片直接跳过，保持原文件；partial片恢复已提交样本/词表/RNG cursor，去除未提交Zarr尾部。未完成场景开启新的native rollout，不恢复旧模拟物理时间。`max-attempts`是本次每片尝试上限，墙钟为整条命令总上限；到限可不满配额，需要用户决定是否继续。
+
+## 检查某片、查看全局进度
+
+```bash
+.venv/bin/python -m vae_data check --dataset outputs/vae_100k --shard 10
+# 检查partial中已提交数据，允许数量尚未齐；complete=false不会发布READY
+.venv/bin/python -m vae_data check --dataset outputs/vae_100k --shard 10 --allow-incomplete
+.venv/bin/python -m vae_data status --dataset outputs/vae_100k
+```
+
+Check为只读，不自动修数据。错误返回非零；status只报告READY与partial统计，100个READY才是正式100K完成。检查结果包含Transition软目标缺口；不能把不足4的真实区域伪装成transition。
+
+## 格式和无损读取
+
+每个正式样本：`tokens:uint16[48,48,48]`、`light:uint8[48,48,48]`，ENU。目标中心为 `[16:32]*3`，region origin = center origin −16。上下文保存完整，动态判定与VAE目标都限定中心。
 
 ```python
-import pyarrow.parquet as pq
-rows=pq.read_table('outputs/vae_dataset/scene_index.parquet').to_pylist()
-print([(r['scene_id'], r['origin']) for r in rows[:10]])
+import zarr, pyarrow.parquet as pq
+from vae_p0.codec import Vocabulary
+root='outputs/vae_100k'
+path=root+'/shards/shard_0010'
+a=zarr.open_group(path+'/snapshots.zarr',mode='r')
+tokens=a['tokens'][0]                 # 完整48³原生状态
+light=a['light'][0]
+center=tokens[16:32,16:32,16:32]       # 目标16³
+names,param2=Vocabulary(root+'/vocabulary.json').decode(tokens)
+rows=pq.read_table(path+'/metadata.parquet').to_pylist()
 ```
+
+`metadata_json`保留seed/固定split、坐标、时间、sim step、physical frame ID、中心Biome/地形、初始化、事件角色及native版本/零实体证据。`journal.sqlite`原子提交样本和完整链；`chains.data`包含选中帧、D4事件、独立Anchor引用与实际source操作。Anchor不计1K，只有成功D4才保存。全局词表只追加不重排，多个shard共用。
+
+每场景最多10个中心不同候选，另保留必要当前帧和D4 anchor；未选状态释放。没有discovery cache、完整raw trajectory或下游latent缓存。同源重复中心状态拒绝；不同seed的真实重复结构不被全局删除。
+
+## 开发检查与授权原生小例
 
 ```bash
-# Replace SCENE_ID with an indexed scene. Three distinct fresh instances.
-.venv/bin/python -m vae_data replay --dataset outputs/vae_dataset \
-  --scene-id SCENE_ID --repeat 3 --seconds 4 --wall-seconds 240
-# Natural water only; no intervention
-.venv/bin/python -m vae_data collect --dataset outputs/vae_dataset \
-  --category D1 --scene-id SCENE_ID --intervention never --seconds 60 --wall-seconds 180
-# Controlled multi-source suspended water (valid placement type)
-.venv/bin/python -m vae_data collect --dataset outputs/vae_dataset \
-  --category D1 --intervention always --source-mode suspended --seconds 60 --wall-seconds 180
-# Lava near indexed water, or ordinary source sites; event attribution remains separate
-.venv/bin/python -m vae_data collect --dataset outputs/vae_dataset \
-  --category D2 --intervention auto --seconds 180 --wall-seconds 420
-# Variable-size legal fire set, independent p=.1 and bounded fallback
-.venv/bin/python -m vae_data collect --dataset outputs/vae_dataset \
-  --category D3 --intervention always --seconds 120 --wall-seconds 300
-# Natural community trimming; no planting / cap filtering; full observation budget
-.venv/bin/python -m vae_data collect --dataset outputs/vae_dataset \
-  --category D4 --subtype bamboo --intervention always --seconds 1800 --wall-seconds 2100
-# Use --subtype reeds or vine for the other natural plant groups.
-# A completed run can be observed again with a longer budget in a NEW independent world:
-.venv/bin/python -m vae_data collect --dataset outputs/vae_dataset \
-  --category D4 --subtype bamboo --seconds 1800 --rollout-tag extended1800 --wall-seconds 2100
-# This restarts the native world; it does not resume its old physical time.
-# Ordinary exports cached native discovery chunks rather than starting a world per snapshot.
-.venv/bin/python -m vae_data collect --dataset outputs/vae_dataset \
-  --category Ordinary --max-scenes 10 --wall-seconds 120
+.venv/bin/python -m unittest vae_data.sharded.tests.test_sharded
+# 仅用户明确需要时：新输出目录；每类成功上限2，总计最多8，禁止自行循环扩测
+.venv/bin/python -m vae_data native-smoke \
+  --dataset outputs/vae_native_examples_new --wall-seconds 300 \
+  --samples-per-category 2 --attempts-per-category 2 --renderer software
 ```
 
-For water/lava/fire, a measured 15-second unchanged interval can stop the current observation. This is a finite observed plateau, not proof that no later change is possible. Plants do not stop at 8 states: `--seconds` is the total native observation budget; choose600/1200/1800 or a longer explicit budget. Original ABM/chance/time mechanisms remain unchanged. Every command has a hard external wall-time watchdog, including blocking engine startup/socket paths.
-
-## Formal 200K — user starts explicitly, not run by Codex
-
-A sufficiently diverse indexed corpus and acceptable native validation/throughput are needed first. The command does not fabricate shortfalls or auto-download/create new worlds endlessly to meet quotas:
-
-```bash
-.venv/bin/python -m vae_data collect --dataset outputs/vae_dataset --resume \
-  --full-200k --intervention auto --wall-seconds 86400
-# Continue the same dataset in another explicitly budgeted run:
-.venv/bin/python -m vae_data collect --dataset outputs/vae_dataset --resume \
-  --full-200k --intervention auto --wall-seconds 86400
-```
-
-Remaining quotas are saved in `quota_shortfall.json`; add more diverse discovery seeds/sites if the index is exhausted. Ordinary enforces4,000 per major biome and at most5% of its quota from one seed. Missing biomes cannot be replaced with easy ones. D4 scheduling includes natural bamboo/reeds/vine; auxiliary events do not fill standard quotas.
-
-## Data / traceability / resume
-
-`scene_index.parquet` and SQLite describe seed, actual source commits, mapgen/config, chunk/region coordinates, biome/geometry/counts/signals, discovery phase/hash and replay reference. Discovery signals are not events. `replay_consistency.json` separates equal initial state from equal timed trajectories; if voxel hashes differ, the pipeline reports that variation.
-
-`snapshots.zarr/{tokens,light}` are uint16/uint8[N,16,16,16], ENU. `vocabulary.json` is append-only `(Node Name,param2)`, light is auxiliary. `metadata.parquet` includes source seed/chunk, phase/hash, actual time/step/split, scene/rollout and attribution. Nested provenance columns use JSON. `collection.sqlite` is authoritative for committed samples/jobs; Parquet is an exported checkpoint. Only run one writer per dataset. Resume retains committed arrays and IDs, removes uncommitted Zarr tails, skips completed region/category jobs, and starts incomplete scenes as **new** rollouts. It does not restore a simulation to its interrupted time.
-
-`trajectories/<rollout>/raw_trajectory.bin/jsonl` preserves actual callback/early/initial/intervention/settling/native captures with sparse token/light updates. Reuse `vae_p1.storage.Reader` to reconstruct captured frames. Raw logs include states beyond the5–8 training selection. `aux_short_event/` is separate. `scenes.jsonl`, `interventions.jsonl` and job rows retain initialization choices and audits. `collection_statistics.json`/`statistics.json` report actual measurements, biome/seed counts and same-source semantic overlap. Parquet exports are batched every five minutes and at command exit; the SQLite commit journal stays current.
-
-Visualizations are real voxel top/side projections, GIFs and added/removed/state-change maps. They are not RGB or a learned model. Native validation publishes only light reports/plots, with raw arrays left in ignored `outputs/`. Inspect actual pre/post/settling/final phases without starting the engine:
-
-```bash
-.venv/bin/python -m vae_data.visualize --dataset outputs/vae_dataset \
-  --rollout ROLLOUT_ID --category D4 --subtype bamboo
-```
-
-## Voxel-only mechanism limits
-
-Entity/drop factories are blocked before game mods load, covering spawners, script spawns and direct plant-drop paths. The spawner cage remains a voxel; entity-only setup/display/timer is disabled. The collector player is invisible, stationary and non-interacting; target MapBlocks are forceloaded, no camera crop determines chunk coordinates.
-
-Falling-node transitions are unsupported because upstream uses a temporary entity. Any attempted falling conversion quarantines that whole rollout before training commit; it is not a valid frozen-world sample or a replacement physics implementation. All accepted native captures must have zero active nontechnical entities, zero dropped items, zero entity-induced node mutations and no unsupported transition.
-
-Native RNG and mapgen decoration order can affect full voxel initial hashes even with a fixed seed. Report matching chunks and variants, do not correct them by hand. Fast contacts between captures can be unconfirmed. Native outputs, rates and costs require actual runs; synthetic unit cases provide no physical evidence. Current measured results decide readiness; the presence of a CLI is not proof that200K can already be collected efficiently.
+小例不创建正式Shard，不写READY。Synthetic Fixture写到独立unit模式临时目录，正式生成器拒绝该格式；不能拿单元测试证明物理成功。

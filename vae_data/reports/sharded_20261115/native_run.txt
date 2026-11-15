@@ -1,0 +1,13 @@
+Console excerpt; complete original: runs/vae_sharded_native_20261115.log
+==> Creating Minetest run directory: /var/folders/rw/t1pzb7zd5871nj_3sdfq1hdh0000gn/T/voxwm-gt-zwq2qz5j/minetest-run-845bcf3f-8e5c-4162-bd61-d451af248b57
+NATIVE D1 0 success
+NATIVE D1 1 success
+==> Creating Minetest run directory: /var/folders/rw/t1pzb7zd5871nj_3sdfq1hdh0000gn/T/voxwm-gt-c4hohg2k/minetest-run-c0f2916b-20f2-4adb-843d-4e71b573190e
+NATIVE D2 0 rejected
+NATIVE D2 1 rejected
+==> Creating Minetest run directory: /var/folders/rw/t1pzb7zd5871nj_3sdfq1hdh0000gn/T/voxwm-gt-51rj8pjn/minetest-run-dd948493-50de-4c0e-8494-990415910856
+NATIVE D3 0 rejected
+NATIVE D3 1 rejected
+==> Creating Minetest run directory: /var/folders/rw/t1pzb7zd5871nj_3sdfq1hdh0000gn/T/voxwm-gt-h6xwpbzm/minetest-run-15d989be-959a-4254-9ae6-3195e49d32a6
+NATIVE D4 0 rejected No qualified center-contact geometry
+NATIVE D4 1 failed JSONDecodeError: Expecting value: line 1 column 1 (char 0)

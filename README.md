@@ -1,21 +1,19 @@
-# VoxWM — Voxel-Only VAE Data Collection
+# VoxWM — Voxel-Only VAE Data Generation
 
-当前活动入口是 **`vae_data/` 统一原生采集系统**：Broad Discovery → Scene Index → 独立重建 / Early Replay → 可选干预 → Native Collection。固定世界坐标16³，Combined Token `(Node Name, raw param2)`，light辅助保存；不包含模型或训练。
+当前为100K数据生成器，100个严格1K Shards；每片Static500，D1 Water / D2 Lava / D3 Fire / D4 Water–Lava Solidification各125。每样本保留真实48³上下文，目标仍为中心16³；动态每链固定五状态。本轮不实现模型、训练器或DataLoader。
 
-[当前采集协议](VAE_DATA_COLLECTION_PROTOCOL.md) · [运行 / 数据格式 / Resume](vae_data/README.md) · [真实原生结果](vae_data/NATIVE_VALIDATION_RESULTS.md) · [Drive 当前 Markdown](https://drive.google.com/file/d/1NFM1Cb3os2yesAQgBk8VzM6vMmcj1eg8/view)。最新用户指令优先，其次当前采集协议；11/12 Manifest 的架构不变，旧 P0/P1 规则仅作为历史。
+[当前数据协议](VAE_DATA_COLLECTION_PROTOCOL.md) · [服务器生成/恢复/检查命令](vae_data/README.md) · [本轮Native结果](vae_data/SHARDED_RESULTS.md)。最新用户指令覆盖旧200K/植物协议，VAE架构不变。活动代码为`vae_data/sharded/`，默认入口`python -m vae_data`。
 
-**2026-11-15：实现已完成，原生整体验证 INCONCLUSIVE，200K 尚未就绪。** 真实标准样本 Ordinary12 / Water62 / Fire21；Lava仅2个辅助状态；4株天然竹子修剪正确，但约601秒未再生长。实体/掉落/实体改Voxel均为0；三次重建有初态差异，报告不将其伪装成相同初态。
+代码已实现，原生验证 **INCONCLUSIVE**：8次有限尝试中Water成功2条，其他类别未得到合格链；不宣称1K/100K或完整Biome分布已验证。JSON交接错误已修正，未为追成功追加Native。47项快速Unit通过，Fixture不作物理证据。
 
 ```bash
-# 已有 CPU 原生环境；首次安装见下方。以下命令不会自动进入200K。
-uv pip install --python .venv/bin/python -r vae_p0/requirements.txt
-.venv/bin/python -m vae_data discover --dataset outputs/vae_dataset --world-count 20 --sites-per-world 8 --wall-seconds 1800
-.venv/bin/python -m vae_data status --dataset outputs/vae_dataset
-# 有界真实集成验证，用户明确启动
-.venv/bin/python -m vae_data validate --dataset outputs/unified_validation --wall-seconds 900
+# 全部真实生成由用户在CPU服务器手动启动，下面只展示入口
+.venv/bin/python -m vae_data generate --dataset outputs/vae_100k --shard 0 --count 1 --workers 1 --wall-seconds 7200
+.venv/bin/python -m vae_data check --dataset outputs/vae_100k --shard 0
+.venv/bin/python -m vae_data status --dataset outputs/vae_100k
 ```
 
-当前采集全局禁止非技术实体和掉落，在独立临时引擎 overlay 中执行。依赖临时实体的 falling-node 场景被明确排除并隔离，不发布为冻结物理的数据。旧 `voxwm_gt/` 保留原始交互/视频工具与共享引擎接口；其历史生成命令不具备新的Voxel-only数据合同，不能替代当前采集入口。
+纯Voxel边界复用隔离引擎overlay，禁止实体、掉落与当前不支持的falling-entity动态。旧P0/P1/pilot、Unified代码/结果/日志与docs保留；旧README及协议快照在`vae_data/LEGACY_UNIFIED_README.md`、`vae_data/history/`。旧格式不是当前生产入口。
 
 以下保留独立GT环境的安装和历史使用方法；P0/P1/pilot及 `docs/` 不覆盖、不删除。
 
