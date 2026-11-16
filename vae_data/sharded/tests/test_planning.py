@@ -14,8 +14,8 @@ class PlanningTests(unittest.TestCase):
     def test_all_legal_points_no_presampling_and_protection(self):
         f,v=fixture(large=True);f.meta['protected_source_indices']=[int(np.ravel_multi_index((20,20,20),f.tokens.shape))]
         p=Planner(f,v);r=p.evaluate('water')
-        self.assertEqual(len(r['sources']),71423);self.assertEqual(r['metrics']['evaluated_source_count'],71423)
-        self.assertEqual(len(np.unique(r['sources'])),71423)
+        self.assertEqual(len(r['sources']),2743);self.assertEqual(r['metrics']['evaluated_source_count'],2743)
+        self.assertEqual(len(np.unique(r['sources'])),2743)
         self.assertEqual(r['metrics']['batch_size'],64);self.assertLess(r['metrics']['kernel_working_bytes'],40*1024**2)
     def test_optimized_equals_independent_reference_all_four_modes(self):
         for kind in('water','lava','fire','pair'):
@@ -29,10 +29,11 @@ class PlanningTests(unittest.TestCase):
                 stats,arrival=reference(p.geometry,k,int(source),contact)
                 np.testing.assert_array_equal(stats,r['stats'][i]);np.testing.assert_array_equal(arrival.ravel(),r['arrivals'][i])
     def test_time_horizon_and_center_separation(self):
-        f,v=fixture(large=True);p=Planner(f,v);point=np.ravel_multi_index((0,0,47),f.tokens.shape)
+        f,v=fixture(large=True);p=Planner(f,v);point=np.ravel_multi_index((17,17,30),f.tokens.shape)
         sid=int(np.searchsorted(p.geometry.legal['water'],point));r=p.evaluate('water',source_ids=[sid],detail=True)
         grid=r['arrivals'][0];self.assertFalse(np.any((grid>10)&(grid<255)))
-        self.assertEqual(r['stats'][0,1],0);self.assertFalse(r['qualified'][0])
+        self.assertGreater(r['stats'][0,1],0)
+        self.assertTrue(np.any((grid.reshape(f.tokens.shape)<255)&~p.geometry.source_domain))
     def test_four_distinct_time_stages_not_four_voxels(self):
         self.assertFalse(four_stages(1<<1));self.assertFalse(four_stages(sum(1<<t for t in(3,4,5,6))))
         self.assertFalse(four_stages(sum(1<<t for t in(1,2,5,6))));self.assertTrue(four_stages(sum(1<<t for t in(1,2,3,4))))

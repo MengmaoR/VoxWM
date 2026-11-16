@@ -1,3 +1,11 @@
+INCONCLUSIVE — Fixed24 / Interior Sources Revision
+
+24Hz原生时钟和post-update捕获已验证，完整物理跨吞吐等价未验证。只读clock检查合计28.96秒，240连续Tick复核通过；未重开六型、正式Shard或训练。[本次实测/限制](reports/fixed24_20261116/README.md)。
+
+---
+
+以下历史结果保留，不能代替新固定步长协议验收。
+
 INCONCLUSIVE — 2026-11-16 Dynamic Scene Sampling Revision
 
 本次独立一轮252.49秒、10次尝试；D1/D2/D4-A/D4-C成功，D3/D4-B未通过。真实Surface/Cave与Air65/稳定池19筛选已接入；没有正式Shard或训练。[完整实测/六型预览/性能](reports/scene_sampling_20261116/README.md)。

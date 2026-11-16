@@ -2,7 +2,7 @@
 from collections import deque
 import time
 import numpy as np
-from ..protocol import CENTER,kind_mask
+from ..protocol import CENTER,INTERIOR,kind_mask
 
 CARDINAL=((1,0,0),(-1,0,0),(0,1,0),(0,-1,0),(0,0,1),(0,0,-1))
 
@@ -39,8 +39,9 @@ class Geometry:
         self.ambient_contact=ambient.copy()
         for d in CARDINAL:self.ambient_contact|=shifted(ambient,d)
         self.kernel_targets=self.center+2*self.contact_halo.astype(np.uint8)+4*self.ambient_contact.astype(np.uint8)
-        self.legal={'water':np.flatnonzero(((self.air|self.replaceable)&~self.protected).ravel()).astype(np.int32),'lava':np.flatnonzero(((self.air|self.replaceable)&~self.protected).ravel()).astype(np.int32),
-            'fire':np.flatnonzero((self.air&~shifted(kind_mask(frame.tokens,vocabulary,'water'),(0,0,-1))&~self.protected).ravel()).astype(np.int32)}
+        self.source_domain=np.zeros(self.shape,bool);self.source_domain[INTERIOR]=True
+        self.legal={'water':np.flatnonzero(((self.air|self.replaceable)&self.source_domain&~self.protected).ravel()).astype(np.int32),'lava':np.flatnonzero(((self.air|self.replaceable)&self.source_domain&~self.protected).ravel()).astype(np.int32),
+            'fire':np.flatnonzero((self.air&self.source_domain&~shifted(kind_mask(frame.tokens,vocabulary,'water'),(0,0,-1))&~self.protected).ravel()).astype(np.int32)}
         self.falling_risk=self.fuel&shifted(self.falling,(0,0,1));self.graphs={};self.build_seconds=time.perf_counter()-start
     def graph(self,kind):
         if kind in self.graphs:return self.graphs[kind]

@@ -4,7 +4,7 @@
 
 [当前数据协议](VAE_DATA_COLLECTION_PROTOCOL.md) · [服务器生成/恢复/检查命令](vae_data/README.md) · [本轮Native结果](vae_data/SHARDED_RESULTS.md)。最新用户指令覆盖旧200K/植物协议，VAE架构不变。活动代码为`vae_data/sharded/`，默认入口`python -m vae_data`。
 
-当前原生验证 **INCONCLUSIVE**：本次场景采样修订后独立一轮10次尝试、252.49秒，D1/D2/D4-A/D4-C各成功一条，D3/D4-B仍有缺口。真实Surface/Cave及中心Air≥65、稳定池≥19筛选已接入全点规划；[实测/六型预览/性能](vae_data/reports/scene_sampling_20261116/README.md)。没有正式1K/100K、模型或训练。前轮报告与GT保留。
+当前为 **Fixed24时钟已验证 / 完整物理等价性INCONCLUSIVE**：六型人工source仅中心14³，Fire无变化120 Tick，其余48 Tick；opt-in固定24Hz、无墙钟FPS限速、逐Tick post-update原生快照已实现。有限只读验证连续Tick0..240通过，含Trace实测74.26 Tick/s。没有重开六型、正式1K/100K或训练；Lava/Fire及受控随机跨吞吐等价仍未验证。[本次报告与服务器命令](vae_data/reports/fixed24_20261116/README.md)。[此前六型结果](vae_data/reports/scene_sampling_20261116/README.md)保留，不能代替新时序验证。
 
 [Node-state 审计与 Viewer](vae_data/reports/transition_audit_20261116/README.md)：已核对D2 attempt_2的18.9–19.2秒；消失的是Flowing Lava，被替换的是红蘑菇。支持原生液面/Firelike、固定世界坐标Before/After和点击Inspector。没有额外Native生成。
 

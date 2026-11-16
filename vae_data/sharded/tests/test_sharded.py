@@ -17,7 +17,7 @@ def frame(v,step,tokens=None,seed=42,rollout='fixture'):
     air=v.add('air',0)
     a=np.full((48,)*3,air,np.uint16)if tokens is None else tokens.copy()
     return Frame(a,np.zeros(a.shape,np.uint8),dict(data_source='synthetic_fixture',center_origin=[0,0,0],region_origin=[-16,-16,-16],
-        simulation_step=step,sim_time=step*.2,engine_us=step*100,rollout_id=rollout,world_seed=seed,
+        simulation_step=step,sim_time=step/24,simulation_hz=24,frame_index=step,relative_sim_time=step/24,absolute_sim_time=step/24,native_simulation_step=step,engine_us=step*100,rollout_id=rollout,world_seed=seed,
         split=split_for_seed(seed,[80,10,10]),biome_group='Plains',stratum='surface',event_roles=[]))
 
 
@@ -56,7 +56,7 @@ class ShardedTests(unittest.TestCase):
     def test_neighbor_change_does_not_add_candidate_or_reset_clock(self):
         v=Vocabulary();start=frame(v,0);monitor=Collector(start,'D1',v)
         water=v.add('mcl_core:water_flowing',2)
-        for step in range(1,12):
+        for step in range(1,49):
             f=frame(v,step);f.tokens[2,2,2]=water
             stopped=monitor.observe(f)
         self.assertTrue(stopped);self.assertEqual(len(monitor.registry.frames),1)

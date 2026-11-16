@@ -3,6 +3,7 @@ import copy
 import json
 import shutil
 import tempfile
+import time
 from pathlib import Path
 import numpy as np
 from .encoding import Encoder
@@ -56,7 +57,7 @@ class GTSession:
     supplied by get_voxel_data_cpp, never estimated from player position.
     """
     def __init__(self, scene='test_a', seed=42, renderer='auto', craftium_dir=DEFAULT_CRAFTIUM,
-                 world_file=None, mapgen='v7', scene_script=None, native_settings=None, image_size=(640,360), scene_assets=()):
+                 world_file=None, mapgen='v7', scene_script=None, native_settings=None, image_size=(640,360), scene_assets=(), fixed_step=False, voxel_observation=True, render_rgb=True):
         self.scene,self.seed,self.renderer=scene,seed,renderer
         self.craftium_dir=Path(craftium_dir).resolve()
         self.world_file=Path(world_file).resolve() if world_file else None
@@ -65,6 +66,7 @@ class GTSession:
         self.native_settings=dict(native_settings or {})
         self.image_size=image_size
         self.scene_assets=tuple(Path(p) for p in scene_assets)
+        self.fixed_step=fixed_step;self.voxel_observation=voxel_observation;self.render_rgb=render_rgb
         self.env=None; self.work=None
         self.elapsed=0.
 
@@ -84,7 +86,7 @@ class GTSession:
             name='Craftium/OpenWorldCreative-v0' if self.scene=='procedural' else 'Craftium/OpenWorldDataset-v0'
             kwargs=copy.deepcopy(gym.spec(name).kwargs)
             kwargs.update(env_dir=str(folder),minetest_dir=str(self.craftium_dir),
-                          obs_width=self.image_size[0],obs_height=self.image_size[1],enable_voxel_obs=True,
+                          obs_width=self.image_size[0],obs_height=self.image_size[1],enable_voxel_obs=self.voxel_observation,
                           voxel_obs_rx=24,voxel_obs_ry=24,voxel_obs_rz=24,
                           init_frames=200,fps_max=24,frameskip=1,pmul=1,sync_mode=True,
                           max_timesteps=None,seed=self.seed,run_dir_prefix=self.work.name,
@@ -98,14 +100,22 @@ class GTSession:
                 conf.update(enable_damage=False,enable_pvp=False,view_bobbing_amount=0.,
                             starting_inventory_creative='mcl_core:dirt 99,mcl_core:stone 99,mcl_core:tree 99,mcl_core:water_source 99')
             if __import__('sys').platform=='darwin': conf['video_driver']='opengl3'
+            if self.fixed_step:
+                conf.update(voxwm_fixed24=True,voxwm_skip_rgb=not self.render_rgb,vsync=False,pause_on_lost_focus=False)
             conf.update(self.native_settings)
             kwargs['minetest_conf']=conf
-            self.env=MultiDiscreteActionWrapper(NueToEnuVoxelObs(CraftiumEnv(**kwargs)))
+            native=CraftiumEnv(**kwargs)
+            self.env=MultiDiscreteActionWrapper(NueToEnuVoxelObs(native)if self.voxel_observation else native)
+            self.world=Path(self.env.unwrapped.mt.run_dir)/'worlds/world'
+            if self.fixed_step:
+                self.env.unwrapped.mt.overwrite_config({'voxwm_client_clock_file':str(self.world/'client_clock.txt')})
             self.env.unwrapped.mt.proc_env=environment
             self.rgb,self.info=self.env.reset(seed=self.seed)
             self.world=Path(self.env.unwrapped.mt.run_dir)/'worlds/world'
             noop=np.zeros(4,dtype=np.int64)
-            for _ in range(300):
+            ready_deadline=time.monotonic()+45
+            for _ in range(24000 if self.fixed_step else 300):
+                if time.monotonic()>ready_deadline:raise TimeoutError("Native scene emergence exceeded 45 wall seconds")
                 if (self.world/'gt_ready').is_file(): break
                 self.step(noop)
             else: raise RuntimeError('Scene did not emerge; see native engine output')
@@ -126,6 +136,9 @@ class GTSession:
     def step(self,action):
         self.rgb,reward,self.terminated,self.truncated,self.info=self.env.step(action)
         self.elapsed+=float(self.info['mt_dtime'])
+        if self.fixed_step:
+            tick,dt=(self.world/'client_clock.txt').read_text().split()
+            self.info.update(native_client_tick=int(tick),native_client_dt=float(dt))
         return self.rgb,reward,self.terminated,self.truncated,self.info
 
     def close(self):

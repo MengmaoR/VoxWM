@@ -5,12 +5,19 @@ import json
 import numpy as np
 import zarr
 import pyarrow.parquet as pq
-from .protocol import CONFIG,VERSION,CATEGORIES,STRATA,BIOMES,PRODUCTS,Frame,Chain,Vocabulary,split_for_seed,target_changes,d4_targets
+from .protocol import CONFIG,VERSION,CATEGORIES,STRATA,BIOMES,PRODUCTS,Frame,Chain,Vocabulary,split_for_seed,target_changes,d4_targets,SIMULATION_HZ
 
 
 def validate_native(frame):
     meta=frame.meta
     if meta.get('data_source')!='native':raise ValueError('Non-native sample in formal dataset')
+    if meta.get('simulation_hz')!=SIMULATION_HZ:raise ValueError('Expected fixed24 native data; do not mix historical variable-step samples')
+    n=meta.get('native_simulation_step');clock=meta.get('native_clock',{})
+    if n!=frame.step or any(clock.get(k)!=n for k in('server_tick','client_request_tick','client_completed_tick','lua_tick')):
+        raise ValueError('Native clock alignment failed')
+    if meta.get('absolute_sim_time')!=n/SIMULATION_HZ or frame.time!=n/SIMULATION_HZ:raise ValueError('Native tick-derived absolute time mismatch')
+    index=meta.get('frame_index')
+    if index is not None and(meta.get('relative_sim_time')is None or abs(meta['relative_sim_time']-index/SIMULATION_HZ)>1e-6):raise ValueError('Relative native tick clock mismatch')
     evidence=meta.get('native_provenance',{});audit=evidence.get('voxel_only',{})
     if not audit.get('compatible')or any(audit.get(k)!=0 for k in('nontechnical_entities','dropped_items','entity_induced_changes','unsupported_falling_attempts')):
         raise ValueError('Voxel-only provenance failed')
@@ -34,6 +41,8 @@ def confirmed_transition(transition,pre,reaction,vocabulary):
     else:
         expected='mcl_core:obsidian'if 'source'in lava_name else'mcl_core:cobble'
         valid=np.array_equal(p,lava)and after==expected and water[2]>=lava[2]and'lava'in transition.get('before','')
+    event_tick=transition.get('clock',{}).get('native_simulation_step')
+    if event_tick is not None:return bool(valid and pre.step<event_tick<=reaction.step)
     event_us=transition.get('clock',{}).get('engine_us')
     return bool(valid and event_us is not None and pre.meta['engine_us']<event_us<=reaction.meta['engine_us'])
 

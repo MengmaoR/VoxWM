@@ -1,0 +1,334 @@
+--- a/src/client/client.cpp
++++ b/src/client/client.cpp
+@@ -57,6 +57,8 @@
+ #include "item_visuals_manager.h"
+ 
+ #include "craftium.h"
++#include <fstream>
++#include <iomanip>
+ #include "gui/mainmenumanager.h"
+ #include <chrono>
+ 
+@@ -230,10 +232,11 @@
+ 
+     /* Take the screenshot */
+     irr::video::IVideoDriver *driver = m_rendering_engine->get_video_driver();
+-    irr::video::IImage* const raw_image = driver->createScreenShot();
++    const bool skip_rgb=voxwmFixed24() && g_settings->getBool("voxwm_skip_rgb");
++    irr::video::IImage* const raw_image = skip_rgb ? nullptr : driver->createScreenShot();
+ 
+     /* Get the dimensions of the image */
+-    auto dims = raw_image->getDimension();
++    auto dims = driver->getScreenSize();
+     W = dims.Width;
+     H = dims.Height;
+ 
+@@ -260,12 +263,15 @@
+         obs_rwd_buffer = (unsigned char*) malloc(obs_rwd_buffer_size);
+     }
+ 
+-    if (!raw_image)
++    if (!raw_image && !skip_rgb)
+         return;
+ 
+     /* Copy RGB image into a flat u8 array (obs_rwd_buffer) */
+     int i = 0;
+-    if (g_settings->getBool("rgb_frames")) {
++    if (skip_rgb) {
++        i=W*H*(g_settings->getBool("rgb_frames") ? 3 : 1);
++        memset(obs_rwd_buffer,0,i);
++    } else if (g_settings->getBool("rgb_frames")) {
+         for (int h=0; h<H; h++) {
+             for (int w=0; w<W; w++) {
+                 c = raw_image->getPixel(w, h).color;
+@@ -719,7 +725,7 @@
+ {
+     syncClientStep();
+ 
+-	dtime -= m_craftium_lag;
++	if (voxwmFixed24()) dtime=voxwmDt; else dtime -= m_craftium_lag;
+ 
+ 	// printf("client dtime: %f, LIM: %f\n", dtime, DTIME_LIMIT);
+ 	// Limit a bit
+@@ -1113,6 +1119,10 @@
+ 		Handle environment
+ 	*/
+ 	auto begin = std::chrono::steady_clock::now();
++    if (voxwmFixed24()) {
++        std::ofstream stamp(g_settings->get("voxwm_client_clock_file"),std::ios::trunc);
++        stamp << voxwmClientTick.load() << " " << std::setprecision(17) << dtime << "\n";
++    }
+     pyConnStep(player, m_camera, dtime);
+ 	auto end = std::chrono::steady_clock::now();
+ 	std::chrono::duration<float> duration = end - begin;
+--- a/src/client/craftium.h
++++ b/src/client/craftium.h
+@@ -16,6 +16,7 @@
+ #include <cstdint>
+ 
+ #include "../settings.h"
++#include "voxwm_clock.h"
+ 
+ 
+ inline char actions[27];
+@@ -122,7 +123,7 @@
+         syncServerInit();
+ 
+ 
+-    if (sem_post(srv_sem_B) < 0) {
++    if (!voxwmFixed24() && sem_post(srv_sem_B) < 0) {
+         perror("[SyncServerStep] Error posting sem B");
+         exit(EXIT_FAILURE);
+     }
+@@ -144,6 +145,7 @@
+     if (cli_sem_A == nullptr)
+       syncClientInit();
+ 
++    if (voxwmFixed24()) ++voxwmClientTick;
+     if (sem_post(cli_sem_A) < 0) {
+         perror("[SyncServerStep] Error posting sem A");
+         exit(EXIT_FAILURE);
+--- a/src/client/game.cpp
++++ b/src/client/game.cpp
+@@ -2619,15 +2619,15 @@
+ 		fps_max = std::min(fps_max, 60.0f);
+ 
+ 		server->setStepSettings(Server::StepSettings{
+-				1.0f / fps_max,
++				voxwmFixed24() ? voxwmDt : 1.0f / fps_max,
+ 				m_is_paused
+ 			});
+ 
+ 		server->step();
+ 	}
+ 
+-	if (!m_is_paused)
+-            client->step(dtime);
++	if (!m_is_paused || voxwmFixed24())
++            client->step(voxwmFixed24() ? voxwmDt : dtime);
+ }
+ 
+ static void pauseNodeAnimation(PausedNodesList &paused, scene::ISceneNode *node) {
+@@ -4033,7 +4033,7 @@
+ 	/*
+ 		==================== Drawing begins ====================
+ 	*/
+-	if (device->isWindowVisible())
++	if (device->isWindowVisible() && !(voxwmFixed24() && g_settings->getBool("voxwm_skip_rgb")))
+ 		drawScene(graph, stats);
+ 	/*
+ 		==================== End scene ====================
+--- a/src/client/renderingengine.cpp
++++ b/src/client/renderingengine.cpp
+@@ -23,6 +23,7 @@
+ #include "filesys.h"
+ #include "irrlicht_changes/static_text.h"
+ #include "irr_ptr.h"
++#include "voxwm_clock.h"
+ 
+ RenderingEngine *RenderingEngine::s_singleton = nullptr;
+ const video::SColor RenderingEngine::MENU_SKY_COLOR = video::SColor(255, 140, 186, 250);
+@@ -36,6 +37,10 @@
+ 
+ void FpsControl::limit(IrrlichtDevice *device, f32 *dtime)
+ {
++	if (voxwmFixed24()) {
++		const u64 now=porting::getTimeUs(); busy_time=now-last_time;
++		last_time=now; sleep_time=0; *dtime=voxwmDt; return;
++	}
+ 	const float fps_limit = device->isWindowFocused()
+ 			? g_settings->getFloat("fps_max")
+ 			: g_settings->getFloat("fps_max_unfocused");
+--- a/src/script/cpp_api/s_env.cpp
++++ b/src/script/cpp_api/s_env.cpp
+@@ -130,6 +130,16 @@
+ 	runCallbacks(3, RUN_CALLBACKS_MODE_FIRST);
+ }
+ 
++void ScriptApiEnv::environment_VoxwmPostStep(float dtime)
++{
++	SCRIPTAPI_PRECHECKHEADER
++	lua_getglobal(L, "core");
++	lua_getfield(L, -1, "registered_voxwm_poststeps");
++	if (!lua_istable(L, -1)) return;
++	lua_pushnumber(L, dtime);
++	runCallbacks(1, RUN_CALLBACKS_MODE_FIRST);
++}
++
+ void ScriptApiEnv::environment_Step(float dtime)
+ {
+ 	SCRIPTAPI_PRECHECKHEADER
+--- a/src/script/cpp_api/s_env.h
++++ b/src/script/cpp_api/s_env.h
+@@ -19,6 +19,7 @@
+ public:
+ 	// Called on environment step
+ 	void environment_Step(float dtime);
++	void environment_VoxwmPostStep(float dtime);
+ 
+ 	// Called after generating a piece of map
+ 	void environment_OnGenerated(v3s16 minp, v3s16 maxp, u32 blockseed);
+--- a/src/script/scripting_server.cpp
++++ b/src/script/scripting_server.cpp
+@@ -35,6 +35,7 @@
+ #include "common/c_converter.h"
+ #include "common/c_content.h"
+ #include "serverenvironment.h"
++#include "mapblock.h"
+ 
+ extern "C" {
+ #include <lualib.h>
+@@ -111,6 +112,40 @@
+         lua_error(L);
+         return 0;
+     }
++}
++
++// Read-only capture, chunk-major ENU, same 27 aligned16-cubes as the P0 path.
++inline static int lua_voxwm_region(lua_State *L) {
++    try {
++        if (!voxwmFixed24()) throw std::runtime_error("Fixed24 capture requires fixed24 scheduler");
++        const v3s16 low=read_v3s16(L,1);
++        auto *env=dynamic_cast<ServerEnvironment*>(ModApiBase::getEnv(L));
++        static std::vector<char> buffer(48*48*48*4);
++        size_t at=0;
++        for(int bx=0;bx<3;bx++)for(int bz=0;bz<3;bz++)for(int by=0;by<3;by++) {
++            const v3s16 origin=low+v3s16(bx*16,by*16,bz*16);
++            auto *block=env->getServerMap().getBlockNoCreateNoEx(getNodeBlockPos(origin));
++            if(!block) throw std::runtime_error("Missing active block in fixed24 capture");
++            for(int x=0;x<16;x++)for(int z=0;z<16;z++)for(int y=0;y<16;y++) {
++                const auto node=block->getNodeNoCheck(x,y,z);const auto id=node.getContent();
++                if(id==CONTENT_IGNORE) throw std::runtime_error("Ignore voxel in fixed24 capture");
++                buffer[at++]=id&255;buffer[at++]=(id>>8)&255;
++                buffer[at++]=node.param1;buffer[at++]=node.getParam2();
++            }
++        }
++        lua_pushlstring(L,buffer.data(),buffer.size());return 1;
++    } catch(const std::exception &e) {return luaL_error(L,"%s",e.what());}
++}
++inline static int lua_voxwm_clock(lua_State *L) {
++    lua_newtable(L);
++    const auto tick=voxwmServerTick.load();
++    lua_pushnumber(L,tick);lua_setfield(L,-2,"server_tick");
++    lua_pushnumber(L,voxwmClientTick.load());lua_setfield(L,-2,"client_request_tick");
++    lua_pushnumber(L,tick/24.0);lua_setfield(L,-2,"absolute_sim_time");
++    lua_pushnumber(L,voxwmDt);lua_setfield(L,-2,"server_dt");
++    lua_pushnumber(L,voxwmPhysicsUs);lua_setfield(L,-2,"physics_us");
++    lua_pushstring(L,"voxwm-fixed24-v1");lua_setfield(L,-2,"patch_version");
++    return 1;
+ }
+ 
+ ServerScripting::ServerScripting(Server* server):
+@@ -153,6 +188,8 @@
+         lua_register(L, "set_voxel_light_data", lua_set_voxel_light_data);
+         lua_register(L, "set_voxel_param2_data", lua_set_voxel_param2_data);
+         lua_register(L, "get_voxel_data_cpp", lua_get_voxel_data_cpp);
++        lua_register(L, "voxwm_region", lua_voxwm_region);
++        lua_register(L, "voxwm_clock", lua_voxwm_clock);
+ 
+ 	// Initialize our lua_api modules
+ 	InitializeModApi(L, top);
+--- a/src/server.cpp
++++ b/src/server.cpp
+@@ -140,14 +140,16 @@
+ 		try {
+ 			// see explanation inside
+ 			// (+1 ms, because we don't sleep more fine-grained)
+-			if (dtime > step_settings.steplen + 0.001f)
++			if (!voxwmFixed24() && dtime > step_settings.steplen + 0.001f)
+ 				m_server->yieldToOtherThreads(dtime);
+ 
+-			m_server->AsyncRunStep(step_settings.pause ? 0.0f : dtime);
++			if (voxwmFixed24()) { ++voxwmServerTick; voxwmStepStartUs=porting::getTimeUs(); }
++			m_server->AsyncRunStep(voxwmFixed24() ? voxwmDt : (step_settings.pause ? 0.0f : dtime));
+ 
+ 			const float remaining_time = step_settings.steplen
+ 					- 1e-6f * (porting::getTimeUs() - t0);
+-			m_server->Receive(remaining_time);
++			m_server->Receive(voxwmFixed24() ? 0.0f : remaining_time);
++            if (voxwmFixed24()) m_server->voxwmPostStep();
+ 
+ 		} catch (con::PeerNotFoundException &e) {
+ 			infostream<<"Server: PeerNotFoundException"<<std::endl;
+@@ -161,6 +163,7 @@
+ 			m_server->setAsyncFatalError(e.what());
+ 		}
+ 
++		if (voxwmFixed24() && sem_post(srv_sem_B) < 0) throw std::runtime_error("VoxWM completion semaphore failed");
+ 		dtime = 1e-6f * (porting::getTimeUs() - t0);
+ 		framemarker.end();
+ 	}
+@@ -1090,6 +1093,13 @@
+ 	m_shutdown_state.tick(dtime, this);
+ }
+ 
++void Server::voxwmPostStep()
++{
++    voxwmPhysicsUs=porting::getTimeUs()-voxwmStepStartUs;
++    EnvAutoLock lock(this);
++    m_script->environment_VoxwmPostStep(voxwmDt);
++}
++
+ void Server::Receive(float min_time)
+ {
+ 	ZoneScoped;
+--- a/src/server.h
++++ b/src/server.h
+@@ -188,6 +188,7 @@
+ 	// Actual processing is done in another thread.
+ 	// This just checks if there was an error in that thread.
+ 	void step();
++    void voxwmPostStep();
+ 
+ 	// This is run by ServerThread and does the actual processing
+ 	void AsyncRunStep(float dtime, bool initial_step = false);
+--- a/src/serverenvironment.cpp
++++ b/src/serverenvironment.cpp
+@@ -6,6 +6,7 @@
+ #include <stack>
+ #include <utility>
+ #include "serverenvironment.h"
++#include "client/voxwm_clock.h"
+ #include "irr_aabb3d.h"
+ #include "settings.h"
+ #include "log.h"
+@@ -1045,7 +1046,7 @@
+ 
+ 			u32 time_ms = timer.getTimerTime();
+ 
+-			if (time_ms > max_time_ms) {
++			if (!voxwmFixed24() && time_ms > max_time_ms) {
+ 				warningstream << "active block modifiers took "
+ 					  << time_ms << "ms (processed " << i << " of "
+ 					  << output.size() << " active blocks)" << std::endl;
+--- a/src/servermap.cpp
++++ b/src/servermap.cpp
+@@ -3,6 +3,7 @@
+ // Copyright (C) 2010-2024 celeron55, Perttu Ahola <celeron55@gmail.com>
+ 
+ #include "map.h"
++#include "client/voxwm_clock.h"
+ #include "mapsector.h"
+ #include "filesys.h"
+ #include "voxel.h"
+@@ -1201,7 +1202,7 @@
+ 
+ 	time_until_purge *= 1000;	// seconds -> milliseconds
+ 
+-	u64 curr_time = porting::getTimeMs();
++	u64 curr_time = voxwmFixed24() ? voxwmServerTick.load()*1000/24 : porting::getTimeMs();
+ 	u32 prev_unprocessed = m_unprocessed_count;
+ 	m_unprocessed_count = m_transforming_liquid.size();
+ 
+--- /dev/null
++++ b/src/client/voxwm_clock.h
+@@ -0,0 +1,9 @@
++// VoxWM opt-in fixed-step clock; native voxel rules and RNG are unchanged.
++#pragma once
++#include <atomic>
++#include <cstdint>
++#include "../settings.h"
++inline bool voxwmFixed24() { return g_settings->exists("voxwm_fixed24") && g_settings->getBool("voxwm_fixed24"); }
++inline constexpr float voxwmDt = 1.0f / 24.0f;
++inline std::atomic<uint64_t> voxwmServerTick{0}, voxwmClientTick{0};
++inline uint64_t voxwmStepStartUs=0, voxwmPhysicsUs=0;

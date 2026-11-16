@@ -1,6 +1,6 @@
 # VoxWM — VAE 100K / 1K Shard 数据采集协议
 
-版本：2026-11-16 / `vae-region48-shards-v1`。最新用户《VAE Dynamic Scene Sampling & Intervention Planning Revision》为本次最高权威。本协议只修改数据生成，不改变 VAE 架构、不实现模型、训练器或 DataLoader。旧 200K 协议保存在 `vae_data/history/UNIFIED_200K_2026-11-15.md`，旧代码、结果和日志保留，不混入当前数据。
+版本：2026-11-16 / `vae-region48-fixed24-v2`。最新用户《Unified Revision: Interior Intervention, Fixed 24Hz Simulation & High-Throughput GT Collection》为本次最高权威。本协议只修改数据生成，不改变 VAE 架构、不实现模型、训练器或 DataLoader。旧 200K 协议保存在 `vae_data/history/UNIFIED_200K_2026-11-15.md`，旧代码、结果和日志保留，不混入当前数据。
 
 ## 1. 数量和空间单位
 
@@ -42,7 +42,7 @@ VoxGen原始空间协议要求真实连续27个Chunk，细分配额原为建议�
 
 只统计中心16³的对应变化。D1=Water状态；D2=Lava流动状态；D3=Fire及与火邻接的可燃方块改变。邻接Chunk的改变不能增加候选或重置超时，也不能跨Chunk拼成一条链。
 
-每场景最多10个中心不同候选状态；中心连续2个原生模拟秒无对应变化、或达到10候选、或达到最大观察时长，即停止。所有超时用实际sim_time，不用墙钟/帧数推测。当前最大模拟观察D1=30s、D2=40s、D3=40s、D4=60s；命令另有明确总墙钟限制。默认liquid_update=1.0s，Lava viscosity=7是level调整阻力，不是7帧更新周期，禁止时钟加速。
+每场景最多10个中心不同候选状态；D1/D2/D4中心连续48 Tick、D3连续120 Tick无有效对应变化、或达到10候选、或达到最大观察时长，即停止。所有超时用原生整数Tick差；相对时间=frame_index/24，不能用墙钟或浮点轮询调度。Fire年龄变化不能重置超时。当前最大模拟观察D1=30s、D2=40s、D3=40s、D4=60s；命令另有明确总墙钟限制。默认liquid_update=1.0s，Lava viscosity=7是level调整阻力，不是7帧更新周期，不改其规则/参数；计算可快于实时，原生dt仍固定为1/24。
 
 候选按真实时间排序，随机选一个相邻五状态窗口；不足5则拒绝，不补齐。重复中心状态不重复候选，48³邻域变化不能虚增中心状态数。
 
@@ -54,11 +54,11 @@ VoxGen原始空间协议要求真实连续27个Chunk，细分配额原为建议�
 
 每片25条，按A/B/C中一个9条、另两个8条轮换（shard0为8/8/9，shard1为9/8/8，shard2为8/9/8）。缺失不替代。
 
-全部合法源点参与预计算，不使用inspect256或预随机32/64子集。共享原生Node合法性/障碍图，反向乐观不可达判定、10秒时间分层和64-source稀疏bitset批处理；所有合法点有结果或明确的不可达依据。仅选中点保留详细可达域，不保存N×48³密集矩阵。编译小型C++17 CPU内核，不引入新的Python依赖。
+人工放置域为中心local[1..14]^3、region[17:31]^3，最多2744点；在此域内先检查合法性/保护/障碍，再对全部合法源点预计算，不使用预随机32/64子集。天然池不受此人工源点域限制；Python调用前后和Lua放置前复核全部source，越界整次拒绝。传播图/原生后续动态仍为完整48³，不能裁到14³。共享原生Node合法性/障碍图，反向乐观不可达判定、10秒时间分层和64-source稀疏bitset批处理；所有合法点有结果或明确的不可达依据。仅选中点保留详细可达域，不保存N×48³密集矩阵。编译小型C++17 CPU内核，不引入新的Python依赖。
 
 Water range7、Lava range3，考虑向下流动、水平level衰减、source与flowing差异、floodable及另一流体阻挡。Lava黏度产生的level调整、Fire ABM机会与湿度均存在不确定性：10个scheduled-wave秒是可解释的传播潜力，不是原生确定性预报；随机过程最低实际产出可为0，不能声称10秒必达。可能存在未建模的可燃/冰雪移除时，禁用据此不安全的反向剪枝。
 
-区分完整可达、中心可达、到达时间及时间阶段；至少四个不同的中心潜在变化时间带，首带不晚于2秒、前四带间隔不超过2秒。一个时间带影响多个体素仍只算一次。D4只统计预计Stone/Cobble/Obsidian实际产物位于中心的接触，不把邻接触点当产物。初始化后基准可作D1–D3首帧，D4 Anchor仍独立。
+区分完整可达、中心可达、到达时间及时间阶段；至少四个不同的中心潜在变化时间带，D1/D2/D4首带不晚于2秒、前四带间隔不超过2秒；D3对应5秒。一个时间带影响多个体素仍只算一次。D4只统计预计Stone/Cobble/Obsidian实际产物位于中心的接触，不把邻接触点当产物。初始化后基准可作D1–D3首帧，D4 Anchor仍独立。
 
 合格集合N上逐点独立Bernoulli p=1/N；零命中均匀保底、最多4源点、超限无放回随机裁剪。D4-B完整评估两类源点：先过滤10秒内能进入中心/产物接触halo的单源潜力集合，分别p=1/N，再查询隐式水–岩浆接触因子图。组合必须同时满足真实产物位置和联合四时间阶段潜力；一次有界条件保底评估全部lava并均匀选择兼容点，明确记录条件概率/分布变化；不枚举完整笛卡尔积，不保证每个场景一定找到配对。A/C按上节中心连通≥19及短时稳定性筛池，Source/稳定Flowing均可；B使用两套独立候选集合和联合兼容性。不新建池、不改地形。
 
@@ -66,9 +66,19 @@ Fire枚举全部合法air点火位置（无保护、下方非水），再评估�
 
 用原生cooling写入的被动观测确认：真实Water/Lava接触、原状态以及Stone/Cobblestone/Obsidian新转换。观察器转发原始set_node，不改变规则、参数或结果。已有固体不是事件证据；未被可靠捕获的转换不伪造为成功。
 
-Initial Anchor为全部source放置完的原始48³初态，独立保存且不进入VAE候选。Pre为reaction前最后一个已捕获中心状态；Reaction为首次观察到对应真实转换的帧；Post为其后第一次中心相关动态改变；后续reaction同样记录。采样不是每引擎step全量轨迹，原生写入step/us与包含该写入的观察帧step分别记录，不能声称捕获了所有未采样中间状态。
+Initial Anchor为全部source放置完的原始48³初态，独立保存且不进入VAE候选。Pre为reaction前最后一个已捕获中心状态；Reaction为首次观察到对应真实转换的帧；Post为其后第一次中心相关动态改变；后续reaction同样记录。初始化完成后的每个原生Tick均捕获；原生写入Tick与post-step观察Tick分别记录。一个Tick内部未暴露的多个顺序写入不等于多个可用状态。
 
 统一Frame Registry以 `(rollout_id,simulation_step)`标识物理帧，重叠角色/Reaction IDs合并，Snapshot不重复存储。不同时间相同中心状态不能补数；角色可引用已有相同中心状态，但保留该引用的原始物理时间，并另存实际最后Pre观察的frame ID/time/step/us及中心相等证据，不伪造时间。无法满足真实Pre–Reaction–Post时间关系的事件仍拒绝。候选最多10，从中随机选连续五状态窗口，必须中心各不同，至少有一组完整Pre–Reaction–Post，时间严格递增、反应在中心、实际contact/write证据有效。没有合法窗口就拒绝。只有最终成功D4场景保留Anchor。
+
+## 4a. Fixed24原生时序与接口
+
+- `simulation_hz=24`，物理每step用相同的float32最近可表示`1/24`；计时用整数native tick，绝不累计墙钟dt。相对Tick0是全部人工干预完成后的状态。
+- 固定版本Craftium采用opt-in补丁：Server等待Client请求→执行原生step/液体/ABM/Node Timers/packet处理→post-step捕获→完成信号→Client同dt完成→发送Python观测并阻塞等待下一动作。Python处理、规划和写盘时不额外推进世界。
+- 移除固定模式的FpsControl sleep与Server Receive等待；跳过Client的墙钟lag扣减，禁vsync。ABM扫描不因墙钟预算提前中断；液体queue purge时钟用模拟时间。原生传播范围、黏度、interval/chance及RNG算法不改。
+- 采集用只读C++ MapBlock完整27块快照；与同Tick原P0 VoxelManip结果比较一次后缓存静态几何metadata。每Tick复用native buffer与Combined Token LUT，保留Node/raw param2/light，不重建27个VoxelManip，也不重复跑逐voxel名字回解审计。
+- 保存`frame_index`、`native_simulation_step`、`relative_sim_time`、`absolute_sim_time`、seed、center、rollout ID及Server/Client/Lua时钟。原来的`simulation_step/sim_time`作为绝对Tick/时间别名保留。准备阶段无相对Tick；演化阶段只调用`Native.tick()`，严格+1。
+- 当前VAE模式不渲染RGB，只发小型空白兼容packet；不是实际RGB数据。未来VoxEvolve可启用RGB，但原生截图/Camera在Client渲染循环中的相位及逐像素等价要另行验证。
+- 时序正确不等于完整随机世界可复现：全局RNG、emergence、异步加载及初态/队列未快照；不同吞吐下严格voxel-state等价尚未证明，不将视频24FPS当证据。当前实测见`vae_data/reports/fixed24_20261116/README.md`。
 
 ## 5. 存储、恢复和发布
 
@@ -95,9 +105,11 @@ dataset/
 
 ## 6. 纯Voxel与本次权限
 
-继续从引擎入口禁止非技术实体、掉落和实体导致的Voxel变化；技术player不可见无交互。当前不支持falling-entity物理，发生该请求则排除当前rollout，不发布被冻结的物理。保留原生液体、cooling、fire，不加速ABM或模拟时钟。
+继续从引擎入口禁止非技术实体、掉落和实体导致的Voxel变化；技术player不可见无交互。当前不支持falling-entity物理，发生该请求则排除当前rollout，不发布被冻结的物理。保留原生液体、cooling、fire及其概率/参数；只用固定dt推进原生时钟，不按墙钟限速。
 
-本轮仅允许六个Unique Types D1/D2/D3/D4-A/D4-B/D4-C：每型最多3次Native Attempt，成功1条即停止，整轮硬墙钟900秒。上一轮202.49秒结果保留。本次用户重新明确授权独立的一轮同上限验证；结果见`vae_data/reports/scene_sampling_20261116/README.md`，完成后不追加尝试。正式Shard不保存全轨迹；本轮专用Debug Trace另外保存每次真实观察的48³ tokens/light、原生时间/step、所有源点统计、选中点时间网格、干预前后、原生事件/产物及选中五帧索引。VWT1首帧+稀疏增量可无损重建，包括失败观察；无观测则明确报错而不补造状态。
+六型D1/D2/D3/D4-A/D4-B/D4-C仍为每型最多3次Attempt/1成功、总墙钟900秒；此次不重开六型、不增加动态样例。本次单独有限Clock检查总预算120秒：准备阶段失败13.98秒，修复后240 Tick复核14.98秒，合计28.96秒。真实只读自然场景，不计正式样本；物理跨吞吐/RNG等价仍未完成。历史报告/输出保留。
+
+正式Shard只保存选中五状态和成功D4独立Anchor；每Tick都检查中心。Debug Trace保留所有实际Tick，包括零变化Tick，以首帧+无损稀疏delta表示，不能复制或插值。
 
 GT-only Viewer独立于docs展示站，复用其只读Three/OrbitControls资源与ABV1格式；按真实sim_time播放实际观察帧，支持48³/中心16³、切片、27边界、类型高亮、source及估计/实际变化叠加、相对干预时间、事件/接收帧标记。每型轻量PNG/GIF/JSON/Markdown入Git，全部Trace留outputs并忽略。所有预计算、Actual Native、Accepted VAE States和Synthetic Tests明确区分。
 

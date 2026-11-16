@@ -2,7 +2,7 @@
 from pathlib import Path
 import time,traceback
 import numpy as np
-from .protocol import Vocabulary
+from .protocol import Vocabulary,VERSION,SIMULATION_HZ,NO_CHANGE_TICKS
 from .native import Native
 from .generate import collect
 from .centers import prepare_dynamic,height_statistics
@@ -21,7 +21,7 @@ def run(args):
     if root.exists():raise FileExistsError('Use a new output directory; this native budget cannot silently restart')
     root.mkdir(parents=True);Vocabulary().save(root/'vocabulary.json')
     started=time.monotonic();deadline=started+args.wall_seconds-12;rng=np.random.default_rng(args.seed)
-    result=dict(status='INCONCLUSIVE',source='real_native',unique_types=list(TYPES),successes={t:0 for t in TYPES},attempts=[],
+    result=dict(version=VERSION,simulation_hz=SIMULATION_HZ,no_change_ticks=NO_CHANGE_TICKS,source_domain='center local[1..14]^3',status='INCONCLUSIVE',source='real_native',unique_types=list(TYPES),successes={t:0 for t in TYPES},attempts=[],
         wall_budget=args.wall_seconds,attempts_per_type=args.attempts_per_type,max_successes_per_type=1,
         formal_shard_generated=False,models_or_training=False)
     sites={'D1':[(80,1984),(96,1936),(112,1952)],'D2':[(800,-1232),(-288,1456),(96,1936)],

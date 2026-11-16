@@ -1,6 +1,6 @@
 """Streaming lossless native-only debug observations; separate from five-state shard data."""
 from pathlib import Path
-import json,struct
+import json,struct,time
 import numpy as np
 from .protocol import Frame,dump
 from .storage import atomic_json
@@ -10,13 +10,14 @@ class Trace:
     def __init__(self,root,vocabulary,unique_type):
         self.root=Path(root);self.root.mkdir(parents=True);self.v=vocabulary;self.type=unique_type
         self.stream=open(self.root/'observations.bin','wb');self.stream.write(b'VWT1')
-        self.rows=[];self.by_key={};self.previous=None;self.events=[];self.selection={};self.vsize=-1
+        self.write_seconds=0.;self.rows=[];self.by_key={};self.previous=None;self.events=[];self.selection={};self.vsize=-1
     def observe(self,frame,stage,events=()):
         if frame.meta.get('data_source')!='native':raise ValueError('Debug Trace accepts observed native states only')
         if frame.key in self.by_key:
             row=self.rows[self.by_key[frame.key]]
             if stage not in row['stages']:row['stages'].append(stage)
             return row['index']
+        started=time.perf_counter()
         old=self.previous;mask=np.ones(frame.tokens.size,bool)if old is None else((frame.tokens!=old.tokens)|(frame.light!=old.light)).ravel()
         indices=np.flatnonzero(mask);cells=np.empty(len(indices),CELL);cells['index']=indices
         cells['token']=frame.tokens.ravel()[indices];cells['light']=frame.light.ravel()[indices]
@@ -27,7 +28,9 @@ class Trace:
             center_changes=center,neighbor_changes=total-center,metadata=dict(frame.meta))
         self.by_key[frame.key]=row['index'];self.rows.append(row);self.events.extend(events)
         self.previous=frame
-        self.checkpoint();return row['index']
+        if len(self.rows)==1 or len(self.rows)%24==0:self.checkpoint()
+        self.write_seconds+=time.perf_counter()-started
+        return row['index']
     def checkpoint(self):
         if len(self.v.entries)!=self.vsize:self.v.save(self.root/'vocabulary.json');self.vsize=len(self.v.entries)
         atomic_json(self.root/'trace.json',dict(format='VWT1',unique_type=self.type,shape=[48]*3,source='real_native',frames=self.rows,
@@ -46,7 +49,7 @@ class Trace:
             for f in collector.registry.frames:
                 if f.key in self.by_key:self.rows[self.by_key[f.key]]['metadata'].update(f.meta)
         if chain:self.selection=dict(indices=[self.by_key[f.key]for f in chain.frames],frame_ids=[f.key for f in chain.frames],events=chain.events)
-        self.selection['status']=status;self.checkpoint();self.stream.close()
+        self.selection['status']=status;self.selection['trace_delta_write_seconds']=self.write_seconds;self.checkpoint();self.stream.close()
     def recover(self,world):
         result=getattr(world,'last_result',{})
         if result.get('chunks'):

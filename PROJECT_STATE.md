@@ -1,10 +1,11 @@
 # VoxWM 当前状态
 
-**INCONCLUSIVE — VAE Dynamic Scene Sampling & Intervention Planning Revision**。
+**Fixed24 Clock VERIFIED / Full Native Physics Equivalence INCONCLUSIVE**。
 
-- 已取消通用天然目标体素定位；真实Surface/Cave、中心六连通Air≥65、A/C稳定流体≥19后才执行完整合法源点规划。现有16³对齐、48³ Assembly、100K/1K配方、五状态/2秒规则保持不变。
-- 本次新授权的一轮原生CPU验证已结束：252.49秒、10次尝试；D1、D2、D4-A、D4-C各成功一条，D3和D4-B仍有缺口。包含真实Cave成功，不以合成结果或前轮成功补缺。[实际结果、预览与性能](vae_data/reports/scene_sampling_20261116/README.md)。
-- 50项快速CPU测试及语法/CLI通过。完整GT在`outputs/vae_scene_sampling_20261116/`（不入Git），六型可复用已有Native-State Viewer；仅补相对干预时间。历史报告与输出不覆盖。
-- 已有GT全点离线测量约0.27–0.64秒，峰值单进程RSS119 MB；本轮采集进程RSS峰值132 MB，不含引擎。正式1K、100K、完整群落/高度产率及多worker真实吞吐尚未验证。
+- 已实现所有六型人工干预仅中心14³，放置前后复核，后续传播仍完整48³。D3超时120 Tick，其他48 Tick；原16³网格、100K/1K配方、五状态合同不变。
+- 固定Craftium的opt-in时序补丁已编译；Server/Client/Lua均固定1/24、post-update捕获。只读Native验证经历一次准备阶段错位及明确修复，复核连续Tick0..240通过，合计28.96秒，未重开六型。
+- 含完整Trace实测74.26 Tick/s、3.09 sim s/s；Python/child峰值RSS分别88.5/627.4 MB。241个真实状态，230个零delta Tick；邻域水流每24 Tick更新，中心没有有效动态，不计成功链。[报告/性能/命令](vae_data/reports/fixed24_20261116/README.md)。
+- 62项快速CPU测试、Python/Lua/Shell语法与CLI通过。完整数据在`outputs/vae_fixed24_clock_20261116_fixed/`；旧六型GT/Viewer/报告不改。新格式v2不混合历史variable-step数据。
+- 完整原生初态/RNG尚未快照；Lava/Fire新时序、跨吞吐严格voxel等价及RGB渲染相位未验证。未运行新六型、正式Shard、100K或训练。
 
-唯一下一步：用户查看本轮六型GT，决定如何处理D3结构传播与D4-B五状态缺口；Codex不再追加原生验证或正式采集。[手动生成/恢复/检查](vae_data/README.md)。
+唯一下一步：用户决定是否授权固定初态/受控RNG的Water/Lava/Fire跨吞吐有限验证；Codex停止，不自动追加实验。

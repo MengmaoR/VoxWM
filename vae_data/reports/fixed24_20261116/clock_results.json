@@ -1,0 +1,48 @@
+{
+  "status": "INCONCLUSIVE",
+  "purpose": "clock verification only, not six-type native acceptance",
+  "simulation_hz": 24,
+  "requested_ticks": 240,
+  "dynamic_examples_generated": 0,
+  "formal_shard_generated": false,
+  "consumer_work_ms": 0.0,
+  "clock_verified": true,
+  "consecutive_native_ticks": true,
+  "ticks_observed": 240,
+  "clock_checkpoints": {
+    "24": 1.0,
+    "48": 2.0,
+    "120": 5.0,
+    "240": 10.0
+  },
+  "first_absolute_tick": 1155,
+  "last_absolute_tick": 1395,
+  "source_initialization": "none; read-only existing natural scene",
+  "native_voxel_changes": 1900,
+  "performance": {
+    "simulation_hz": 24,
+    "ticks": 240,
+    "measured_tick_wall_seconds": 2.0246621660116944,
+    "seconds_per_tick": {
+      "total": 0.00843609235838206,
+      "simulation": 0.00046672500000000014,
+      "capture": 0.00048553749999999976,
+      "communication": 0.00047996661217742563,
+      "decode": 0.00155928836673714
+    },
+    "simulation_ticks_per_wall_second": 118.538294451744,
+    "simulation_seconds_per_wall_second": 4.939095602156,
+    "capture_to_simulation_ratio": 1.0403074615673034,
+    "peak_python_rss_mb": 88.453125,
+    "scope": "Per-tick wall includes client synchronization/blank packet, IPC and decode; excludes planning, setup and Trace persistence. Native capture is post-update and before completion release."
+  },
+  "trace_delta_write_seconds": 1.198728340001253,
+  "loop_wall_seconds": 3.231722250002349,
+  "ticks_per_wall_second_including_trace": 74.2638077885021,
+  "simulation_seconds_per_wall_second_including_trace": 3.0943253245209212,
+  "server_client_lua_equal": true,
+  "same_tick_p0_vs_cpp_capture_equal": true,
+  "peak_child_rss_mb": 627.390625,
+  "limits": "Clock/capture synchronization verified only. New fixed24 Water/Lava/Fire trajectories, controlled-RNG replay and pixel equivalence need separate bounded native experiments; six-type examples were not rerun.",
+  "total_wall_seconds": 14.977997582998796
+}

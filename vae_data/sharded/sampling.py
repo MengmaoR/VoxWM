@@ -1,6 +1,6 @@
 """At most ten center-distinct candidates; D4 roles share physical frame identities."""
 import numpy as np
-from .protocol import Chain,CONFIG,target_changes
+from .protocol import Chain,CONFIG,NO_CHANGE_TICKS,SIMULATION_HZ,target_changes
 
 class Registry:
     def __init__(self,anchor=None):
@@ -28,13 +28,14 @@ class Collector:
         self.anchor=anchor;self.category=category;self.v=vocabulary;self.previous=anchor
         self.registry=Registry(anchor if category=='D4'else None)
         if category!='D4':self.registry.add(anchor)
-        self.started=anchor.time;self.last_change=anchor.time;self.changes=0;self.transition_steps=0;self.events=[]
+        self.started=anchor.time;self.last_change=anchor.time;self.last_change_step=anchor.step;self.changes=0;self.transition_steps=0;self.events=[]
         self.max_seconds=max_seconds if max_seconds is not None else CONFIG['max_observation_seconds'][category]
         self.reason=None
     def observe(self,frame,reactions=()):
-        if frame.step<=self.previous.step or frame.time<=self.previous.time:raise ValueError('Native time/step must increase')
+        if frame.step!=self.previous.step+1:raise ValueError('Tick capture must be consecutive; no skipped/merged native ticks')
+        if frame.time<=self.previous.time:raise ValueError('Native time must increase')
         changed=target_changes(self.previous,frame,self.v,self.category)
-        if changed:self.last_change=frame.time;self.changes+=changed;self.transition_steps+=1
+        if changed:self.last_change_step=frame.step;self.last_change=frame.time;self.changes+=changed;self.transition_steps+=1
         if self.category!='D4':
             if changed:self.registry.add(frame)
         else:
@@ -53,8 +54,8 @@ class Collector:
                         equal_center_to_reference=bool(pre and np.array_equal(self.previous.center,self.registry.by_key[pre].center)))))
         self.previous=frame
         if len(self.registry.frames)>=10:self.reason='candidate_limit'
-        elif frame.time-self.last_change>=2.0:self.reason='center_no_change_2s'
-        elif frame.time-self.started>=self.max_seconds:self.reason='maximum_sim_time'
+        elif frame.step-self.last_change_step>=NO_CHANGE_TICKS[self.category]:self.reason='center_no_change_'+str(NO_CHANGE_TICKS[self.category]//SIMULATION_HZ)+'s'
+        elif frame.step-self.anchor.step>=round(self.max_seconds*SIMULATION_HZ):self.reason='maximum_sim_time'
         return self.reason is not None
     def _inside(self,position):
         low=np.asarray(self.anchor.meta['center_origin']);p=np.asarray(position)
@@ -84,4 +85,4 @@ class Collector:
         return valid[int(rng.integers(len(valid)))]if valid else None
     def summary(self):
         return dict(candidate_states=len(self.registry.frames),center_target_changes=self.changes,center_transition_observations=self.transition_steps,
-                    simulated_seconds=self.previous.time-self.started,stop_reason=self.reason,legal_windows=len(self.windows()))
+                    simulated_ticks=self.previous.step-self.anchor.step,simulated_seconds=(self.previous.step-self.anchor.step)/SIMULATION_HZ,stop_reason=self.reason,legal_windows=len(self.windows()))

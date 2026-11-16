@@ -6,18 +6,32 @@ import numpy as np
 from vae_p0.codec import Vocabulary
 from vae_pilot.sampling import biome_group,split_for_seed
 
-VERSION='vae-region48-shards-v1'
+VERSION='vae-region48-fixed24-v2'
+SIMULATION_HZ=24
+FIXED_DT=1/SIMULATION_HZ
+NO_CHANGE_TICKS={'D1':48,'D2':48,'D3':120,'D4':48}
 BIOMES=json.loads((Path(__file__).resolve().parents[2]/'vae_pilot/config.json').read_text())['biome_groups']
 CATEGORIES={'Static':500,'D1':125,'D2':125,'D3':125,'D4':125}
 STRATA={'surface':8,'elevated_complex':4,'shallow_underground':4,'deep_cave':4}
 CENTER=(slice(16,32),)*3
+INTERIOR=(slice(17,31),)*3
 PRODUCTS={'mcl_core:stone','mcl_core:cobble','mcl_core:obsidian'}
 CONFIG=dict(version=VERSION,shards=100,shard_size=1000,region_size=48,chunk_size=16,axes='ENU',
     categories=CATEGORIES,static_per_biome=STRATA,biome_transition_soft_target=4,chain_states=5,
-    candidate_limit=10,no_change_seconds=2.0,liquid_update=1.0,liquid_ranges={'water':7,'lava':3},
-    capture_seconds=.2,max_observation_seconds={'D1':30.,'D2':40.,'D3':40.,'D4':60.},
+    candidate_limit=10,simulation_hz=SIMULATION_HZ,fixed_dt=FIXED_DT,no_change_ticks=NO_CHANGE_TICKS,liquid_update=1.0,liquid_ranges={'water':7,'lava':3},
+    capture_schedule="every completed native tick",intervention_local_bounds=[1,14],max_observation_seconds={'D1':30.,'D2':40.,'D3':40.,'D4':60.},
     split_percent=[80,10,10],max_samples_per_seed_per_shard=100,biome_groups=BIOMES,
     initialization=dict(source_count_max=4,sampling='all qualified points: independent p=1/N, uniform zero-hit fallback'))
+
+def check_sources(actions,center):
+    """Initialization only: propagation is allowed throughout the full region."""
+    origin=np.asarray(center)
+    for action in actions:
+        position=np.asarray(action.get('position',[]))
+        if position.shape!=(3,)or position.dtype.kind not in'iu' or not np.all((position-origin>=1)&(position-origin<=14)):
+            raise ValueError('intervention_outside_center_14: '+str(action.get('position')))
+    return True
+
 
 def d4_targets(shard):
     result={'A':8,'B':8,'C':8};result[('C','A','B')[shard%3]]+=1
@@ -110,3 +124,21 @@ def target_change_mask(previous,current,vocabulary,category):
 
 def target_changes(previous,current,vocabulary,category):
     return int(target_change_mask(previous,current,vocabulary,category)[CENTER].sum())
+
+
+def fire_change_counts(previous,current,vocabulary):
+    """Center-only observed transitions; near-fire fuel loss is not a write journal."""
+    names=np.array([name for name,_ in vocabulary.entries],object)
+    before=names[previous.center];after=names[current.center];delta=previous.center!=current.center
+    old=kind_mask(previous.tokens,vocabulary,'fire');new=kind_mask(current.tokens,vocabulary,'fire')
+    a=old[CENTER];b=new[CENTER];fuel=np.isin(before,current.meta.get('flammable_names',[]))
+    near=adjacent(old|new)[CENTER]
+    masks=dict(new_fire=delta&(before=='air')&b,fuel_to_fire=delta&fuel&b,
+        fuel_removed_near_fire=delta&fuel&(after=='air')&near,fire_extinguished=delta&a&(after=='air'),
+        fire_age_update=delta&a&b&(before==after))
+    structural=target_change_mask(previous,current,vocabulary,'D3')[CENTER]
+    covered=np.zeros((16,)*3,bool)
+    for key,mask in masks.items():
+        if key!='fire_age_update':covered|=mask
+    masks['other_structural_fire_transition']=structural&~covered
+    return {key:int(mask.sum())for key,mask in masks.items()}

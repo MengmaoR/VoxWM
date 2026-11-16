@@ -1,0 +1,11 @@
+{
+  "status": "FAIL",
+  "purpose": "clock verification only, not six-type native acceptance",
+  "simulation_hz": 24,
+  "requested_ticks": 240,
+  "dynamic_examples_generated": 0,
+  "formal_shard_generated": false,
+  "consumer_work_ms": 0.0,
+  "reason": "ValueError: Server/client/Lua clock mismatch",
+  "total_wall_seconds": 13.983285499998601
+}

@@ -30,10 +30,10 @@ def pointer(array):return None if array is None else np.asarray(array).ctypes.da
 
 def phase_ticks(mask):return [tick for tick in range(1,11)if int(mask)&(1<<tick)]
 
-def four_stages(mask):
+def four_stages(mask,max_gap=2):
     times=phase_ticks(mask)
-    if len(times)<REQUIRED_CENTER_TRANSITIONS or times[0]>2:return False
-    return all(b-a<=2 for a,b in zip([0,*times[:4]],times[:4]))
+    if len(times)<REQUIRED_CENTER_TRANSITIONS or times[0]>max_gap:return False
+    return all(b-a<=max_gap for a,b in zip([0,*times[:4]],times[:4]))
 
 def bernoulli_sources(indices,rng,maximum=4):
     ids=np.asarray(indices,dtype=np.int32);n=len(ids)
@@ -63,7 +63,7 @@ class Planner:
         # Four occupied time bands, not four voxels in one time band. Time is a
         # scheduled-wave estimate; chance/humidity/queue effects remain uncertain.
         filter_start=time.perf_counter()
-        qualified=np.array([four_stages(row[2])and(partner is None or row[5]>0)for row in stats],bool)
+        qualified=np.array([four_stages(row[2],5 if kind=='fire'else 2)and(partner is None or row[5]>0)for row in stats],bool)
         metrics=dict(legal_source_count=len(legal),evaluated_source_count=len(ids),
             reachable_candidate_count=int(np.count_nonzero((stats[:,1]>0)|(stats[:,4]>0))),qualified_candidate_count=int(qualified.sum()),
             mathematically_pruned_count=int(np.count_nonzero(graph['reverse'][sources]==0)),
@@ -149,5 +149,8 @@ class Planner:
                     q=np.array(p)+offset
                     if np.all(q>=0)and np.all(q<g.shape)and g.fuel[tuple(q)]:action['under']=(q+self.frame.meta['region_origin']).tolist();break
             actions.append(action)
+        from ..protocol import check_sources
+        check_sources(actions,self.frame.meta['center_origin'])
+        selection['source_domain']='center local[1..14]^3, region[17:31]^3'
         selection['details']=details
         return actions,selection

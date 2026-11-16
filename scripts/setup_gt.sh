@@ -24,6 +24,7 @@ if [[ ! -e "$CRAFTIUM_DIR" ]]; then
 fi
 [[ $(git -C "$CRAFTIUM_DIR" rev-parse HEAD) == "$PIN" ]] || { printf 'Craftium source must remain at %s; existing checkout was not changed.\n' "$PIN" >&2; exit 1; }
 git -C "$CRAFTIUM_DIR" submodule update --init --recursive
+python3 "$ROOT/scripts/apply_fixed24.py" --craftium-dir "$CRAFTIUM_DIR"
 # Install only the native GT requirements; no model dependencies.
 if [[ ! -x "$GT_ENV/bin/python" ]]; then
     uv venv --python 3.11 "$GT_ENV" --seed

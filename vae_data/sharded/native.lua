@@ -1,8 +1,14 @@
 -- One fixed 48³ region, no discovery cache or raw trajectory. Original ABMs are untouched.
 local mt=minetest;local mod=mt.get_modpath('craftium_env');local p0=dofile(mod..'/native.lua');local geometry=dofile(mod..'/scene_geometry.lua')
 local world=mt.get_worldpath();local elapsed,step,last=0,0,0;local ready,armed,started=false,false,false
-local region=nil;local held={};local reactions={}
-local function clock()return {sim_time=elapsed,simulation_step=step,engine_us=mt.get_us_time()}end
+assert(voxwm_clock and voxwm_region,'Build the VoxWM fixed24 timing patch before collection')
+local region=nil;local pending_capture=nil;local held={};local reactions={};local zero_tick=nil;local lua_tick=0
+local function clock()
+    local c=voxwm_clock();local n=c.server_tick
+    return {sim_time=n/24,absolute_sim_time=n/24,simulation_step=n,native_simulation_step=n,simulation_hz=24,
+        frame_index=zero_tick and n-zero_tick or nil,relative_sim_time=zero_tick and(n-zero_tick)/24 or nil,
+        lua_tick=lua_tick,native_clock=c,engine_us=mt.get_us_time()}
+end
 local function enu(p)return {p.x,p.z,p.y}end
 local function eng(p)return {x=p[1],y=p[3],z=p[2]}end
 local function read(name)local f=io.open(world..'/'..name);if not f then return nil end;local s=f:read('*a');f:close();return s end
@@ -38,13 +44,26 @@ mt.set_node=function(pos,node,...)
     return result
 end
 local function capture(r,extra)
-    p0.handle({kind='p0_capture',origins=region.origins,surface_y=region.surface_y,verify=true},nil,function(_,data)
+    local function emit()
+        local start=mt.get_us_time();local payload=voxwm_region(region.low)
+        local out=assert(io.open(world..'/native48.bin','wb'));out:write(payload);out:close()
+        local data={status='captured',chunks=region.chunks,capture_us=mt.get_us_time()-start,capture_method='post_server_step_MapBlock',
+            reaction_events=reactions,center_origin=region.center};reactions={}
         if extra then for k,v in pairs(extra)do data[k]=v end end
-        data.reaction_events=reactions;reactions={};data.center_origin=region.center;reply(r,data)
-    end)
+        reply(r,data)
+    end
+    if not region.chunks then
+        -- One setup-only P0 comparison, never 27 VoxelManip rebuilds per tick.
+        p0.handle({kind='p0_capture',origins=region.origins,surface_y=region.surface_y,verify=true},nil,function(_,data)
+            region.chunks=data.chunks
+            assert(voxwm_region(region.low)==read('p0_capture.bin'),'C++ capture differs from the original P0 same-tick state')
+            emit()
+        end)
+    else emit()end
 end
 local function prepare(r)
     for _,p in ipairs(held)do mt.forceload_free_block(p,true)end;held={};reactions={}
+    zero_tick=nil
     local center=eng(r.center);local low=vector.subtract(center,16);local high=vector.add(center,31)
     mt.emerge_area(vector.subtract(low,16),vector.add(high,16),function(_,_,left)
         if left~=0 then return end
@@ -60,7 +79,7 @@ local function prepare(r)
                 for x=low.x,high.x do for z=low.z,high.z do for y=low.y,high.y do
                     if mt.is_protected({x=x,y=y,z=z},player_name)then protected[#protected+1]=index end;index=index+1
                 end end end
-                capture(r,{status='prepared',protected_source_indices=protected})
+                pending_capture={request=r,extra={status='prepared',protected_source_indices=protected}}
             end
         end)
     end)
@@ -170,7 +189,12 @@ mt.register_on_joinplayer(function(player)
     mt.emerge_area(vector.subtract(player:get_pos(),16),vector.add(player:get_pos(),16),function(_,_,left)if left==0 then ready=true;write('gt_ready','ready')end end)
 end)
 mt.register_globalstep(function(dt)
-    elapsed=elapsed+dt;step=step+1;local player=mt.get_connected_players()[1];if not player then return end
+    if dt==0 then return end -- boot initialization is not a physics tick
+    assert(math.abs(dt-1/24)<1e-8,'Non-fixed native Lua dt')
+    lua_tick=voxwm_clock().server_tick
+end)
+local function post_step(dt)
+    elapsed=voxwm_clock().absolute_sim_time;step=voxwm_clock().server_tick;local player=mt.get_connected_players()[1];if not player then return end
     player:hud_set_flags({crosshair=false,basic_debug=false,chat=false})
     if ready and not armed and read('gt_arm')then armed=true end
     if armed and not started and read('gt_start')then
@@ -184,6 +208,7 @@ mt.register_globalstep(function(dt)
         end
         write('pilot_boot.json',{nodes=records,liquid_update=mt.settings:get('liquid_update')or'1.0'});write('gt_nodes.json',nodes);started=true
     end
+    if pending_capture then local job=pending_capture;pending_capture=nil;capture(job.request,job.extra)end
     if started then
         local text=read('pilot_command.json')
         if text then local r=assert(mt.parse_json(text))
@@ -191,11 +216,16 @@ mt.register_globalstep(function(dt)
                 if r.kind=='find_centers'then find_centers(r)
                 elseif r.kind=='locate'then locate(r)
                 elseif r.kind=='prepare'then prepare(r)
-                elseif r.kind=='capture'then capture(r)
+                elseif r.kind=='capture'or r.kind=='advance'then capture(r)
                 elseif r.kind=='clock'then reply(r,{status='clock'})
                 elseif r.kind=='inspect'then inspect(r)
                 elseif r.kind=='intervene'then
-                    reactions={};local actions={}
+                    reactions={};local actions={};local valid=true
+                    for _,a in ipairs(r.actions)do for axis=1,3 do
+                        local offset=a.position[axis]-region.center[axis]
+                        if offset<1 or offset>14 or offset~=math.floor(offset)then valid=false end
+                    end end
+                    if not valid then reply(r,{status='intervention_outside_center_14',actions={}});return end
                     for _,a in ipairs(r.actions)do
                         local p=eng(a.position);local before=mt.get_node(p).name
                         local def=mt.registered_nodes[before]
@@ -205,6 +235,7 @@ mt.register_globalstep(function(dt)
                         end
                         actions[#actions+1]={type=a.type,position=a.position,before=before,after=mt.get_node(p).name,clock=clock()}
                     end
+                    zero_tick=step
                     capture(r,{actions=actions})
                 elseif r.kind=='entity_probe'then
                     mt.add_entity(player:get_pos(),'mobs_mc:pig');mt.add_item(player:get_pos(),'mcl_core:dirt');reply(r,{status='probe'})
@@ -212,5 +243,5 @@ mt.register_globalstep(function(dt)
             end
         end
     end
-    if mt.settings:get_bool('voxel_obs')then get_voxel_data_cpp(player:get_pos(),{x=24,y=24,z=24})end
-end)
+end
+mt.registered_voxwm_poststeps={post_step}

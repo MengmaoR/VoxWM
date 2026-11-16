@@ -1,0 +1,40 @@
+{
+  "source": "actual_native_read_only_clock_test",
+  "observations": 241,
+  "relative_ticks": [
+    0,
+    240
+  ],
+  "zero_delta_observations": 230,
+  "native_time_metadata_valid": true,
+  "dynamics": {
+    "water": {
+      "region_updates": 1900,
+      "center_updates": 0,
+      "relative_change_ticks": [
+        21,
+        45,
+        69,
+        93,
+        117,
+        141,
+        165,
+        189,
+        213,
+        237
+      ]
+    },
+    "lava": {
+      "region_updates": 0,
+      "center_updates": 0,
+      "relative_change_ticks": []
+    },
+    "fire": {
+      "region_updates": 0,
+      "center_updates": 0,
+      "relative_change_ticks": []
+    }
+  },
+  "accepted_dynamic_chains": 0,
+  "interpretation": "Full48 observations, not six-type success evidence. Native zero-delta ticks were actually captured, not copied."
+}

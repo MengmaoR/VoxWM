@@ -3,7 +3,7 @@ from pathlib import Path
 from collections import Counter
 import json,time,subprocess
 import numpy as np
-from .protocol import CONFIG,BIOMES,STRATA,Frame,Chain,kind_mask,biome_group,dump
+from .protocol import CONFIG,BIOMES,STRATA,Frame,Chain,kind_mask,biome_group,dump,fire_change_counts
 from .native import Native
 from .sampling import Collector
 from .centers import prepare_dynamic,choose_height,spatial_gate,stable_pool,natural_interaction
@@ -75,23 +75,22 @@ def collect(world,frame,category,rng,subtype='',max_seconds=None,trace=None):
     if category=='D4'and subtype=='B'and not all(any(a['type']==kind and a['after'].endswith('_source')for a in intervention['actual_actions'])for kind in('water','lava')):
         return reject('both_new_fluids_not_initialized',spatial=True,planned=True)
     monitor=Collector(anchor,category,world.v,max_seconds)
+    loop_start=time.perf_counter()
+    fire_counts={}
     all_reactions=[];contact_observed=False;contact_center=False;structural=0;age_only=0
     while True:
-        world.wait(monitor.previous.time+CONFIG['capture_seconds'])
-        current,result=world.capture48();current.meta['phase']='native_evolution'
+        current,result=world.tick();current.meta['phase']='native_evolution'
         events=result.get('reaction_events')or[];all_reactions.extend(events)
         if category=='D4':
             from .protocol import adjacent,CENTER
             contacts=kind_mask(current.tokens,world.v,'water')&adjacent(kind_mask(current.tokens,world.v,'lava'))
             contact_observed|=bool(contacts.any());contact_center|=bool(contacts[CENTER].any())
         if category=='D3':
-            names=np.asarray([name for name,_ in world.v.entries],object)
-            delta=current.center!=monitor.previous.center
-            age=delta&(names[current.center]==names[monitor.previous.center])&kind_mask(current.center,world.v,'fire')
-            age_only+=int(age.sum());structural+=int((delta&~age).sum())
+            kinds=fire_change_counts(monitor.previous,current,world.v)
+            for key,count in kinds.items():fire_counts[key]=fire_counts.get(key,0)+count
+            age_only+=kinds['fire_age_update'];structural+=sum(n for k,n in kinds.items()if k!='fire_age_update')
         if trace:trace.observe(current,'native_observation',events)
         if monitor.observe(current,events):break
-    world.entity_probe()
     chain=monitor.select(rng,intervention,subtype)
     reason=None
     if not chain:
@@ -106,7 +105,10 @@ def collect(world,frame,category,rng,subtype='',max_seconds=None,trace=None):
     status=dict(status='success'if chain else'rejected',reason=reason,**monitor.summary(),
         subtype=subtype,world_seed=world.seed,height_type=height,scene_spatial_qualified=True,planning_qualified=True,center_origin=world.center,audit=world.audit,
         observed_reaction_count=len(all_reactions),contact_observed=contact_observed,center_contact_observed=contact_center,
-        structural_fire_changes=structural,fire_age_only_changes=age_only,intervention=intervention)
+        structural_fire_changes=structural,fire_age_only_changes=age_only,fire_transition_counts=fire_counts,intervention=intervention,performance=world.performance())
+    status['performance'].update(loop_wall_seconds=time.perf_counter()-loop_start,
+        trace_delta_write_seconds=trace.write_seconds if trace else 0.)
+    status['performance']['ticks_per_wall_second_including_trace']=status['performance']['ticks']/status['performance']['loop_wall_seconds']
     if trace:trace.finish(monitor,chain,status)
     return chain,status
 

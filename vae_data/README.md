@@ -2,7 +2,7 @@
 
 当前入口：`python -m vae_data` → `vae_data/sharded/`。仅生成数据，无模型/训练器/DataLoader。依据[当前协议](../VAE_DATA_COLLECTION_PROTOCOL.md) / [Drive Markdown](https://drive.google.com/file/d/1NFM1Cb3os2yesAQgBk8VzM6vMmcj1eg8/view)。旧200K代码、结果与日志保留；[旧README](LEGACY_UNIFIED_README.md)中的命令需使用 `python -m vae_data.legacy_entry`，不是当前生产格式。
 
-**当前结果INCONCLUSIVE**：本次独立六型验证10次、252.49秒，D1/D2/D4-A/D4-C各成功一条，D3/D4-B未成功。[当前实测及六型预览](reports/scene_sampling_20261116/README.md)。[此前202.49秒报告](reports/exhaustive_20261116/README.md)原样保留；未运行正式1K/100K。
+**当前完整验收INCONCLUSIVE**：Fixed24原生时钟/逐Tick捕获已验证，62项CPU测试通过；未重开六型。含Trace实测74.26 Tick/s。[本轮报告、限制和有限验证命令](reports/fixed24_20261116/README.md)。旧六型数据/Viewer保留，新格式`vae-region48-fixed24-v2`不可混入旧variable-step Shard。
 
 ## 服务器环境（用户手动执行）
 
@@ -13,6 +13,8 @@ git pull --ff-only origin master
 # 仅首次新服务器安装；系统依赖见根README。脚本不自动sudo。
 bash scripts/setup_gt.sh
 uv pip install --python .venv/bin/python -r vae_p0/requirements.txt
+# 已有环境：增量应用/编译固定版本的opt-in时序补丁
+bash scripts/build_fixed24.sh
 ```
 
 Linux示例使用 `--renderer software`，macOS可改为 `--renderer auto`。不改变原生液体/火规则，不做时钟加速。
@@ -21,18 +23,18 @@ Linux示例使用 `--renderer software`，macOS可改为 `--renderer auto`。不
 
 ```bash
 .venv/bin/python -m vae_data generate \
-  --dataset outputs/vae_100k --shard 0 --count 1 --workers 1 \
+  --dataset outputs/vae_100k_fixed24 --shard 0 --count 1 --workers 1 \
   --max-attempts 5000 --wall-seconds 7200 --renderer software
 ```
 
-`shard`索引0..99。每片硬配额：Static500，四动态各125；每类25条五状态链。Static每群落20条，8/4/4/4。D4是水岩浆固化，不是植物；子类型A/B/C每片8/8/9轮换。动态中心连续2个模拟秒无目标变化即停止，不能为了过测延长。未达到配额只保留partial和缺口，不READY、不替代类别。
+`shard`索引0..99。每片硬配额：Static500，四动态各125；每类25条五状态链。Static每群落20条，8/4/4/4。D4是水岩浆固化，不是植物；子类型A/B/C每片8/8/9轮换。动态每Tick采集：D1/D2/D4中心48 Tick无目标变化停止，D3为120 Tick；不能为了过测延长。未达到配额只保留partial和缺口，不READY、不替代类别。
 
 ## 连续多片 / 多CPU workers
 
 ```bash
 # 生成 shard_0010 .. shard_0013，最多4个独立CPU世界并行
 .venv/bin/python -m vae_data generate \
-  --dataset outputs/vae_100k --shard 10 --count 4 --workers 4 \
+  --dataset outputs/vae_100k_fixed24 --shard 10 --count 4 --workers 4 \
   --max-attempts 5000 --wall-seconds 14400 --renderer software
 ```
 
@@ -42,7 +44,7 @@ Worker按片独占目录与锁；Native世界/临时引擎独立；全局词表�
 
 ```bash
 .venv/bin/python -m vae_data generate \
-  --dataset outputs/vae_100k --shard 10 --count 4 --workers 4 --resume \
+  --dataset outputs/vae_100k_fixed24 --shard 10 --count 4 --workers 4 --resume \
   --max-attempts 5000 --wall-seconds 14400 --renderer software
 ```
 
@@ -51,10 +53,10 @@ Ctrl-C会停止本命令拥有的worker和引擎进程；已提交数据可恢�
 ## 检查某片、查看全局进度
 
 ```bash
-.venv/bin/python -m vae_data check --dataset outputs/vae_100k --shard 10
+.venv/bin/python -m vae_data check --dataset outputs/vae_100k_fixed24 --shard 10
 # 检查partial中已提交数据，允许数量尚未齐；complete=false不会发布READY
-.venv/bin/python -m vae_data check --dataset outputs/vae_100k --shard 10 --allow-incomplete
-.venv/bin/python -m vae_data status --dataset outputs/vae_100k
+.venv/bin/python -m vae_data check --dataset outputs/vae_100k_fixed24 --shard 10 --allow-incomplete
+.venv/bin/python -m vae_data status --dataset outputs/vae_100k_fixed24
 ```
 
 Check为只读，不自动修数据。错误返回非零；status只报告READY与partial统计，100个READY才是正式100K完成。检查结果包含Transition软目标缺口；不能把不足4的真实区域伪装成transition。
@@ -66,7 +68,7 @@ Check为只读，不自动修数据。错误返回非零；status只报告READY�
 ```python
 import zarr, pyarrow.parquet as pq
 from vae_p0.codec import Vocabulary
-root='outputs/vae_100k'
+root='outputs/vae_100k_fixed24'
 path=root+'/shards/shard_0010'
 a=zarr.open_group(path+'/snapshots.zarr',mode='r')
 tokens=a['tokens'][0]                 # 完整48³原生状态
@@ -82,7 +84,7 @@ rows=pq.read_table(path+'/metadata.parquet').to_pylist()
 
 ## 动态场景筛选
 
-D1/D3仅真实Surface；D2和D4按50/50给Surface/Cave机会。Surface必须含地形固体—Air边界，不把液面/湖底当地表；Cave必须有真实地下连通空气。保留16³世界网格，不滑动中心。所有中心最大六邻域Air分量≥65；仅D4-A/C寻找天然对应水/岩浆池，短时观察后中心稳定最大分量≥19（Source或Flowing皆可）。取消通用天然目标体素`center_hint`及旧二维池/体积门槛。通过筛选后才做全点规划。
+D1/D3仅真实Surface；D2和D4按50/50给Surface/Cave机会。Surface必须含地形固体—Air边界，不把液面/湖底当地表；Cave必须有真实地下连通空气。保留16³世界网格，不滑动中心。所有人工source先限制中心local[1..14]^3（region[17:31]^3），最多2744点；后续原生传播不受此域限制。所有中心最大六邻域Air分量≥65；仅D4-A/C寻找天然对应水/岩浆池，短时观察后中心稳定最大分量≥19（Source或Flowing皆可）。取消通用天然目标体素`center_hint`及旧二维池/体积门槛。通过筛选后才做全点规划。
 
 D4-B两种新源独立采样并检查联合固化潜力；拒绝已有天然水岩浆接触及预计源路径接触已有流体。每类/高度的attempt、空间合格、规划合格、accepted写入statistics；没有合格场景就报告缺口，不改配额。
 
@@ -112,11 +114,20 @@ Viewer支持六型和各attempt、真实模拟时间及相对干预时间播放/
 
 正式Shard不写这些完整Trace。本次轻量过程图在`vae_data/reports/scene_sampling_20261116/`（历史exhaustive报告保留），完整Trace不入Git；到新服务器需用户自行复制现有输出，或明确决定另做一次有界测试。历史`native-smoke`仅保留复现旧四大类测试，当前协议使用六Unique Types。
 
+## 固定时钟有限检查
+
+```bash
+.venv/bin/python -m vae_data clock-verify \
+  --dataset outputs/clock24_check --ticks 240 --wall-seconds 120 --seed 191664964
+```
+
+只读原生场景，不生成链/正式Shard。检查Server/Client/Lua、Tick连续性与同Tick快照；输出clock_results.json和完整Trace。无自动后续实验。不同吞吐对照用`--consumer-work-ms 5 --compare-to <先前clock目录>`，需用户单独启动；不保证已控制全局RNG。
+
 ## 开发检查及明确授权的小例
 
 ```bash
 .venv/bin/python -m unittest discover -s vae_data/sharded/tests -q
-# 以下只供用户明确决定重复小例时手动启动；本轮Codex已经执行并停止。
+# 以下只供用户明确决定重复小例时手动启动；本轮Codex没有重开六型，需新的明确授权。
 .venv/bin/python -m vae_data native-six \
   --dataset outputs/vae_native_six_new --wall-seconds 900 \
   --attempts-per-type 3 --renderer software

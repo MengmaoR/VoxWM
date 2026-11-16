@@ -10,15 +10,19 @@ ROOT=Path(__file__).resolve().parents[2]
 
 def parser(argv=None):
     p=argparse.ArgumentParser(description=__doc__);sub=p.add_subparsers(dest='command',required=True)
-    for name in('generate','check','status','native-smoke','native-six'):
+    for name in('generate','check','status','native-smoke','native-six','clock-verify'):
         q=sub.add_parser(name);q.add_argument('--dataset',type=Path,required=True)
-        if name in('generate','native-smoke','native-six'):
+        if name in('generate','native-smoke','native-six','clock-verify'):
             q.add_argument('--wall-seconds',type=float,required=True);q.add_argument('--craftium-dir',type=Path,default=ROOT/'third_party/craftium')
             q.add_argument('--renderer',choices=('auto','window','software'),default='auto');q.add_argument('--seed',type=int,default=42)
         if name in('generate','check'):q.add_argument('--shard',type=int,default=0)
         if name=='generate':
             q.add_argument('--count',type=int,default=1);q.add_argument('--workers',type=int,default=1);q.add_argument('--resume',action='store_true')
             q.add_argument('--max-attempts',type=int,default=5000);q.add_argument('--sites-per-world',type=int,default=8)
+        if name=='clock-verify':
+            q.add_argument('--ticks',type=int,choices=(24,48,120,240),default=240)
+            q.add_argument('--consumer-work-ms',type=float,default=0.)
+            q.add_argument('--compare-to',type=Path)
         if name=='check':q.add_argument('--allow-incomplete',action='store_true')
         if name=='native-six':q.add_argument('--attempts-per-type',type=int,choices=(1,2,3),default=3)
         if name=='native-smoke':
@@ -33,6 +37,7 @@ def parser(argv=None):
     if a.command=='generate'and(a.count<1 or a.shard+a.count>100 or a.workers<1 or a.max_attempts<1 or a.sites_per_world<1):p.error('Positive counts within 100 shards required')
     if a.command=='native-smoke'and not 1<=a.attempts_per_category<=4:p.error('Native smoke has a finite 1..4 attempts/category cap')
     if a.command=='native-six'and a.wall_seconds>900:p.error('Six-type native validation has a 900 second total cap')
+    if a.command=='clock-verify'and(not 0<=a.consumer_work_ms<=20 or a.wall_seconds>120):p.error('Clock test: CPU workload 0..20ms, wall cap <=120s')
     return a
 
 
@@ -64,6 +69,9 @@ def main(argv=None):
         final=a.dataset/'shards'/f'shard_{a.shard:04d}';path=final if final.exists()else final.parent/('.'+final.name+'.partial')
         result=check_shard(a.dataset,path,not a.allow_incomplete)
         print(json.dumps(result,indent=2));return 0 if result['valid']else 1
+    elif a.command=='clock-verify':
+        from .clock_verify import run
+        result=run(a)
     elif a.command=='native-six':
         from .native_six import run
         result=run(a)
@@ -78,6 +86,6 @@ def main(argv=None):
             with ProcessPoolExecutor(max_workers=min(a.workers,a.count),mp_context=multiprocessing.get_context('spawn'))as executor:
                 futures=[executor.submit(generate_shard,*task)for task in tasks];results=[future.result()for future in futures]
         result=dict(shards=results,progress=status(a.dataset));dump(a.dataset/'last_generation.json',result)
-    print(json.dumps(result,indent=2));return 0
+    print(json.dumps(result,indent=2));return 1 if result.get('status')=='FAIL'else 0
 
 if __name__=='__main__':raise SystemExit(main())
