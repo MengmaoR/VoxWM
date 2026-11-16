@@ -14,7 +14,7 @@ class Native(World):
         self.temp=tempfile.TemporaryDirectory(prefix='voxwm-shard-')
         root=overlay(self.source,Path(self.temp.name)/'engine')
         self.session=GTSession('procedural',self.seed,self.renderer,root,scene_script=HERE/'native.lua',
-            scene_assets=(HERE.parents[1]/'vae_p0/native.lua',),native_settings=dict(SETTINGS),image_size=(128,128))
+            scene_assets=(HERE.parents[1]/'vae_p0/native.lua',HERE/'scene_geometry.lua'),native_settings=dict(SETTINGS),image_size=(128,128))
         try:
             self.session.__enter__();self.probe=Probe(self.session,self.deadline,self.v,self.seed)
             self.build={name:subprocess.check_output(['git','-C',str(path),'rev-parse','HEAD'],text=True).strip() for name,path in
@@ -24,6 +24,8 @@ class Native(World):
             self.collector_revision=subprocess.check_output(['git','-C',str(repo),'rev-parse','HEAD'],text=True).strip()
             self.collector_dirty=bool(subprocess.check_output(['git','-C',str(repo),'status','--porcelain'],text=True).strip())
             boot=json.loads((self.session.world/'pilot_boot.json').read_text());self.defs={n['name']:n for n in boot['nodes']}
+            self.terrain=[n['name']for n in boot['nodes']if n.get('terrain_solid')]
+            self.scene_selection=None
             self.flammable=[n['name']for n in boot['nodes']if n['groups'].get('flammable',0)>0]
             self.floodable=[n['name']for n in boot['nodes']if n.get('floodable')]
             self.buildable=[n['name']for n in boot['nodes']if n.get('buildable_to')]
@@ -39,7 +41,10 @@ class Native(World):
         self.last_result=result
         return super().checked(result)
     def locate(self,x,z):return self.checked(self.probe.command('locate',x=x,z=z))
+    def find_centers(self,site,height_type,pool_kind=''):
+        return self.checked(self.probe.command('find_centers',x=int(site[0])//16*16,z=int(site[1])//16*16,height_type=height_type,pool_kind=pool_kind))
     def prepare_at(self,center,surface_y):
+        self.scene_selection=None
         self.center=list(map(int,center));self.surface_y=surface_y;self.rollout=uuid.uuid4().hex
         result=self.checked(self.probe.command('prepare',center=self.center,surface_y=surface_y))
         if result['status']!='prepared':raise RuntimeError(result['status'])
@@ -50,9 +55,10 @@ class Native(World):
         meta.update(sim_time=result['sim_time'],simulation_step=int(result['simulation_step']),engine_us=int(result['engine_us']),
             rollout_id=self.rollout,world_seed=self.seed,center_origin=self.center,region_origin=(np.asarray(self.center)-16).tolist(),
             native_provenance=dict(engine_build=self.build,settings=SETTINGS,mapgen='v7',voxel_only=result['audit'],liquid_update=1.0,collector_revision=self.collector_revision,collector_worktree_dirty=self.collector_dirty),
-            protected_source_indices=self.protected_indices,buildable_names=self.buildable,wet_names=self.wet,falling_names=self.falling,
+            scene_selection=self.scene_selection,terrain_names=self.terrain,protected_source_indices=self.protected_indices,buildable_names=self.buildable,wet_names=self.wet,falling_names=self.falling,
             sample_surface_y=self.surface_y,flammable_names=self.flammable,floodable_names=self.floodable,biome_group=biome_group(central.meta['surface_biome'],BIOMES),
             split=split_for_seed(self.seed,[80,10,10]),biome_points=result['chunks'][13]['biome_points'])
+        if self.scene_selection:meta.update(height_type=self.scene_selection['height_type'],stratum=self.scene_selection['height_type'])
         meta['verified_native_voxels']=sum(int(info['verified'])for info in result['chunks'])
         meta['biome_groups_present']=sorted({group for info in result['chunks']for name in info['biome_points']if(group:=biome_group(name,BIOMES))})
         meta['biome_transition']=len(meta['biome_groups_present'])>1

@@ -14,7 +14,7 @@ int vw_wave(int v,int n,int range,int viscosity,int horizon,int batch,
  uint8_t* details,uint64_t* operations,uint64_t* workspace_bytes) {
  try {
   const bool fire=range<0;const int levels=fire?1:range+2;const int states=v*levels;
-  const bool cooling=cptr!=nullptr;const int cols=7;
+  const bool cooling=cptr!=nullptr;const int cols=8;
   std::vector<uint64_t> seen(states),front(states),next(states),voxel(v),product_seen(cooling?v:0);
   std::vector<uint64_t> pending(cooling?(horizon+2)*v:0);
   std::vector<int> active,following,ts,tv,tp,tpend;
@@ -34,7 +34,7 @@ int vw_wave(int v,int n,int range,int viscosity,int horizon,int batch,
     if(!seen[s])ts.push_back(s);seen[s]|=b;
     if(!front[s])active.push_back(s);front[s]|=b;
     if(!voxel[p])tv.push_back(p);voxel[p]|=b;
-    stats[row*cols]++;stats[row*cols+1]+=(center[p]&1)?1:0;stats[row*cols+6]+=(center[p]&2)?1:0;
+    stats[row*cols]++;stats[row*cols+1]+=(center[p]&1)?1:0;stats[row*cols+6]+=(center[p]&2)?1:0;stats[row*cols+7]+=(center[p]&4)?1:0;
     if(details)details[(int64_t)row*v+p]=0;
    }
    for(int tick=0;tick<=horizon;tick++) {
@@ -45,7 +45,7 @@ int vw_wave(int v,int n,int range,int viscosity,int horizon,int batch,
       if(!voxel[p])tv.push_back(p);voxel[p]|=fresh;
       bits_each(fresh,[&](int bit){int row=base+bit;stats[row*cols]++;
        if(details)details[(int64_t)row*v+p]=(uint8_t)tick;
-       if(center[p]&2)stats[row*cols+6]++;
+       if(center[p]&2)stats[row*cols+6]++;if(center[p]&4)stats[row*cols+7]++;
        if(center[p]&1){stats[row*cols+1]++;stats[row*cols+2]|=1<<tick;stats[row*cols+3]=std::min(stats[row*cols+3],tick);
         // Level changes are a POTENTIAL for flow-fed viscous lava, never an exact promise.
         if(!fire&&viscosity>1&&tick>=2)for(int t=tick+1;t<=std::min(horizon,tick+viscosity-1);t++)stats[row*cols+2]|=1<<t;

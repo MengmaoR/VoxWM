@@ -35,7 +35,10 @@ class Geometry:
         self.center=np.zeros(self.shape,np.uint8);self.center[CENTER]=1
         self.contact_halo=self.center.astype(bool).copy()
         for d in CARDINAL:self.contact_halo|=shifted(self.center,d).astype(bool)
-        self.kernel_targets=self.center+2*self.contact_halo.astype(np.uint8)
+        ambient=kind_mask(frame.tokens,vocabulary,'water')|kind_mask(frame.tokens,vocabulary,'lava')
+        self.ambient_contact=ambient.copy()
+        for d in CARDINAL:self.ambient_contact|=shifted(ambient,d)
+        self.kernel_targets=self.center+2*self.contact_halo.astype(np.uint8)+4*self.ambient_contact.astype(np.uint8)
         self.legal={'water':np.flatnonzero(((self.air|self.replaceable)&~self.protected).ravel()).astype(np.int32),'lava':np.flatnonzero(((self.air|self.replaceable)&~self.protected).ravel()).astype(np.int32),
             'fire':np.flatnonzero((self.air&~shifted(kind_mask(frame.tokens,vocabulary,'water'),(0,0,-1))&~self.protected).ravel()).astype(np.int32)}
         self.falling_risk=self.fuel&shifted(self.falling,(0,0,1));self.graphs={};self.build_seconds=time.perf_counter()-start

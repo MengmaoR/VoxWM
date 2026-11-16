@@ -2,7 +2,7 @@
 
 当前入口：`python -m vae_data` → `vae_data/sharded/`。仅生成数据，无模型/训练器/DataLoader。依据[当前协议](../VAE_DATA_COLLECTION_PROTOCOL.md) / [Drive Markdown](https://drive.google.com/file/d/1NFM1Cb3os2yesAQgBk8VzM6vMmcj1eg8/view)。旧200K代码、结果与日志保留；[旧README](LEGACY_UNIFIED_README.md)中的命令需使用 `python -m vae_data.legacy_entry`，不是当前生产格式。
 
-**当前结果INCONCLUSIVE**：六型12次有限尝试，202.49秒；D1/D2/D3/D4-C各成功1条，D4-A/B未成功。已完成全点预计算、真实GT Trace、PNG/GIF和独立Viewer；[实测报告](reports/exhaustive_20261116/README.md)。未运行正式1K/100K，D4-B运行后修正的原生效果尚未验证。
+**当前结果INCONCLUSIVE**：本次独立六型验证10次、252.49秒，D1/D2/D4-A/D4-C各成功一条，D3/D4-B未成功。[当前实测及六型预览](reports/scene_sampling_20261116/README.md)。[此前202.49秒报告](reports/exhaustive_20261116/README.md)原样保留；未运行正式1K/100K。
 
 ## 服务器环境（用户手动执行）
 
@@ -80,18 +80,24 @@ rows=pq.read_table(path+'/metadata.parquet').to_pylist()
 
 每场景最多10个中心不同候选，另保留必要当前帧和D4 anchor；未选状态释放。没有discovery cache、完整raw trajectory或下游latent缓存。同源重复中心状态拒绝；不同seed的真实重复结构不被全局删除。
 
+## 动态场景筛选
+
+D1/D3仅真实Surface；D2和D4按50/50给Surface/Cave机会。Surface必须含地形固体—Air边界，不把液面/湖底当地表；Cave必须有真实地下连通空气。保留16³世界网格，不滑动中心。所有中心最大六邻域Air分量≥65；仅D4-A/C寻找天然对应水/岩浆池，短时观察后中心稳定最大分量≥19（Source或Flowing皆可）。取消通用天然目标体素`center_hint`及旧二维池/体积门槛。通过筛选后才做全点规划。
+
+D4-B两种新源独立采样并检查联合固化潜力；拒绝已有天然水岩浆接触及预计源路径接触已有流体。每类/高度的attempt、空间合格、规划合格、accepted写入statistics；没有合格场景就报告缺口，不改配额。
+
 ## 全点预计算与独立GT Viewer
 
 小型C++17 CPU内核首次按源文件mtime编译到系统临时目录，需`c++`（安装GT环境已需要编译器）；不需要Torch/CUDA。共享CSR图+乐观反向不可达界+64源稀疏bitset传播，不预删合法点。流体与Fire的时间估计仅为不确定潜力，实际合格仍由native五状态/事件判定。选点p=1/N；D4-B查询隐式联合兼容，不建Water×Lava密集矩阵。源码说明及复杂度见[报告](reports/exhaustive_20261116/README.md)。
 
 ```bash
 # 已有本轮完整Trace时：仅CPU导出/查看，无引擎运行
-.venv/bin/python -m vae_data export-traces --dataset outputs/vae_native_six_20261116
-.venv/bin/python -m vae_data view --dataset outputs/vae_native_six_20261116 --port 8765
+.venv/bin/python -m vae_data export-traces --dataset outputs/vae_scene_sampling_20261116
+.venv/bin/python -m vae_data view --dataset outputs/vae_scene_sampling_20261116 --port 8765
 # 浏览器 http://127.0.0.1:8765/?type=D4-C&region=16
 ```
 
-Viewer支持六型和各attempt、真实模拟时间播放/逐观察帧/拖动、48³/16³、XYZ剖切、自由轨道/缩放、27边界、块类高亮、源点、估计时间可达域/实际变化叠加、Pre/Reaction/Post/接收五帧。静态预览含真实中心切片；没有神经网络预测。`docs/vendor`仅提供只读Three/OrbitControls资源，不修改/部署网站。服务器可手动`--host 0.0.0.0`，默认仅localhost。
+Viewer支持六型和各attempt、真实模拟时间及相对干预时间播放/逐观察帧/拖动、48³/16³、XYZ剖切、自由轨道/缩放、27边界、块类高亮、源点、估计时间可达域/实际变化叠加、Pre/Reaction/Post/接收五帧。静态预览含真实中心切片；没有神经网络预测。`docs/vendor`仅提供只读Three/OrbitControls资源，不修改/部署网站。服务器可手动`--host 0.0.0.0`，默认仅localhost。
 
 ```bash
 # 使用已存在的真实GT，只做CPU测量；不会创建原生世界
@@ -102,9 +108,9 @@ Viewer支持六型和各attempt、真实模拟时间播放/逐观察帧/拖动�
   --output outputs/planning_profile.json
 ```
 
-完整Trace在`outputs/vae_native_six_20261116/traces/<type>/attempt_N/`，VWT1无损保存tokens/light和真实metadata。`planning/*.npz`为全部合法源点的region-local ENU坐标/统计；`selected_N.bin`是选中源uint8[48³]最早估计时间，255为估计未达。summary含世界坐标、p/保底/条件分布及不确定性。`planning_followup`明确是运行后只读原场景的CPU复算，不能当作已执行干预。
+本次完整Trace在`outputs/vae_scene_sampling_20261116/traces/<type>/attempt_N/`，VWT1无损保存tokens/light和真实metadata。`planning/*.npz`为全部合法源点的region-local ENU坐标/统计；`selected_N.bin`是选中源uint8[48³]最早估计时间，255为估计未达。summary含世界坐标、p/保底/条件分布及不确定性。`planning_followup`明确是运行后只读原场景的CPU复算，不能当作已执行干预。
 
-正式Shard不写这些完整Trace。轻量过程图在`vae_data/reports/exhaustive_20261116/`，完整Trace不入Git；到新服务器需用户自行复制现有输出，或明确决定另做一次有界测试。历史`native-smoke`仅保留复现旧四大类测试，当前协议使用六Unique Types。
+正式Shard不写这些完整Trace。本次轻量过程图在`vae_data/reports/scene_sampling_20261116/`（历史exhaustive报告保留），完整Trace不入Git；到新服务器需用户自行复制现有输出，或明确决定另做一次有界测试。历史`native-smoke`仅保留复现旧四大类测试，当前协议使用六Unique Types。
 
 ## 开发检查及明确授权的小例
 

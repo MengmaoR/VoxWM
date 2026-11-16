@@ -1,5 +1,5 @@
 -- One fixed 48³ region, no discovery cache or raw trajectory. Original ABMs are untouched.
-local mt=minetest;local mod=mt.get_modpath('craftium_env');local p0=dofile(mod..'/native.lua')
+local mt=minetest;local mod=mt.get_modpath('craftium_env');local p0=dofile(mod..'/native.lua');local geometry=dofile(mod..'/scene_geometry.lua')
 local world=mt.get_worldpath();local elapsed,step,last=0,0,0;local ready,armed,started=false,false,false
 local region=nil;local held={};local reactions={}
 local function clock()return {sim_time=elapsed,simulation_step=step,engine_us=mt.get_us_time()}end
@@ -84,6 +84,68 @@ local function locate(r)
         end)
     end)
 end
+-- A bounded read-only native terrain probe. Every result is an aligned16³ chunk,
+-- sampled uniformly by chunk later, never weighted by a random target fluid voxel.
+local function find_centers(r)
+    local ylow=math.floor(mcl_vars.mg_overworld_min/16)*16;local yhigh=191
+    local low={x=r.x-16,z=r.z-16,y=ylow};local high={x=r.x+31,z=r.z+31,y=yhigh}
+    mt.emerge_area(vector.subtract(low,16),vector.add(high,16),function(_,_,left)
+        if left~=0 then return end
+        mt.after(0,function()
+            local vm=VoxelManip();local a,b=vm:read_from_map(low,high);local area=VoxelArea:new({MinEdge=a,MaxEdge=b});local data=vm:get_data()
+            local terrain,water,lava={}, {}, {};local airid=mt.get_content_id('air');local ignoreid=mt.get_content_id('ignore')
+            for name,d in pairs(mt.registered_nodes)do local id=mt.get_content_id(name);terrain[id]=geometry.terrain(d);water[id]=(d.groups.water or 0)>0;lava[id]=(d.groups.lava or 0)>0 end
+            local function node(x,z,y)return data[area:index(x,y,z)]end
+            local tops={};local boundaries={}
+            for x=low.x,high.x do tops[x]={};boundaries[x]={}
+                for z=low.z,high.z do
+                    local first=true
+                    for y=yhigh,ylow,-1 do local id=node(x,z,y)
+                        if id==ignoreid then first=false
+                        elseif terrain[id]then
+                            tops[x][z]=y
+                            if first and node(x,z,y+1)==airid then boundaries[x][z]=y end
+                            break
+                        elseif water[id]or lava[id]then first=false end
+                    end
+                end
+            end
+            local candidates={};local diagnostic=nil;local best_score=-1;local rejected={no_air=0,no_height=0,no_pool=0,unavailable=0};local examined=0
+            for x=low.x,high.x,16 do for z=low.z,high.z,16 do for y=ylow,yhigh,16 do
+                examined=examined+1;local air,under,pool={},{},{};local count=0;local boundary=0;local missing=false
+                for dx=0,15 do for dz=0,15 do
+                    local top=tops[x+dx][z+dz];local ground=boundaries[x+dx][z+dz]
+                    if ground and ground>=y and ground<y+16 then boundary=boundary+1 end
+                    for dy=0,15 do local id=node(x+dx,z+dz,y+dy);count=count+1
+                        air[count]=id==airid;under[count]=air[count]and top and y+dy<top or false
+                        pool[count]=r.pool_kind=='water'and water[id]or r.pool_kind=='lava'and lava[id]or false
+                        if id==ignoreid then missing=true end
+                    end
+                end end
+                local largest=geometry.largest(air);local underground=r.height_type=='cave'and geometry.largest(under)or 0
+                local fluid=r.pool_kind~=''and geometry.largest(pool)or 0
+                local reason=nil
+                local height_ok=(r.height_type=='surface'and boundary>0)or(r.height_type=='cave'and boundary==0 and underground>64)
+                if missing then reason='unavailable'
+                elseif largest<=64 then reason='no_air'
+                elseif not height_ok then reason='no_height'
+                elseif r.pool_kind~=''and fluid<=18 then reason='no_pool'end
+                if reason then rejected[reason]=rejected[reason]+1 end
+                local score=(height_ok and 100000 or 0)+math.min(largest,65)*100+math.min(fluid,19)
+                if not reason or(not missing and score>best_score)then
+                    local roof={};for dx=0,15 do roof[dx+1]={};for dz=0,15 do roof[dx+1][dz+1]=tops[x+dx][z+dz]or ylow-1 end end
+                    local info={center={x,z,y},surface_y=tops[x+8][z+8]or y,solid_surface_heights=roof,
+                        surface_boundary_columns=boundary,largest_connected_air_component=largest,largest_underground_air_component=underground,
+                        initial_connected_pool=fluid,height_type=r.height_type,pool_kind=r.pool_kind,probe_qualified=not reason,diagnostic_rejection_reason=reason}
+                    if not reason then candidates[#candidates+1]=info
+                    else diagnostic=info;best_score=score end
+                end
+            end end end
+            reply(r,{status='centers_found',candidates=candidates,diagnostic=diagnostic,examined_chunks=examined,rejected=rejected,
+                probe_domain={low=enu(low),high=enu(high)},selection='uniform over qualified aligned chunks; no target-voxel sampling'})
+        end)
+    end)
+end
 local function inspect(r)
     local attached,suspended,fire={},{},{};local count=0
     for _,p in ipairs(mt.find_nodes_in_area(region.low,region.high,{'air'}))do
@@ -117,7 +179,7 @@ mt.register_globalstep(function(dt)
             local id=mt.get_content_id(name)
             if not seen[id]then seen[id]=true;local n=mt.get_name_from_content_id(id);local d=mt.registered_nodes[n]or def
                 nodes[#nodes+1]={id,n,d.walkable~=false,(d.groups and(d.groups.water or 0)>0)or false,d.liquidtype or'none'}
-                records[#records+1]={id=id,name=n,groups=d.groups or{},walkable=d.walkable,liquid_range=d.liquid_range,liquid_viscosity=d.liquid_viscosity,floodable=d.floodable or false,buildable_to=d.buildable_to or false}
+                records[#records+1]={id=id,name=n,groups=d.groups or{},walkable=d.walkable,terrain_solid=geometry.terrain(d),liquid_range=d.liquid_range,liquid_viscosity=d.liquid_viscosity,floodable=d.floodable or false,buildable_to=d.buildable_to or false}
             end
         end
         write('pilot_boot.json',{nodes=records,liquid_update=mt.settings:get('liquid_update')or'1.0'});write('gt_nodes.json',nodes);started=true
@@ -126,7 +188,8 @@ mt.register_globalstep(function(dt)
         local text=read('pilot_command.json')
         if text then local r=assert(mt.parse_json(text))
             if r.request_id>last then last=r.request_id
-                if r.kind=='locate'then locate(r)
+                if r.kind=='find_centers'then find_centers(r)
+                elseif r.kind=='locate'then locate(r)
                 elseif r.kind=='prepare'then prepare(r)
                 elseif r.kind=='capture'then capture(r)
                 elseif r.kind=='clock'then reply(r,{status='clock'})

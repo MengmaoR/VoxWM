@@ -1,3 +1,11 @@
+INCONCLUSIVE — 2026-11-16 Dynamic Scene Sampling Revision
+
+本次独立一轮252.49秒、10次尝试；D1/D2/D4-A/D4-C成功，D3/D4-B未通过。真实Surface/Cave与Air65/稳定池19筛选已接入；没有正式Shard或训练。[完整实测/六型预览/性能](reports/scene_sampling_20261116/README.md)。
+
+---
+
+以下历史报告原文保留，其中“本轮/唯一一轮”仅指其当次授权。
+
 # 最新：2026-11-16 全点预计算 / 六型 GT
 
 **INCONCLUSIVE**：唯一一轮202.49秒，D1/D2/D3/D4-C成功，D4-A/B未通过。[完整实测、六型PNG/GIF、命令及限制](reports/exhaustive_20261116/README.md)。本次没有正式Shard或训练。

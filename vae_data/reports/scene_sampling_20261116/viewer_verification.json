@@ -1,0 +1,109 @@
+{
+  "source": "actual_native_GT",
+  "native_simulations_started": 0,
+  "checks": [
+    {
+      "type": "D1",
+      "attempt": "attempt_1",
+      "observations": 34,
+      "selected_states": 5,
+      "tokens_equal": true,
+      "vocabulary_equal": true,
+      "metadata_equal": true,
+      "aligned_16": true
+    },
+    {
+      "type": "D2",
+      "attempt": "attempt_1",
+      "observations": 35,
+      "selected_states": 5,
+      "tokens_equal": true,
+      "vocabulary_equal": true,
+      "metadata_equal": true,
+      "aligned_16": true
+    },
+    {
+      "type": "D3",
+      "attempt": "attempt_1",
+      "observations": 10,
+      "selected_states": 0,
+      "tokens_equal": true,
+      "vocabulary_equal": true,
+      "metadata_equal": true,
+      "aligned_16": true
+    },
+    {
+      "type": "D3",
+      "attempt": "attempt_2",
+      "observations": 10,
+      "selected_states": 0,
+      "tokens_equal": true,
+      "vocabulary_equal": true,
+      "metadata_equal": true,
+      "aligned_16": true
+    },
+    {
+      "type": "D3",
+      "attempt": "attempt_3",
+      "observations": 10,
+      "selected_states": 0,
+      "tokens_equal": true,
+      "vocabulary_equal": true,
+      "metadata_equal": true,
+      "aligned_16": true
+    },
+    {
+      "type": "D4-A",
+      "attempt": "attempt_1",
+      "observations": 60,
+      "selected_states": 5,
+      "tokens_equal": true,
+      "vocabulary_equal": true,
+      "metadata_equal": true,
+      "aligned_16": true
+    },
+    {
+      "type": "D4-B",
+      "attempt": "attempt_1",
+      "observations": 24,
+      "selected_states": 0,
+      "tokens_equal": true,
+      "vocabulary_equal": true,
+      "metadata_equal": true,
+      "aligned_16": true
+    },
+    {
+      "type": "D4-B",
+      "attempt": "attempt_2",
+      "observations": 110,
+      "selected_states": 0,
+      "tokens_equal": true,
+      "vocabulary_equal": true,
+      "metadata_equal": true,
+      "aligned_16": true
+    },
+    {
+      "type": "D4-B",
+      "attempt": "attempt_3",
+      "observations": 1,
+      "selected_states": 0,
+      "tokens_equal": true,
+      "vocabulary_equal": true,
+      "metadata_equal": true,
+      "aligned_16": true
+    },
+    {
+      "type": "D4-C",
+      "attempt": "attempt_1",
+      "observations": 42,
+      "selected_states": 5,
+      "tokens_equal": true,
+      "vocabulary_equal": true,
+      "metadata_equal": true,
+      "aligned_16": true
+    }
+  ],
+  "passed": true,
+  "attempts": 10,
+  "observations": 336
+}

@@ -1,0 +1,34 @@
+{
+  "status": {
+    "status": "rejected",
+    "reason": "center_probe_no_height",
+    "subtype": "B",
+    "world_seed": 191664964,
+    "height_type": "cave",
+    "center_origin": [
+      -304,
+      1440,
+      0
+    ],
+    "scene_spatial_qualified": false,
+    "planning_qualified": false,
+    "intervention": {
+      "mode": "native_initialization",
+      "rng_state": {
+        "bit_generator": "PCG64",
+        "state": {
+          "state": 31510642937646930680940679474115356392,
+          "inc": 332724090758049132448979897138935081983
+        },
+        "has_uint32": 0,
+        "uinteger": 2139373402
+      }
+    }
+  },
+  "planning": {},
+  "native_frames": 1,
+  "accepted_indices": [],
+  "actual_center_changes": 0,
+  "actual_neighbor_changes": 0,
+  "native_events": []
+}

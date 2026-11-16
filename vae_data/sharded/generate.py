@@ -6,7 +6,7 @@ import numpy as np
 from .protocol import CONFIG,BIOMES,STRATA,Frame,Chain,kind_mask,biome_group,dump
 from .native import Native
 from .sampling import Collector
-from .reachability import pool_components
+from .centers import prepare_dynamic,choose_height,spatial_gate,stable_pool,natural_interaction
 from .planning import Planner
 from .storage import Writer,atomic_json
 
@@ -24,31 +24,32 @@ def prepare(world,site,stratum,rng):
     return frame,result
 
 
-def center_hint(world,frame,category,rng):
-    if category=='D3':
-        table=np.array([name in world.flammable for name,_ in world.v.entries],bool);mask=table[frame.tokens]
-    else:mask=kind_mask(frame.tokens,world.v,'water'if category in('D1','D4')else'lava')
-    points=np.argwhere(mask)
-    if not len(points):return frame
-    p=points[int(rng.integers(len(points)))]+np.asarray(frame.meta['region_origin'])
-    center=(p//16*16).tolist()
-    if center==world.center:return frame
-    shifted,_=world.prepare_at(center,world.surface_y);return shifted
-
-
 def collect(world,frame,category,rng,subtype='',max_seconds=None,trace=None):
     """One scene, one all-point plan, one initialization; no native retry inside."""
-    intervention=dict(mode='native_initialization',rng_state=rng.bit_generator.state);stable_pool=None
+    intervention=dict(mode='native_initialization',rng_state=rng.bit_generator.state);verified_pool=None
+    scene_info=frame.meta.get('scene_selection')or{};height=frame.meta.get('height_type',scene_info.get('height_type'))
+    def reject(reason,spatial=False,planned=False,**extra):
+        status=dict(status='rejected',reason=reason,subtype=subtype,world_seed=world.seed,height_type=height,
+            center_origin=world.center,scene_spatial_qualified=spatial,planning_qualified=planned,intervention=intervention,**extra)
+        if trace:trace.finish(status=status)
+        return None,status
     if trace:trace.observe(frame,'original_scene')
+    if scene_info.get('probe_qualified')is False:return reject('center_probe_'+scene_info['diagnostic_rejection_reason'])
+    valid,screen=spatial_gate(frame,world.v);intervention['spatial_screen']=screen
+    if not valid:return reject(screen['reason'])
     if category=='D4'and subtype in('A','C'):
         before=frame;world.wait(frame.time+1.1);frame,result=world.capture48()
         if trace:trace.observe(frame,'natural_pool_observation',result.get('reaction_events')or[])
         kind='water'if subtype=='A'else'lava'
-        source_lookup=np.array([kind in name and 'source'in name for name,_ in world.v.entries],bool)
-        stable_pool=pool_components((before.tokens==frame.tokens)&source_lookup[before.tokens]&source_lookup[frame.tokens])
-        intervention['pool_observation_seconds']=frame.time-before.time
+        count,verified_pool=stable_pool(before,frame,world.v,kind)
+        intervention.update(pool_kind=kind,largest_connected_stable_pool=count,pool_observation_seconds=frame.time-before.time)
+        valid,screen=spatial_gate(frame,world.v);intervention['spatial_screen_after_pool']=screen
+        if not valid:return reject(screen['reason'])
+        if count<19:return reject('center_stable_'+kind+'_component_below_19')
+    if category=='D4'and subtype=='B'and natural_interaction(frame,world.v):return reject('preexisting_natural_water_lava_contact')
+    if category=='D2':intervention['initial_water_voxels']=int(kind_mask(frame.tokens,world.v,'water').sum())
     planner=Planner(frame,world.v)
-    actions,selection=planner.select(category,rng,subtype,stable_pool)
+    actions,selection=planner.select(category,rng,subtype,verified_pool)
     if trace:trace.planning(planner,selection)
     # Only chosen source details are retained in formal metadata; all-point dense
     # tensors are neither constructed nor stored. The debug trace has streamed grids.
@@ -59,23 +60,20 @@ def collect(world,frame,category,rng,subtype='',max_seconds=None,trace=None):
         compact['selected_sources'].append(dict({k:v for k,v in detail.items()if k!='estimated_arrival_seconds'},
             reachable_region_indices=indices.tolist(),estimated_arrival_seconds=grid.ravel()[indices].tolist()))
     intervention['planning']=compact
-    def reject(reason,**extra):
-        status=dict(status='rejected',reason=reason,subtype=subtype,world_seed=world.seed,
-            center_origin=world.center,intervention=intervention,**extra)
-        if trace:trace.finish(status=status)
-        return None,status
     if not actions:
         metrics=selection.get('metrics',{})
         reason=selection.get('reason','no_qualified_temporal_center_potential')
         if metrics and all(m['legal_source_count']==0 for m in metrics.values()):reason='no_legal_source'
-        return reject(reason)
+        return reject(reason,spatial=True)
     if trace:trace.observe(frame,'before_intervention')
     anchor,result=world.place(actions)
     intervention.update(requested_actions=actions,actual_actions=result.get('actions')or[])
     anchor.meta['phase']='initial_anchor'if category=='D4'else'post_initialization'
     if trace:trace.observe(anchor,'after_intervention',result.get('reaction_events')or[])
     if not any(a['before']!=a['after']and(a['after'].startswith('mcl_fire:')if category=='D3'else a['after'].endswith('_source'))for a in intervention['actual_actions']):
-        return reject('native_initialization_failed')
+        return reject('native_initialization_failed',spatial=True,planned=True)
+    if category=='D4'and subtype=='B'and not all(any(a['type']==kind and a['after'].endswith('_source')for a in intervention['actual_actions'])for kind in('water','lava')):
+        return reject('both_new_fluids_not_initialized',spatial=True,planned=True)
     monitor=Collector(anchor,category,world.v,max_seconds)
     all_reactions=[];contact_observed=False;contact_center=False;structural=0;age_only=0
     while True:
@@ -106,7 +104,7 @@ def collect(world,frame,category,rng,subtype='',max_seconds=None,trace=None):
         elif not monitor.changes:reason='native_flow_did_not_change_center'
         else:reason='fewer_than_four_distinct_center_transitions'
     status=dict(status='success'if chain else'rejected',reason=reason,**monitor.summary(),
-        subtype=subtype,world_seed=world.seed,center_origin=world.center,audit=world.audit,
+        subtype=subtype,world_seed=world.seed,height_type=height,scene_spatial_qualified=True,planning_qualified=True,center_origin=world.center,audit=world.audit,
         observed_reaction_count=len(all_reactions),contact_observed=contact_observed,center_contact_observed=contact_center,
         structural_fire_changes=structural,fire_age_only_changes=age_only,intervention=intervention)
     if trace:trace.finish(monitor,chain,status)
@@ -143,19 +141,18 @@ def generate_shard(root,shard,resume,deadline,craftium,renderer,seed,max_attempt
                     stratum='surface';subtype=''
                     if category=='D4':
                         choices=[k for k,n in missing['d4'].items()if n>0];subtype=choices[int(rng.integers(len(choices)))]
-                        # Natural lava pools are also searched underground, never manufactured.
-                        if subtype=='C':stratum='deep_cave'if rng.random()<.75 else'surface'
                     if category=='Static':
                         location=world.locate(int(site[0]),int(site[1]));group=biome_group(location.get('biome',''),BIOMES)
                         choices=[m for m in missing['static']if m['biome']==group]
                         if not choices:raise ValueError('Observed biome quota already full or outside the 25 groups')
                         stratum=choices[int(rng.integers(len(choices)))]['stratum']
-                    frame,_=prepare(world,site,stratum,rng)
                     if category=='Static':
+                        frame,_=prepare(world,site,stratum,rng)
                         frame.meta['stratum']=stratum;frame.meta['phase']='static_snapshot'
                         saved=writer.submit(Chain('Static',[frame]),world.v);entry.update(status='committed'if saved else'rejected')
                     else:
-                        frame=center_hint(world,frame,'D2'if category=='D4'and subtype=='C'else category,rng)
+                        height=choose_height(category,rng);entry.update(height_type=height,subtype=subtype)
+                        frame,_=prepare_dynamic(world,site,category,rng,subtype,height)
                         chain,result=collect(world,frame,category,rng,subtype);entry.update(result)
                         if chain:entry['status']='committed'if writer.submit(chain,world.v)else'rejected_duplicate_or_quota'
                 except Exception as exc:

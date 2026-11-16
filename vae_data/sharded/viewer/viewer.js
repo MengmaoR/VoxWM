@@ -12,7 +12,7 @@ const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamp
 scene.add(new THREE.AmbientLight(0xffffff,1.6));const sun=new THREE.DirectionalLight(0xffffff,2);sun.position.set(20,60,35);scene.add(sun);
 const voxels=new THREE.Group(),boxes=new THREE.Group(),markers=new THREE.Group(),overlays=new THREE.Group(),ghosts=new THREE.Group(),selection=new THREE.Group();scene.add(voxels,boxes,markers,overlays,ghosts,selection);
 const cube=new THREE.BoxGeometry(.98,.98,.98),matrix=new THREE.Matrix4();
-let manifest,data,stream,table,index=0,playing=false,playStart=0,playTime=0,arrivals=[],reference=null,baseTime=0,origin=[0,0,0],loadId=0,firstLoad=true,pinned=null,displayed=null,pair=null;
+let manifest,data,stream,table,index=0,playing=false,playStart=0,playTime=0,arrivals=[],reference=null,baseTime=null,origin=[0,0,0],loadId=0,firstLoad=true,pinned=null,displayed=null,pair=null;
 const raycaster=new THREE.Raycaster();raycaster.params.Points.threshold=.18;
 const point=p=>new THREE.Vector3(...worldToLocal(p,origin));
 function clear(g){clearGroup(g,cube);}
@@ -103,7 +103,7 @@ function renderState(){
   for(const[type,ids]of changeGroups)for(const id of ids){const o=document.createElement('option');o.value=id;const xyz=localXYZ(id).map((p,i)=>p+pair.after.metadata.region_origin[i]);o.textContent=`${xyz.join(',')} · ${table[b[id]].name} → ${table[a[id]].name} · ${type}`;$('transition').append(o);}
   if($('sources').checked)for(const source of data.planning?.selected_sources||[]){const marker=new THREE.Mesh(new THREE.SphereGeometry(.3,10,8),new THREE.MeshBasicMaterial({color:source.kind==='water'?0x50c6ff:source.kind==='lava'?0xff962e:0xffd448,depthTest:false}));marker.position.copy(point(source.position));markers.add(marker);}
   boxes.visible=$('bounds').checked;$('sliceLabel').value=$('slice').value;$('timeline').value=index;
-  const row=data.frames[displayed.index];$('time').textContent=`${displayed.metadata.sim_time.toFixed(6)} sim s`;
+  const row=data.frames[displayed.index];$('time').textContent=`${displayed.metadata.sim_time.toFixed(6)} sim s · ${baseTime===null?'no intervention':((displayed.metadata.sim_time-baseTime).toFixed(3)+' s from initialization')}`;
   $('readout').textContent=`Timeline #${index}; displaying original observation #${displayed.index}/${data.frames.length-1} · native step ${row.metadata.simulation_step}\nCenter raw changes: ${row.center_changes} · neighbor: ${row.neighbor_changes} · roles: ${row.stages.join(', ')}${data.selected_indices.includes(displayed.index)?' · ACCEPTED VAE STATE':''}\nOrigin ENU: ${origin.join(', ')} · ghost previous leaves: ${$('ghost').checked?burnt.length:0} (not current GT)\nPair ${pair.before.index} → ${pair.after.index}: ${[...changeGroups].map(([type,ids])=>`${type}: ${ids.length}`).join(' | ')}`;
   window.nativeViewerState={type:$('type').value,attempt:$('attempt').value,index:displayed.index,timelineIndex:index,time:row.metadata.sim_time,step:row.metadata.simulation_step,frames:data.frames.length,shape:stream.shape,selectedIndices:data.selected_indices,source:'actual_native_GT',mode:$('mode').value,shapes,ghostCount:$('ghost').checked?burnt.length:0,transitionCounts:Object.fromEntries([...changeGroups].map(([k,v])=>[k,v.length]))};
   updateInspector();$('error').textContent='';
@@ -123,7 +123,7 @@ async function load(){
   data=m;stream=new VoxelStream(buffer);table=tokenTable(v,defs,c,m.frames[0].metadata.flammable_names||[]);arrivals=grids;
   if(stream.frames!==m.frames.length||stream.shape.some(v=>v!==48))throw Error('Voxel and metadata shape/index mismatch');
   if(m.frames.some(f=>f.metadata.region_origin.some((v,i)=>v!==m.frames[0].metadata.region_origin[i])))throw Error('Moving native region: this fixed-region comparison cannot assume equal local indices');
-  index=0;const ri=Math.max(0,data.frames.findIndex(f=>f.stages.includes('after_intervention')));reference=stream.frame(ri).slice();baseTime=data.frames[ri].metadata.sim_time;
+  index=0;const init=data.frames.findIndex(f=>f.stages.includes('after_intervention')),ri=Math.max(0,init);reference=stream.frame(ri).slice();baseTime=init<0?null:data.frames[ri].metadata.sim_time;
   const status=m.selection.status||{};$('status').textContent=`${type.id} / ${entry.attempt}\n${status.status}: ${status.reason||'accepted native chain'}\nRollout: ${m.frames[0].metadata.rollout_id}${m.planning.native_intervention_executed===false?'\nOffline plan only; proposed sources NOT executed':''}`;
   $('planning').textContent=JSON.stringify(m.planning,null,2);$('timeline').max=m.frames.length-1;for(const id of['beforeFrame','afterFrame'])$(id).max=m.frames.length-1;
   $('stages').replaceChildren();const notes=[];m.frames.forEach((row,i)=>{const roles=row.stages.filter(s=>!['native_observation','original_scene'].includes(s));if(m.selected_indices.includes(i))roles.push('VAE');if(roles.length){const o=document.createElement('option');o.value=i;o.label=roles.join('/');$('stages').append(o);notes.push(`#${i} ${row.metadata.sim_time.toFixed(3)}s ${roles.join('/')}`);}});$('markers').textContent=notes.join(' · ');

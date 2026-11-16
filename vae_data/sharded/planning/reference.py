@@ -5,7 +5,7 @@ import numpy as np
 def reference(geometry,kind,source,contacts=None):
     graph=geometry.graph(kind);fire=kind=='fire';radius=7 if kind=='water'else 3;viscosity=7 if kind=='lava'else 1
     initial=(0 if fire else radius+1,int(source));queue=deque([(initial,0)]);seen={initial};arrival={int(source):0};cool={};phase=0;first=255
-    if not graph['reverse'][source]:return np.array([0,0,0,255,0,0,0],np.int32),np.full(geometry.shape,255,np.uint8)
+    if not graph['reverse'][source]:return np.array([0,0,0,255,0,0,0,0],np.int32),np.full(geometry.shape,255,np.uint8)
     while queue:
         (r,p),t=queue.popleft()
         if contacts is not None:
@@ -37,4 +37,4 @@ def reference(geometry,kind,source,contacts=None):
     for time in cool.values():product_phase|=1<<time;first=min(first,time)
     phase|=product_phase;grid=np.full(geometry.size,255,np.uint8)
     for p,t in arrival.items():grid[p]=t
-    return np.array([len(arrival),centers,phase,first,len(cool),product_phase,sum(bool(geometry.contact_halo.ravel()[p])for p in arrival)],np.int32),grid.reshape(geometry.shape)
+    return np.array([len(arrival),centers,phase,first,len(cool),product_phase,sum(bool(geometry.contact_halo.ravel()[p])for p in arrival),sum(bool(geometry.ambient_contact.ravel()[p])for p in arrival)],np.int32),grid.reshape(geometry.shape)

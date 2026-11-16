@@ -1,0 +1,371 @@
+{
+  "status": {
+    "status": "success",
+    "reason": null,
+    "candidate_states": 10,
+    "center_target_changes": 69,
+    "center_transition_observations": 9,
+    "simulated_seconds": 9.037803947925568,
+    "stop_reason": "candidate_limit",
+    "legal_windows": 6,
+    "subtype": "",
+    "world_seed": 191664964,
+    "height_type": "cave",
+    "scene_spatial_qualified": true,
+    "planning_qualified": true,
+    "center_origin": [
+      800,
+      -1248,
+      -48
+    ],
+    "audit": {
+      "blocked_entities": {
+        "mcl_chests:chest": 6.0,
+        "mcl_wieldview:wieldview": 423.0,
+        "mobs_mc:pig": 1.0
+      },
+      "blocked_item_attempts": 2.0,
+      "compatible": true,
+      "dropped_items": 0.0,
+      "entity_callbacks": 0.0,
+      "entity_induced_changes": 0.0,
+      "nontechnical_entities": 0.0,
+      "unsupported_falling_attempts": 0.0
+    },
+    "observed_reaction_count": 0,
+    "contact_observed": false,
+    "center_contact_observed": false,
+    "structural_fire_changes": 0,
+    "fire_age_only_changes": 0,
+    "intervention": {
+      "mode": "native_initialization",
+      "rng_state": {
+        "bit_generator": "PCG64",
+        "state": {
+          "state": 295687708157485158435820790765748589861,
+          "inc": 332724090758049132448979897138935081983
+        },
+        "has_uint32": 0,
+        "uinteger": 1789851401
+      },
+      "spatial_screen": {
+        "height_type": "cave",
+        "largest_connected_air_component": 242,
+        "air_required": 65,
+        "surface_boundary_columns": 0,
+        "largest_underground_air_component": 242,
+        "reason": null,
+        "filter_seconds": 1.329949040999054
+      },
+      "initial_water_voxels": 12,
+      "planning": {
+        "planner_version": "shared-wave64-scene-v2",
+        "reachability_horizon_seconds": 10.0,
+        "required_center_transitions": 4,
+        "rng_state": {
+          "bit_generator": "PCG64",
+          "state": {
+            "state": 295687708157485158435820790765748589861,
+            "inc": 332724090758049132448979897138935081983
+          },
+          "has_uint32": 0,
+          "uinteger": 1789851401
+        },
+        "algorithm": "all-source shared graph / sparse 64-source bitsets",
+        "pair_compatibility_seconds": 0.0,
+        "lava": {
+          "N": 322,
+          "p": 0.003105590062111801,
+          "selected": [
+            2535
+          ],
+          "fallback": true,
+          "cap": 4,
+          "distribution": "independent Bernoulli then uniform fallback/cap"
+        },
+        "precompute_wall_seconds": 0.017416833001334453,
+        "candidate_filtering_seconds": 0.0032230420019914163,
+        "precompute_peak_memory_mb": 132.234375,
+        "memory_scope": "Python process peak RSS, including input/shared graph, not per-kernel incremental memory",
+        "selected_source_count": 1,
+        "metrics": {
+          "lava": {
+            "legal_source_count": 4150,
+            "evaluated_source_count": 4150,
+            "reachable_candidate_count": 539,
+            "qualified_candidate_count": 322,
+            "mathematically_pruned_count": 786,
+            "visited_nodes": 160187,
+            "reachability_seconds": 0.007107415998689248,
+            "shared_graph_build_seconds": 0.2840319160004583,
+            "candidate_filtering_seconds": 0.0032077080013550585,
+            "kernel_working_bytes": 14155776,
+            "batch_size": 64,
+            "uncertain_pruning_disabled": false,
+            "candidates_per_second": 583897.1576681798,
+            "semantics": "10 scheduled-wave seconds: optimistic potential, NOT deterministic native GT",
+            "uncertainty": "native queue ordering, fluid renewal/competition and ABM randomness are not fixed; lower bound0, no finite stochastic upper bound"
+          }
+        },
+        "selected_sources": [
+          {
+            "kind": "lava",
+            "source_index": 2535,
+            "position": [
+              808,
+              -1244,
+              -45
+            ],
+            "reachable_voxels": 57,
+            "center_reachable_voxels": 50,
+            "potential_transition_times": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "falling_risk_reachable_voxels": 0,
+            "reachable_region_indices": [
+              44656,
+              46912,
+              46960,
+              47008,
+              47057,
+              49168,
+              49216,
+              49264,
+              49312,
+              49313,
+              49361,
+              49409,
+              51471,
+              51472,
+              51520,
+              51568,
+              51569,
+              51617,
+              51665,
+              51713,
+              53727,
+              53728,
+              53776,
+              53824,
+              53872,
+              53873,
+              53921,
+              53969,
+              53970,
+              53971,
+              54017,
+              55983,
+              56031,
+              56032,
+              56080,
+              56128,
+              56129,
+              56177,
+              56225,
+              56226,
+              56227,
+              56273,
+              56274,
+              56275,
+              56321,
+              56322,
+              56323,
+              58336,
+              58384,
+              58433,
+              58481,
+              58529,
+              58577,
+              58578,
+              58579,
+              60785,
+              60833
+            ],
+            "estimated_arrival_seconds": [
+              10,
+              10,
+              9,
+              8,
+              6,
+              10,
+              9,
+              8,
+              7,
+              6,
+              5,
+              6,
+              10,
+              9,
+              8,
+              7,
+              6,
+              5,
+              4,
+              5,
+              10,
+              9,
+              8,
+              7,
+              6,
+              5,
+              4,
+              3,
+              2,
+              1,
+              4,
+              10,
+              9,
+              8,
+              7,
+              6,
+              5,
+              4,
+              3,
+              2,
+              1,
+              2,
+              1,
+              0,
+              3,
+              2,
+              1,
+              9,
+              8,
+              6,
+              5,
+              4,
+              3,
+              2,
+              1,
+              6,
+              5
+            ]
+          }
+        ]
+      },
+      "requested_actions": [
+        {
+          "type": "lava",
+          "position": [
+            808,
+            -1244,
+            -45
+          ]
+        }
+      ],
+      "actual_actions": [
+        {
+          "after": "mcl_core:lava_source",
+          "before": "air",
+          "clock": {
+            "engine_us": 10509028413.0,
+            "sim_time": 13.262986965477467,
+            "simulation_step": 261.0
+          },
+          "position": [
+            808.0,
+            -1244.0,
+            -45.0
+          ],
+          "type": "lava"
+        }
+      ]
+    }
+  },
+  "planning": {
+    "planner_version": "shared-wave64-scene-v2",
+    "reachability_horizon_seconds": 10.0,
+    "required_center_transitions": 4,
+    "rng_state": {
+      "bit_generator": "PCG64",
+      "state": {
+        "state": 295687708157485158435820790765748589861,
+        "inc": 332724090758049132448979897138935081983
+      },
+      "has_uint32": 0,
+      "uinteger": 1789851401
+    },
+    "algorithm": "all-source shared graph / sparse 64-source bitsets",
+    "pair_compatibility_seconds": 0.0,
+    "lava": {
+      "N": 322,
+      "p": 0.003105590062111801,
+      "selected": [
+        2535
+      ],
+      "fallback": true,
+      "cap": 4,
+      "distribution": "independent Bernoulli then uniform fallback/cap"
+    },
+    "precompute_wall_seconds": 0.017416833001334453,
+    "candidate_filtering_seconds": 0.0032230420019914163,
+    "precompute_peak_memory_mb": 132.234375,
+    "memory_scope": "Python process peak RSS, including input/shared graph, not per-kernel incremental memory",
+    "selected_source_count": 1,
+    "metrics": {
+      "lava": {
+        "legal_source_count": 4150,
+        "evaluated_source_count": 4150,
+        "reachable_candidate_count": 539,
+        "qualified_candidate_count": 322,
+        "mathematically_pruned_count": 786,
+        "visited_nodes": 160187,
+        "reachability_seconds": 0.007107415998689248,
+        "shared_graph_build_seconds": 0.2840319160004583,
+        "candidate_filtering_seconds": 0.0032077080013550585,
+        "kernel_working_bytes": 14155776,
+        "batch_size": 64,
+        "uncertain_pruning_disabled": false,
+        "candidates_per_second": 583897.1576681798,
+        "semantics": "10 scheduled-wave seconds: optimistic potential, NOT deterministic native GT",
+        "uncertainty": "native queue ordering, fluid renewal/competition and ABM randomness are not fixed; lower bound0, no finite stochastic upper bound"
+      }
+    },
+    "selected_sources": [
+      {
+        "kind": "lava",
+        "source_index": 2535,
+        "position": [
+          808,
+          -1244,
+          -45
+        ],
+        "reachable_voxels": 57,
+        "center_reachable_voxels": 50,
+        "potential_transition_times": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10
+        ],
+        "falling_risk_reachable_voxels": 0
+      }
+    ]
+  },
+  "native_frames": 35,
+  "accepted_indices": [
+    4,
+    8,
+    11,
+    15,
+    19
+  ],
+  "actual_center_changes": 69,
+  "actual_neighbor_changes": 51,
+  "native_events": []
+}

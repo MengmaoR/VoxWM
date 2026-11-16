@@ -24,6 +24,8 @@ def load(path):
 def measure(kind,scene):
     started=time.perf_counter();library();compile_seconds=time.perf_counter()-started
     f,v=fixture(forest=True)if scene=='fixture'else load(scene)
+    from ..centers import components
+    filter_start=time.perf_counter();largest_air,_=components(np.asarray([n=='air'for n,_ in v.entries],bool)[f.center]);spatial_seconds=time.perf_counter()-filter_start
     before=rss_mb();started=time.perf_counter();p=Planner(f,v);pair=0.;query_count=0
     if kind=='pair':
         _,selection=p.select('D4',np.random.default_rng(42),'B')
@@ -35,9 +37,9 @@ def measure(kind,scene):
         legal_source_count={k:len(p.geometry.legal[k])for k in(('water','lava')if kind=='pair'else(kind,))},
         reachable_candidate_count={k:r['metrics']['reachable_candidate_count']for k,r in p.results.items()},
         qualified_candidate_count={k:r['metrics']['qualified_candidate_count']for k,r in p.results.items()},
-        precompute_wall_seconds=elapsed,precompute_peak_memory_mb=rss_mb(),incremental_peak_memory_mb=max(0,rss_mb()-before),
+        spatial_connected_air_seconds=spatial_seconds,largest_center_air_component=largest_air,precompute_wall_seconds=elapsed,precompute_peak_memory_mb=rss_mb(),incremental_peak_memory_mb=max(0,rss_mb()-before),
         visited_nodes=sum(m['visited_nodes']for m in metrics),shared_graph_build_seconds=p.geometry.build_seconds+sum(g['build_seconds']for g in p.geometry.graphs.values()),
-        reachability_seconds=sum(m['reachability_seconds']for m in metrics),pair_compatibility_seconds=pair,
+        candidate_filtering_seconds=sum(m['candidate_filtering_seconds']for m in metrics),reachability_seconds=sum(m['reachability_seconds']for m in metrics),pair_compatibility_seconds=pair,
         compatibility_all_source_queries=query_count,candidates_per_second=sum(m['evaluated_source_count']for m in metrics)/elapsed,
         kernel_peak_working_mb=max(m['kernel_working_bytes']for m in metrics)/1024**2,batch_size=64,
         compile_or_load_seconds=compile_seconds,evaluation_calls=len(metrics),naive_vs_optimized_speedup=None,
@@ -65,6 +67,7 @@ def run(output,real,fire=None,pair=None):
             child=subprocess.run(command,capture_output=True,text=True,check=True)
             rows.append(json.loads(child.stdout))
     result=dict(native_simulations_started=0,profiles=rows,reference_comparisons=[comparison(k)for k in('water','lava','fire','pair')])
+    Path(output).parent.mkdir(parents=True,exist_ok=True)
     dump(output,result);return result
 
 if __name__=='__main__':

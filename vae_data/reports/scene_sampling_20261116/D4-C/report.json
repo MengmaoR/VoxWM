@@ -1,0 +1,1100 @@
+{
+  "status": {
+    "status": "success",
+    "reason": null,
+    "candidate_states": 9,
+    "center_target_changes": 54,
+    "center_transition_observations": 9,
+    "simulated_seconds": 10.403172962367535,
+    "stop_reason": "center_no_change_2s",
+    "legal_windows": 5,
+    "subtype": "C",
+    "world_seed": 191664964,
+    "height_type": "cave",
+    "scene_spatial_qualified": true,
+    "planning_qualified": true,
+    "center_origin": [
+      816,
+      -1232,
+      -64
+    ],
+    "audit": {
+      "blocked_entities": {
+        "mcl_chests:chest": 15.0,
+        "mcl_wieldview:wieldview": 477.0,
+        "mobs_mc:pig": 1.0
+      },
+      "blocked_item_attempts": 2.0,
+      "compatible": true,
+      "dropped_items": 0.0,
+      "entity_callbacks": 0.0,
+      "entity_induced_changes": 0.0,
+      "nontechnical_entities": 0.0,
+      "unsupported_falling_attempts": 0.0
+    },
+    "observed_reaction_count": 27,
+    "contact_observed": true,
+    "center_contact_observed": true,
+    "structural_fire_changes": 0,
+    "fire_age_only_changes": 0,
+    "intervention": {
+      "mode": "native_initialization",
+      "rng_state": {
+        "bit_generator": "PCG64",
+        "state": {
+          "state": 253218187559491649003283569585354086535,
+          "inc": 332724090758049132448979897138935081983
+        },
+        "has_uint32": 1,
+        "uinteger": 2128880442
+      },
+      "spatial_screen": {
+        "height_type": "cave",
+        "largest_connected_air_component": 109,
+        "air_required": 65,
+        "surface_boundary_columns": 0,
+        "largest_underground_air_component": 109,
+        "reason": null,
+        "filter_seconds": 1.32665229200029
+      },
+      "pool_kind": "lava",
+      "largest_connected_stable_pool": 189,
+      "pool_observation_seconds": 1.1710509955883026,
+      "spatial_screen_after_pool": {
+        "height_type": "cave",
+        "largest_connected_air_component": 109,
+        "air_required": 65,
+        "surface_boundary_columns": 0,
+        "largest_underground_air_component": 109,
+        "reason": null,
+        "filter_seconds": 1.32640129200081
+      },
+      "planning": {
+        "planner_version": "shared-wave64-scene-v2",
+        "reachability_horizon_seconds": 10.0,
+        "required_center_transitions": 4,
+        "rng_state": {
+          "bit_generator": "PCG64",
+          "state": {
+            "state": 253218187559491649003283569585354086535,
+            "inc": 332724090758049132448979897138935081983
+          },
+          "has_uint32": 1,
+          "uinteger": 2128880442
+        },
+        "algorithm": "all-source shared graph / sparse 64-source bitsets",
+        "pair_compatibility_seconds": 0.0,
+        "water": {
+          "N": 201,
+          "p": 0.004975124378109453,
+          "selected": [
+            1726
+          ],
+          "fallback": false,
+          "cap": 4,
+          "distribution": "independent Bernoulli then uniform fallback/cap"
+        },
+        "precompute_wall_seconds": 0.015114916999664274,
+        "candidate_filtering_seconds": 0.0016203329996642424,
+        "precompute_peak_memory_mb": 132.234375,
+        "memory_scope": "Python process peak RSS, including input/shared graph, not per-kernel incremental memory",
+        "selected_source_count": 1,
+        "metrics": {
+          "water": {
+            "legal_source_count": 1780,
+            "evaluated_source_count": 1780,
+            "reachable_candidate_count": 494,
+            "qualified_candidate_count": 201,
+            "mathematically_pruned_count": 299,
+            "visited_nodes": 135918,
+            "reachability_seconds": 0.007712792001257185,
+            "shared_graph_build_seconds": 0.3292479990013817,
+            "candidate_filtering_seconds": 0.0016041670005506603,
+            "kernel_working_bytes": 36274176,
+            "batch_size": 64,
+            "uncertain_pruning_disabled": false,
+            "candidates_per_second": 230785.4276000001,
+            "semantics": "10 scheduled-wave seconds: optimistic potential, NOT deterministic native GT",
+            "uncertainty": "native queue ordering, fluid renewal/competition and ABM randomness are not fixed; lower bound0, no finite stochastic upper bound"
+          }
+        },
+        "selected_sources": [
+          {
+            "kind": "water",
+            "source_index": 1726,
+            "position": [
+              822,
+              -1222,
+              -51
+            ],
+            "reachable_voxels": 27,
+            "center_reachable_voxels": 27,
+            "potential_transition_times": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "falling_risk_reachable_voxels": 0,
+            "reachable_region_indices": [
+              42893,
+              45149,
+              45197,
+              45245,
+              47453,
+              47501,
+              47549,
+              47597,
+              49709,
+              49757,
+              49805,
+              49853,
+              49901,
+              51965,
+              52013,
+              52061,
+              52109,
+              52157,
+              54221,
+              54269,
+              54317,
+              54365,
+              54413,
+              56525,
+              56573,
+              56621,
+              56669
+            ],
+            "estimated_arrival_seconds": [
+              7,
+              5,
+              6,
+              7,
+              4,
+              5,
+              6,
+              7,
+              2,
+              3,
+              4,
+              5,
+              6,
+              0,
+              1,
+              2,
+              3,
+              4,
+              2,
+              1,
+              2,
+              3,
+              4,
+              3,
+              2,
+              3,
+              4
+            ]
+          }
+        ]
+      },
+      "requested_actions": [
+        {
+          "type": "water",
+          "position": [
+            822,
+            -1222,
+            -51
+          ]
+        }
+      ],
+      "actual_actions": [
+        {
+          "after": "mcl_core:water_source",
+          "before": "air",
+          "clock": {
+            "engine_us": 10693760591.0,
+            "sim_time": 14.815384965389967,
+            "simulation_step": 293.0
+          },
+          "position": [
+            822.0,
+            -1222.0,
+            -51.0
+          ],
+          "type": "water"
+        }
+      ]
+    }
+  },
+  "planning": {
+    "planner_version": "shared-wave64-scene-v2",
+    "reachability_horizon_seconds": 10.0,
+    "required_center_transitions": 4,
+    "rng_state": {
+      "bit_generator": "PCG64",
+      "state": {
+        "state": 253218187559491649003283569585354086535,
+        "inc": 332724090758049132448979897138935081983
+      },
+      "has_uint32": 1,
+      "uinteger": 2128880442
+    },
+    "algorithm": "all-source shared graph / sparse 64-source bitsets",
+    "pair_compatibility_seconds": 0.0,
+    "water": {
+      "N": 201,
+      "p": 0.004975124378109453,
+      "selected": [
+        1726
+      ],
+      "fallback": false,
+      "cap": 4,
+      "distribution": "independent Bernoulli then uniform fallback/cap"
+    },
+    "precompute_wall_seconds": 0.015114916999664274,
+    "candidate_filtering_seconds": 0.0016203329996642424,
+    "precompute_peak_memory_mb": 132.234375,
+    "memory_scope": "Python process peak RSS, including input/shared graph, not per-kernel incremental memory",
+    "selected_source_count": 1,
+    "metrics": {
+      "water": {
+        "legal_source_count": 1780,
+        "evaluated_source_count": 1780,
+        "reachable_candidate_count": 494,
+        "qualified_candidate_count": 201,
+        "mathematically_pruned_count": 299,
+        "visited_nodes": 135918,
+        "reachability_seconds": 0.007712792001257185,
+        "shared_graph_build_seconds": 0.3292479990013817,
+        "candidate_filtering_seconds": 0.0016041670005506603,
+        "kernel_working_bytes": 36274176,
+        "batch_size": 64,
+        "uncertain_pruning_disabled": false,
+        "candidates_per_second": 230785.4276000001,
+        "semantics": "10 scheduled-wave seconds: optimistic potential, NOT deterministic native GT",
+        "uncertainty": "native queue ordering, fluid renewal/competition and ABM randomness are not fixed; lower bound0, no finite stochastic upper bound"
+      }
+    },
+    "selected_sources": [
+      {
+        "kind": "water",
+        "source_index": 1726,
+        "position": [
+          822,
+          -1222,
+          -51
+        ],
+        "reachable_voxels": 27,
+        "center_reachable_voxels": 27,
+        "potential_transition_times": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "falling_risk_reachable_voxels": 0
+      }
+    ]
+  },
+  "native_frames": 42,
+  "accepted_indices": [
+    11,
+    15,
+    18,
+    19,
+    22
+  ],
+  "actual_center_changes": 54,
+  "actual_neighbor_changes": 0,
+  "native_events": [
+    {
+      "after": "mcl_core:obsidian",
+      "before": "mcl_core:lava_source",
+      "clock": {
+        "engine_us": 10694969303.0,
+        "sim_time": 15.975531954318285,
+        "simulation_step": 314.0
+      },
+      "confirmed": true,
+      "contact": {
+        "lava": [
+          822.0,
+          -1222.0,
+          -52.0
+        ],
+        "lava_node": "mcl_core:lava_source",
+        "water": [
+          822.0,
+          -1222.0,
+          -51.0
+        ],
+        "water_node": "mcl_core:water_source"
+      },
+      "position": [
+        822.0,
+        -1222.0,
+        -52.0
+      ]
+    },
+    {
+      "after": "mcl_core:obsidian",
+      "before": "mcl_core:lava_source",
+      "clock": {
+        "engine_us": 10694969345.0,
+        "sim_time": 15.975531954318285,
+        "simulation_step": 314.0
+      },
+      "confirmed": true,
+      "contact": {
+        "lava": [
+          823.0,
+          -1222.0,
+          -52.0
+        ],
+        "lava_node": "mcl_core:lava_source",
+        "water": [
+          823.0,
+          -1222.0,
+          -51.0
+        ],
+        "water_node": "mcl_core:water_flowing"
+      },
+      "position": [
+        823.0,
+        -1222.0,
+        -52.0
+      ]
+    },
+    {
+      "after": "mcl_core:obsidian",
+      "before": "mcl_core:lava_source",
+      "clock": {
+        "engine_us": 10694969371.0,
+        "sim_time": 15.975531954318285,
+        "simulation_step": 314.0
+      },
+      "confirmed": true,
+      "contact": {
+        "lava": [
+          822.0,
+          -1221.0,
+          -52.0
+        ],
+        "lava_node": "mcl_core:lava_source",
+        "water": [
+          822.0,
+          -1221.0,
+          -51.0
+        ],
+        "water_node": "mcl_core:water_flowing"
+      },
+      "position": [
+        822.0,
+        -1221.0,
+        -52.0
+      ]
+    },
+    {
+      "after": "mcl_core:obsidian",
+      "before": "mcl_core:lava_source",
+      "clock": {
+        "engine_us": 10695953084.0,
+        "sim_time": 16.956066951155663,
+        "simulation_step": 332.0
+      },
+      "confirmed": true,
+      "contact": {
+        "lava": [
+          823.0,
+          -1223.0,
+          -52.0
+        ],
+        "lava_node": "mcl_core:lava_source",
+        "water": [
+          823.0,
+          -1223.0,
+          -51.0
+        ],
+        "water_node": "mcl_core:water_flowing"
+      },
+      "position": [
+        823.0,
+        -1223.0,
+        -52.0
+      ]
+    },
+    {
+      "after": "mcl_core:obsidian",
+      "before": "mcl_core:lava_source",
+      "clock": {
+        "engine_us": 10695953116.0,
+        "sim_time": 16.956066951155663,
+        "simulation_step": 332.0
+      },
+      "confirmed": true,
+      "contact": {
+        "lava": [
+          824.0,
+          -1222.0,
+          -52.0
+        ],
+        "lava_node": "mcl_core:lava_source",
+        "water": [
+          824.0,
+          -1222.0,
+          -51.0
+        ],
+        "water_node": "mcl_core:water_flowing"
+      },
+      "position": [
+        824.0,
+        -1222.0,
+        -52.0
+      ]
+    },
+    {
+      "after": "mcl_core:obsidian",
+      "before": "mcl_core:lava_source",
+      "clock": {
+        "engine_us": 10695953131.0,
+        "sim_time": 16.956066951155663,
+        "simulation_step": 332.0
+      },
+      "confirmed": true,
+      "contact": {
+        "lava": [
+          821.0,
+          -1221.0,
+          -52.0
+        ],
+        "lava_node": "mcl_core:lava_source",
+        "water": [
+          821.0,
+          -1221.0,
+          -51.0
+        ],
+        "water_node": "mcl_core:water_flowing"
+      },
+      "position": [
+        821.0,
+        -1221.0,
+        -52.0
+      ]
+    },
+    {
+      "after": "mcl_core:obsidian",
+      "before": "mcl_core:lava_source",
+      "clock": {
+        "engine_us": 10695953185.0,
+        "sim_time": 16.956066951155663,
+        "simulation_step": 332.0
+      },
+      "confirmed": true,
+      "contact": {
+        "lava": [
+          823.0,
+          -1221.0,
+          -52.0
+        ],
+        "lava_node": "mcl_core:lava_source",
+        "water": [
+          823.0,
+          -1221.0,
+          -51.0
+        ],
+        "water_node": "mcl_core:water_flowing"
+      },
+      "position": [
+        823.0,
+        -1221.0,
+        -52.0
+      ]
+    },
+    {
+      "after": "mcl_core:obsidian",
+      "before": "mcl_core:lava_source",
+      "clock": {
+        "engine_us": 10695953211.0,
+        "sim_time": 16.956066951155663,
+        "simulation_step": 332.0
+      },
+      "confirmed": true,
+      "contact": {
+        "lava": [
+          822.0,
+          -1220.0,
+          -52.0
+        ],
+        "lava_node": "mcl_core:lava_source",
+        "water": [
+          822.0,
+          -1220.0,
+          -51.0
+        ],
+        "water_node": "mcl_core:water_flowing"
+      },
+      "position": [
+        822.0,
+        -1220.0,
+        -52.0
+      ]
+    },
+    {
+      "after": "mcl_core:obsidian",
+      "before": "mcl_core:lava_source",
+      "clock": {
+        "engine_us": 10697015041.0,
+        "sim_time": 17.99256695434451,
+        "simulation_step": 351.0
+      },
+      "confirmed": true,
+      "contact": {
+        "lava": [
+          824.0,
+          -1223.0,
+          -52.0
+        ],
+        "lava_node": "mcl_core:lava_source",
+        "water": [
+          824.0,
+          -1223.0,
+          -51.0
+        ],
+        "water_node": "mcl_core:water_flowing"
+      },
+      "position": [
+        824.0,
+        -1223.0,
+        -52.0
+      ]
+    },
+    {
+      "after": "mcl_core:obsidian",
+      "before": "mcl_core:lava_source",
+      "clock": {
+        "engine_us": 10697015083.0,
+        "sim_time": 17.99256695434451,
+        "simulation_step": 351.0
+      },
+      "confirmed": true,
+      "contact": {
+        "lava": [
+          824.0,
+          -1221.0,
+          -52.0
+        ],
+        "lava_node": "mcl_core:lava_source",
+        "water": [
+          824.0,
+          -1221.0,
+          -51.0
+        ],
+        "water_node": "mcl_core:water_flowing"
+      },
+      "position": [
+        824.0,
+        -1221.0,
+        -52.0
+      ]
+    },
+    {
+      "after": "mcl_core:obsidian",
+      "before": "mcl_core:lava_source",
+      "clock": {
+        "engine_us": 10697015144.0,
+        "sim_time": 17.99256695434451,
+        "simulation_step": 351.0
+      },
+      "confirmed": true,
+      "contact": {
+        "lava": [
+          821.0,
+          -1220.0,
+          -52.0
+        ],
+        "lava_node": "mcl_core:lava_source",
+        "water": [
+          821.0,
+          -1220.0,
+          -51.0
+        ],
+        "water_node": "mcl_core:water_flowing"
+      },
+      "position": [
+        821.0,
+        -1220.0,
+        -52.0
+      ]
+    },
+    {
+      "after": "mcl_core:obsidian",
+      "before": "mcl_core:lava_source",
+      "clock": {
+        "engine_us": 10697015193.0,
+        "sim_time": 17.99256695434451,
+        "simulation_step": 351.0
+      },
+      "confirmed": true,
+      "contact": {
+        "lava": [
+          823.0,
+          -1220.0,
+          -52.0
+        ],
+        "lava_node": "mcl_core:lava_source",
+        "water": [
+          823.0,
+          -1220.0,
+          -51.0
+        ],
+        "water_node": "mcl_core:water_flowing"
+      },
+      "position": [
+        823.0,
+        -1220.0,
+        -52.0
+      ]
+    },
+    {
+      "after": "mcl_core:obsidian",
+      "before": "mcl_core:lava_source",
+      "clock": {
+        "engine_us": 10697015234.0,
+        "sim_time": 17.99256695434451,
+        "simulation_step": 351.0
+      },
+      "confirmed": true,
+      "contact": {
+        "lava": [
+          822.0,
+          -1219.0,
+          -52.0
+        ],
+        "lava_node": "mcl_core:lava_source",
+        "water": [
+          822.0,
+          -1219.0,
+          -51.0
+        ],
+        "water_node": "mcl_core:water_flowing"
+      },
+      "position": [
+        822.0,
+        -1219.0,
+        -52.0
+      ]
+    },
+    {
+      "after": "mcl_core:obsidian",
+      "before": "mcl_core:lava_source",
+      "clock": {
+        "engine_us": 10698030630.0,
+        "sim_time": 18.982382960617542,
+        "simulation_step": 369.0
+      },
+      "confirmed": true,
+      "contact": {
+        "lava": [
+          820.0,
+          -1220.0,
+          -52.0
+        ],
+        "lava_node": "mcl_core:lava_source",
+        "water": [
+          820.0,
+          -1220.0,
+          -51.0
+        ],
+        "water_node": "mcl_core:water_flowing"
+      },
+      "position": [
+        820.0,
+        -1220.0,
+        -52.0
+      ]
+    },
+    {
+      "after": "mcl_core:obsidian",
+      "before": "mcl_core:lava_source",
+      "clock": {
+        "engine_us": 10698030691.0,
+        "sim_time": 18.982382960617542,
+        "simulation_step": 369.0
+      },
+      "confirmed": true,
+      "contact": {
+        "lava": [
+          824.0,
+          -1220.0,
+          -52.0
+        ],
+        "lava_node": "mcl_core:lava_source",
+        "water": [
+          824.0,
+          -1220.0,
+          -51.0
+        ],
+        "water_node": "mcl_core:water_flowing"
+      },
+      "position": [
+        824.0,
+        -1220.0,
+        -52.0
+      ]
+    },
+    {
+      "after": "mcl_core:obsidian",
+      "before": "mcl_core:lava_source",
+      "clock": {
+        "engine_us": 10698030794.0,
+        "sim_time": 18.982382960617542,
+        "simulation_step": 369.0
+      },
+      "confirmed": true,
+      "contact": {
+        "lava": [
+          821.0,
+          -1219.0,
+          -52.0
+        ],
+        "lava_node": "mcl_core:lava_source",
+        "water": [
+          821.0,
+          -1219.0,
+          -51.0
+        ],
+        "water_node": "mcl_core:water_flowing"
+      },
+      "position": [
+        821.0,
+        -1219.0,
+        -52.0
+      ]
+    },
+    {
+      "after": "mcl_core:obsidian",
+      "before": "mcl_core:lava_source",
+      "clock": {
+        "engine_us": 10698030910.0,
+        "sim_time": 18.982382960617542,
+        "simulation_step": 369.0
+      },
+      "confirmed": true,
+      "contact": {
+        "lava": [
+          823.0,
+          -1219.0,
+          -52.0
+        ],
+        "lava_node": "mcl_core:lava_source",
+        "water": [
+          823.0,
+          -1219.0,
+          -51.0
+        ],
+        "water_node": "mcl_core:water_flowing"
+      },
+      "position": [
+        823.0,
+        -1219.0,
+        -52.0
+      ]
+    },
+    {
+      "after": "mcl_core:obsidian",
+      "before": "mcl_core:lava_source",
+      "clock": {
+        "engine_us": 10698030999.0,
+        "sim_time": 18.982382960617542,
+        "simulation_step": 369.0
+      },
+      "confirmed": true,
+      "contact": {
+        "lava": [
+          822.0,
+          -1218.0,
+          -52.0
+        ],
+        "lava_node": "mcl_core:lava_source",
+        "water": [
+          822.0,
+          -1218.0,
+          -51.0
+        ],
+        "water_node": "mcl_core:water_flowing"
+      },
+      "position": [
+        822.0,
+        -1218.0,
+        -52.0
+      ]
+    },
+    {
+      "after": "mcl_core:obsidian",
+      "before": "mcl_core:lava_source",
+      "clock": {
+        "engine_us": 10699053024.0,
+        "sim_time": 19.96979795396328,
+        "simulation_step": 387.0
+      },
+      "confirmed": true,
+      "contact": {
+        "lava": [
+          819.0,
+          -1220.0,
+          -52.0
+        ],
+        "lava_node": "mcl_core:lava_source",
+        "water": [
+          819.0,
+          -1220.0,
+          -51.0
+        ],
+        "water_node": "mcl_core:water_flowing"
+      },
+      "position": [
+        819.0,
+        -1220.0,
+        -52.0
+      ]
+    },
+    {
+      "after": "mcl_core:obsidian",
+      "before": "mcl_core:lava_source",
+      "clock": {
+        "engine_us": 10699053123.0,
+        "sim_time": 19.96979795396328,
+        "simulation_step": 387.0
+      },
+      "confirmed": true,
+      "contact": {
+        "lava": [
+          820.0,
+          -1219.0,
+          -52.0
+        ],
+        "lava_node": "mcl_core:lava_source",
+        "water": [
+          820.0,
+          -1219.0,
+          -51.0
+        ],
+        "water_node": "mcl_core:water_flowing"
+      },
+      "position": [
+        820.0,
+        -1219.0,
+        -52.0
+      ]
+    },
+    {
+      "after": "mcl_core:obsidian",
+      "before": "mcl_core:lava_source",
+      "clock": {
+        "engine_us": 10699053179.0,
+        "sim_time": 19.96979795396328,
+        "simulation_step": 387.0
+      },
+      "confirmed": true,
+      "contact": {
+        "lava": [
+          821.0,
+          -1218.0,
+          -52.0
+        ],
+        "lava_node": "mcl_core:lava_source",
+        "water": [
+          821.0,
+          -1218.0,
+          -51.0
+        ],
+        "water_node": "mcl_core:water_flowing"
+      },
+      "position": [
+        821.0,
+        -1218.0,
+        -52.0
+      ]
+    },
+    {
+      "after": "mcl_core:obsidian",
+      "before": "mcl_core:lava_source",
+      "clock": {
+        "engine_us": 10702338287.0,
+        "sim_time": 22.9829679466784,
+        "simulation_step": 442.0
+      },
+      "confirmed": true,
+      "contact": {
+        "lava": [
+          818.0,
+          -1219.0,
+          -52.0
+        ],
+        "lava_node": "mcl_core:lava_source",
+        "water": [
+          818.0,
+          -1219.0,
+          -51.0
+        ],
+        "water_node": "mcl_core:water_flowing"
+      },
+      "position": [
+        818.0,
+        -1219.0,
+        -52.0
+      ]
+    },
+    {
+      "after": "mcl_core:obsidian",
+      "before": "mcl_core:lava_source",
+      "clock": {
+        "engine_us": 10702338387.0,
+        "sim_time": 22.9829679466784,
+        "simulation_step": 442.0
+      },
+      "confirmed": true,
+      "contact": {
+        "lava": [
+          819.0,
+          -1219.0,
+          -52.0
+        ],
+        "lava_node": "mcl_core:lava_source",
+        "water": [
+          819.0,
+          -1219.0,
+          -51.0
+        ],
+        "water_node": "mcl_core:water_flowing"
+      },
+      "position": [
+        819.0,
+        -1219.0,
+        -52.0
+      ]
+    },
+    {
+      "after": "mcl_core:obsidian",
+      "before": "mcl_core:lava_source",
+      "clock": {
+        "engine_us": 10702338517.0,
+        "sim_time": 22.9829679466784,
+        "simulation_step": 442.0
+      },
+      "confirmed": true,
+      "contact": {
+        "lava": [
+          819.0,
+          -1218.0,
+          -52.0
+        ],
+        "lava_node": "mcl_core:lava_source",
+        "water": [
+          819.0,
+          -1218.0,
+          -51.0
+        ],
+        "water_node": "mcl_core:water_flowing"
+      },
+      "position": [
+        819.0,
+        -1218.0,
+        -52.0
+      ]
+    },
+    {
+      "after": "mcl_core:obsidian",
+      "before": "mcl_core:lava_source",
+      "clock": {
+        "engine_us": 10702338545.0,
+        "sim_time": 22.9829679466784,
+        "simulation_step": 442.0
+      },
+      "confirmed": true,
+      "contact": {
+        "lava": [
+          820.0,
+          -1218.0,
+          -52.0
+        ],
+        "lava_node": "mcl_core:lava_source",
+        "water": [
+          820.0,
+          -1218.0,
+          -51.0
+        ],
+        "water_node": "mcl_core:water_flowing"
+      },
+      "position": [
+        820.0,
+        -1218.0,
+        -52.0
+      ]
+    },
+    {
+      "after": "mcl_core:obsidian",
+      "before": "mcl_core:lava_source",
+      "clock": {
+        "engine_us": 10702338646.0,
+        "sim_time": 22.9829679466784,
+        "simulation_step": 442.0
+      },
+      "confirmed": true,
+      "contact": {
+        "lava": [
+          820.0,
+          -1217.0,
+          -52.0
+        ],
+        "lava_node": "mcl_core:lava_source",
+        "water": [
+          820.0,
+          -1217.0,
+          -51.0
+        ],
+        "water_node": "mcl_core:water_flowing"
+      },
+      "position": [
+        820.0,
+        -1217.0,
+        -52.0
+      ]
+    },
+    {
+      "after": "mcl_core:obsidian",
+      "before": "mcl_core:lava_source",
+      "clock": {
+        "engine_us": 10702338669.0,
+        "sim_time": 22.9829679466784,
+        "simulation_step": 442.0
+      },
+      "confirmed": true,
+      "contact": {
+        "lava": [
+          821.0,
+          -1217.0,
+          -52.0
+        ],
+        "lava_node": "mcl_core:lava_source",
+        "water": [
+          821.0,
+          -1217.0,
+          -51.0
+        ],
+        "water_node": "mcl_core:water_flowing"
+      },
+      "position": [
+        821.0,
+        -1217.0,
+        -52.0
+      ]
+    }
+  ]
+}

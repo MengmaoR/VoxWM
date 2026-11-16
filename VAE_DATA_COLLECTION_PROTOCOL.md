@@ -1,6 +1,6 @@
 # VoxWM — VAE 100K / 1K Shard 数据采集协议
 
-版本：2026-11-16 / `vae-region48-shards-v1`。最新用户《Exhaustive Intervention Planning, Six-Type Native Validation & GT Viewer》为本次最高权威。本协议只修改数据生成，不改变 VAE 架构、不实现模型、训练器或 DataLoader。旧 200K 协议保存在 `vae_data/history/UNIFIED_200K_2026-11-15.md`，旧代码、结果和日志保留，不混入当前数据。
+版本：2026-11-16 / `vae-region48-shards-v1`。最新用户《VAE Dynamic Scene Sampling & Intervention Planning Revision》为本次最高权威。本协议只修改数据生成，不改变 VAE 架构、不实现模型、训练器或 DataLoader。旧 200K 协议保存在 `vae_data/history/UNIFIED_200K_2026-11-15.md`，旧代码、结果和日志保留，不混入当前数据。
 
 ## 1. 数量和空间单位
 
@@ -17,6 +17,24 @@
 VoxGen原始空间协议要求真实连续27个Chunk，细分配额原为建议；本次按最新用户明确的8/4/4/4执行。不得拼接群落、不拿简单群落顶替缺失群落。Static表示一次真实采样，允许自然动态内容；保留种子、高度、地形差异，每片单seed最多100个样本。Elevated/Complex不接受纯空气或简单全实心块来凑数。
 
 每次只保持当前世界/区域，采集后直接提交或丢弃。不写Discovery Cache、全时间轨迹或不断增长的场景索引。
+
+## 3a. 动态中心选择（本次修订）
+
+保留现有世界网格16³对齐及27块48³ Assembly。删除通用`center_hint`：D1/D2/D3/D4-B不再先查找天然流体或可燃体素定位中心。D3的燃料检查仅在后续干预规划中进行；D2记录已有水作为干扰风险。
+
+| 类型 | 高度机会 | 天然流体筛选 |
+|---|---|---|
+| D1 / D3 | Surface | 无 |
+| D2 | Surface / Cave各50% | 无 |
+| D4-A | Surface / Cave各50% | 仅稳定Water池 |
+| D4-B | Surface / Cave各50% | 不检索；拒绝已有Water/Lava接触 |
+| D4-C | Surface / Cave各50% | 仅稳定Lava池 |
+
+在有限原生区域探测中按合格**对齐Chunk**均匀选中心，不按池中体素数加权。每站只读48×48水平范围、overworld最低高度所在16格层至191的竖向列；不保证覆盖世界全部高度或所有天然池，探测范围及拒绝原因写入metadata。Surface用真实地形固体—Air边界，排除树冠/木结构和液面；被湖水覆盖的湖底不当作Surface。Cave必须有地形屋顶之下的真实六邻域连通空气，不用Surface减固定深度、不挖洞。
+
+过滤顺序：候选高度证据 → 中心最大六邻域Air分量≥65 → A/C短时原生观察（至少1.1模拟秒）后中心最大稳定对应流体分量≥19 → 全部合法干预点规划。稳定是同世界坐标的Combined Token在两次真实观察中相等，允许Source和稳定Flowing；不额外要求二维面积或体积比例。连通计数严格限制中心16³，邻块不能拼接小分量。B不对散落天然流体套用旧池面积门槛；两种新源的预计路径避免接触已有天然流体，仍需联合中心固化潜力。
+
+每类/高度分别记录attempts、spatial_qualified（完整空间筛选通过）、qualified（已选中可行干预）、accepted（真实五状态链成功）。有限验证若没有合格中心，可只捕获一个真实拒绝区域作debug诊断，禁止在该区域放源；正式Shard直接拒绝并换Chunk。
 
 ## 3. D1–D3
 
@@ -42,7 +60,7 @@ Water range7、Lava range3，考虑向下流动、水平level衰减、source与f
 
 区分完整可达、中心可达、到达时间及时间阶段；至少四个不同的中心潜在变化时间带，首带不晚于2秒、前四带间隔不超过2秒。一个时间带影响多个体素仍只算一次。D4只统计预计Stone/Cobble/Obsidian实际产物位于中心的接触，不把邻接触点当产物。初始化后基准可作D1–D3首帧，D4 Anchor仍独立。
 
-合格集合N上逐点独立Bernoulli p=1/N；零命中均匀保底、最多4源点、超限无放回随机裁剪。D4-B完整评估两类源点：先过滤10秒内能进入中心/产物接触halo的单源潜力集合，分别p=1/N，再查询隐式水–岩浆接触因子图。组合必须同时满足真实产物位置和联合四时间阶段潜力；一次有界条件保底评估全部lava并均匀选择兼容点，明确记录条件概率/分布变化；不枚举完整笛卡尔积，不保证每个场景一定找到配对。A/C短时观测真实天然source池稳定性；B按连通二维source池判定，散落4–5个水方块不是水池。不新建池、不改地形。
+合格集合N上逐点独立Bernoulli p=1/N；零命中均匀保底、最多4源点、超限无放回随机裁剪。D4-B完整评估两类源点：先过滤10秒内能进入中心/产物接触halo的单源潜力集合，分别p=1/N，再查询隐式水–岩浆接触因子图。组合必须同时满足真实产物位置和联合四时间阶段潜力；一次有界条件保底评估全部lava并均匀选择兼容点，明确记录条件概率/分布变化；不枚举完整笛卡尔积，不保证每个场景一定找到配对。A/C按上节中心连通≥19及短时稳定性筛池，Source/稳定Flowing均可；B使用两套独立候选集合和联合兼容性。不新建池、不改地形。
 
 Fire枚举全部合法air点火位置（无保护、下方非水），再评估原生传播邻域、中心可燃结构连通性及falling风险。仅相同Fire节点的raw param2年龄变化不计结构传播；不修改原生ABM、随机规则或falling排除策略。
 
@@ -79,8 +97,8 @@ dataset/
 
 继续从引擎入口禁止非技术实体、掉落和实体导致的Voxel变化；技术player不可见无交互。当前不支持falling-entity物理，发生该请求则排除当前rollout，不发布被冻结的物理。保留原生液体、cooling、fire，不加速ABM或模拟时钟。
 
-本轮仅允许六个Unique Types D1/D2/D3/D4-A/D4-B/D4-C：每型最多3次Native Attempt，成功1条即停止，整轮硬墙钟900秒。已执行一次，202.49秒，成功D1/D2/D3/D4-C；A/B缺口保留，不追加追成功。正式Shard不保存全轨迹；本轮专用Debug Trace另外保存每次真实观察的48³ tokens/light、原生时间/step、所有源点统计、选中点时间网格、干预前后、原生事件/产物及选中五帧索引。VWT1首帧+稀疏增量可无损重建，包括失败观察；无观测则明确报错而不补造状态。
+本轮仅允许六个Unique Types D1/D2/D3/D4-A/D4-B/D4-C：每型最多3次Native Attempt，成功1条即停止，整轮硬墙钟900秒。上一轮202.49秒结果保留。本次用户重新明确授权独立的一轮同上限验证；结果见`vae_data/reports/scene_sampling_20261116/README.md`，完成后不追加尝试。正式Shard不保存全轨迹；本轮专用Debug Trace另外保存每次真实观察的48³ tokens/light、原生时间/step、所有源点统计、选中点时间网格、干预前后、原生事件/产物及选中五帧索引。VWT1首帧+稀疏增量可无损重建，包括失败观察；无观测则明确报错而不补造状态。
 
-GT-only Viewer独立于docs展示站，复用其只读Three/OrbitControls资源与ABV1格式；按真实sim_time播放实际观察帧，支持48³/中心16³、切片、27边界、类型高亮、source及估计/实际变化叠加、事件/接收帧标记。每型轻量PNG/GIF/JSON/Markdown入Git，全部Trace留outputs并忽略。所有预计算、Actual Native、Accepted VAE States和Synthetic Tests明确区分。
+GT-only Viewer独立于docs展示站，复用其只读Three/OrbitControls资源与ABV1格式；按真实sim_time播放实际观察帧，支持48³/中心16³、切片、27边界、类型高亮、source及估计/实际变化叠加、相对干预时间、事件/接收帧标记。每型轻量PNG/GIF/JSON/Markdown入Git，全部Trace留outputs并忽略。所有预计算、Actual Native、Accepted VAE States和Synthetic Tests明确区分。
 
 不运行正式1K片、100K、广域扫描、其他原生动态任务或训练。服务器正式生成全部由用户手动启动。本轮验收是代码完成、检查通过、有限native测试完成或如实失败，而非虚构数据集已就绪。

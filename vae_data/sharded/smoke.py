@@ -6,7 +6,8 @@ import zarr
 from numcodecs import Blosc
 from .protocol import Vocabulary,Chain,dump
 from .native import Native
-from .generate import prepare,center_hint,collect
+from .generate import collect
+from .centers import prepare_dynamic
 from .storage import globalize,atomic_json
 from .validate import validate_chain
 
@@ -46,8 +47,7 @@ def run(args):
                 if result['successes'][category]>=args.samples_per_category or time.monotonic()+15>=deadline:break
                 row=dict(category=category,attempt=attempt,subtype=('A','B','C')[attempt%3]if category=='D4'else'',source='real_native')
                 try:
-                    frame,_=prepare(world,sites[category][attempt%2],'surface',rng)
-                    frame=center_hint(world,frame,category,rng)
+                    frame,_=prepare_dynamic(world,sites[category][attempt%2],category,rng,row['subtype'])
                     chain,details=collect(world,frame,category,rng,row['subtype']);row.update(details)
                     if chain:
                         row['output']=save_example(root,category+'_'+str(result['successes'][category]),chain,v)

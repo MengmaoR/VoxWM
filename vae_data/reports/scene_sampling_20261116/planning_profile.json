@@ -1,0 +1,311 @@
+{
+  "native_simulations_started": 0,
+  "profiles": [
+    {
+      "task": "water",
+      "scene": "fixture",
+      "source": "synthetic_fixture",
+      "legal_source_count": {
+        "water": 1072
+      },
+      "reachable_candidate_count": {
+        "water": 1072
+      },
+      "qualified_candidate_count": {
+        "water": 1072
+      },
+      "spatial_connected_air_seconds": 0.0030906669999239966,
+      "largest_center_air_component": 1072,
+      "precompute_wall_seconds": 0.019945457999710925,
+      "precompute_peak_memory_mb": 92.03125,
+      "incremental_peak_memory_mb": 28.96875,
+      "visited_nodes": 62742,
+      "shared_graph_build_seconds": 0.009718915998746525,
+      "candidate_filtering_seconds": 0.0015933750000840519,
+      "reachability_seconds": 0.008520999999745982,
+      "pair_compatibility_seconds": 0.0,
+      "compatibility_all_source_queries": 0,
+      "candidates_per_second": 53746.57227803627,
+      "kernel_peak_working_mb": 23.625,
+      "batch_size": 64,
+      "compile_or_load_seconds": 0.0018573329998616828,
+      "evaluation_calls": 1,
+      "naive_vs_optimized_speedup": null,
+      "caveat": "Absolute process peak RSS includes Python/imports/input/graphs; pair runs the actual independent samplers and bounded conditional fallback; no Cartesian pair enumeration."
+    },
+    {
+      "task": "lava",
+      "scene": "fixture",
+      "source": "synthetic_fixture",
+      "legal_source_count": {
+        "lava": 1072
+      },
+      "reachable_candidate_count": {
+        "lava": 1072
+      },
+      "qualified_candidate_count": {
+        "lava": 1072
+      },
+      "spatial_connected_air_seconds": 0.003431832999922335,
+      "largest_center_air_component": 1072,
+      "precompute_wall_seconds": 0.015354582999862032,
+      "precompute_peak_memory_mb": 81.453125,
+      "incremental_peak_memory_mb": 18.3125,
+      "visited_nodes": 36682,
+      "shared_graph_build_seconds": 0.006696625001495704,
+      "candidate_filtering_seconds": 0.0043305409999447875,
+      "reachability_seconds": 0.0042620000003807945,
+      "pair_compatibility_seconds": 0.0,
+      "compatibility_all_source_queries": 0,
+      "candidates_per_second": 69816.2887269314,
+      "kernel_peak_working_mb": 13.5,
+      "batch_size": 64,
+      "compile_or_load_seconds": 0.002810166999552166,
+      "evaluation_calls": 1,
+      "naive_vs_optimized_speedup": null,
+      "caveat": "Absolute process peak RSS includes Python/imports/input/graphs; pair runs the actual independent samplers and bounded conditional fallback; no Cartesian pair enumeration."
+    },
+    {
+      "task": "fire",
+      "scene": "fixture",
+      "source": "synthetic_fixture",
+      "legal_source_count": {
+        "fire": 1072
+      },
+      "reachable_candidate_count": {
+        "fire": 336
+      },
+      "qualified_candidate_count": {
+        "fire": 336
+      },
+      "spatial_connected_air_seconds": 0.0030487499989249045,
+      "largest_center_air_component": 1072,
+      "precompute_wall_seconds": 0.025296708001405932,
+      "precompute_peak_memory_mb": 72.859375,
+      "incremental_peak_memory_mb": 9.625,
+      "visited_nodes": 21541,
+      "shared_graph_build_seconds": 0.011687999998684973,
+      "candidate_filtering_seconds": 0.002988958000059938,
+      "reachability_seconds": 0.003534208000928629,
+      "pair_compatibility_seconds": 0.0,
+      "compatibility_all_source_queries": 0,
+      "candidates_per_second": 42377.0555417891,
+      "kernel_peak_working_mb": 3.375,
+      "batch_size": 64,
+      "compile_or_load_seconds": 0.002223334000518662,
+      "evaluation_calls": 1,
+      "naive_vs_optimized_speedup": null,
+      "caveat": "Absolute process peak RSS includes Python/imports/input/graphs; pair runs the actual independent samplers and bounded conditional fallback; no Cartesian pair enumeration."
+    },
+    {
+      "task": "pair",
+      "scene": "fixture",
+      "source": "synthetic_fixture",
+      "legal_source_count": {
+        "water": 1072,
+        "lava": 1072
+      },
+      "reachable_candidate_count": {
+        "water": 1072,
+        "lava": 1072
+      },
+      "qualified_candidate_count": {
+        "water": 1072,
+        "lava": 1072
+      },
+      "spatial_connected_air_seconds": 0.0031939580003381707,
+      "largest_center_air_component": 1072,
+      "precompute_wall_seconds": 0.02060387500023353,
+      "precompute_peak_memory_mb": 103.0625,
+      "incremental_peak_memory_mb": 40.0,
+      "visited_nodes": 99838,
+      "shared_graph_build_seconds": 0.00619895800264203,
+      "candidate_filtering_seconds": 0.0034838329993363004,
+      "reachability_seconds": 0.009033001000716467,
+      "pair_compatibility_seconds": 0.00350287499895785,
+      "compatibility_all_source_queries": 0,
+      "candidates_per_second": 104300.76866490612,
+      "kernel_peak_working_mb": 24.46875,
+      "batch_size": 64,
+      "compile_or_load_seconds": 0.0016439169994555414,
+      "evaluation_calls": 6,
+      "naive_vs_optimized_speedup": null,
+      "caveat": "Absolute process peak RSS includes Python/imports/input/graphs; pair runs the actual independent samplers and bounded conditional fallback; no Cartesian pair enumeration."
+    },
+    {
+      "task": "water",
+      "scene": "outputs/vae_sharded_smoke_20261115/examples/D1_0",
+      "source": "existing_real_native_GT",
+      "legal_source_count": {
+        "water": 33852
+      },
+      "reachable_candidate_count": {
+        "water": 2863
+      },
+      "qualified_candidate_count": {
+        "water": 124
+      },
+      "spatial_connected_air_seconds": 0.0007702080001763534,
+      "largest_center_air_component": 205,
+      "precompute_wall_seconds": 0.27559533400017244,
+      "precompute_peak_memory_mb": 99.4375,
+      "incremental_peak_memory_mb": 36.265625,
+      "visited_nodes": 1820528,
+      "shared_graph_build_seconds": 0.21291745899907255,
+      "candidate_filtering_seconds": 0.02531220900164044,
+      "reachability_seconds": 0.03718937499979802,
+      "pair_compatibility_seconds": 0.0,
+      "compatibility_all_source_queries": 0,
+      "candidates_per_second": 122832.26827047377,
+      "kernel_peak_working_mb": 23.625,
+      "batch_size": 64,
+      "compile_or_load_seconds": 0.0012488749998738058,
+      "evaluation_calls": 1,
+      "naive_vs_optimized_speedup": null,
+      "caveat": "Absolute process peak RSS includes Python/imports/input/graphs; pair runs the actual independent samplers and bounded conditional fallback; no Cartesian pair enumeration."
+    },
+    {
+      "task": "lava",
+      "scene": "outputs/vae_sharded_smoke_20261115/examples/D1_0",
+      "source": "existing_real_native_GT",
+      "legal_source_count": {
+        "lava": 33852
+      },
+      "reachable_candidate_count": {
+        "lava": 280
+      },
+      "qualified_candidate_count": {
+        "lava": 217
+      },
+      "spatial_connected_air_seconds": 0.0006418749999284046,
+      "largest_center_air_component": 205,
+      "precompute_wall_seconds": 0.2724282500003028,
+      "precompute_peak_memory_mb": 86.984375,
+      "incremental_peak_memory_mb": 23.8125,
+      "visited_nodes": 1580411,
+      "shared_graph_build_seconds": 0.21743941699969582,
+      "candidate_filtering_seconds": 0.025449958999161026,
+      "reachability_seconds": 0.02939620899996953,
+      "pair_compatibility_seconds": 0.0,
+      "compatibility_all_source_queries": 0,
+      "candidates_per_second": 124260.24099909747,
+      "kernel_peak_working_mb": 13.5,
+      "batch_size": 64,
+      "compile_or_load_seconds": 0.0024313750000146683,
+      "evaluation_calls": 1,
+      "naive_vs_optimized_speedup": null,
+      "caveat": "Absolute process peak RSS includes Python/imports/input/graphs; pair runs the actual independent samplers and bounded conditional fallback; no Cartesian pair enumeration."
+    },
+    {
+      "task": "fire",
+      "scene": "outputs/vae_native_six_20261116/traces/D3/attempt_2",
+      "source": "existing_real_native_GT",
+      "legal_source_count": {
+        "fire": 53275
+      },
+      "reachable_candidate_count": {
+        "fire": 648
+      },
+      "qualified_candidate_count": {
+        "fire": 335
+      },
+      "spatial_connected_air_seconds": 0.007350457999564242,
+      "largest_center_air_component": 1276,
+      "precompute_wall_seconds": 0.4520414159997017,
+      "precompute_peak_memory_mb": 76.15625,
+      "incremental_peak_memory_mb": 9.890625,
+      "visited_nodes": 356173,
+      "shared_graph_build_seconds": 0.32894445800047833,
+      "candidate_filtering_seconds": 0.03943000000072061,
+      "reachability_seconds": 0.016234750000876375,
+      "pair_compatibility_seconds": 0.0,
+      "compatibility_all_source_queries": 0,
+      "candidates_per_second": 117854.24546151575,
+      "kernel_peak_working_mb": 3.375,
+      "batch_size": 64,
+      "compile_or_load_seconds": 0.0022164580004755408,
+      "evaluation_calls": 1,
+      "naive_vs_optimized_speedup": null,
+      "caveat": "Absolute process peak RSS includes Python/imports/input/graphs; pair runs the actual independent samplers and bounded conditional fallback; no Cartesian pair enumeration."
+    },
+    {
+      "task": "pair",
+      "scene": "outputs/vae_native_six_20261116/traces/D4-B/attempt_1",
+      "source": "existing_real_native_GT",
+      "legal_source_count": {
+        "water": 56756,
+        "lava": 56756
+      },
+      "reachable_candidate_count": {
+        "water": 8252,
+        "lava": 7612,
+        "lava_partner": 7612
+      },
+      "qualified_candidate_count": {
+        "water": 3388,
+        "lava": 3476,
+        "lava_partner": 0
+      },
+      "spatial_connected_air_seconds": 0.006448333000662387,
+      "largest_center_air_component": 2274,
+      "precompute_wall_seconds": 0.6394886250000127,
+      "precompute_peak_memory_mb": 119.296875,
+      "incremental_peak_memory_mb": 55.09375,
+      "visited_nodes": 9149122,
+      "shared_graph_build_seconds": 0.332027417000063,
+      "candidate_filtering_seconds": 0.13189308299843105,
+      "reachability_seconds": 0.171816874999422,
+      "pair_compatibility_seconds": 0.09800958400046511,
+      "compatibility_all_source_queries": 1,
+      "candidates_per_second": 266264.3139273926,
+      "kernel_peak_working_mb": 24.46875,
+      "batch_size": 64,
+      "compile_or_load_seconds": 0.002146667000488378,
+      "evaluation_calls": 6,
+      "naive_vs_optimized_speedup": null,
+      "caveat": "Absolute process peak RSS includes Python/imports/input/graphs; pair runs the actual independent samplers and bounded conditional fallback; no Cartesian pair enumeration."
+    }
+  ],
+  "reference_comparisons": [
+    {
+      "task": "water",
+      "source": "synthetic_fixed_fixture",
+      "source_count": 24,
+      "equal": true,
+      "naive_local_bfs_seconds": 0.014766500000405358,
+      "optimized_seconds": 0.0022515000000566943,
+      "naive_vs_optimized_speedup": 6.558516544540763,
+      "scope": "same24sources with earliest-arrival outputs; shared graph already built for both; no native speedup claim"
+    },
+    {
+      "task": "lava",
+      "source": "synthetic_fixed_fixture",
+      "source_count": 24,
+      "equal": true,
+      "naive_local_bfs_seconds": 0.00635116700141225,
+      "optimized_seconds": 0.0018444170000293525,
+      "naive_vs_optimized_speedup": 3.443455032842994,
+      "scope": "same24sources with earliest-arrival outputs; shared graph already built for both; no native speedup claim"
+    },
+    {
+      "task": "fire",
+      "source": "synthetic_fixed_fixture",
+      "source_count": 24,
+      "equal": true,
+      "naive_local_bfs_seconds": 0.01605383400055871,
+      "optimized_seconds": 0.005597082999884151,
+      "naive_vs_optimized_speedup": 2.868250122589033,
+      "scope": "same24sources with earliest-arrival outputs; shared graph already built for both; no native speedup claim"
+    },
+    {
+      "task": "pair",
+      "source": "synthetic_fixed_fixture",
+      "source_count": 24,
+      "equal": true,
+      "naive_local_bfs_seconds": 0.006773208000595332,
+      "optimized_seconds": 0.0022926250003365567,
+      "naive_vs_optimized_speedup": 2.9543462186799094,
+      "scope": "same24sources with earliest-arrival outputs; shared graph already built for both; no native speedup claim"
+    }
+  ]
+}

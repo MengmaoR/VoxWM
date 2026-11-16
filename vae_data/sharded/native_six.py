@@ -4,7 +4,8 @@ import time,traceback
 import numpy as np
 from .protocol import Vocabulary
 from .native import Native
-from .generate import prepare,center_hint,collect
+from .generate import collect
+from .centers import prepare_dynamic,height_statistics
 from .trace import Trace
 from .smoke import save_example
 from .storage import atomic_json
@@ -29,23 +30,19 @@ def run(args):
     atomic_json(root/'native_results.json',result)
     for label in TYPES:
         if time.monotonic()+20>=deadline:break
-        world=None
+        world=None;first_height=int(rng.integers(2))
         for attempt in range(args.attempts_per_type):
             if result['successes'][label] or time.monotonic()+15>=deadline:break
             category=label.split('-')[0];subtype=label.split('-')[1]if'-'in label else''
             folder=root/'traces'/label/f'attempt_{attempt+1}';trace=Trace(folder,Vocabulary(),label)
-            row=dict(unique_type=label,category=category,subtype=subtype,attempt=attempt+1,trace=str(folder.relative_to(root)),source='real_native')
+            height='surface'if category in('D1','D3')else('surface','cave')[(first_height+attempt)%2]
+            row=dict(height_type=height,unique_type=label,category=category,subtype=subtype,attempt=attempt+1,trace=str(folder.relative_to(root)),source='real_native')
             attempt_start=time.monotonic()
             try:
                 if world is None:
                     v=Vocabulary();world=Native(191664964,v,deadline,args.craftium_dir,args.renderer);world.__enter__()
                 trace.v=world.v
-                frame,_=prepare(world,sites[label][attempt],'surface',rng)
-                if label=='D4-C':
-                    # Native overworld lava sea, not a constructed pool. This height is
-                    # an inspected mapgen setting, and is still verified by real GT.
-                    frame,_=world.prepare_at([world.center[0],world.center[1],-64],world.surface_y)
-                if label!='D4-B':frame=center_hint(world,frame,'D2'if label=='D4-C'else category,rng)
+                frame,_=prepare_dynamic(world,sites[label][attempt],category,rng,subtype,height,diagnostic=True)
                 chain,details=collect(world,frame,category,rng,subtype,trace=trace);row.update(details)
                 if chain:
                     row['output']=save_example(root,label,chain,world.v);result['successes'][label]=1
@@ -59,7 +56,7 @@ def run(args):
             finally:
                 if not trace.stream.closed:trace.finish(status=row)
                 row['wall_seconds']=time.monotonic()-attempt_start
-                result['attempts'].append(row);result['wall_seconds']=time.monotonic()-started
+                result['attempts'].append(row);result['height_statistics']=height_statistics(result['attempts']);result['wall_seconds']=time.monotonic()-started
                 atomic_json(root/'native_results.json',result)
                 print('NATIVE6',label,attempt+1,row.get('status'),row.get('reason'),f"{row['wall_seconds']:.1f}s",flush=True)
             if time.monotonic()+15>=deadline:break

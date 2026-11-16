@@ -45,7 +45,7 @@ if(JSON.stringify(worldToLocal([4,4,4],[-16,-16,-16]))!==JSON.stringify([-3.5,-3
             with tempfile.TemporaryDirectory()as tmp:
                 args=SimpleNamespace(dataset=Path(tmp)/'six',wall_seconds=900,attempts_per_type=3,seed=42,craftium_dir='unused',renderer='auto')
                 def collect(*a,**kw):return(object()if success else None,dict(status='success'if success else'rejected'))
-                with patch('vae_data.sharded.native_six.Native',World),patch('vae_data.sharded.native_six.Trace',Trace),patch('vae_data.sharded.native_six.prepare',return_value=(None,None)),patch('vae_data.sharded.native_six.center_hint',return_value=None),patch('vae_data.sharded.native_six.collect',side_effect=collect)as collect_mock,patch('vae_data.sharded.native_six.save_example',return_value='fixture_dispatch'),patch('builtins.print'):
+                with patch('vae_data.sharded.native_six.Native',World),patch('vae_data.sharded.native_six.Trace',Trace),patch('vae_data.sharded.native_six.prepare_dynamic',return_value=(None,None)),patch('vae_data.sharded.native_six.collect',side_effect=collect)as collect_mock,patch('vae_data.sharded.native_six.save_example',return_value='fixture_dispatch'),patch('builtins.print'):
                     r=run(args)
                 self.assertEqual(collect_mock.call_count,6 if success else 18)
                 self.assertEqual(set(r['successes']),set(TYPES));self.assertTrue(all(n==(1 if success else 0)for n in r['successes'].values()))

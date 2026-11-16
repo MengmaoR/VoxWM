@@ -1,12 +1,15 @@
 """Complete legal-source evaluation using a shared sparse bitset propagation kernel."""
 import ctypes as ct
-import fcntl,os,subprocess,sys,tempfile,time
+import fcntl,os,subprocess,sys,tempfile,time,resource
 from pathlib import Path
 import numpy as np
 from .graph import Geometry,csr
 from ..protocol import kind_mask,CENTER
 
 _LIBRARY=None
+REACHABILITY_HORIZON_SECONDS=10.0
+REQUIRED_CENTER_TRANSITIONS=4
+STAT_COLUMNS=('reachable_voxels','center_reachable_voxels','time_phases','first_center_time','center_products','product_time_phases','contact_halo_voxels','ambient_fluid_contact_voxels')
 
 def library():
     global _LIBRARY
@@ -29,7 +32,7 @@ def phase_ticks(mask):return [tick for tick in range(1,11)if int(mask)&(1<<tick)
 
 def four_stages(mask):
     times=phase_ticks(mask)
-    if len(times)<4 or times[0]>2:return False
+    if len(times)<REQUIRED_CENTER_TRANSITIONS or times[0]>2:return False
     return all(b-a<=2 for a,b in zip([0,*times[:4]],times[:4]))
 
 def bernoulli_sources(indices,rng,maximum=4):
@@ -49,22 +52,23 @@ class Planner:
         sources=np.ascontiguousarray(legal[ids],np.int32)
         if detail and len(ids)>64:raise ValueError('Detailed reach grids are streamed only for selected sources (max64)')
         contacts=g.contacts(kind,partner)if partner is not None else(None,None,None)
-        stats=np.empty((len(ids),7),np.int32);arrival=np.empty((len(ids),g.size),np.uint8)if detail else None
+        stats=np.empty((len(ids),8),np.int32);arrival=np.empty((len(ids),g.size),np.uint8)if detail else None
         operations=np.zeros(1,np.uint64);workspace=np.zeros(1,np.uint64)
         lib=library();start=time.perf_counter()
         if len(ids):
             result=lib.vw_wave(g.size,len(ids),-1 if kind=='fire'else 7 if kind=='water'else 3,
-                7 if kind=='lava'else 1,10,64,*[pointer(a)for a in(graph['ptr'],graph['edges'],graph['types'],g.kernel_targets.ravel(),graph['reverse'],sources,*contacts,stats,arrival,operations,workspace)])
+                7 if kind=='lava'else 1,int(REACHABILITY_HORIZON_SECONDS),64,*[pointer(a)for a in(graph['ptr'],graph['edges'],graph['types'],g.kernel_targets.ravel(),graph['reverse'],sources,*contacts,stats,arrival,operations,workspace)])
             if result:raise RuntimeError('Shared propagation kernel failed')
         elapsed=time.perf_counter()-start
         # Four occupied time bands, not four voxels in one time band. Time is a
         # scheduled-wave estimate; chance/humidity/queue effects remain uncertain.
+        filter_start=time.perf_counter()
         qualified=np.array([four_stages(row[2])and(partner is None or row[5]>0)for row in stats],bool)
         metrics=dict(legal_source_count=len(legal),evaluated_source_count=len(ids),
             reachable_candidate_count=int(np.count_nonzero((stats[:,1]>0)|(stats[:,4]>0))),qualified_candidate_count=int(qualified.sum()),
             mathematically_pruned_count=int(np.count_nonzero(graph['reverse'][sources]==0)),
             visited_nodes=int(operations[0]),reachability_seconds=elapsed,shared_graph_build_seconds=g.build_seconds+graph['build_seconds'],
-            kernel_working_bytes=int(workspace[0]),batch_size=64,uncertain_pruning_disabled=graph['uncertain_pruning_disabled'],
+            candidate_filtering_seconds=time.perf_counter()-filter_start,kernel_working_bytes=int(workspace[0]),batch_size=64,uncertain_pruning_disabled=graph['uncertain_pruning_disabled'],
             candidates_per_second=len(ids)/elapsed if elapsed else None,
             semantics='10 scheduled-wave seconds: optimistic potential, NOT deterministic native GT',
             uncertainty='native queue ordering, fluid renewal/competition and ABM randomness are not fixed; lower bound0, no finite stochastic upper bound')
@@ -81,7 +85,7 @@ class Planner:
             falling_risk_reachable_voxels=int(np.count_nonzero((result['arrivals'][i].reshape(g.shape)<255)&g.falling_risk))if kind=='fire'else 0,
             estimated_arrival_seconds=result['arrivals'][i].reshape(self.geometry.shape))for i,(source_id,p,row)in enumerate(zip(result['source_ids'],result['sources'],result['stats']))]
     def select(self,category,rng,subtype='',stable_pool=None):
-        started=time.perf_counter();g=self.geometry;selection=dict(planner_version='shared-wave64-v1',rng_state=rng.bit_generator.state,algorithm='all-source shared graph / sparse 64-source bitsets',pair_compatibility_seconds=0.)
+        started=time.perf_counter();g=self.geometry;selection=dict(planner_version='shared-wave64-scene-v2',reachability_horizon_seconds=REACHABILITY_HORIZON_SECONDS,required_center_transitions=REQUIRED_CENTER_TRANSITIONS,rng_state=rng.bit_generator.state,algorithm='all-source shared graph / sparse 64-source bitsets',pair_compatibility_seconds=0.)
         selected={};details=[];relations=[]
         if category!='D4':
             kind={'D1':'water','D2':'lava','D3':'fire'}[category];result=self.evaluate(kind)
@@ -90,23 +94,21 @@ class Planner:
         elif subtype in('A','C'):
             kind='lava'if subtype=='A'else'water';other='water'if kind=='lava'else'lava'
             pool=kind_mask(self.frame.tokens,self.v,other)if stable_pool is None else stable_pool
-            if np.count_nonzero(pool)<4:
-                result=self.evaluate(kind,np.full(g.shape,255,np.uint8))
-                return None,dict(reason='no_static_pool',metrics={kind:result['metrics']},**selection)
+            from ..centers import components
+            if stable_pool is None or components(pool[CENTER])[0]<19:
+                return None,dict(reason='no_verified_center_static_pool_19',metrics={},**selection)
             partner=np.where(pool,0,255).astype(np.uint8);result=self.evaluate(kind,partner)
             chosen,sampling=bernoulli_sources(np.flatnonzero(result['qualified']),rng);selected[kind]=chosen;selection[kind]=sampling
         else:
             water=self.evaluate('water');lava=self.evaluate('lava')
-            from ..reachability import pool_components
-            names=np.asarray([name for name,_ in self.v.entries],object)
-            has_pool=any(pool_components(np.array([kind in name and 'source'in name for name in names],bool)[self.frame.tokens]).any()for kind in('water','lava'))
-            if has_pool:
-                return None,dict(reason='existing_pool_in_D4_B',metrics={k:r['metrics']for k,r in self.results.items()},**selection)
+            from ..centers import natural_interaction
+            if natural_interaction(self.frame,self.v):
+                return None,dict(reason='preexisting_natural_water_lava_contact',metrics={k:r['metrics']for k,r in self.results.items()},**selection)
             # Both complete sets are evaluated. The compatibility graph is implicit:
             # a queried edge exists only if the center-product/time constraints pass.
-            possible_w=np.flatnonzero((water['stats'][:,6]>0)&(water['stats'][:,0]>1));possible_l=np.flatnonzero((lava['stats'][:,6]>0)&(lava['stats'][:,0]>1))
+            possible_w=np.flatnonzero((water['stats'][:,6]>0)&(water['stats'][:,0]>1)&(water['stats'][:,7]==0));possible_l=np.flatnonzero((lava['stats'][:,6]>0)&(lava['stats'][:,0]>1)&(lava['stats'][:,7]==0))
             w,ws=bernoulli_sources(possible_w,rng);l,ls=bernoulli_sources(possible_l,rng)
-            selection.update(water=ws,lava=ls,unary_filter='10s reach intersects center or its one-cell product-contact halo; four-stage potential is checked JOINTLY',compatibility_graph='lazy shared contact-factor graph over complete source sets',conditional_distribution_changes=[])
+            selection.update(water=ws,lava=ls,unary_filter='10s reach intersects center or its one-cell product-contact halo; routes cannot touch initial ambient fluid; four-stage potential is checked JOINTLY',compatibility_graph='lazy shared contact-factor graph over complete source sets',conditional_distribution_changes=[])
             pair_start=time.perf_counter();pairs=[]
             for wi in w:
                 wd=self.details('water',[wi])[0]
@@ -130,6 +132,10 @@ class Planner:
             else:selected={}
         for kind,ids in selected.items():details.extend(self.details(kind,ids))
         selection['precompute_wall_seconds']=time.perf_counter()-started
+        selection['candidate_filtering_seconds']=sum(m['candidate_filtering_seconds']for m in self.work_log)
+        selection['precompute_peak_memory_mb']=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/(1024**2 if sys.platform=='darwin'else 1024)
+        selection['memory_scope']='Python process peak RSS, including input/shared graph, not per-kernel incremental memory'
+        selection['selected_source_count']=len(details)
         selection['metrics']={kind:result['metrics']for kind,result in self.results.items()}
         # Partner-mode results are still complete evaluations; include their metrics.
         if category=='D4'and subtype in('A','C'):selection['metrics']={kind:result['metrics']}

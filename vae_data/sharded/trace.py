@@ -71,7 +71,7 @@ def save_planning(directory,planner,selection):
     directory=Path(directory);directory.mkdir(exist_ok=True)
     for kind,result in planner.results.items():
         np.savez_compressed(directory/(kind+'.npz'),legal_positions=np.asarray(np.unravel_index(planner.geometry.legal[result['kind']],planner.geometry.shape)).T,
-            stats=result['stats'],qualified=result['qualified'])
+            stats=result['stats'],qualified=result['qualified'],stat_columns=np.asarray(__import__('vae_data.sharded.planning.planner',fromlist=['STAT_COLUMNS']).STAT_COLUMNS))
     selected=[]
     for i,detail in enumerate(selection.get('details',[])):
         grid=detail['estimated_arrival_seconds'];grid.astype('u1').tofile(directory/f'selected_{i}.bin')

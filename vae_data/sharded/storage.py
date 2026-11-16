@@ -156,7 +156,9 @@ class Writer:
         rows=self.rows();data=[dict(snapshot_id=r['snapshot_id'],category=r['category'],world_seed=r['world_seed'],split=r['split'],
             biome_group=r.get('biome_group'),stratum=r.get('stratum'),chain_id=r['chain_id'],metadata_json=json.dumps(r))for r in rows]
         pq.write_table(pa.Table.from_pylist(data)if data else pa.table({'snapshot_id':pa.array([],pa.int64())}),self.path/'metadata.parquet',compression='zstd')
-        stats=dict(counts=dict(self.counts()),samples=len(rows),missing=self.missing(),attempts=self.db.execute('SELECT COUNT(*) FROM attempts').fetchone()[0])
+        from .centers import height_statistics
+        heights=height_statistics([json.loads(row[0])for row in self.db.execute('SELECT data FROM attempts')])
+        stats=dict(height_sampling=heights,counts=dict(self.counts()),samples=len(rows),missing=self.missing(),attempts=self.db.execute('SELECT COUNT(*) FROM attempts').fetchone()[0])
         dump(self.path/'statistics.json',stats)
         dump(self.path/'manifest.json',dict(version=VERSION,shard=self.shard,source_mode='unit_fixture'if self.fixture else'native',
             samples=len(rows),config=CONFIG,center_slice=[[16,32]]*3,region_shape=[48]*3,d4_chain_targets=d4_targets(self.shard)))
