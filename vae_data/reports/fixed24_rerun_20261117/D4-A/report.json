@@ -1,0 +1,1182 @@
+{
+  "status": {
+    "status": "success",
+    "reason": null,
+    "candidate_states": 10,
+    "center_target_changes": 451,
+    "center_transition_observations": 33,
+    "simulated_ticks": 777,
+    "simulated_seconds": 32.375,
+    "stop_reason": "candidate_limit",
+    "legal_windows": 6,
+    "subtype": "A",
+    "world_seed": 191664964,
+    "height_type": "surface",
+    "scene_spatial_qualified": true,
+    "planning_qualified": true,
+    "center_origin": [
+      64,
+      2000,
+      0
+    ],
+    "audit": {
+      "blocked_entities": {
+        "mcl_chests:chest": 6.0,
+        "mcl_minecarts:tnt_minecart": 1.0,
+        "mcl_wieldview:wieldview": 1214.0,
+        "mobs_mc:iron_golem": 1.0,
+        "mobs_mc:parrot": 3.0,
+        "mobs_mc:pillager": 118.0
+      },
+      "blocked_item_attempts": 0.0,
+      "compatible": true,
+      "dropped_items": 0.0,
+      "entity_callbacks": 0.0,
+      "entity_induced_changes": 0.0,
+      "nontechnical_entities": 0.0,
+      "unsupported_falling_attempts": 0.0
+    },
+    "observed_reaction_count": 18,
+    "contact_observed": true,
+    "center_contact_observed": true,
+    "structural_fire_changes": 0,
+    "fire_age_only_changes": 0,
+    "fire_transition_counts": {},
+    "intervention": {
+      "mode": "native_initialization",
+      "rng_state": {
+        "bit_generator": "PCG64",
+        "state": {
+          "state": 220722155094072627041744273312489979272,
+          "inc": 332724090758049132448979897138935081983
+        },
+        "has_uint32": 1,
+        "uinteger": 3109608945
+      },
+      "spatial_screen": {
+        "height_type": "surface",
+        "largest_connected_air_component": 3457,
+        "air_required": 65,
+        "surface_boundary_columns": 76,
+        "largest_underground_air_component": 0,
+        "reason": null,
+        "filter_seconds": 1.3839663749968167
+      },
+      "pool_kind": "water",
+      "largest_connected_stable_pool": 282,
+      "pool_observation_seconds": 1.1666666666666643,
+      "spatial_screen_after_pool": {
+        "height_type": "surface",
+        "largest_connected_air_component": 3457,
+        "air_required": 65,
+        "surface_boundary_columns": 76,
+        "largest_underground_air_component": 0,
+        "reason": null,
+        "filter_seconds": 1.4869411659965408
+      },
+      "planning": {
+        "planner_version": "shared-wave64-scene-v2",
+        "reachability_horizon_seconds": 10.0,
+        "required_center_transitions": 4,
+        "rng_state": {
+          "bit_generator": "PCG64",
+          "state": {
+            "state": 220722155094072627041744273312489979272,
+            "inc": 332724090758049132448979897138935081983
+          },
+          "has_uint32": 1,
+          "uinteger": 3109608945
+        },
+        "algorithm": "all-source shared graph / sparse 64-source bitsets",
+        "pair_compatibility_seconds": 0.0,
+        "lava": {
+          "N": 1559,
+          "p": 0.0006414368184733803,
+          "selected": [
+            1921
+          ],
+          "fallback": true,
+          "cap": 4,
+          "distribution": "independent Bernoulli then uniform fallback/cap"
+        },
+        "precompute_wall_seconds": 0.02243083299981663,
+        "candidate_filtering_seconds": 0.005098291003378108,
+        "precompute_peak_memory_mb": 130.765625,
+        "memory_scope": "Python process peak RSS, including input/shared graph, not per-kernel incremental memory",
+        "selected_source_count": 1,
+        "metrics": {
+          "lava": {
+            "legal_source_count": 2484,
+            "evaluated_source_count": 2484,
+            "reachable_candidate_count": 2484,
+            "qualified_candidate_count": 1559,
+            "mathematically_pruned_count": 0,
+            "visited_nodes": 119273,
+            "reachability_seconds": 0.006182041994179599,
+            "shared_graph_build_seconds": 0.28366654199635377,
+            "candidate_filtering_seconds": 0.005082832998596132,
+            "kernel_working_bytes": 25657344,
+            "batch_size": 64,
+            "uncertain_pruning_disabled": true,
+            "candidates_per_second": 401808.9819413536,
+            "semantics": "10 scheduled-wave seconds: optimistic potential, NOT deterministic native GT",
+            "uncertainty": "native queue ordering, fluid renewal/competition and ABM randomness are not fixed; lower bound0, no finite stochastic upper bound"
+          }
+        },
+        "source_domain": "center local[1..14]^3, region[17:31]^3",
+        "selected_sources": [
+          {
+            "kind": "lava",
+            "source_index": 1921,
+            "position": [
+              75,
+              2013,
+              11
+            ],
+            "reachable_voxels": 50,
+            "center_reachable_voxels": 50,
+            "potential_transition_times": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "falling_risk_reachable_voxels": 0,
+            "reachable_region_indices": [
+              61314,
+              61315,
+              61316,
+              61317,
+              61318,
+              61319,
+              61320,
+              61321,
+              61322,
+              61323,
+              63570,
+              63571,
+              63572,
+              63573,
+              63574,
+              63575,
+              63576,
+              63577,
+              63578,
+              63579,
+              63618,
+              63619,
+              63620,
+              63621,
+              63622,
+              63623,
+              63624,
+              63625,
+              63626,
+              63627,
+              63666,
+              63667,
+              63668,
+              63669,
+              63670,
+              63671,
+              63672,
+              63673,
+              63674,
+              63675,
+              65922,
+              65923,
+              65924,
+              65925,
+              65926,
+              65927,
+              65928,
+              65929,
+              65930,
+              65931
+            ],
+            "estimated_arrival_seconds": [
+              10,
+              9,
+              8,
+              7,
+              6,
+              5,
+              4,
+              3,
+              2,
+              1,
+              10,
+              9,
+              8,
+              7,
+              6,
+              5,
+              4,
+              3,
+              2,
+              1,
+              9,
+              8,
+              7,
+              6,
+              5,
+              4,
+              3,
+              2,
+              1,
+              0,
+              10,
+              9,
+              8,
+              7,
+              6,
+              5,
+              4,
+              3,
+              2,
+              1,
+              10,
+              9,
+              8,
+              7,
+              6,
+              5,
+              4,
+              3,
+              2,
+              1
+            ]
+          }
+        ]
+      },
+      "requested_actions": [
+        {
+          "type": "lava",
+          "position": [
+            75,
+            2013,
+            11
+          ]
+        }
+      ],
+      "actual_actions": [
+        {
+          "after": "mcl_core:lava_source",
+          "before": "air",
+          "clock": {
+            "absolute_sim_time": 18.625,
+            "engine_us": 33801103377.0,
+            "lua_tick": 447.0,
+            "native_clock": {
+              "absolute_sim_time": 18.625,
+              "client_request_tick": 447.0,
+              "patch_version": "voxwm-fixed24-v1",
+              "physics_us": 531.0,
+              "server_dt": 0.0416666679084301,
+              "server_tick": 447.0
+            },
+            "native_simulation_step": 447.0,
+            "sim_time": 18.625,
+            "simulation_hz": 24.0,
+            "simulation_step": 447.0
+          },
+          "position": [
+            75.0,
+            2013.0,
+            11.0
+          ],
+          "type": "lava"
+        }
+      ]
+    },
+    "performance": {
+      "simulation_hz": 24,
+      "ticks": 777,
+      "measured_tick_wall_seconds": 6.085905383988575,
+      "seconds_per_tick": {
+        "total": 0.007832568061761358,
+        "simulation": 0.00041721750321750326,
+        "capture": 0.0004135366795366795,
+        "communication": 0.00041565233175933455,
+        "decode": 0.001486181005086175
+      },
+      "simulation_ticks_per_wall_second": 127.67204729212706,
+      "simulation_seconds_per_wall_second": 5.319668637171961,
+      "capture_to_simulation_ratio": 0.9911776863328171,
+      "peak_python_rss_mb": 130.765625,
+      "scope": "Per-tick wall includes client synchronization/blank packet, IPC and decode; excludes planning, setup and Trace persistence. Native capture is post-update and before completion release.",
+      "loop_wall_seconds": 19.687969416998385,
+      "trace_delta_write_seconds": 12.517604948050575,
+      "ticks_per_wall_second_including_trace": 39.465725669461186
+    }
+  },
+  "planning": {
+    "planner_version": "shared-wave64-scene-v2",
+    "reachability_horizon_seconds": 10.0,
+    "required_center_transitions": 4,
+    "rng_state": {
+      "bit_generator": "PCG64",
+      "state": {
+        "state": 220722155094072627041744273312489979272,
+        "inc": 332724090758049132448979897138935081983
+      },
+      "has_uint32": 1,
+      "uinteger": 3109608945
+    },
+    "algorithm": "all-source shared graph / sparse 64-source bitsets",
+    "pair_compatibility_seconds": 0.0,
+    "lava": {
+      "N": 1559,
+      "p": 0.0006414368184733803,
+      "selected": [
+        1921
+      ],
+      "fallback": true,
+      "cap": 4,
+      "distribution": "independent Bernoulli then uniform fallback/cap"
+    },
+    "precompute_wall_seconds": 0.02243083299981663,
+    "candidate_filtering_seconds": 0.005098291003378108,
+    "precompute_peak_memory_mb": 130.765625,
+    "memory_scope": "Python process peak RSS, including input/shared graph, not per-kernel incremental memory",
+    "selected_source_count": 1,
+    "metrics": {
+      "lava": {
+        "legal_source_count": 2484,
+        "evaluated_source_count": 2484,
+        "reachable_candidate_count": 2484,
+        "qualified_candidate_count": 1559,
+        "mathematically_pruned_count": 0,
+        "visited_nodes": 119273,
+        "reachability_seconds": 0.006182041994179599,
+        "shared_graph_build_seconds": 0.28366654199635377,
+        "candidate_filtering_seconds": 0.005082832998596132,
+        "kernel_working_bytes": 25657344,
+        "batch_size": 64,
+        "uncertain_pruning_disabled": true,
+        "candidates_per_second": 401808.9819413536,
+        "semantics": "10 scheduled-wave seconds: optimistic potential, NOT deterministic native GT",
+        "uncertainty": "native queue ordering, fluid renewal/competition and ABM randomness are not fixed; lower bound0, no finite stochastic upper bound"
+      }
+    },
+    "source_domain": "center local[1..14]^3, region[17:31]^3",
+    "selected_sources": [
+      {
+        "kind": "lava",
+        "source_index": 1921,
+        "position": [
+          75,
+          2013,
+          11
+        ],
+        "reachable_voxels": 50,
+        "center_reachable_voxels": 50,
+        "potential_transition_times": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10
+        ],
+        "falling_risk_reachable_voxels": 0
+      }
+    ]
+  },
+  "native_frames": 780,
+  "accepted_indices": [
+    610,
+    611,
+    635,
+    778,
+    779
+  ],
+  "actual_center_changes": 451,
+  "actual_neighbor_changes": 671,
+  "native_events": [
+    {
+      "after": "mcl_core:stone",
+      "before": "mcl_core:water_source",
+      "clock": {
+        "absolute_sim_time": 35.0,
+        "engine_us": 33807882885.0,
+        "frame_index": 393.0,
+        "lua_tick": 839.0,
+        "native_clock": {
+          "absolute_sim_time": 35.0,
+          "client_request_tick": 840.0,
+          "patch_version": "voxwm-fixed24-v1",
+          "physics_us": 192.0,
+          "server_dt": 0.0416666679084301,
+          "server_tick": 840.0
+        },
+        "native_simulation_step": 840.0,
+        "relative_sim_time": 16.375,
+        "sim_time": 35.0,
+        "simulation_hz": 24.0,
+        "simulation_step": 840.0
+      },
+      "confirmed": true,
+      "contact": {
+        "lava": [
+          75.0,
+          2013.0,
+          2.0
+        ],
+        "lava_node": "mcl_core:lava_flowing",
+        "water": [
+          75.0,
+          2013.0,
+          1.0
+        ],
+        "water_node": "mcl_core:water_source"
+      },
+      "position": [
+        75.0,
+        2013.0,
+        1.0
+      ]
+    },
+    {
+      "after": "mcl_core:stone",
+      "before": "mcl_core:water_source",
+      "clock": {
+        "absolute_sim_time": 37.0,
+        "engine_us": 33809138030.0,
+        "frame_index": 441.0,
+        "lua_tick": 887.0,
+        "native_clock": {
+          "absolute_sim_time": 37.0,
+          "client_request_tick": 888.0,
+          "patch_version": "voxwm-fixed24-v1",
+          "physics_us": 330.0,
+          "server_dt": 0.0416666679084301,
+          "server_tick": 888.0
+        },
+        "native_simulation_step": 888.0,
+        "relative_sim_time": 18.375,
+        "sim_time": 37.0,
+        "simulation_hz": 24.0,
+        "simulation_step": 888.0
+      },
+      "confirmed": true,
+      "contact": {
+        "lava": [
+          75.0,
+          2012.0,
+          2.0
+        ],
+        "lava_node": "mcl_core:lava_flowing",
+        "water": [
+          75.0,
+          2012.0,
+          1.0
+        ],
+        "water_node": "mcl_core:water_source"
+      },
+      "position": [
+        75.0,
+        2012.0,
+        1.0
+      ]
+    },
+    {
+      "after": "mcl_core:stone",
+      "before": "mcl_core:water_source",
+      "clock": {
+        "absolute_sim_time": 37.0,
+        "engine_us": 33809138113.0,
+        "frame_index": 441.0,
+        "lua_tick": 887.0,
+        "native_clock": {
+          "absolute_sim_time": 37.0,
+          "client_request_tick": 888.0,
+          "patch_version": "voxwm-fixed24-v1",
+          "physics_us": 330.0,
+          "server_dt": 0.0416666679084301,
+          "server_tick": 888.0
+        },
+        "native_simulation_step": 888.0,
+        "relative_sim_time": 18.375,
+        "sim_time": 37.0,
+        "simulation_hz": 24.0,
+        "simulation_step": 888.0
+      },
+      "confirmed": true,
+      "contact": {
+        "lava": [
+          74.0,
+          2013.0,
+          2.0
+        ],
+        "lava_node": "mcl_core:lava_flowing",
+        "water": [
+          74.0,
+          2013.0,
+          1.0
+        ],
+        "water_node": "mcl_core:water_source"
+      },
+      "position": [
+        74.0,
+        2013.0,
+        1.0
+      ]
+    },
+    {
+      "after": "mcl_core:stone",
+      "before": "mcl_core:water_source",
+      "clock": {
+        "absolute_sim_time": 37.0,
+        "engine_us": 33809138130.0,
+        "frame_index": 441.0,
+        "lua_tick": 887.0,
+        "native_clock": {
+          "absolute_sim_time": 37.0,
+          "client_request_tick": 888.0,
+          "patch_version": "voxwm-fixed24-v1",
+          "physics_us": 330.0,
+          "server_dt": 0.0416666679084301,
+          "server_tick": 888.0
+        },
+        "native_simulation_step": 888.0,
+        "relative_sim_time": 18.375,
+        "sim_time": 37.0,
+        "simulation_hz": 24.0,
+        "simulation_step": 888.0
+      },
+      "confirmed": true,
+      "contact": {
+        "lava": [
+          76.0,
+          2013.0,
+          2.0
+        ],
+        "lava_node": "mcl_core:lava_flowing",
+        "water": [
+          76.0,
+          2013.0,
+          1.0
+        ],
+        "water_node": "mcl_core:water_source"
+      },
+      "position": [
+        76.0,
+        2013.0,
+        1.0
+      ]
+    },
+    {
+      "after": "mcl_core:stone",
+      "before": "mcl_core:water_source",
+      "clock": {
+        "absolute_sim_time": 37.0,
+        "engine_us": 33809138192.0,
+        "frame_index": 441.0,
+        "lua_tick": 887.0,
+        "native_clock": {
+          "absolute_sim_time": 37.0,
+          "client_request_tick": 888.0,
+          "patch_version": "voxwm-fixed24-v1",
+          "physics_us": 330.0,
+          "server_dt": 0.0416666679084301,
+          "server_tick": 888.0
+        },
+        "native_simulation_step": 888.0,
+        "relative_sim_time": 18.375,
+        "sim_time": 37.0,
+        "simulation_hz": 24.0,
+        "simulation_step": 888.0
+      },
+      "confirmed": true,
+      "contact": {
+        "lava": [
+          75.0,
+          2014.0,
+          2.0
+        ],
+        "lava_node": "mcl_core:lava_flowing",
+        "water": [
+          75.0,
+          2014.0,
+          1.0
+        ],
+        "water_node": "mcl_core:water_source"
+      },
+      "position": [
+        75.0,
+        2014.0,
+        1.0
+      ]
+    },
+    {
+      "after": "mcl_core:stone",
+      "before": "mcl_core:water_source",
+      "clock": {
+        "absolute_sim_time": 44.0,
+        "engine_us": 33814237695.0,
+        "frame_index": 609.0,
+        "lua_tick": 1055.0,
+        "native_clock": {
+          "absolute_sim_time": 44.0,
+          "client_request_tick": 1056.0,
+          "patch_version": "voxwm-fixed24-v1",
+          "physics_us": 248.0,
+          "server_dt": 0.0416666679084301,
+          "server_tick": 1056.0
+        },
+        "native_simulation_step": 1056.0,
+        "relative_sim_time": 25.375,
+        "sim_time": 44.0,
+        "simulation_hz": 24.0,
+        "simulation_step": 1056.0
+      },
+      "confirmed": true,
+      "contact": {
+        "lava": [
+          75.0,
+          2011.0,
+          2.0
+        ],
+        "lava_node": "mcl_core:lava_flowing",
+        "water": [
+          75.0,
+          2011.0,
+          1.0
+        ],
+        "water_node": "mcl_core:water_source"
+      },
+      "position": [
+        75.0,
+        2011.0,
+        1.0
+      ]
+    },
+    {
+      "after": "mcl_core:stone",
+      "before": "mcl_core:water_source",
+      "clock": {
+        "absolute_sim_time": 44.0,
+        "engine_us": 33814237757.0,
+        "frame_index": 609.0,
+        "lua_tick": 1055.0,
+        "native_clock": {
+          "absolute_sim_time": 44.0,
+          "client_request_tick": 1056.0,
+          "patch_version": "voxwm-fixed24-v1",
+          "physics_us": 248.0,
+          "server_dt": 0.0416666679084301,
+          "server_tick": 1056.0
+        },
+        "native_simulation_step": 1056.0,
+        "relative_sim_time": 25.375,
+        "sim_time": 44.0,
+        "simulation_hz": 24.0,
+        "simulation_step": 1056.0
+      },
+      "confirmed": true,
+      "contact": {
+        "lava": [
+          74.0,
+          2012.0,
+          2.0
+        ],
+        "lava_node": "mcl_core:lava_flowing",
+        "water": [
+          74.0,
+          2012.0,
+          1.0
+        ],
+        "water_node": "mcl_core:water_source"
+      },
+      "position": [
+        74.0,
+        2012.0,
+        1.0
+      ]
+    },
+    {
+      "after": "mcl_core:stone",
+      "before": "mcl_core:water_source",
+      "clock": {
+        "absolute_sim_time": 44.0,
+        "engine_us": 33814237775.0,
+        "frame_index": 609.0,
+        "lua_tick": 1055.0,
+        "native_clock": {
+          "absolute_sim_time": 44.0,
+          "client_request_tick": 1056.0,
+          "patch_version": "voxwm-fixed24-v1",
+          "physics_us": 248.0,
+          "server_dt": 0.0416666679084301,
+          "server_tick": 1056.0
+        },
+        "native_simulation_step": 1056.0,
+        "relative_sim_time": 25.375,
+        "sim_time": 44.0,
+        "simulation_hz": 24.0,
+        "simulation_step": 1056.0
+      },
+      "confirmed": true,
+      "contact": {
+        "lava": [
+          76.0,
+          2012.0,
+          2.0
+        ],
+        "lava_node": "mcl_core:lava_flowing",
+        "water": [
+          76.0,
+          2012.0,
+          1.0
+        ],
+        "water_node": "mcl_core:water_source"
+      },
+      "position": [
+        76.0,
+        2012.0,
+        1.0
+      ]
+    },
+    {
+      "after": "mcl_core:stone",
+      "before": "mcl_core:water_source",
+      "clock": {
+        "absolute_sim_time": 44.0,
+        "engine_us": 33814237823.0,
+        "frame_index": 609.0,
+        "lua_tick": 1055.0,
+        "native_clock": {
+          "absolute_sim_time": 44.0,
+          "client_request_tick": 1056.0,
+          "patch_version": "voxwm-fixed24-v1",
+          "physics_us": 248.0,
+          "server_dt": 0.0416666679084301,
+          "server_tick": 1056.0
+        },
+        "native_simulation_step": 1056.0,
+        "relative_sim_time": 25.375,
+        "sim_time": 44.0,
+        "simulation_hz": 24.0,
+        "simulation_step": 1056.0
+      },
+      "confirmed": true,
+      "contact": {
+        "lava": [
+          77.0,
+          2013.0,
+          2.0
+        ],
+        "lava_node": "mcl_core:lava_flowing",
+        "water": [
+          77.0,
+          2013.0,
+          1.0
+        ],
+        "water_node": "mcl_core:water_source"
+      },
+      "position": [
+        77.0,
+        2013.0,
+        1.0
+      ]
+    },
+    {
+      "after": "mcl_core:stone",
+      "before": "mcl_core:water_source",
+      "clock": {
+        "absolute_sim_time": 44.0,
+        "engine_us": 33814237886.0,
+        "frame_index": 609.0,
+        "lua_tick": 1055.0,
+        "native_clock": {
+          "absolute_sim_time": 44.0,
+          "client_request_tick": 1056.0,
+          "patch_version": "voxwm-fixed24-v1",
+          "physics_us": 248.0,
+          "server_dt": 0.0416666679084301,
+          "server_tick": 1056.0
+        },
+        "native_simulation_step": 1056.0,
+        "relative_sim_time": 25.375,
+        "sim_time": 44.0,
+        "simulation_hz": 24.0,
+        "simulation_step": 1056.0
+      },
+      "confirmed": true,
+      "contact": {
+        "lava": [
+          76.0,
+          2014.0,
+          2.0
+        ],
+        "lava_node": "mcl_core:lava_flowing",
+        "water": [
+          76.0,
+          2014.0,
+          1.0
+        ],
+        "water_node": "mcl_core:water_source"
+      },
+      "position": [
+        76.0,
+        2014.0,
+        1.0
+      ]
+    },
+    {
+      "after": "mcl_core:stone",
+      "before": "mcl_core:water_source",
+      "clock": {
+        "absolute_sim_time": 51.0,
+        "engine_us": 33820763938.0,
+        "frame_index": 777.0,
+        "lua_tick": 1223.0,
+        "native_clock": {
+          "absolute_sim_time": 51.0,
+          "client_request_tick": 1224.0,
+          "patch_version": "voxwm-fixed24-v1",
+          "physics_us": 267.0,
+          "server_dt": 0.0416666679084301,
+          "server_tick": 1224.0
+        },
+        "native_simulation_step": 1224.0,
+        "relative_sim_time": 32.375,
+        "sim_time": 51.0,
+        "simulation_hz": 24.0,
+        "simulation_step": 1224.0
+      },
+      "confirmed": true,
+      "contact": {
+        "lava": [
+          75.0,
+          2010.0,
+          2.0
+        ],
+        "lava_node": "mcl_core:lava_flowing",
+        "water": [
+          75.0,
+          2010.0,
+          1.0
+        ],
+        "water_node": "mcl_core:water_source"
+      },
+      "position": [
+        75.0,
+        2010.0,
+        1.0
+      ]
+    },
+    {
+      "after": "mcl_core:stone",
+      "before": "mcl_core:water_source",
+      "clock": {
+        "absolute_sim_time": 51.0,
+        "engine_us": 33820764033.0,
+        "frame_index": 777.0,
+        "lua_tick": 1223.0,
+        "native_clock": {
+          "absolute_sim_time": 51.0,
+          "client_request_tick": 1224.0,
+          "patch_version": "voxwm-fixed24-v1",
+          "physics_us": 267.0,
+          "server_dt": 0.0416666679084301,
+          "server_tick": 1224.0
+        },
+        "native_simulation_step": 1224.0,
+        "relative_sim_time": 32.375,
+        "sim_time": 51.0,
+        "simulation_hz": 24.0,
+        "simulation_step": 1224.0
+      },
+      "confirmed": true,
+      "contact": {
+        "lava": [
+          74.0,
+          2011.0,
+          2.0
+        ],
+        "lava_node": "mcl_core:lava_flowing",
+        "water": [
+          74.0,
+          2011.0,
+          1.0
+        ],
+        "water_node": "mcl_core:water_source"
+      },
+      "position": [
+        74.0,
+        2011.0,
+        1.0
+      ]
+    },
+    {
+      "after": "mcl_core:stone",
+      "before": "mcl_core:water_source",
+      "clock": {
+        "absolute_sim_time": 51.0,
+        "engine_us": 33820764057.0,
+        "frame_index": 777.0,
+        "lua_tick": 1223.0,
+        "native_clock": {
+          "absolute_sim_time": 51.0,
+          "client_request_tick": 1224.0,
+          "patch_version": "voxwm-fixed24-v1",
+          "physics_us": 267.0,
+          "server_dt": 0.0416666679084301,
+          "server_tick": 1224.0
+        },
+        "native_simulation_step": 1224.0,
+        "relative_sim_time": 32.375,
+        "sim_time": 51.0,
+        "simulation_hz": 24.0,
+        "simulation_step": 1224.0
+      },
+      "confirmed": true,
+      "contact": {
+        "lava": [
+          76.0,
+          2011.0,
+          2.0
+        ],
+        "lava_node": "mcl_core:lava_flowing",
+        "water": [
+          76.0,
+          2011.0,
+          1.0
+        ],
+        "water_node": "mcl_core:water_source"
+      },
+      "position": [
+        76.0,
+        2011.0,
+        1.0
+      ]
+    },
+    {
+      "after": "mcl_core:stone",
+      "before": "mcl_core:water_source",
+      "clock": {
+        "absolute_sim_time": 51.0,
+        "engine_us": 33820764095.0,
+        "frame_index": 777.0,
+        "lua_tick": 1223.0,
+        "native_clock": {
+          "absolute_sim_time": 51.0,
+          "client_request_tick": 1224.0,
+          "patch_version": "voxwm-fixed24-v1",
+          "physics_us": 267.0,
+          "server_dt": 0.0416666679084301,
+          "server_tick": 1224.0
+        },
+        "native_simulation_step": 1224.0,
+        "relative_sim_time": 32.375,
+        "sim_time": 51.0,
+        "simulation_hz": 24.0,
+        "simulation_step": 1224.0
+      },
+      "confirmed": true,
+      "contact": {
+        "lava": [
+          73.0,
+          2012.0,
+          2.0
+        ],
+        "lava_node": "mcl_core:lava_flowing",
+        "water": [
+          73.0,
+          2012.0,
+          1.0
+        ],
+        "water_node": "mcl_core:water_source"
+      },
+      "position": [
+        73.0,
+        2012.0,
+        1.0
+      ]
+    },
+    {
+      "after": "mcl_core:stone",
+      "before": "mcl_core:water_source",
+      "clock": {
+        "absolute_sim_time": 51.0,
+        "engine_us": 33820764113.0,
+        "frame_index": 777.0,
+        "lua_tick": 1223.0,
+        "native_clock": {
+          "absolute_sim_time": 51.0,
+          "client_request_tick": 1224.0,
+          "patch_version": "voxwm-fixed24-v1",
+          "physics_us": 267.0,
+          "server_dt": 0.0416666679084301,
+          "server_tick": 1224.0
+        },
+        "native_simulation_step": 1224.0,
+        "relative_sim_time": 32.375,
+        "sim_time": 51.0,
+        "simulation_hz": 24.0,
+        "simulation_step": 1224.0
+      },
+      "confirmed": true,
+      "contact": {
+        "lava": [
+          77.0,
+          2012.0,
+          2.0
+        ],
+        "lava_node": "mcl_core:lava_flowing",
+        "water": [
+          77.0,
+          2012.0,
+          1.0
+        ],
+        "water_node": "mcl_core:water_source"
+      },
+      "position": [
+        77.0,
+        2012.0,
+        1.0
+      ]
+    },
+    {
+      "after": "mcl_core:stone",
+      "before": "mcl_core:water_source",
+      "clock": {
+        "absolute_sim_time": 51.0,
+        "engine_us": 33820764157.0,
+        "frame_index": 777.0,
+        "lua_tick": 1223.0,
+        "native_clock": {
+          "absolute_sim_time": 51.0,
+          "client_request_tick": 1224.0,
+          "patch_version": "voxwm-fixed24-v1",
+          "physics_us": 267.0,
+          "server_dt": 0.0416666679084301,
+          "server_tick": 1224.0
+        },
+        "native_simulation_step": 1224.0,
+        "relative_sim_time": 32.375,
+        "sim_time": 51.0,
+        "simulation_hz": 24.0,
+        "simulation_step": 1224.0
+      },
+      "confirmed": true,
+      "contact": {
+        "lava": [
+          78.0,
+          2013.0,
+          2.0
+        ],
+        "lava_node": "mcl_core:lava_flowing",
+        "water": [
+          78.0,
+          2013.0,
+          1.0
+        ],
+        "water_node": "mcl_core:water_source"
+      },
+      "position": [
+        78.0,
+        2013.0,
+        1.0
+      ]
+    },
+    {
+      "after": "mcl_core:stone",
+      "before": "mcl_core:water_source",
+      "clock": {
+        "absolute_sim_time": 51.0,
+        "engine_us": 33820764223.0,
+        "frame_index": 777.0,
+        "lua_tick": 1223.0,
+        "native_clock": {
+          "absolute_sim_time": 51.0,
+          "client_request_tick": 1224.0,
+          "patch_version": "voxwm-fixed24-v1",
+          "physics_us": 267.0,
+          "server_dt": 0.0416666679084301,
+          "server_tick": 1224.0
+        },
+        "native_simulation_step": 1224.0,
+        "relative_sim_time": 32.375,
+        "sim_time": 51.0,
+        "simulation_hz": 24.0,
+        "simulation_step": 1224.0
+      },
+      "confirmed": true,
+      "contact": {
+        "lava": [
+          77.0,
+          2014.0,
+          2.0
+        ],
+        "lava_node": "mcl_core:lava_flowing",
+        "water": [
+          77.0,
+          2014.0,
+          1.0
+        ],
+        "water_node": "mcl_core:water_source"
+      },
+      "position": [
+        77.0,
+        2014.0,
+        1.0
+      ]
+    },
+    {
+      "after": "mcl_core:stone",
+      "before": "mcl_core:water_source",
+      "clock": {
+        "absolute_sim_time": 51.0,
+        "engine_us": 33820764256.0,
+        "frame_index": 777.0,
+        "lua_tick": 1223.0,
+        "native_clock": {
+          "absolute_sim_time": 51.0,
+          "client_request_tick": 1224.0,
+          "patch_version": "voxwm-fixed24-v1",
+          "physics_us": 267.0,
+          "server_dt": 0.0416666679084301,
+          "server_tick": 1224.0
+        },
+        "native_simulation_step": 1224.0,
+        "relative_sim_time": 32.375,
+        "sim_time": 51.0,
+        "simulation_hz": 24.0,
+        "simulation_step": 1224.0
+      },
+      "confirmed": true,
+      "contact": {
+        "lava": [
+          76.0,
+          2015.0,
+          2.0
+        ],
+        "lava_node": "mcl_core:lava_flowing",
+        "water": [
+          76.0,
+          2015.0,
+          1.0
+        ],
+        "water_node": "mcl_core:water_source"
+      },
+      "position": [
+        76.0,
+        2015.0,
+        1.0
+      ]
+    }
+  ]
+}

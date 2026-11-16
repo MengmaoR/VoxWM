@@ -1,4 +1,4 @@
-"""Exactly six unique native types, <=3 attempts/type, <=1 success/type, <=900s total."""
+"""Requested native types (optional D2 skip), <=3 attempts/type, <=1 success/type, <=900s total."""
 from pathlib import Path
 import time,traceback
 import numpy as np
@@ -17,18 +17,18 @@ def limits(args):
     if not 1<=args.attempts_per_type<=3:raise ValueError('At most three native attempts/type')
 
 def run(args):
-    limits(args);root=Path(args.dataset)
+    limits(args);types=tuple(t for t in TYPES if t!='D2'or not getattr(args,'skip_d2',False));root=Path(args.dataset)
     if root.exists():raise FileExistsError('Use a new output directory; this native budget cannot silently restart')
     root.mkdir(parents=True);Vocabulary().save(root/'vocabulary.json')
     started=time.monotonic();deadline=started+args.wall_seconds-12;rng=np.random.default_rng(args.seed)
-    result=dict(version=VERSION,simulation_hz=SIMULATION_HZ,no_change_ticks=NO_CHANGE_TICKS,source_domain='center local[1..14]^3',status='INCONCLUSIVE',source='real_native',unique_types=list(TYPES),successes={t:0 for t in TYPES},attempts=[],
+    result=dict(version=VERSION,simulation_hz=SIMULATION_HZ,no_change_ticks=NO_CHANGE_TICKS,source_domain='center local[1..14]^3',status='INCONCLUSIVE',source='real_native',unique_types=list(types),skipped_types=[t for t in TYPES if t not in types],successes={t:0 for t in types},attempts=[],
         wall_budget=args.wall_seconds,attempts_per_type=args.attempts_per_type,max_successes_per_type=1,
         formal_shard_generated=False,models_or_training=False)
     sites={'D1':[(80,1984),(96,1936),(112,1952)],'D2':[(800,-1232),(-288,1456),(96,1936)],
         'D3':[(800,-1232),(-288,1456),(816,-1216)],'D4-A':[(80,1984),(96,1936),(112,1952)],
         'D4-B':[(800,-1232),(816,-1216),(-288,1456)],'D4-C':[(800,-1232),(80,1984),(-288,1456)]}
     atomic_json(root/'native_results.json',result)
-    for label in TYPES:
+    for label in types:
         if time.monotonic()+20>=deadline:break
         world=None;first_height=int(rng.integers(2))
         for attempt in range(args.attempts_per_type):
@@ -62,8 +62,8 @@ def run(args):
             if time.monotonic()+15>=deadline:break
         if world:world.__exit__(None,None,None)
     result['wall_seconds']=time.monotonic()-started
-    result['not_attempted']=[t for t in TYPES if not any(r['unique_type']==t for r in result['attempts'])]
+    result['not_attempted']=[t for t in types if not any(r['unique_type']==t for r in result['attempts'])]
     result['status']='GO'if all(result['successes'].values())else'INCONCLUSIVE'
-    result['interpretation']='Native attempts only. Failure is not replaced by synthetic data; formal 1K/100K throughput is unverified.'
+    result['interpretation']='Requested types only; skipped types are not new passes. Native attempts only. Failure is not replaced by synthetic data; formal 1K/100K throughput is unverified.'
     atomic_json(root/'native_results.json',result)
     return result

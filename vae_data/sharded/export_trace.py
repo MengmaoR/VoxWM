@@ -106,6 +106,9 @@ def one_trace(source,destination):
 
 def export(root,report_dir=None):
     root=Path(root);out=root/'viewer';out.mkdir(exist_ok=True);entries=[]
+    prior=json.loads((out/'manifest.json').read_text()).get('types',[])if(out/'manifest.json').exists()else[]
+    retained={entry['id']:entry for entry in prior if entry.get('retained_from')}
+    native=json.loads((root/'native_results.json').read_text())if(root/'native_results.json').exists()else{}
     for label in TYPES:
         attempts=sorted((root/'traces'/label).glob('attempt_*/trace.json'));candidates=[];options=[]
         for attempt in attempts:
@@ -120,8 +123,9 @@ def export(root,report_dir=None):
             if report_dir:
                 dest=Path(report_dir)/label;dest.mkdir(parents=True,exist_ok=True)
                 for name in('contact_sheet.png','evolution.gif','report.md','report.json'):shutil.copy2(out/relative/name,dest/name)
-        else:entries.append(dict(id=label,path=None,available=False,attempts=[],reason='not attempted within native budget'))
-    dump(out/'manifest.json',dict(source='Actual Native GT only',types=entries))
+        elif label in native.get('skipped_types',[])and label in retained and(out/retained[label]['path']/'frames.json').exists():entries.append(retained[label])
+        else:entries.append(dict(id=label,path=None,available=False,attempts=[],reason='skipped by user; not rerun'if label in native.get('skipped_types',[])else'not attempted within native budget'))
+    dump(out/'manifest.json',dict(source='Actual Native GT only',types=entries,run_directory=str(root),retained_types=[entry['id']for entry in entries if entry.get('retained_from')]))
     return out
 
 if __name__=='__main__':

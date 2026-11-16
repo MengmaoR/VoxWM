@@ -28,7 +28,7 @@ def check_sources(actions,center):
     origin=np.asarray(center)
     for action in actions:
         position=np.asarray(action.get('position',[]))
-        if position.shape!=(3,)or position.dtype.kind not in'iu' or not np.all((position-origin>=1)&(position-origin<=14)):
+        if position.shape!=(3,)or position.dtype.kind not in'iuf' or not np.all(np.isfinite(position)&(position==np.floor(position))&(position-origin>=1)&(position-origin<=14)):
             raise ValueError('intervention_outside_center_14: '+str(action.get('position')))
     return True
 

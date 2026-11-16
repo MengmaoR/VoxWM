@@ -1,0 +1,343 @@
+{
+  "version": "vae-region48-fixed24-v2",
+  "simulation_hz": 24,
+  "no_change_ticks": {
+    "D1": 48,
+    "D2": 48,
+    "D3": 120,
+    "D4": 48
+  },
+  "source_domain": "center local[1..14]^3",
+  "status": "INCONCLUSIVE",
+  "source": "real_native",
+  "unique_types": [
+    "D1",
+    "D3",
+    "D4-A",
+    "D4-B",
+    "D4-C"
+  ],
+  "skipped_types": [
+    "D2"
+  ],
+  "successes": {
+    "D1": 0,
+    "D3": 0,
+    "D4-A": 0,
+    "D4-B": 0,
+    "D4-C": 0
+  },
+  "attempts": [
+    {
+      "height_type": "surface",
+      "unique_type": "D1",
+      "category": "D1",
+      "subtype": "",
+      "attempt": 1,
+      "trace": "traces/D1/attempt_1",
+      "source": "real_native",
+      "status": "failed",
+      "reason": "ValueError: intervention_outside_center_14: [102.0, 1974.0, 3.0]",
+      "error_class": "ValueError",
+      "wall_seconds": 15.150868584001728
+    },
+    {
+      "height_type": "surface",
+      "unique_type": "D1",
+      "category": "D1",
+      "subtype": "",
+      "attempt": 2,
+      "trace": "traces/D1/attempt_2",
+      "source": "real_native",
+      "status": "failed",
+      "reason": "ValueError: intervention_outside_center_14: [115.0, 1923.0, 14.0]",
+      "error_class": "ValueError",
+      "wall_seconds": 13.53417629100295
+    },
+    {
+      "height_type": "surface",
+      "unique_type": "D1",
+      "category": "D1",
+      "subtype": "",
+      "attempt": 3,
+      "trace": "traces/D1/attempt_3",
+      "source": "real_native",
+      "status": "failed",
+      "reason": "ValueError: intervention_outside_center_14: [116.0, 1948.0, 7.0]",
+      "error_class": "ValueError",
+      "wall_seconds": 12.80539200000203
+    },
+    {
+      "height_type": "surface",
+      "unique_type": "D3",
+      "category": "D3",
+      "subtype": "",
+      "attempt": 1,
+      "trace": "traces/D3/attempt_1",
+      "source": "real_native",
+      "status": "failed",
+      "reason": "ValueError: intervention_outside_center_14: [790.0, -1236.0, 7.0]",
+      "error_class": "ValueError",
+      "wall_seconds": 12.659345667001617
+    },
+    {
+      "height_type": "surface",
+      "unique_type": "D3",
+      "category": "D3",
+      "subtype": "",
+      "attempt": 2,
+      "trace": "traces/D3/attempt_2",
+      "source": "real_native",
+      "status": "failed",
+      "reason": "ConnectionError: Failed to receive from MT. Connection closed by peer: is MT down?",
+      "error_class": "ConnectionError",
+      "wall_seconds": 9.885112500000105
+    },
+    {
+      "height_type": "surface",
+      "unique_type": "D3",
+      "category": "D3",
+      "subtype": "",
+      "attempt": 3,
+      "trace": "traces/D3/attempt_3",
+      "source": "real_native",
+      "status": "failed",
+      "reason": "ValueError: intervention_outside_center_14: [809.0, -1186.0, 3.0]",
+      "error_class": "ValueError",
+      "wall_seconds": 13.045809166003892
+    },
+    {
+      "height_type": "cave",
+      "unique_type": "D4-A",
+      "category": "D4",
+      "subtype": "A",
+      "attempt": 1,
+      "trace": "traces/D4-A/attempt_1",
+      "source": "real_native",
+      "status": "rejected",
+      "reason": "no_qualified_temporal_center_potential",
+      "world_seed": 191664964,
+      "center_origin": [
+        80,
+        1968,
+        -16
+      ],
+      "scene_spatial_qualified": true,
+      "planning_qualified": false,
+      "intervention": {
+        "mode": "native_initialization",
+        "rng_state": {
+          "bit_generator": "PCG64",
+          "state": {
+            "state": 150917150878072923161953263779303709622,
+            "inc": 332724090758049132448979897138935081983
+          },
+          "has_uint32": 0,
+          "uinteger": 1034767059
+        },
+        "spatial_screen": {
+          "height_type": "cave",
+          "largest_connected_air_component": 85,
+          "air_required": 65,
+          "surface_boundary_columns": 0,
+          "largest_underground_air_component": 85,
+          "reason": null,
+          "filter_seconds": 1.3461125410030945
+        },
+        "pool_kind": "water",
+        "largest_connected_stable_pool": 1231,
+        "pool_observation_seconds": 1.1666666666666643,
+        "spatial_screen_after_pool": {
+          "height_type": "cave",
+          "largest_connected_air_component": 85,
+          "air_required": 65,
+          "surface_boundary_columns": 0,
+          "largest_underground_air_component": 85,
+          "reason": null,
+          "filter_seconds": 1.3542244589989423
+        },
+        "planning": {
+          "planner_version": "shared-wave64-scene-v2",
+          "reachability_horizon_seconds": 10.0,
+          "required_center_transitions": 4,
+          "rng_state": {
+            "bit_generator": "PCG64",
+            "state": {
+              "state": 150917150878072923161953263779303709622,
+              "inc": 332724090758049132448979897138935081983
+            },
+            "has_uint32": 0,
+            "uinteger": 1034767059
+          },
+          "algorithm": "all-source shared graph / sparse 64-source bitsets",
+          "pair_compatibility_seconds": 0.0,
+          "lava": {
+            "N": 0,
+            "p": null,
+            "selected": [],
+            "fallback": false,
+            "cap": 4
+          },
+          "precompute_wall_seconds": 0.012393707998853642,
+          "candidate_filtering_seconds": 0.00011954199726460502,
+          "precompute_peak_memory_mb": 128.09375,
+          "memory_scope": "Python process peak RSS, including input/shared graph, not per-kernel incremental memory",
+          "selected_source_count": 0,
+          "metrics": {
+            "lava": {
+              "legal_source_count": 27,
+              "evaluated_source_count": 27,
+              "reachable_candidate_count": 27,
+              "qualified_candidate_count": 0,
+              "mathematically_pruned_count": 0,
+              "visited_nodes": 988,
+              "reachability_seconds": 0.0022780409999541007,
+              "shared_graph_build_seconds": 0.28264387600211194,
+              "candidate_filtering_seconds": 0.00010958399798255414,
+              "kernel_working_bytes": 25657344,
+              "batch_size": 64,
+              "uncertain_pruning_disabled": true,
+              "candidates_per_second": 11852.288874758624,
+              "semantics": "10 scheduled-wave seconds: optimistic potential, NOT deterministic native GT",
+              "uncertainty": "native queue ordering, fluid renewal/competition and ABM randomness are not fixed; lower bound0, no finite stochastic upper bound"
+            }
+          },
+          "reason": "no_qualified_temporal_center_potential",
+          "selected_sources": []
+        }
+      },
+      "wall_seconds": 12.923121624997293
+    },
+    {
+      "height_type": "surface",
+      "unique_type": "D4-A",
+      "category": "D4",
+      "subtype": "A",
+      "attempt": 2,
+      "trace": "traces/D4-A/attempt_2",
+      "source": "real_native",
+      "status": "failed",
+      "reason": "ValueError: intervention_outside_center_14: [108.0, 1960.0, 5.0]",
+      "error_class": "ValueError",
+      "wall_seconds": 5.439058500000101
+    },
+    {
+      "height_type": "cave",
+      "unique_type": "D4-A",
+      "category": "D4",
+      "subtype": "A",
+      "attempt": 3,
+      "trace": "traces/D4-A/attempt_3",
+      "source": "real_native",
+      "status": "rejected",
+      "reason": "not_real_cave_geometry",
+      "world_seed": 191664964,
+      "center_origin": [
+        96,
+        1952,
+        -16
+      ],
+      "scene_spatial_qualified": false,
+      "planning_qualified": false,
+      "intervention": {
+        "mode": "native_initialization",
+        "rng_state": {
+          "bit_generator": "PCG64",
+          "state": {
+            "state": 271490999542911104840480024412730440872,
+            "inc": 332724090758049132448979897138935081983
+          },
+          "has_uint32": 1,
+          "uinteger": 1644077253
+        },
+        "spatial_screen": {
+          "height_type": "cave",
+          "largest_connected_air_component": 577,
+          "air_required": 65,
+          "surface_boundary_columns": 21,
+          "largest_underground_air_component": 191,
+          "reason": "not_real_cave_geometry",
+          "filter_seconds": 1.378344458003994
+        }
+      },
+      "wall_seconds": 12.164582666999195
+    },
+    {
+      "height_type": "surface",
+      "unique_type": "D4-B",
+      "category": "D4",
+      "subtype": "B",
+      "attempt": 1,
+      "trace": "traces/D4-B/attempt_1",
+      "source": "real_native",
+      "status": "failed",
+      "reason": "ValueError: intervention_outside_center_14: [821.0, -1220.0, 14.0]",
+      "error_class": "ValueError",
+      "wall_seconds": 12.718273749997024
+    }
+  ],
+  "wall_budget": 900.0,
+  "attempts_per_type": 3,
+  "max_successes_per_type": 1,
+  "formal_shard_generated": false,
+  "models_or_training": false,
+  "height_statistics": {
+    "D1": {
+      "surface": {
+        "attempts": 3,
+        "spatial_qualified": 0,
+        "qualified": 0,
+        "accepted": 0
+      },
+      "cave": {
+        "attempts": 0,
+        "spatial_qualified": 0,
+        "qualified": 0,
+        "accepted": 0
+      }
+    },
+    "D3": {
+      "surface": {
+        "attempts": 3,
+        "spatial_qualified": 0,
+        "qualified": 0,
+        "accepted": 0
+      },
+      "cave": {
+        "attempts": 0,
+        "spatial_qualified": 0,
+        "qualified": 0,
+        "accepted": 0
+      }
+    },
+    "D4-A": {
+      "surface": {
+        "attempts": 1,
+        "spatial_qualified": 0,
+        "qualified": 0,
+        "accepted": 0
+      },
+      "cave": {
+        "attempts": 2,
+        "spatial_qualified": 1,
+        "qualified": 0,
+        "accepted": 0
+      }
+    },
+    "D4-B": {
+      "surface": {
+        "attempts": 1,
+        "spatial_qualified": 0,
+        "qualified": 0,
+        "accepted": 0
+      },
+      "cave": {
+        "attempts": 0,
+        "spatial_qualified": 0,
+        "qualified": 0,
+        "accepted": 0
+      }
+    }
+  },
+  "wall_seconds": 121.46175533399946
+}

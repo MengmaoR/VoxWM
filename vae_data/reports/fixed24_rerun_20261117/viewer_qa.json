@@ -1,0 +1,46 @@
+{
+  "passed": true,
+  "browser": "Playwright; Browser plugin unavailable",
+  "url": "http://127.0.0.1:8766/?type=D1&region=16&run=fixed24_20261117",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "run_directory": "outputs/vae_fixed24_native_20261117_fixed_no_d2",
+  "firstStatus": "D1 / attempt_1\nsuccess: accepted native chain\nRollout: e5bd41fb46e4454db9be4e84a0a0c457",
+  "nextFrameVerified": true,
+  "types": [
+    {
+      "type": "D1",
+      "status": "D1 / attempt_1\nsuccess: accepted native chain\nRollout: e5bd41fb46e4454db9be4e84a0a0c457",
+      "frames": 241
+    },
+    {
+      "type": "D2",
+      "status": "D2 / retained_previous\nsuccess: accepted native chain\nRollout: 84e58b2b9a5b447ca0660c2dea09ce2a\n保留的旧结果（本轮未重跑）: outputs/vae_scene_sampling_20261116/traces/D2/attempt_1",
+      "frames": 35
+    },
+    {
+      "type": "D3",
+      "status": "D3 / attempt_2\nsuccess: accepted native chain\nRollout: 10f8e33283f54e6496eccc211bc05f62",
+      "frames": 252
+    },
+    {
+      "type": "D4-A",
+      "status": "D4-A / attempt_1\nsuccess: accepted native chain\nRollout: 26271a7b27a24c91898e165c22654fef",
+      "frames": 780
+    },
+    {
+      "type": "D4-B",
+      "status": "D4-B / attempt_1\nsuccess: accepted native chain\nRollout: 2c0f1607ccd3492bb5df3c97e5588623",
+      "frames": 336
+    },
+    {
+      "type": "D4-C",
+      "status": "D4-C / attempt_2\nsuccess: accepted native chain\nRollout: f18969efe8464dedabf8543d9f2fe2dc",
+      "frames": 205
+    }
+  ],
+  "consoleErrors": [],
+  "screenshot": "/tmp/voxwm_fixed24_rerun_viewer.png"
+}

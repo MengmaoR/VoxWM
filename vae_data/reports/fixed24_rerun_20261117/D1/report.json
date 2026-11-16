@@ -1,0 +1,420 @@
+{
+  "status": {
+    "status": "success",
+    "reason": null,
+    "candidate_states": 9,
+    "center_target_changes": 115,
+    "center_transition_observations": 8,
+    "simulated_ticks": 239,
+    "simulated_seconds": 9.958333333333334,
+    "stop_reason": "center_no_change_2s",
+    "legal_windows": 5,
+    "subtype": "",
+    "world_seed": 191664964,
+    "height_type": "surface",
+    "scene_spatial_qualified": true,
+    "planning_qualified": true,
+    "center_origin": [
+      96,
+      1968,
+      0
+    ],
+    "audit": {
+      "blocked_entities": {
+        "mcl_chests:chest": 1.0,
+        "mcl_minecarts:tnt_minecart": 1.0,
+        "mcl_wieldview:wieldview": 1669.0
+      },
+      "blocked_item_attempts": 0.0,
+      "compatible": true,
+      "dropped_items": 0.0,
+      "entity_callbacks": 0.0,
+      "entity_induced_changes": 0.0,
+      "nontechnical_entities": 0.0,
+      "unsupported_falling_attempts": 0.0
+    },
+    "observed_reaction_count": 0,
+    "contact_observed": false,
+    "center_contact_observed": false,
+    "structural_fire_changes": 0,
+    "fire_age_only_changes": 0,
+    "fire_transition_counts": {},
+    "intervention": {
+      "mode": "native_initialization",
+      "rng_state": {
+        "bit_generator": "PCG64",
+        "state": {
+          "state": 95376830783351682500486580248632280039,
+          "inc": 332724090758049132448979897138935081983
+        },
+        "has_uint32": 0,
+        "uinteger": 3324115917
+      },
+      "spatial_screen": {
+        "height_type": "surface",
+        "largest_connected_air_component": 3464,
+        "air_required": 65,
+        "surface_boundary_columns": 10,
+        "largest_underground_air_component": 0,
+        "reason": null,
+        "filter_seconds": 1.3846462910005357
+      },
+      "planning": {
+        "planner_version": "shared-wave64-scene-v2",
+        "reachability_horizon_seconds": 10.0,
+        "required_center_transitions": 4,
+        "rng_state": {
+          "bit_generator": "PCG64",
+          "state": {
+            "state": 95376830783351682500486580248632280039,
+            "inc": 332724090758049132448979897138935081983
+          },
+          "has_uint32": 0,
+          "uinteger": 3324115917
+        },
+        "algorithm": "all-source shared graph / sparse 64-source bitsets",
+        "pair_compatibility_seconds": 0.0,
+        "water": {
+          "N": 2311,
+          "p": 0.00043271311120726956,
+          "selected": [
+            976
+          ],
+          "fallback": true,
+          "cap": 4,
+          "distribution": "independent Bernoulli then uniform fallback/cap"
+        },
+        "precompute_wall_seconds": 0.02457824999873992,
+        "candidate_filtering_seconds": 0.0034984159938176163,
+        "precompute_peak_memory_mb": 125.625,
+        "memory_scope": "Python process peak RSS, including input/shared graph, not per-kernel incremental memory",
+        "selected_source_count": 1,
+        "metrics": {
+          "water": {
+            "legal_source_count": 2468,
+            "evaluated_source_count": 2468,
+            "reachable_candidate_count": 2468,
+            "qualified_candidate_count": 2311,
+            "mathematically_pruned_count": 0,
+            "visited_nodes": 141087,
+            "reachability_seconds": 0.006560791996889748,
+            "shared_graph_build_seconds": 0.29313674999866635,
+            "candidate_filtering_seconds": 0.003475457997410558,
+            "kernel_working_bytes": 24772608,
+            "batch_size": 64,
+            "uncertain_pruning_disabled": true,
+            "candidates_per_second": 376174.09623258846,
+            "semantics": "10 scheduled-wave seconds: optimistic potential, NOT deterministic native GT",
+            "uncertainty": "native queue ordering, fluid renewal/competition and ABM randomness are not fixed; lower bound0, no finite stochastic upper bound"
+          }
+        },
+        "source_domain": "center local[1..14]^3, region[17:31]^3",
+        "selected_sources": [
+          {
+            "kind": "water",
+            "source_index": 976,
+            "position": [
+              102,
+              1974,
+              3
+            ],
+            "reachable_voxels": 70,
+            "center_reachable_voxels": 20,
+            "potential_transition_times": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "falling_risk_reachable_voxels": 0,
+            "reachable_region_indices": [
+              44750,
+              44797,
+              44844,
+              44845,
+              47006,
+              47054,
+              47101,
+              47102,
+              47149,
+              47196,
+              47197,
+              49310,
+              49358,
+              49405,
+              49406,
+              49453,
+              49454,
+              49455,
+              49456,
+              49457,
+              49458,
+              49459,
+              49500,
+              49501,
+              49548,
+              51662,
+              51710,
+              51711,
+              51712,
+              51713,
+              51714,
+              51715,
+              51757,
+              51758,
+              51759,
+              51760,
+              51761,
+              51762,
+              51763,
+              51805,
+              51806,
+              51807,
+              51808,
+              51809,
+              51810,
+              51811,
+              51852,
+              51853,
+              51900,
+              53966,
+              54014,
+              54061,
+              54062,
+              54063,
+              54064,
+              54065,
+              54066,
+              54067,
+              54109,
+              54156,
+              54157,
+              56318,
+              56365,
+              56366,
+              56413,
+              56461,
+              58622,
+              58670,
+              58717,
+              60926
+            ],
+            "estimated_arrival_seconds": [
+              10,
+              10,
+              10,
+              9,
+              10,
+              9,
+              9,
+              10,
+              8,
+              10,
+              9,
+              9,
+              8,
+              8,
+              7,
+              7,
+              6,
+              5,
+              4,
+              3,
+              2,
+              1,
+              9,
+              8,
+              10,
+              7,
+              6,
+              5,
+              4,
+              3,
+              2,
+              1,
+              6,
+              5,
+              4,
+              3,
+              2,
+              1,
+              0,
+              7,
+              6,
+              5,
+              4,
+              3,
+              2,
+              1,
+              9,
+              8,
+              10,
+              8,
+              7,
+              7,
+              6,
+              5,
+              4,
+              3,
+              2,
+              1,
+              8,
+              10,
+              9,
+              8,
+              8,
+              9,
+              9,
+              10,
+              9,
+              10,
+              10,
+              10
+            ]
+          }
+        ]
+      },
+      "requested_actions": [
+        {
+          "type": "water",
+          "position": [
+            102,
+            1974,
+            3
+          ]
+        }
+      ],
+      "actual_actions": [
+        {
+          "after": "mcl_core:water_source",
+          "before": "air",
+          "clock": {
+            "absolute_sim_time": 60.041666666666664,
+            "engine_us": 33748845868.0,
+            "lua_tick": 1441.0,
+            "native_clock": {
+              "absolute_sim_time": 60.041666666666664,
+              "client_request_tick": 1441.0,
+              "patch_version": "voxwm-fixed24-v1",
+              "physics_us": 548.0,
+              "server_dt": 0.0416666679084301,
+              "server_tick": 1441.0
+            },
+            "native_simulation_step": 1441.0,
+            "sim_time": 60.041666666666664,
+            "simulation_hz": 24.0,
+            "simulation_step": 1441.0
+          },
+          "position": [
+            102.0,
+            1974.0,
+            3.0
+          ],
+          "type": "water"
+        }
+      ]
+    },
+    "performance": {
+      "simulation_hz": 24,
+      "ticks": 239,
+      "measured_tick_wall_seconds": 1.8576725910388632,
+      "seconds_per_tick": {
+        "total": 0.007772688665434574,
+        "simulation": 0.0004385104602510463,
+        "capture": 0.00037505857740585756,
+        "communication": 0.0003810186111017532,
+        "decode": 0.0014654879705935607
+      },
+      "simulation_ticks_per_wall_second": 128.65560979523545,
+      "simulation_seconds_per_wall_second": 5.360650408134811,
+      "capture_to_simulation_ratio": 0.8553013243769312,
+      "peak_python_rss_mb": 128.6875,
+      "scope": "Per-tick wall includes client synchronization/blank packet, IPC and decode; excludes planning, setup and Trace persistence. Native capture is post-update and before completion release.",
+      "loop_wall_seconds": 3.4172106670012,
+      "trace_delta_write_seconds": 1.480016998037172,
+      "ticks_per_wall_second_including_trace": 69.94008367934083
+    }
+  },
+  "planning": {
+    "planner_version": "shared-wave64-scene-v2",
+    "reachability_horizon_seconds": 10.0,
+    "required_center_transitions": 4,
+    "rng_state": {
+      "bit_generator": "PCG64",
+      "state": {
+        "state": 95376830783351682500486580248632280039,
+        "inc": 332724090758049132448979897138935081983
+      },
+      "has_uint32": 0,
+      "uinteger": 3324115917
+    },
+    "algorithm": "all-source shared graph / sparse 64-source bitsets",
+    "pair_compatibility_seconds": 0.0,
+    "water": {
+      "N": 2311,
+      "p": 0.00043271311120726956,
+      "selected": [
+        976
+      ],
+      "fallback": true,
+      "cap": 4,
+      "distribution": "independent Bernoulli then uniform fallback/cap"
+    },
+    "precompute_wall_seconds": 0.02457824999873992,
+    "candidate_filtering_seconds": 0.0034984159938176163,
+    "precompute_peak_memory_mb": 125.625,
+    "memory_scope": "Python process peak RSS, including input/shared graph, not per-kernel incremental memory",
+    "selected_source_count": 1,
+    "metrics": {
+      "water": {
+        "legal_source_count": 2468,
+        "evaluated_source_count": 2468,
+        "reachable_candidate_count": 2468,
+        "qualified_candidate_count": 2311,
+        "mathematically_pruned_count": 0,
+        "visited_nodes": 141087,
+        "reachability_seconds": 0.006560791996889748,
+        "shared_graph_build_seconds": 0.29313674999866635,
+        "candidate_filtering_seconds": 0.003475457997410558,
+        "kernel_working_bytes": 24772608,
+        "batch_size": 64,
+        "uncertain_pruning_disabled": true,
+        "candidates_per_second": 376174.09623258846,
+        "semantics": "10 scheduled-wave seconds: optimistic potential, NOT deterministic native GT",
+        "uncertainty": "native queue ordering, fluid renewal/competition and ABM randomness are not fixed; lower bound0, no finite stochastic upper bound"
+      }
+    },
+    "source_domain": "center local[1..14]^3, region[17:31]^3",
+    "selected_sources": [
+      {
+        "kind": "water",
+        "source_index": 976,
+        "position": [
+          102,
+          1974,
+          3
+        ],
+        "reachable_voxels": 70,
+        "center_reachable_voxels": 20,
+        "potential_transition_times": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "falling_risk_reachable_voxels": 0
+      }
+    ]
+  },
+  "native_frames": 241,
+  "accepted_indices": [
+    24,
+    48,
+    72,
+    96,
+    120
+  ],
+  "actual_center_changes": 115,
+  "actual_neighbor_changes": 1345,
+  "native_events": []
+}

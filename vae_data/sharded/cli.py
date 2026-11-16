@@ -24,7 +24,9 @@ def parser(argv=None):
             q.add_argument('--consumer-work-ms',type=float,default=0.)
             q.add_argument('--compare-to',type=Path)
         if name=='check':q.add_argument('--allow-incomplete',action='store_true')
-        if name=='native-six':q.add_argument('--attempts-per-type',type=int,choices=(1,2,3),default=3)
+        if name=='native-six':
+            q.add_argument('--attempts-per-type',type=int,choices=(1,2,3),default=3)
+            q.add_argument('--skip-d2',action='store_true',help='Do not rerun the already accepted D2 example')
         if name=='native-smoke':
             q.add_argument('--samples-per-category',type=int,choices=(1,2),default=2)
             q.add_argument('--attempts-per-category',type=int,default=2)

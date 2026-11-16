@@ -2,7 +2,7 @@
 
 当前入口：`python -m vae_data` → `vae_data/sharded/`。仅生成数据，无模型/训练器/DataLoader。依据[当前协议](../VAE_DATA_COLLECTION_PROTOCOL.md) / [Drive Markdown](https://drive.google.com/file/d/1NFM1Cb3os2yesAQgBk8VzM6vMmcj1eg8/view)。旧200K代码、结果与日志保留；[旧README](LEGACY_UNIFIED_README.md)中的命令需使用 `python -m vae_data.legacy_entry`，不是当前生产格式。
 
-**当前完整验收INCONCLUSIVE**：Fixed24原生时钟/逐Tick捕获已验证，62项CPU测试通过；未重开六型。含Trace实测74.26 Tick/s。[本轮报告、限制和有限验证命令](reports/fixed24_20261116/README.md)。旧六型数据/Viewer保留，新格式`vae-region48-fixed24-v2`不可混入旧variable-step Shard。
+**当前请求的五类fixed24 Native样例重跑通过**：D1/D3/D4-A/B/C各一条成功，D2保留已通过的旧结果并在Viewer标注未重跑。[本轮新数据/预览/Viewer检查](reports/fixed24_rerun_20261117/README.md)。未采集正式1K/100K，受控RNG跨吞吐严格等价仍未证明。
 
 ## 服务器环境（用户手动执行）
 
@@ -132,6 +132,8 @@ Viewer支持六型和各attempt、真实模拟时间及相对干预时间播放/
   --dataset outputs/vae_native_six_new --wall-seconds 900 \
   --attempts-per-type 3 --renderer software
 ```
+
+`native-six --skip-d2`仅重跑D1/D3/D4-A/B/C，D2明确列入skipped_types，不能计为本轮新通过。Viewer可以保留已有D2导出，但必须显示“旧结果，本轮未重跑”。
 
 不创建正式Shard/READY。每型最多3次尝试，成功1条即停止，整轮最多900秒；输出目录必须全新。失败保留Trace及原因，不能通过重复命令追加Codex测试预算。Synthetic Fixture只在临时Unit目录，不能当Native物理证据。
 

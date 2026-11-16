@@ -125,6 +125,7 @@ async function load(){
   if(m.frames.some(f=>f.metadata.region_origin.some((v,i)=>v!==m.frames[0].metadata.region_origin[i])))throw Error('Moving native region: this fixed-region comparison cannot assume equal local indices');
   index=0;const init=data.frames.findIndex(f=>f.stages.includes('after_intervention')),ri=Math.max(0,init);reference=stream.frame(ri).slice();baseTime=init<0?null:data.frames[ri].metadata.sim_time;
   const status=m.selection.status||{};$('status').textContent=`${type.id} / ${entry.attempt}\n${status.status}: ${status.reason||'accepted native chain'}\nRollout: ${m.frames[0].metadata.rollout_id}${m.planning.native_intervention_executed===false?'\nOffline plan only; proposed sources NOT executed':''}`;
+  if(m.retained_from)$('status').textContent+=`\n保留的旧结果（本轮未重跑）: ${m.retained_from}`;
   $('planning').textContent=JSON.stringify(m.planning,null,2);$('timeline').max=m.frames.length-1;for(const id of['beforeFrame','afterFrame'])$(id).max=m.frames.length-1;
   $('stages').replaceChildren();const notes=[];m.frames.forEach((row,i)=>{const roles=row.stages.filter(s=>!['native_observation','original_scene'].includes(s));if(m.selected_indices.includes(i))roles.push('VAE');if(roles.length){const o=document.createElement('option');o.value=i;o.label=roles.join('/');$('stages').append(o);notes.push(`#${i} ${row.metadata.sim_time.toFixed(3)}s ${roles.join('/')}`);}});$('markers').textContent=notes.join(' · ');
   $('contact').href=path+'/contact_sheet.png';$('gif').href=path+'/evolution.gif';$('report').href=path+'/report.md';

@@ -1,0 +1,119 @@
+{
+  "requested_types": [
+    "D1",
+    "D3",
+    "D4-A",
+    "D4-B",
+    "D4-C"
+  ],
+  "skipped_types": [
+    "D2"
+  ],
+  "repaired_run_wall_seconds": 127.47328179200122,
+  "initial_run_wall_seconds_approx": 127.05170488357544,
+  "total_native_wall_seconds_approx": 254.52498667557666,
+  "successes": {
+    "D1": 1,
+    "D3": 1,
+    "D4-A": 1,
+    "D4-B": 1,
+    "D4-C": 1
+  },
+  "attempts": [
+    {
+      "type": "D1",
+      "attempt": 1,
+      "observations": 241,
+      "evolution_ticks": 239,
+      "source_positions_valid": true,
+      "continuous_ticks": true,
+      "selected_indices": [
+        24,
+        48,
+        72,
+        96,
+        120
+      ]
+    },
+    {
+      "type": "D3",
+      "attempt": 1,
+      "observations": 279,
+      "evolution_ticks": 277,
+      "source_positions_valid": true,
+      "continuous_ticks": true,
+      "selected_indices": []
+    },
+    {
+      "type": "D3",
+      "attempt": 2,
+      "observations": 252,
+      "evolution_ticks": 250,
+      "source_positions_valid": true,
+      "continuous_ticks": true,
+      "selected_indices": [
+        155,
+        179,
+        203,
+        227,
+        251
+      ]
+    },
+    {
+      "type": "D4-A",
+      "attempt": 1,
+      "observations": 780,
+      "evolution_ticks": 777,
+      "source_positions_valid": true,
+      "continuous_ticks": true,
+      "selected_indices": [
+        610,
+        611,
+        635,
+        778,
+        779
+      ]
+    },
+    {
+      "type": "D4-B",
+      "attempt": 1,
+      "observations": 336,
+      "evolution_ticks": 334,
+      "source_positions_valid": true,
+      "continuous_ticks": true,
+      "selected_indices": [
+        119,
+        143,
+        167,
+        191,
+        215
+      ]
+    },
+    {
+      "type": "D4-C",
+      "attempt": 1,
+      "observations": 1,
+      "evolution_ticks": null,
+      "source_positions_valid": true,
+      "continuous_ticks": null,
+      "selected_indices": []
+    },
+    {
+      "type": "D4-C",
+      "attempt": 2,
+      "observations": 205,
+      "evolution_ticks": 202,
+      "source_positions_valid": true,
+      "continuous_ticks": true,
+      "selected_indices": [
+        36,
+        60,
+        84,
+        108,
+        132
+      ]
+    }
+  ],
+  "retained_d2": "outputs/vae_scene_sampling_20261116/traces/D2/attempt_1",
+  "scope": "Five newly rerun types only; D2 historical result retained explicitly"
+}

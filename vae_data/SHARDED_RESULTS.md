@@ -1,3 +1,9 @@
+GO — requested five-type fixed24 rerun, D2 retained
+
+11/17修复后7次尝试，D1/D3/D4-A/B/C各成功一条；D2不重跑。两段原生工作约254.52秒，Viewer已更新并标记旧D2。此GO仅指本轮请求的五种样例，不包含受控RNG跨吞吐等价或正式Shard验收。[实测/预览](reports/fixed24_rerun_20261117/README.md)。
+
+---
+
 INCONCLUSIVE — Fixed24 / Interior Sources Revision
 
 24Hz原生时钟和post-update捕获已验证，完整物理跨吞吐等价未验证。只读clock检查合计28.96秒，240连续Tick复核通过；未重开六型、正式Shard或训练。[本次实测/限制](reports/fixed24_20261116/README.md)。

@@ -31,6 +31,17 @@ if(stream.frame(1)[(20*48+20)*48+20]!==Number(process.argv[3]))throw Error('ABV1
 if(JSON.stringify(worldToLocal([4,4,4],[-16,-16,-16]))!==JSON.stringify([-3.5,-3.5,3.5]))throw Error('ENU mapping');
 """
             subprocess.run(['node','--input-type=module','-e',code,module,str(target/'voxels.bin'),str(int(second.tokens[20,20,20]))],check=True,capture_output=True)
+    def test_reexport_preserves_explicit_historical_d2(self):
+        from vae_data.sharded.export_trace import export
+        with tempfile.TemporaryDirectory()as tmp:
+            root=Path(tmp);out=root/'viewer';folder=out/'D2/retained_previous';folder.mkdir(parents=True)
+            (folder/'frames.json').write_text('{}')
+            entry=dict(id='D2',path='D2/retained_previous',available=True,retained_from='existing accepted D2')
+            (out/'manifest.json').write_text(json.dumps(dict(types=[entry])))
+            (root/'native_results.json').write_text(json.dumps(dict(skipped_types=['D2'])))
+            export(root);manifest=json.loads((out/'manifest.json').read_text())
+            self.assertEqual(next(t for t in manifest['types']if t['id']=='D2'),entry)
+            self.assertEqual(manifest['retained_types'],['D2'])
     def test_native_six_stops_each_type_after_one_success_and_three_attempts(self):
         from vae_data.sharded.native_six import run,TYPES
         class World:
@@ -41,13 +52,15 @@ if(JSON.stringify(worldToLocal([4,4,4],[-16,-16,-16]))!==JSON.stringify([-3.5,-3
         class Trace:
             def __init__(self,*a):self.stream=SimpleNamespace(closed=False)
             def finish(self,*a,**k):self.stream.closed=True
-        for success in(True,False):
+        for success,skip_d2 in((True,False),(False,False),(True,True)):
             with tempfile.TemporaryDirectory()as tmp:
-                args=SimpleNamespace(dataset=Path(tmp)/'six',wall_seconds=900,attempts_per_type=3,seed=42,craftium_dir='unused',renderer='auto')
+                args=SimpleNamespace(skip_d2=skip_d2,dataset=Path(tmp)/'six',wall_seconds=900,attempts_per_type=3,seed=42,craftium_dir='unused',renderer='auto')
                 def collect(*a,**kw):return(object()if success else None,dict(status='success'if success else'rejected'))
                 with patch('vae_data.sharded.native_six.Native',World),patch('vae_data.sharded.native_six.Trace',Trace),patch('vae_data.sharded.native_six.prepare_dynamic',return_value=(None,None)),patch('vae_data.sharded.native_six.collect',side_effect=collect)as collect_mock,patch('vae_data.sharded.native_six.save_example',return_value='fixture_dispatch'),patch('builtins.print'):
                     r=run(args)
-                self.assertEqual(collect_mock.call_count,6 if success else 18)
-                self.assertEqual(set(r['successes']),set(TYPES));self.assertTrue(all(n==(1 if success else 0)for n in r['successes'].values()))
+                requested=set(TYPES)-({'D2'}if skip_d2 else set())
+                self.assertEqual(collect_mock.call_count,len(requested)*(1 if success else 3))
+                self.assertEqual(set(r['successes']),requested);self.assertEqual(r['skipped_types'],['D2']if skip_d2 else[]);
+                self.assertTrue(all(n==(1 if success else 0)for n in r['successes'].values()))
 
 if __name__=='__main__':unittest.main()

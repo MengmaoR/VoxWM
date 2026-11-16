@@ -1,11 +1,10 @@
 # VoxWM 当前状态
 
-**Fixed24 Clock VERIFIED / Full Native Physics Equivalence INCONCLUSIVE**。
+**用户指定的五类fixed24 Native重跑通过；D2保留旧结果。**
 
-- 已实现所有六型人工干预仅中心14³，放置前后复核，后续传播仍完整48³。D3超时120 Tick，其他48 Tick；原16³网格、100K/1K配方、五状态合同不变。
-- 固定Craftium的opt-in时序补丁已编译；Server/Client/Lua均固定1/24、post-update捕获。只读Native验证经历一次准备阶段错位及明确修复，复核连续Tick0..240通过，合计28.96秒，未重开六型。
-- 含完整Trace实测74.26 Tick/s、3.09 sim s/s；Python/child峰值RSS分别88.5/627.4 MB。241个真实状态，230个零delta Tick；邻域水流每24 Tick更新，中心没有有效动态，不计成功链。[报告/性能/命令](vae_data/reports/fixed24_20261116/README.md)。
-- 62项快速CPU测试、Python/Lua/Shell语法与CLI通过。完整数据在`outputs/vae_fixed24_clock_20261116_fixed/`；旧六型GT/Viewer/报告不改。新格式v2不混合历史variable-step数据。
-- 完整原生初态/RNG尚未快照；Lava/Fire新时序、跨吞吐严格voxel等价及RGB渲染相位未验证。未运行新六型、正式Shard、100K或训练。
+- D1、D4-A、D4-B首次成功；D3、D4-C第二次成功，各保留一条真实五状态链。修复段7次尝试127.47秒；含接口错误初段总计约254.52秒，低于用户批准的900秒。
+- 已修复Lua把整数坐标返回为浮点时的误拒绝；位置必须为有限整数值且中心偏移1..14，不取整或改数据。源点域与连续24Hz Tick检查通过。
+- 当前Viewer 8766已服务`outputs/vae_fixed24_native_20261117_fixed_no_d2/`；D2明确标为保留旧结果。Playwright验证新数据目录、六型切换、逐帧交互和无console error通过。[本轮结果/预览](vae_data/reports/fixed24_rerun_20261117/README.md)。
+- 原始GT/失败记录保存在outputs，不入Git；旧数据不覆盖。未运行正式Shard、100K、GPU或训练；受控RNG跨吞吐严格等价仍未证明。
 
-唯一下一步：用户决定是否授权固定初态/受控RNG的Water/Lava/Fire跨吞吐有限验证；Codex停止，不自动追加实验。
+唯一下一步：用户在已更新Viewer中检查五类新GT，并决定是否进入正式数据采集。Codex不自动追加实验。

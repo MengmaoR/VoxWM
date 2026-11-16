@@ -40,6 +40,14 @@ class Fixed24Tests(unittest.TestCase):
             for kind in('water','lava','fire'):
                 with self.assertRaisesRegex(ValueError,'outside_center_14'):native.place([dict(type=kind,position=[value,5,5])])
         native.probe.command.assert_not_called();self.assertTrue(check_sources([dict(position=[1,14,7])],[0,0,0]))
+    def test_lua_integer_valued_float_positions_are_valid_without_rounding(self):
+        self.assertTrue(check_sources([dict(position=[102.,1974.,3.])],[96,1968,0]))
+        for invalid in([102.5,1974.,3.],[float('nan'),1974.,3.],[float('inf'),1974.,3.],[96.,1974.,3.]):
+            with self.assertRaisesRegex(ValueError,'outside_center_14'):check_sources([dict(position=invalid)],[96,1968,0])
+        native=object.__new__(Native);native.center=[96,1968,0];native.checked=lambda x:x
+        native.probe=SimpleNamespace(command=lambda *a,**kw:dict(status='captured',actions=[dict(type='water',position=[102.,1974.,3.])]))
+        native.frame=lambda r:(SimpleNamespace(meta=dict(frame_index=0),step=100),r)
+        native.place([dict(type='water',position=[102,1974,3])]);self.assertEqual(native._last_tick,100)
     def test_returned_actual_source_out_of_bounds_rejected(self):
         native=object.__new__(Native);native.center=[0,0,0];native.checked=lambda x:x
         native.probe=SimpleNamespace(command=lambda *a,**kw:dict(status='captured',actions=[dict(type='water',position=[0,5,5])]))
