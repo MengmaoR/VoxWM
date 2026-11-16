@@ -1,0 +1,12 @@
+NATIVE6 D1 1 success None 37.1s
+NATIVE6 D2 1 rejected no_qualified_temporal_center_potential 22.1s
+NATIVE6 D2 2 success None 11.4s
+NATIVE6 D3 1 rejected no_structural_fire_propagation 26.3s
+NATIVE6 D3 2 success None 14.5s
+NATIVE6 D4-A 1 rejected no_qualified_temporal_center_potential 22.6s
+NATIVE6 D4-A 2 rejected no_qualified_temporal_center_potential 2.2s
+NATIVE6 D4-A 3 rejected no_qualified_temporal_center_potential 1.9s
+NATIVE6 D4-B 1 rejected existing_pool_in_D4_B 20.3s
+NATIVE6 D4-B 2 rejected existing_pool_in_D4_B 1.4s
+NATIVE6 D4-B 3 rejected existing_pool_in_D4_B 2.2s
+NATIVE6 D4-C 1 success None 31.2s

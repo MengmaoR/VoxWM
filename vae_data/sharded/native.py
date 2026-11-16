@@ -26,22 +26,31 @@ class Native(World):
             boot=json.loads((self.session.world/'pilot_boot.json').read_text());self.defs={n['name']:n for n in boot['nodes']}
             self.flammable=[n['name']for n in boot['nodes']if n['groups'].get('flammable',0)>0]
             self.floodable=[n['name']for n in boot['nodes']if n.get('floodable')]
+            self.buildable=[n['name']for n in boot['nodes']if n.get('buildable_to')]
+            self.wet=[n['name']for n in boot['nodes']if n['groups'].get('puts_out_fire',0)>0]
+            self.falling=[n['name']for n in boot['nodes']if n['groups'].get('falling_node',0)>0]
+            self.protected_indices=[]
             if float(boot['liquid_update'])!=1.0:raise ValueError('This protocol expects native liquid_update=1.0; no override applied')
             for kind,value in(('water',7),('lava',3)):
                 if self.defs['mcl_core:'+kind+'_source']['liquid_range']!=value:raise ValueError('Native liquid_range differs from the fixed protocol')
             self.rollout=uuid.uuid4().hex;self.center=None;return self
         except BaseException:self.__exit__(None,None,None);raise
+    def checked(self,result):
+        self.last_result=result
+        return super().checked(result)
     def locate(self,x,z):return self.checked(self.probe.command('locate',x=x,z=z))
     def prepare_at(self,center,surface_y):
         self.center=list(map(int,center));self.surface_y=surface_y;self.rollout=uuid.uuid4().hex
         result=self.checked(self.probe.command('prepare',center=self.center,surface_y=surface_y))
         if result['status']!='prepared':raise RuntimeError(result['status'])
+        self.protected_indices=result.get('protected_source_indices')or[]
         return self.frame(result)
     def frame(self,result):
         chunks=self.decode(result);central=chunks[tuple(self.center)];meta=dict(central.meta)
         meta.update(sim_time=result['sim_time'],simulation_step=int(result['simulation_step']),engine_us=int(result['engine_us']),
             rollout_id=self.rollout,world_seed=self.seed,center_origin=self.center,region_origin=(np.asarray(self.center)-16).tolist(),
             native_provenance=dict(engine_build=self.build,settings=SETTINGS,mapgen='v7',voxel_only=result['audit'],liquid_update=1.0,collector_revision=self.collector_revision,collector_worktree_dirty=self.collector_dirty),
+            protected_source_indices=self.protected_indices,buildable_names=self.buildable,wet_names=self.wet,falling_names=self.falling,
             sample_surface_y=self.surface_y,flammable_names=self.flammable,floodable_names=self.floodable,biome_group=biome_group(central.meta['surface_biome'],BIOMES),
             split=split_for_seed(self.seed,[80,10,10]),biome_points=result['chunks'][13]['biome_points'])
         meta['verified_native_voxels']=sum(int(info['verified'])for info in result['chunks'])

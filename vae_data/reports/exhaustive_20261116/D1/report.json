@@ -1,0 +1,335 @@
+{
+  "status": {
+    "status": "success",
+    "reason": null,
+    "candidate_states": 5,
+    "center_target_changes": 19,
+    "center_transition_observations": 4,
+    "simulated_seconds": 5.201644968241453,
+    "stop_reason": "center_no_change_2s",
+    "legal_windows": 1,
+    "subtype": "",
+    "world_seed": 191664964,
+    "center_origin": [
+      96,
+      2000,
+      -16
+    ],
+    "audit": {
+      "blocked_entities": {
+        "mcl_chests:chest": 1.0,
+        "mcl_minecarts:chest_minecart": 1.0,
+        "mcl_minecarts:minecart": 1.0,
+        "mcl_minecarts:tnt_minecart": 1.0,
+        "mcl_wieldview:wieldview": 368.0,
+        "mobs_mc:pig": 1.0
+      },
+      "blocked_item_attempts": 1.0,
+      "compatible": true,
+      "dropped_items": 0.0,
+      "entity_callbacks": 0.0,
+      "entity_induced_changes": 0.0,
+      "nontechnical_entities": 0.0,
+      "unsupported_falling_attempts": 0.0
+    },
+    "observed_reaction_count": 0,
+    "contact_observed": false,
+    "center_contact_observed": false,
+    "structural_fire_changes": 0,
+    "fire_age_only_changes": 0,
+    "intervention": {
+      "mode": "native_initialization",
+      "rng_state": {
+        "bit_generator": "PCG64",
+        "state": {
+          "state": 95376830783351682500486580248632280039,
+          "inc": 332724090758049132448979897138935081983
+        },
+        "has_uint32": 0,
+        "uinteger": 3324115917
+      },
+      "planning": {
+        "rng_state": {
+          "bit_generator": "PCG64",
+          "state": {
+            "state": 95376830783351682500486580248632280039,
+            "inc": 332724090758049132448979897138935081983
+          },
+          "has_uint32": 0,
+          "uinteger": 3324115917
+        },
+        "algorithm": "all-source shared graph / sparse 64-source bitsets",
+        "pair_compatibility_seconds": 0.0,
+        "water": {
+          "N": 129,
+          "p": 0.007751937984496124,
+          "selected": [
+            13765
+          ],
+          "fallback": false,
+          "cap": 4,
+          "distribution": "independent Bernoulli then uniform fallback/cap"
+        },
+        "precompute_wall_seconds": 0.10242279199883342,
+        "metrics": {
+          "water": {
+            "legal_source_count": 33995,
+            "evaluated_source_count": 33995,
+            "reachable_candidate_count": 2873,
+            "qualified_candidate_count": 129,
+            "mathematically_pruned_count": 0,
+            "visited_nodes": 1823437,
+            "reachability_seconds": 0.04054175014607608,
+            "shared_graph_build_seconds": 0.4223273750394583,
+            "kernel_working_bytes": 24772608,
+            "batch_size": 64,
+            "uncertain_pruning_disabled": true,
+            "candidates_per_second": 838518.3145155926,
+            "semantics": "10 scheduled-wave seconds: optimistic potential, NOT deterministic native GT",
+            "uncertainty": "native queue ordering, fluid renewal/competition and ABM randomness are not fixed; lower bound0, no finite stochastic upper bound"
+          }
+        },
+        "selected_sources": [
+          {
+            "kind": "water",
+            "source_index": 13765,
+            "position": [
+              97,
+              2001,
+              -13
+            ],
+            "reachable_voxels": 59,
+            "center_reachable_voxels": 20,
+            "potential_transition_times": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "reachable_region_indices": [
+              37549,
+              37550,
+              37598,
+              37646,
+              37647,
+              37695,
+              37696,
+              37697,
+              37698,
+              37699,
+              39805,
+              39853,
+              39901,
+              39902,
+              39950,
+              39951,
+              39952,
+              39953,
+              39954,
+              39955,
+              39998,
+              39999,
+              40000,
+              40001,
+              40002,
+              40003,
+              40047,
+              40048,
+              40049,
+              40050,
+              40051,
+              40095,
+              42157,
+              42205,
+              42253,
+              42254,
+              42302,
+              42303,
+              42304,
+              42305,
+              42306,
+              42307,
+              42350,
+              42351,
+              42398,
+              42399,
+              44509,
+              44557,
+              44605,
+              44606,
+              44653,
+              44654,
+              44702,
+              44750,
+              46861,
+              46908,
+              46909,
+              46957,
+              47006
+            ],
+            "estimated_arrival_seconds": [
+              10,
+              9,
+              8,
+              7,
+              6,
+              5,
+              4,
+              3,
+              2,
+              1,
+              10,
+              9,
+              8,
+              7,
+              6,
+              5,
+              4,
+              3,
+              2,
+              1,
+              5,
+              4,
+              3,
+              2,
+              1,
+              0,
+              5,
+              4,
+              3,
+              2,
+              1,
+              6,
+              10,
+              9,
+              8,
+              7,
+              6,
+              5,
+              4,
+              3,
+              2,
+              1,
+              7,
+              6,
+              8,
+              7,
+              10,
+              9,
+              8,
+              7,
+              9,
+              8,
+              9,
+              10,
+              10,
+              10,
+              9,
+              10,
+              10
+            ]
+          }
+        ]
+      },
+      "requested_actions": [
+        {
+          "type": "water",
+          "position": [
+            97,
+            2001,
+            -13
+          ]
+        }
+      ],
+      "actual_actions": [
+        {
+          "after": "mcl_core:water_source",
+          "before": "air",
+          "clock": {
+            "engine_us": 2290686604273.0,
+            "sim_time": 13.003359965980053,
+            "simulation_step": 272.0
+          },
+          "position": [
+            97.0,
+            2001.0,
+            -13.0
+          ],
+          "type": "water"
+        }
+      ]
+    }
+  },
+  "planning": {
+    "rng_state": {
+      "bit_generator": "PCG64",
+      "state": {
+        "state": 95376830783351682500486580248632280039,
+        "inc": 332724090758049132448979897138935081983
+      },
+      "has_uint32": 0,
+      "uinteger": 3324115917
+    },
+    "algorithm": "all-source shared graph / sparse 64-source bitsets",
+    "pair_compatibility_seconds": 0.0,
+    "water": {
+      "N": 129,
+      "p": 0.007751937984496124,
+      "selected": [
+        13765
+      ],
+      "fallback": false,
+      "cap": 4,
+      "distribution": "independent Bernoulli then uniform fallback/cap"
+    },
+    "precompute_wall_seconds": 0.10242279199883342,
+    "metrics": {
+      "water": {
+        "legal_source_count": 33995,
+        "evaluated_source_count": 33995,
+        "reachable_candidate_count": 2873,
+        "qualified_candidate_count": 129,
+        "mathematically_pruned_count": 0,
+        "visited_nodes": 1823437,
+        "reachability_seconds": 0.04054175014607608,
+        "shared_graph_build_seconds": 0.4223273750394583,
+        "kernel_working_bytes": 24772608,
+        "batch_size": 64,
+        "uncertain_pruning_disabled": true,
+        "candidates_per_second": 838518.3145155926,
+        "semantics": "10 scheduled-wave seconds: optimistic potential, NOT deterministic native GT",
+        "uncertainty": "native queue ordering, fluid renewal/competition and ABM randomness are not fixed; lower bound0, no finite stochastic upper bound"
+      }
+    },
+    "selected_sources": [
+      {
+        "kind": "water",
+        "source_index": 13765,
+        "position": [
+          97,
+          2001,
+          -13
+        ],
+        "reachable_voxels": 59,
+        "center_reachable_voxels": 20,
+        "potential_transition_times": [
+          1,
+          2,
+          3,
+          4
+        ]
+      }
+    ]
+  },
+  "native_frames": 21,
+  "accepted_indices": [
+    1,
+    2,
+    5,
+    9,
+    12
+  ],
+  "actual_center_changes": 19,
+  "actual_neighbor_changes": 832,
+  "native_events": []
+}

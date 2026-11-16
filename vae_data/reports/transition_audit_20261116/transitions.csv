@@ -1,0 +1,26 @@
+sim_time,world_xyz,before_name,before_param2,after_name,after_param2,transition_type
+19.17777892947197,"[-266, 1434, -2]",air,0,mcl_core:water_flowing,7,flowing_liquid_appearance_observed
+19.17777892947197,"[-265, 1433, -2]",air,0,mcl_core:water_flowing,15,flowing_liquid_appearance_observed
+19.17777892947197,"[-265, 1434, -1]",air,0,mcl_core:water_flowing,15,flowing_liquid_appearance_observed
+19.17777892947197,"[-264, 1431, -2]",air,0,mcl_core:water_flowing,7,flowing_liquid_appearance_observed
+19.17777892947197,"[-264, 1432, -2]",air,0,mcl_core:water_flowing,15,flowing_liquid_appearance_observed
+19.17777892947197,"[-264, 1433, -1]",air,0,mcl_core:water_flowing,15,flowing_liquid_appearance_observed
+19.17777892947197,"[-264, 1434, 0]",air,0,mcl_core:water_flowing,15,flowing_liquid_appearance_observed
+19.17777892947197,"[-264, 1435, 1]",air,0,mcl_core:water_flowing,14,flowing_liquid_appearance_observed
+19.17777892947197,"[-258, 1439, -3]",mcl_core:lava_flowing,2,mcl_core:lava_flowing,3,liquid_level_or_flow_down_update
+19.17777892947197,"[-258, 1440, -2]",mcl_core:lava_flowing,2,air,0,flowing_liquid_recession_observed
+19.17777892947197,"[-257, 1438, -4]",mcl_core:lava_flowing,8,mcl_core:lava_flowing,9,liquid_level_or_flow_down_update
+19.17777892947197,"[-257, 1438, -3]",mcl_core:lava_flowing,10,mcl_core:lava_flowing,11,liquid_level_or_flow_down_update
+19.17777892947197,"[-257, 1439, -4]",mcl_core:lava_flowing,2,mcl_core:lava_flowing,3,liquid_level_or_flow_down_update
+19.17777892947197,"[-257, 1440, -3]",mcl_mushrooms:mushroom_red,0,mcl_core:lava_flowing,0,lava_replaced_lava_destructible_node_observed
+19.17777892947197,"[-257, 1440, -2]",mcl_core:lava_flowing,7,mcl_core:lava_flowing,15,liquid_level_or_flow_down_update
+19.17777892947197,"[-257, 1441, -2]",mcl_core:lava_flowing,2,mcl_core:lava_flowing,3,liquid_level_or_flow_down_update
+19.17777892947197,"[-256, 1439, -4]",mcl_core:lava_flowing,8,mcl_core:lava_flowing,9,liquid_level_or_flow_down_update
+19.17777892947197,"[-256, 1439, -3]",mcl_core:lava_flowing,10,mcl_core:lava_flowing,11,liquid_level_or_flow_down_update
+19.17777892947197,"[-256, 1440, -3]",mcl_core:lava_flowing,8,mcl_core:lava_flowing,9,liquid_level_or_flow_down_update
+19.17777892947197,"[-256, 1440, -2]",mcl_core:lava_flowing,10,mcl_core:lava_flowing,11,liquid_level_or_flow_down_update
+19.17777892947197,"[-256, 1441, -3]",mcl_core:lava_flowing,2,mcl_core:lava_flowing,3,liquid_level_or_flow_down_update
+19.17777892947197,"[-255, 1441, -3]",mcl_core:lava_flowing,0,mcl_core:lava_flowing,1,liquid_level_or_flow_down_update
+19.17777892947197,"[-255, 1441, -2]",mcl_core:lava_flowing,10,mcl_core:lava_flowing,11,liquid_level_or_flow_down_update
+19.17777892947197,"[-255, 1442, -2]",mcl_core:lava_flowing,0,mcl_core:lava_flowing,1,liquid_level_or_flow_down_update
+19.17777892947197,"[-255, 1442, -1]",mcl_core:lava_flowing,10,mcl_core:lava_flowing,11,liquid_level_or_flow_down_update

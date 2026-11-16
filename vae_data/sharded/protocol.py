@@ -17,7 +17,7 @@ CONFIG=dict(version=VERSION,shards=100,shard_size=1000,region_size=48,chunk_size
     candidate_limit=10,no_change_seconds=2.0,liquid_update=1.0,liquid_ranges={'water':7,'lava':3},
     capture_seconds=.2,max_observation_seconds={'D1':30.,'D2':40.,'D3':40.,'D4':60.},
     split_percent=[80,10,10],max_samples_per_seed_per_shard=100,biome_groups=BIOMES,
-    initialization=dict(source_count_range=[1,4],attached_weight=.9,source_spacing=4,fire_probability=.1,fire_spacing=3,fire_candidate_budget=64))
+    initialization=dict(source_count_max=4,sampling='all qualified points: independent p=1/N, uniform zero-hit fallback'))
 
 def d4_targets(shard):
     result={'A':8,'B':8,'C':8};result[('C','A','B')[shard%3]]+=1
@@ -86,7 +86,7 @@ def adjacent(mask):
     return out
 
 
-def target_changes(previous,current,vocabulary,category):
+def target_change_mask(previous,current,vocabulary,category):
     if previous.meta['center_origin']!=current.meta['center_origin']:raise ValueError('Dynamic center moved')
     delta=previous.tokens!=current.tokens
     if category in('D1','D2'):
@@ -98,9 +98,15 @@ def target_changes(previous,current,vocabulary,category):
         fuel_names=current.meta.get('flammable_names',[])
         table=np.array([name in fuel_names for name,_ in vocabulary.entries],bool)
         relevant=old|new|((table[previous.tokens]|table[current.tokens])&adjacent(old|new))
+        names=np.asarray([name for name,_ in vocabulary.entries],object)
+        delta&=~(old&new&(names[previous.tokens]==names[current.tokens])) # Fire age alone is not structural propagation.
     elif category=='D4':
         relevant=np.zeros(delta.shape,bool)
         for kind in('water','lava'):relevant|=kind_mask(previous.tokens,vocabulary,kind)|kind_mask(current.tokens,vocabulary,kind)
         relevant|=kind_mask(current.tokens,vocabulary,'product')&~kind_mask(previous.tokens,vocabulary,'product')
     else:raise ValueError(category)
-    return int((delta&relevant)[CENTER].sum())
+    return delta&relevant
+
+
+def target_changes(previous,current,vocabulary,category):
+    return int(target_change_mask(previous,current,vocabulary,category)[CENTER].sum())

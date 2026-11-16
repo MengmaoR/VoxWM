@@ -1,0 +1,206 @@
+{
+  "browser_path": "Browser plugin not available; existing bundled Playwright + installed Chrome / SwiftShader",
+  "url": "http://127.0.0.1:8765/",
+  "viewport": [
+    1500,
+    1080
+  ],
+  "checks": {
+    "page_identity": true,
+    "non_blank": true,
+    "before_mushroom": {
+      "world_coordinate": [
+        -257,
+        1440,
+        -3
+      ],
+      "region_local": [
+        31,
+        16,
+        29
+      ],
+      "center_chunk_local": [
+        15,
+        0,
+        13
+      ],
+      "combined_token_id": 64,
+      "node_name": "mcl_mushrooms:mushroom_red",
+      "raw_param2": 0,
+      "node_type": "plantlike",
+      "definition_known": true,
+      "liquid_type": "none",
+      "liquid_level": null,
+      "flow_down_flag": null,
+      "source_param2_semantics": null,
+      "fire_age": null,
+      "previous_node_state": "mcl_mushrooms:mushroom_red [param2=0, token=64] @ 18.609990s (#14)",
+      "current_node_state": "mcl_mushrooms:mushroom_red [param2=0, token=64] @ 18.903741s (#15)",
+      "before_node_state": "mcl_mushrooms:mushroom_red [param2=0, token=64] @ 18.903741s (#15)",
+      "after_node_state": "mcl_core:lava_flowing [param2=0, token=76] @ 19.177779s (#16)",
+      "observed_transition": "lava_replaced_lava_destructible_node_observed",
+      "native_simulation_time": 18.9037409350276,
+      "center_valid_dynamic_in_pair": true,
+      "ghost_is_current_GT": false
+    },
+    "after_lava": {
+      "world_coordinate": [
+        -257,
+        1440,
+        -3
+      ],
+      "region_local": [
+        31,
+        16,
+        29
+      ],
+      "center_chunk_local": [
+        15,
+        0,
+        13
+      ],
+      "combined_token_id": 76,
+      "node_name": "mcl_core:lava_flowing",
+      "raw_param2": 0,
+      "node_type": "flowingliquid",
+      "definition_known": true,
+      "liquid_type": "flowing",
+      "liquid_level": 0,
+      "flow_down_flag": false,
+      "source_param2_semantics": null,
+      "fire_age": null,
+      "previous_node_state": "mcl_mushrooms:mushroom_red [param2=0, token=64] @ 18.903741s (#15)",
+      "current_node_state": "mcl_core:lava_flowing [param2=0, token=76] @ 19.177779s (#16)",
+      "before_node_state": "mcl_mushrooms:mushroom_red [param2=0, token=64] @ 18.903741s (#15)",
+      "after_node_state": "mcl_core:lava_flowing [param2=0, token=76] @ 19.177779s (#16)",
+      "observed_transition": "lava_replaced_lava_destructible_node_observed",
+      "native_simulation_time": 19.17777892947197,
+      "center_valid_dynamic_in_pair": true,
+      "ghost_is_current_GT": false
+    },
+    "difference": true,
+    "flowing_not_source_recession": true,
+    "raycast_result": {
+      "world_coordinate": [
+        -257,
+        1438,
+        -2
+      ],
+      "region_local": [
+        31,
+        14,
+        30
+      ],
+      "center_chunk_local": null,
+      "combined_token_id": 73,
+      "node_name": "mcl_core:lava_flowing",
+      "raw_param2": 15,
+      "node_type": "flowingliquid",
+      "definition_known": true,
+      "liquid_type": "flowing",
+      "liquid_level": 7,
+      "flow_down_flag": true,
+      "source_param2_semantics": null,
+      "fire_age": null,
+      "previous_node_state": "mcl_core:lava_flowing [param2=15, token=73] @ 18.903741s (#15)",
+      "current_node_state": "mcl_core:lava_flowing [param2=15, token=73] @ 19.177779s (#16)",
+      "before_node_state": "mcl_core:lava_flowing [param2=15, token=73] @ 18.903741s (#15)",
+      "after_node_state": "mcl_core:lava_flowing [param2=15, token=73] @ 19.177779s (#16)",
+      "observed_transition": "unchanged",
+      "native_simulation_time": 19.17777892947197,
+      "center_valid_dynamic_in_pair": false,
+      "ghost_is_current_GT": false
+    },
+    "click_inspector": true,
+    "semantic_mode": true,
+    "fire_and_previous_leaf_ghost": {
+      "type": "D3",
+      "attempt": "attempt_2",
+      "index": 17,
+      "timelineIndex": 17,
+      "time": 23.214634958654642,
+      "step": 462,
+      "frames": 43,
+      "shape": [
+        48,
+        48,
+        48
+      ],
+      "selectedIndices": [
+        24,
+        28,
+        31,
+        35,
+        39
+      ],
+      "source": "actual_native_GT",
+      "mode": "native",
+      "shapes": {
+        "liquidTypes": [],
+        "fireTypes": [
+          "mcl_fire:fire"
+        ],
+        "plantTypes": [],
+        "sourceMarks": 0
+      },
+      "ghostCount": 2,
+      "transitionCounts": {
+        "air_to_fire": 1,
+        "fire_age_update": 1,
+        "leaves_to_fire": 2
+      },
+      "inspector": {
+        "world_coordinate": [
+          -268,
+          1470,
+          9
+        ],
+        "region_local": [
+          20,
+          30,
+          25
+        ],
+        "center_chunk_local": [
+          4,
+          14,
+          9
+        ],
+        "combined_token_id": 74,
+        "node_name": "mcl_fire:fire",
+        "raw_param2": 15,
+        "node_type": "firelike",
+        "definition_known": true,
+        "liquid_type": "none",
+        "liquid_level": null,
+        "flow_down_flag": null,
+        "source_param2_semantics": null,
+        "fire_age": 15,
+        "previous_node_state": "mcl_core:leaves [param2=7, token=68] @ 22.940191s (#16)",
+        "current_node_state": "mcl_fire:fire [param2=15, token=74] @ 23.214635s (#17)",
+        "before_node_state": "mcl_core:leaves [param2=7, token=68] @ 22.940191s (#16)",
+        "after_node_state": "mcl_fire:fire [param2=15, token=74] @ 23.214635s (#17)",
+        "observed_transition": "leaves_to_fire",
+        "native_simulation_time": 23.214634958654642,
+        "center_valid_dynamic_in_pair": true,
+        "ghost_is_current_GT": false
+      }
+    },
+    "mobile_non_blank": true,
+    "screenshot_evidence": true,
+    "no_error_overlay": true,
+    "no_runtime_errors": true
+  },
+  "screenshots": [
+    "native_before.png",
+    "native_after.png",
+    "fire_ghost.png"
+  ],
+  "errors": [],
+  "warnings": [
+    "[.WebGL-0x11400579000]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+    "[.WebGL-0x11400579000]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+    "[.WebGL-0x11400579000]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+    "[.WebGL-0x11400579000]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)"
+  ],
+  "status": "PASS"
+}

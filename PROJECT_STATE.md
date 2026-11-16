@@ -1,12 +1,10 @@
 # VoxWM 当前状态
 
-**VAE 100K / 1K Shard Generator — IMPLEMENTED / NATIVE INCONCLUSIVE**。
+**Native Transition Audit + Native-State GT Viewer — IMPLEMENTED / CPU VERIFIED**。
 
-- 当前入口 `vae_data/sharded/`；[当前协议](VAE_DATA_COLLECTION_PROTOCOL.md)、[手动服务器命令](vae_data/README.md)、[本轮实测](vae_data/SHARDED_RESULTS.md)。100片×1K，每片Static500+四动态各125，D4为水岩浆固化；旧200K/植物规则仅历史。
-- 已实现完整48³上下文、中心16³动态、最多10候选/连续五状态、D4重叠事件注册与独立Anchor、Static群落地形配额、全局append-only词表、多CPU分片、恢复、独立QA和原子READY。
-- 本轮唯一原生测试：总墙钟上限300秒，实际约140秒；每类2次尝试，D1成功2条，D2/D3中心2秒无变化而拒绝，D4-A几何筛选无解，D4-B响应JSON错误。未把初始化、邻块变化或Fixture凑成成功。
-- JSON响应改为原子交接并补充离线检查，未追加native验证。D4-C、事件重叠、配额与READY等有Unit覆盖；正式分片并行生成的物理吞吐、完整25群落与1K/100K未实跑。
-- 原生小例 `outputs/vae_sharded_smoke_20261115/`，轻量报告在 `vae_data/reports/sharded_20261115/`。47项Unit通过；真实成功样例为两条完整五状态48³，原生版本/零实体证据在报告中。
-- 旧P0/P1/pilot、旧Unified源码/报告、所有数据日志及docs保留；只切换默认入口，旧 `__main__` 保存在 `legacy_entry.py`。没有模型/训练器/DataLoader或GPU运行。
+- 用户修正的目标为D2 attempt_2，18.9–19.2秒。原始32帧/完整48³逐体素核对通过；目标变化是Flowing Lava→Air，以及红蘑菇→Flowing Lava。未发现Source→Air或Dirt→Lava；两枚初始化Source保留。没有完整节点写入journal，内部回调归因仍有限。[审计/CSV/预览](vae_data/reports/transition_audit_20261116/README.md)。
+- Viewer直接解码原词表，三种模式、液位/Flow-Down、Firelike、可选历史叶子Ghost、点击Inspector和同坐标Before/After/Difference已实现并以已有GT验证；本轮没有新增Native采集、模型或训练，也没有改动原GT/词表/原生物理/docs。
+- VAE配方不变：100×1K，Static500+四动态各125/片，完整48³、中心16³、五状态链。此前六型有界Native验证仍为INCONCLUSIVE：202.49秒，D1/D2/D3/D4-C成功，D4-A/B缺口及后续仅离线修正均保留。[前轮实测](vae_data/reports/exhaustive_20261116/README.md)。
+- 原始Trace保留在`outputs/vae_native_six_20261116/`，不入Git。正式1K/100K、25群落产能及D4-A/B稳定产出未验证。[手动命令](vae_data/README.md)。
 
-唯一下一步：用户先查看本轮失败与2秒停止规则带来的实际产出缺口，决定在服务器手动验证/生成；Codex不自动启动正式1K或100K。
+唯一下一步：用户在本地Viewer复查D2固定世界坐标及D3燃烧过程，再决定采集器的下一项有限改动；Codex完成提交后停止，不追加Native生成。

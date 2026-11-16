@@ -1,0 +1,25 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>VoxWM Native GT Traces</title><link rel="icon" href="data:,"><link rel="stylesheet" href="style.css"><script type="importmap">{"imports":{"three":"/vendor/three.module.min.js"}}</script></head><body>
+<header><strong>VoxWM · Native GT</strong><span>Observed states only · no neural prediction or voxel interpolation</span></header>
+<main><aside>
+<label>Unique type<select id="type"></select></label><label>Native attempt<select id="attempt"></select></label><div id="status"></div>
+<label>Render mode<select id="mode"><option value="semantic">Semantic Mode</option><option value="native" selected>Native-State Mode</option><option value="changes">Change Inspection Mode</option></select></label>
+<label>Inspect pair view<select id="pairView"><option value="after">After</option><option value="before">Before</option><option value="difference">Difference</option></select></label>
+<div class="pair"><label>Before frame<input id="beforeFrame" type="number" min="0" value="0"></label><label>After frame<input id="afterFrame" type="number" min="0" value="0"></label></div>
+<label><input id="freeze" type="checkbox"> Freeze comparison pair</label>
+<label><input id="ghost" type="checkbox"> Previous leaves ghost (wireframe only)</label>
+<label>Observed transitions<select id="transition"><option value="">Select a changed world coordinate</option></select></label>
+<details open><summary>Voxel Inspector · click a voxel</summary>
+<label>World X,Y,Z (ENU)<input id="world" placeholder="-258, 1440, -2"></label><div class="pair"><button id="pin">Pin coordinate</button><button id="focus">Focus voxel</button></div>
+<label><input id="isolate" type="checkbox"> Show ±3-node neighborhood</label>
+<pre id="inspector">Click a voxel, a change marker, or enter a world coordinate.</pre>
+</details>
+<label>Region<select id="region"><option value="48">Full 48³</option><option value="16">Center 16³</option></select></label>
+<label>Highlight<select id="highlight"><option value="all">All block types</option><option>water</option><option>lava</option><option>fire</option><option>stone</option><option>cobble</option><option>obsidian</option></select></label>
+<label>Slice axis<select id="axis"><option value="2">Up / Z</option><option value="0">East / X</option><option value="1">North / Y</option></select></label><label>Slice upper bound <output id="sliceLabel">47</output><input id="slice" type="range" min="0" max="47" value="47"></label>
+<label><input id="bounds" type="checkbox" checked> 27 chunk boundaries + center</label>
+<label>Diagnostic overlay<select id="overlay"><option value="none">None</option><option value="actual">Actual change from post-initialization (red)</option><option value="predicted">Estimated reach by time (blue)</option><option value="both">Estimated reach + actual change</option></select></label>
+<label><input id="sources" type="checkbox" checked> Initial intervention sources</label>
+<button id="reset">Reset view</button><div class="legend"><b>Blue overlay</b>: uncertain precomputation, not GT.<br><b>Red overlay</b>: real observed change since initialization.<br>White dots on liquid tops mark Source nodes. Thin vertical lines mark Flow-Down. Cyan wireframes are previous leaves, not current GT. Yellow box: center target. Orange markers: intervention locations.</div>
+<details><summary>Source selection / metrics</summary><pre id="planning"></pre></details><a id="contact" target="_blank">Timeline contact sheet</a><a id="gif" target="_blank">Native evolution GIF</a><a id="report" target="_blank">Attempt report</a>
+</aside><section><div id="canvas"></div><div id="error" role="alert"></div><div id="readout"></div><div class="controls"><button id="back">◀</button><button id="play">Play</button><button id="next">▶</button><select id="speed"><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1× sim time</option><option value="2">2×</option></select><span id="time"></span></div><input id="timeline" type="range" min="0" max="0" value="0" list="stages"><datalist id="stages"></datalist><div id="markers"></div></section></main>
+<script type="module" src="viewer.js"></script></body></html>

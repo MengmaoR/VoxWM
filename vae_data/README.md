@@ -2,7 +2,7 @@
 
 当前入口：`python -m vae_data` → `vae_data/sharded/`。仅生成数据，无模型/训练器/DataLoader。依据[当前协议](../VAE_DATA_COLLECTION_PROTOCOL.md) / [Drive Markdown](https://drive.google.com/file/d/1NFM1Cb3os2yesAQgBk8VzM6vMmcj1eg8/view)。旧200K代码、结果与日志保留；[旧README](LEGACY_UNIFIED_README.md)中的命令需使用 `python -m vae_data.legacy_entry`，不是当前生产格式。
 
-**当前原生结果为INCONCLUSIVE**：本轮8次有限尝试，D1成功2条，D2/D3未达到五状态，D4未成功。JSON响应交接错误已做原子写修复，但没有追加native运行；详见[实测与检查报告](SHARDED_RESULTS.md)。1K/100K正式采集、完整25群落吞吐均未实跑，不把CLI存在当作已验证产能。
+**当前结果INCONCLUSIVE**：六型12次有限尝试，202.49秒；D1/D2/D3/D4-C各成功1条，D4-A/B未成功。已完成全点预计算、真实GT Trace、PNG/GIF和独立Viewer；[实测报告](reports/exhaustive_20261116/README.md)。未运行正式1K/100K，D4-B运行后修正的原生效果尚未验证。
 
 ## 服务器环境（用户手动执行）
 
@@ -80,14 +80,54 @@ rows=pq.read_table(path+'/metadata.parquet').to_pylist()
 
 每场景最多10个中心不同候选，另保留必要当前帧和D4 anchor；未选状态释放。没有discovery cache、完整raw trajectory或下游latent缓存。同源重复中心状态拒绝；不同seed的真实重复结构不被全局删除。
 
-## 开发检查与授权原生小例
+## 全点预计算与独立GT Viewer
+
+小型C++17 CPU内核首次按源文件mtime编译到系统临时目录，需`c++`（安装GT环境已需要编译器）；不需要Torch/CUDA。共享CSR图+乐观反向不可达界+64源稀疏bitset传播，不预删合法点。流体与Fire的时间估计仅为不确定潜力，实际合格仍由native五状态/事件判定。选点p=1/N；D4-B查询隐式联合兼容，不建Water×Lava密集矩阵。源码说明及复杂度见[报告](reports/exhaustive_20261116/README.md)。
 
 ```bash
-.venv/bin/python -m unittest vae_data.sharded.tests.test_sharded
-# 仅用户明确需要时：新输出目录；每类成功上限2，总计最多8，禁止自行循环扩测
-.venv/bin/python -m vae_data native-smoke \
-  --dataset outputs/vae_native_examples_new --wall-seconds 300 \
-  --samples-per-category 2 --attempts-per-category 2 --renderer software
+# 已有本轮完整Trace时：仅CPU导出/查看，无引擎运行
+.venv/bin/python -m vae_data export-traces --dataset outputs/vae_native_six_20261116
+.venv/bin/python -m vae_data view --dataset outputs/vae_native_six_20261116 --port 8765
+# 浏览器 http://127.0.0.1:8765/?type=D4-C&region=16
 ```
 
-小例不创建正式Shard，不写READY。Synthetic Fixture写到独立unit模式临时目录，正式生成器拒绝该格式；不能拿单元测试证明物理成功。
+Viewer支持六型和各attempt、真实模拟时间播放/逐观察帧/拖动、48³/16³、XYZ剖切、自由轨道/缩放、27边界、块类高亮、源点、估计时间可达域/实际变化叠加、Pre/Reaction/Post/接收五帧。静态预览含真实中心切片；没有神经网络预测。`docs/vendor`仅提供只读Three/OrbitControls资源，不修改/部署网站。服务器可手动`--host 0.0.0.0`，默认仅localhost。
+
+```bash
+# 使用已存在的真实GT，只做CPU测量；不会创建原生世界
+.venv/bin/python -m vae_data profile-planner \
+  --real outputs/vae_sharded_smoke_20261115/examples/D1_0 \
+  --fire outputs/vae_native_six_20261116/traces/D3/attempt_2 \
+  --pair outputs/vae_native_six_20261116/traces/D4-B/attempt_1 \
+  --output outputs/planning_profile.json
+```
+
+完整Trace在`outputs/vae_native_six_20261116/traces/<type>/attempt_N/`，VWT1无损保存tokens/light和真实metadata。`planning/*.npz`为全部合法源点的region-local ENU坐标/统计；`selected_N.bin`是选中源uint8[48³]最早估计时间，255为估计未达。summary含世界坐标、p/保底/条件分布及不确定性。`planning_followup`明确是运行后只读原场景的CPU复算，不能当作已执行干预。
+
+正式Shard不写这些完整Trace。轻量过程图在`vae_data/reports/exhaustive_20261116/`，完整Trace不入Git；到新服务器需用户自行复制现有输出，或明确决定另做一次有界测试。历史`native-smoke`仅保留复现旧四大类测试，当前协议使用六Unique Types。
+
+## 开发检查及明确授权的小例
+
+```bash
+.venv/bin/python -m unittest discover -s vae_data/sharded/tests -q
+# 以下只供用户明确决定重复小例时手动启动；本轮Codex已经执行并停止。
+.venv/bin/python -m vae_data native-six \
+  --dataset outputs/vae_native_six_new --wall-seconds 900 \
+  --attempts-per-type 3 --renderer software
+```
+
+不创建正式Shard/READY。每型最多3次尝试，成功1条即停止，整轮最多900秒；输出目录必须全新。失败保留Trace及原因，不能通过重复命令追加Codex测试预算。Synthetic Fixture只在临时Unit目录，不能当Native物理证据。
+
+## 原生节点状态与异常检查
+
+[本轮D2逐体素审计及Viewer说明](reports/transition_audit_20261116/README.md)。Viewer直接读取原Combined Token vocabulary，支持Semantic、Native-State、Change Inspection三模式；液体解码0x07/0x08及真实liquid_range，火焰年龄不作方向，未知Node Definition标为简化fallback。
+
+点击体素或输入世界ENU坐标查看Token/Node/param2/液位/Fire Age；Freeze comparison pair固定两次真实观察，Before/After/Difference始终查询同一世界坐标。Previous leaves ghost只显示旧状态的线框。
+
+```bash
+.venv/bin/python -m vae_data.sharded.audit_transitions \
+  --trace outputs/vae_native_six_20261116/traces/D2/attempt_2 \
+  --start 18.9 --end 19.2 --output outputs/d2_transition_audit
+```
+
+以上只读已有GT；不会补造中间状态、运行引擎或改变原始词表。完整逐节点写入journal未保存，无法从采样间隔唯一确定每次内部callback。

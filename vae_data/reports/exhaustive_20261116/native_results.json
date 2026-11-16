@@ -1,0 +1,1338 @@
+{
+  "status": "INCONCLUSIVE",
+  "source": "real_native",
+  "unique_types": [
+    "D1",
+    "D2",
+    "D3",
+    "D4-A",
+    "D4-B",
+    "D4-C"
+  ],
+  "successes": {
+    "D1": 1,
+    "D2": 1,
+    "D3": 1,
+    "D4-A": 0,
+    "D4-B": 0,
+    "D4-C": 1
+  },
+  "attempts": [
+    {
+      "unique_type": "D1",
+      "category": "D1",
+      "subtype": "",
+      "attempt": 1,
+      "trace": "traces/D1/attempt_1",
+      "source": "real_native",
+      "status": "success",
+      "reason": null,
+      "candidate_states": 5,
+      "center_target_changes": 19,
+      "center_transition_observations": 4,
+      "simulated_seconds": 5.201644968241453,
+      "stop_reason": "center_no_change_2s",
+      "legal_windows": 1,
+      "world_seed": 191664964,
+      "center_origin": [
+        96,
+        2000,
+        -16
+      ],
+      "audit": {
+        "blocked_entities": {
+          "mcl_chests:chest": 1.0,
+          "mcl_minecarts:chest_minecart": 1.0,
+          "mcl_minecarts:minecart": 1.0,
+          "mcl_minecarts:tnt_minecart": 1.0,
+          "mcl_wieldview:wieldview": 368.0,
+          "mobs_mc:pig": 1.0
+        },
+        "blocked_item_attempts": 1.0,
+        "compatible": true,
+        "dropped_items": 0.0,
+        "entity_callbacks": 0.0,
+        "entity_induced_changes": 0.0,
+        "nontechnical_entities": 0.0,
+        "unsupported_falling_attempts": 0.0
+      },
+      "observed_reaction_count": 0,
+      "contact_observed": false,
+      "center_contact_observed": false,
+      "structural_fire_changes": 0,
+      "fire_age_only_changes": 0,
+      "intervention": {
+        "mode": "native_initialization",
+        "rng_state": {
+          "bit_generator": "PCG64",
+          "state": {
+            "state": 95376830783351682500486580248632280039,
+            "inc": 332724090758049132448979897138935081983
+          },
+          "has_uint32": 0,
+          "uinteger": 3324115917
+        },
+        "planning": {
+          "rng_state": {
+            "bit_generator": "PCG64",
+            "state": {
+              "state": 95376830783351682500486580248632280039,
+              "inc": 332724090758049132448979897138935081983
+            },
+            "has_uint32": 0,
+            "uinteger": 3324115917
+          },
+          "algorithm": "all-source shared graph / sparse 64-source bitsets",
+          "pair_compatibility_seconds": 0.0,
+          "water": {
+            "N": 129,
+            "p": 0.007751937984496124,
+            "selected": [
+              13765
+            ],
+            "fallback": false,
+            "cap": 4,
+            "distribution": "independent Bernoulli then uniform fallback/cap"
+          },
+          "precompute_wall_seconds": 0.10242279199883342,
+          "metrics": {
+            "water": {
+              "legal_source_count": 33995,
+              "evaluated_source_count": 33995,
+              "reachable_candidate_count": 2873,
+              "qualified_candidate_count": 129,
+              "mathematically_pruned_count": 0,
+              "visited_nodes": 1823437,
+              "reachability_seconds": 0.04054175014607608,
+              "shared_graph_build_seconds": 0.4223273750394583,
+              "kernel_working_bytes": 24772608,
+              "batch_size": 64,
+              "uncertain_pruning_disabled": true,
+              "candidates_per_second": 838518.3145155926,
+              "semantics": "10 scheduled-wave seconds: optimistic potential, NOT deterministic native GT",
+              "uncertainty": "native queue ordering, fluid renewal/competition and ABM randomness are not fixed; lower bound0, no finite stochastic upper bound"
+            }
+          },
+          "selected_sources": [
+            {
+              "kind": "water",
+              "source_index": 13765,
+              "position": [
+                97,
+                2001,
+                -13
+              ],
+              "reachable_voxels": 59,
+              "center_reachable_voxels": 20,
+              "potential_transition_times": [
+                1,
+                2,
+                3,
+                4
+              ]
+            }
+          ]
+        },
+        "requested_actions": [
+          {
+            "type": "water",
+            "position": [
+              97,
+              2001,
+              -13
+            ]
+          }
+        ],
+        "actual_actions": [
+          {
+            "after": "mcl_core:water_source",
+            "before": "air",
+            "clock": {
+              "engine_us": 2290686604273.0,
+              "sim_time": 13.003359965980053,
+              "simulation_step": 272.0
+            },
+            "position": [
+              97.0,
+              2001.0,
+              -13.0
+            ],
+            "type": "water"
+          }
+        ]
+      },
+      "output": "examples/D1",
+      "wall_seconds": 37.0611804171931
+    },
+    {
+      "unique_type": "D2",
+      "category": "D2",
+      "subtype": "",
+      "attempt": 1,
+      "trace": "traces/D2/attempt_1",
+      "source": "real_native",
+      "status": "rejected",
+      "reason": "no_qualified_temporal_center_potential",
+      "world_seed": 191664964,
+      "center_origin": [
+        800,
+        -1248,
+        -16
+      ],
+      "intervention": {
+        "mode": "native_initialization",
+        "rng_state": {
+          "bit_generator": "PCG64",
+          "state": {
+            "state": 101187285527920527669479332927494043465,
+            "inc": 332724090758049132448979897138935081983
+          },
+          "has_uint32": 1,
+          "uinteger": 732691220
+        },
+        "planning": {
+          "rng_state": {
+            "bit_generator": "PCG64",
+            "state": {
+              "state": 101187285527920527669479332927494043465,
+              "inc": 332724090758049132448979897138935081983
+            },
+            "has_uint32": 1,
+            "uinteger": 732691220
+          },
+          "algorithm": "all-source shared graph / sparse 64-source bitsets",
+          "pair_compatibility_seconds": 0.0,
+          "lava": {
+            "N": 0,
+            "p": null,
+            "selected": [],
+            "fallback": false,
+            "cap": 4
+          },
+          "precompute_wall_seconds": 0.03655924997292459,
+          "metrics": {
+            "lava": {
+              "legal_source_count": 17174,
+              "evaluated_source_count": 17174,
+              "reachable_candidate_count": 0,
+              "qualified_candidate_count": 0,
+              "mathematically_pruned_count": 0,
+              "visited_nodes": 694527,
+              "reachability_seconds": 0.019873250043019652,
+              "shared_graph_build_seconds": 0.2841182502452284,
+              "kernel_working_bytes": 14155776,
+              "batch_size": 64,
+              "uncertain_pruning_disabled": true,
+              "candidates_per_second": 864176.7180920795,
+              "semantics": "10 scheduled-wave seconds: optimistic potential, NOT deterministic native GT",
+              "uncertainty": "native queue ordering, fluid renewal/competition and ABM randomness are not fixed; lower bound0, no finite stochastic upper bound"
+            }
+          },
+          "reason": "no_qualified_temporal_center_potential",
+          "selected_sources": []
+        }
+      },
+      "wall_seconds": 22.0708573339507
+    },
+    {
+      "unique_type": "D2",
+      "category": "D2",
+      "subtype": "",
+      "attempt": 2,
+      "trace": "traces/D2/attempt_2",
+      "source": "real_native",
+      "status": "success",
+      "reason": null,
+      "candidate_states": 10,
+      "center_target_changes": 20,
+      "center_transition_observations": 9,
+      "simulated_seconds": 8.341752965003252,
+      "stop_reason": "candidate_limit",
+      "legal_windows": 6,
+      "world_seed": 191664964,
+      "center_origin": [
+        -272,
+        1440,
+        -16
+      ],
+      "audit": {
+        "blocked_entities": {
+          "mcl_chests:chest": 11.0,
+          "mcl_wieldview:wieldview": 467.0,
+          "mobs_mc:pig": 1.0
+        },
+        "blocked_item_attempts": 1.0,
+        "compatible": true,
+        "dropped_items": 0.0,
+        "entity_callbacks": 0.0,
+        "entity_induced_changes": 0.0,
+        "nontechnical_entities": 0.0,
+        "unsupported_falling_attempts": 0.0
+      },
+      "observed_reaction_count": 0,
+      "contact_observed": false,
+      "center_contact_observed": false,
+      "structural_fire_changes": 0,
+      "fire_age_only_changes": 0,
+      "intervention": {
+        "mode": "native_initialization",
+        "rng_state": {
+          "bit_generator": "PCG64",
+          "state": {
+            "state": 101187285527920527669479332927494043465,
+            "inc": 332724090758049132448979897138935081983
+          },
+          "has_uint32": 0,
+          "uinteger": 732691220
+        },
+        "planning": {
+          "rng_state": {
+            "bit_generator": "PCG64",
+            "state": {
+              "state": 101187285527920527669479332927494043465,
+              "inc": 332724090758049132448979897138935081983
+            },
+            "has_uint32": 0,
+            "uinteger": 732691220
+          },
+          "algorithm": "all-source shared graph / sparse 64-source bitsets",
+          "pair_compatibility_seconds": 0.0,
+          "lava": {
+            "N": 20,
+            "p": 0.05,
+            "selected": [
+              17173,
+              17436
+            ],
+            "fallback": false,
+            "cap": 4,
+            "distribution": "independent Bernoulli then uniform fallback/cap"
+          },
+          "precompute_wall_seconds": 0.03368687490001321,
+          "metrics": {
+            "lava": {
+              "legal_source_count": 18854,
+              "evaluated_source_count": 18854,
+              "reachable_candidate_count": 156,
+              "qualified_candidate_count": 20,
+              "mathematically_pruned_count": 0,
+              "visited_nodes": 825608,
+              "reachability_seconds": 0.015851542120799422,
+              "shared_graph_build_seconds": 0.28969537490047514,
+              "kernel_working_bytes": 14155776,
+              "batch_size": 64,
+              "uncertain_pruning_disabled": true,
+              "candidates_per_second": 1189411.090499576,
+              "semantics": "10 scheduled-wave seconds: optimistic potential, NOT deterministic native GT",
+              "uncertainty": "native queue ordering, fluid renewal/competition and ABM randomness are not fixed; lower bound0, no finite stochastic upper bound"
+            }
+          },
+          "selected_sources": [
+            {
+              "kind": "lava",
+              "source_index": 17173,
+              "position": [
+                -257,
+                1439,
+                -2
+              ],
+              "reachable_voxels": 64,
+              "center_reachable_voxels": 3,
+              "potential_transition_times": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8
+              ]
+            },
+            {
+              "kind": "lava",
+              "source_index": 17436,
+              "position": [
+                -256,
+                1441,
+                -1
+              ],
+              "reachable_voxels": 55,
+              "center_reachable_voxels": 4,
+              "potential_transition_times": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10
+              ]
+            }
+          ]
+        },
+        "requested_actions": [
+          {
+            "type": "lava",
+            "position": [
+              -257,
+              1439,
+              -2
+            ]
+          },
+          {
+            "type": "lava",
+            "position": [
+              -256,
+              1441,
+              -1
+            ]
+          }
+        ],
+        "actual_actions": [
+          {
+            "after": "mcl_core:lava_source",
+            "before": "air",
+            "clock": {
+              "engine_us": 2290718697123.0,
+              "sim_time": 14.927035957574844,
+              "simulation_step": 313.0
+            },
+            "position": [
+              -257.0,
+              1439.0,
+              -2.0
+            ],
+            "type": "lava"
+          },
+          {
+            "after": "mcl_core:lava_source",
+            "before": "air",
+            "clock": {
+              "engine_us": 2290718697190.0,
+              "sim_time": 14.927035957574844,
+              "simulation_step": 313.0
+            },
+            "position": [
+              -256.0,
+              1441.0,
+              -1.0
+            ],
+            "type": "lava"
+          }
+        ]
+      },
+      "output": "examples/D2",
+      "wall_seconds": 11.37229674984701
+    },
+    {
+      "unique_type": "D3",
+      "category": "D3",
+      "subtype": "",
+      "attempt": 1,
+      "trace": "traces/D3/attempt_1",
+      "source": "real_native",
+      "status": "rejected",
+      "reason": "no_structural_fire_propagation",
+      "candidate_states": 1,
+      "center_target_changes": 0,
+      "center_transition_observations": 0,
+      "simulated_seconds": 2.2375159934163094,
+      "stop_reason": "center_no_change_2s",
+      "legal_windows": 0,
+      "world_seed": 191664964,
+      "center_origin": [
+        816,
+        -1216,
+        0
+      ],
+      "audit": {
+        "blocked_entities": {
+          "mcl_chests:chest": 9.0,
+          "mcl_wieldview:wieldview": 320.0,
+          "mobs_mc:pig": 1.0
+        },
+        "blocked_item_attempts": 1.0,
+        "compatible": true,
+        "dropped_items": 0.0,
+        "entity_callbacks": 0.0,
+        "entity_induced_changes": 0.0,
+        "nontechnical_entities": 0.0,
+        "unsupported_falling_attempts": 0.0
+      },
+      "observed_reaction_count": 0,
+      "contact_observed": false,
+      "center_contact_observed": false,
+      "structural_fire_changes": 0,
+      "fire_age_only_changes": 0,
+      "intervention": {
+        "mode": "native_initialization",
+        "rng_state": {
+          "bit_generator": "PCG64",
+          "state": {
+            "state": 80670189460158642641312996651256267615,
+            "inc": 332724090758049132448979897138935081983
+          },
+          "has_uint32": 1,
+          "uinteger": 602365250
+        },
+        "planning": {
+          "rng_state": {
+            "bit_generator": "PCG64",
+            "state": {
+              "state": 80670189460158642641312996651256267615,
+              "inc": 332724090758049132448979897138935081983
+            },
+            "has_uint32": 1,
+            "uinteger": 602365250
+          },
+          "algorithm": "all-source shared graph / sparse 64-source bitsets",
+          "pair_compatibility_seconds": 0.0,
+          "fire": {
+            "N": 708,
+            "p": 0.0014124293785310734,
+            "selected": [
+              38094
+            ],
+            "fallback": false,
+            "cap": 4,
+            "distribution": "independent Bernoulli then uniform fallback/cap"
+          },
+          "precompute_wall_seconds": 0.1592622920870781,
+          "metrics": {
+            "fire": {
+              "legal_source_count": 59818,
+              "evaluated_source_count": 59818,
+              "reachable_candidate_count": 1916,
+              "qualified_candidate_count": 708,
+              "mathematically_pruned_count": 55274,
+              "visited_nodes": 1974835,
+              "reachability_seconds": 0.08347783307544887,
+              "shared_graph_build_seconds": 0.3815970001742244,
+              "kernel_working_bytes": 3538944,
+              "batch_size": 64,
+              "uncertain_pruning_disabled": false,
+              "candidates_per_second": 716573.4638312346,
+              "semantics": "10 scheduled-wave seconds: optimistic potential, NOT deterministic native GT",
+              "uncertainty": "native queue ordering, fluid renewal/competition and ABM randomness are not fixed; lower bound0, no finite stochastic upper bound"
+            }
+          },
+          "selected_sources": [
+            {
+              "kind": "fire",
+              "source_index": 38094,
+              "position": [
+                830,
+                -1200,
+                16
+              ],
+              "reachable_voxels": 388,
+              "center_reachable_voxels": 226,
+              "potential_transition_times": [
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10
+              ]
+            }
+          ]
+        },
+        "requested_actions": [
+          {
+            "type": "fire",
+            "position": [
+              830,
+              -1200,
+              16
+            ],
+            "under": [
+              830,
+              -1201,
+              16
+            ]
+          }
+        ],
+        "actual_actions": [
+          {
+            "after": "mcl_fire:fire",
+            "before": "air",
+            "clock": {
+              "engine_us": 2290752809460.0,
+              "sim_time": 14.120584987103939,
+              "simulation_step": 282.0
+            },
+            "position": [
+              830.0,
+              -1200.0,
+              16.0
+            ],
+            "type": "fire"
+          }
+        ]
+      },
+      "wall_seconds": 26.29531666613184
+    },
+    {
+      "unique_type": "D3",
+      "category": "D3",
+      "subtype": "",
+      "attempt": 2,
+      "trace": "traces/D3/attempt_2",
+      "source": "real_native",
+      "status": "success",
+      "reason": null,
+      "candidate_states": 10,
+      "center_target_changes": 21,
+      "center_transition_observations": 9,
+      "simulated_seconds": 11.249480951577425,
+      "stop_reason": "candidate_limit",
+      "legal_windows": 6,
+      "world_seed": 191664964,
+      "center_origin": [
+        -272,
+        1456,
+        0
+      ],
+      "audit": {
+        "blocked_entities": {
+          "mcl_chests:chest": 14.0,
+          "mcl_wieldview:wieldview": 590.0,
+          "mobs_mc:pig": 2.0
+        },
+        "blocked_item_attempts": 2.0,
+        "compatible": true,
+        "dropped_items": 0.0,
+        "entity_callbacks": 0.0,
+        "entity_induced_changes": 0.0,
+        "nontechnical_entities": 0.0,
+        "unsupported_falling_attempts": 0.0
+      },
+      "observed_reaction_count": 0,
+      "contact_observed": false,
+      "center_contact_observed": false,
+      "structural_fire_changes": 21,
+      "fire_age_only_changes": 14,
+      "intervention": {
+        "mode": "native_initialization",
+        "rng_state": {
+          "bit_generator": "PCG64",
+          "state": {
+            "state": 304423838876456808600962097734296110750,
+            "inc": 332724090758049132448979897138935081983
+          },
+          "has_uint32": 1,
+          "uinteger": 3140205108
+        },
+        "planning": {
+          "rng_state": {
+            "bit_generator": "PCG64",
+            "state": {
+              "state": 304423838876456808600962097734296110750,
+              "inc": 332724090758049132448979897138935081983
+            },
+            "has_uint32": 1,
+            "uinteger": 3140205108
+          },
+          "algorithm": "all-source shared graph / sparse 64-source bitsets",
+          "pair_compatibility_seconds": 0.0,
+          "fire": {
+            "N": 335,
+            "p": 0.0029850746268656717,
+            "selected": [
+              28394,
+              35740
+            ],
+            "fallback": false,
+            "cap": 4,
+            "distribution": "independent Bernoulli then uniform fallback/cap"
+          },
+          "precompute_wall_seconds": 0.07026262488216162,
+          "metrics": {
+            "fire": {
+              "legal_source_count": 53275,
+              "evaluated_source_count": 53275,
+              "reachable_candidate_count": 648,
+              "qualified_candidate_count": 335,
+              "mathematically_pruned_count": 51896,
+              "visited_nodes": 356173,
+              "reachability_seconds": 0.01579087506979704,
+              "shared_graph_build_seconds": 0.2967887509148568,
+              "kernel_working_bytes": 3538944,
+              "batch_size": 64,
+              "uncertain_pruning_disabled": false,
+              "candidates_per_second": 3373783.895098902,
+              "semantics": "10 scheduled-wave seconds: optimistic potential, NOT deterministic native GT",
+              "uncertainty": "native queue ordering, fluid renewal/competition and ABM randomness are not fixed; lower bound0, no finite stochastic upper bound"
+            }
+          },
+          "selected_sources": [
+            {
+              "kind": "fire",
+              "source_index": 28394,
+              "position": [
+                -268,
+                1470,
+                8
+              ],
+              "reachable_voxels": 681,
+              "center_reachable_voxels": 243,
+              "potential_transition_times": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                9,
+                10
+              ]
+            },
+            {
+              "kind": "fire",
+              "source_index": 35740,
+              "position": [
+                -261,
+                1456,
+                15
+              ],
+              "reachable_voxels": 832,
+              "center_reachable_voxels": 77,
+              "potential_transition_times": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10
+              ]
+            }
+          ]
+        },
+        "requested_actions": [
+          {
+            "type": "fire",
+            "position": [
+              -268,
+              1470,
+              8
+            ],
+            "under": [
+              -268,
+              1470,
+              9
+            ]
+          },
+          {
+            "type": "fire",
+            "position": [
+              -261,
+              1456,
+              15
+            ],
+            "under": [
+              -262,
+              1456,
+              15
+            ]
+          }
+        ],
+        "actual_actions": [
+          {
+            "after": "mcl_fire:fire",
+            "before": "air",
+            "clock": {
+              "engine_us": 2290757933180.0,
+              "sim_time": 18.816975977271795,
+              "simulation_step": 377.0
+            },
+            "position": [
+              -268.0,
+              1470.0,
+              8.0
+            ],
+            "type": "fire"
+          },
+          {
+            "after": "mcl_fire:fire",
+            "before": "air",
+            "clock": {
+              "engine_us": 2290757933334.0,
+              "sim_time": 18.816975977271795,
+              "simulation_step": 377.0
+            },
+            "position": [
+              -261.0,
+              1456.0,
+              15.0
+            ],
+            "type": "fire"
+          }
+        ]
+      },
+      "output": "examples/D3",
+      "wall_seconds": 14.455809250008315
+    },
+    {
+      "unique_type": "D4-A",
+      "category": "D4",
+      "subtype": "A",
+      "attempt": 1,
+      "trace": "traces/D4-A/attempt_1",
+      "source": "real_native",
+      "status": "rejected",
+      "reason": "no_qualified_temporal_center_potential",
+      "world_seed": 191664964,
+      "center_origin": [
+        96,
+        1984,
+        -16
+      ],
+      "intervention": {
+        "mode": "native_initialization",
+        "rng_state": {
+          "bit_generator": "PCG64",
+          "state": {
+            "state": 228037074982395522650904259222010468462,
+            "inc": 332724090758049132448979897138935081983
+          },
+          "has_uint32": 0,
+          "uinteger": 2817815854
+        },
+        "pool_observation_seconds": 1.1842719949781895,
+        "planning": {
+          "rng_state": {
+            "bit_generator": "PCG64",
+            "state": {
+              "state": 228037074982395522650904259222010468462,
+              "inc": 332724090758049132448979897138935081983
+            },
+            "has_uint32": 0,
+            "uinteger": 2817815854
+          },
+          "algorithm": "all-source shared graph / sparse 64-source bitsets",
+          "pair_compatibility_seconds": 0.0,
+          "lava": {
+            "N": 0,
+            "p": null,
+            "selected": [],
+            "fallback": false,
+            "cap": 4
+          },
+          "precompute_wall_seconds": 0.06807149993255734,
+          "metrics": {
+            "lava": {
+              "legal_source_count": 36043,
+              "evaluated_source_count": 36043,
+              "reachable_candidate_count": 1024,
+              "qualified_candidate_count": 0,
+              "mathematically_pruned_count": 0,
+              "visited_nodes": 1677244,
+              "reachability_seconds": 0.0340557920280844,
+              "shared_graph_build_seconds": 0.2928670831024647,
+              "kernel_working_bytes": 25657344,
+              "batch_size": 64,
+              "uncertain_pruning_disabled": true,
+              "candidates_per_second": 1058351.541795793,
+              "semantics": "10 scheduled-wave seconds: optimistic potential, NOT deterministic native GT",
+              "uncertainty": "native queue ordering, fluid renewal/competition and ABM randomness are not fixed; lower bound0, no finite stochastic upper bound"
+            }
+          },
+          "reason": "no_qualified_temporal_center_potential",
+          "selected_sources": []
+        }
+      },
+      "wall_seconds": 22.56060004187748
+    },
+    {
+      "unique_type": "D4-A",
+      "category": "D4",
+      "subtype": "A",
+      "attempt": 2,
+      "trace": "traces/D4-A/attempt_2",
+      "source": "real_native",
+      "status": "rejected",
+      "reason": "no_qualified_temporal_center_potential",
+      "world_seed": 191664964,
+      "center_origin": [
+        80,
+        1936,
+        -16
+      ],
+      "intervention": {
+        "mode": "native_initialization",
+        "rng_state": {
+          "bit_generator": "PCG64",
+          "state": {
+            "state": 317956785442657990383092895957087155621,
+            "inc": 332724090758049132448979897138935081983
+          },
+          "has_uint32": 0,
+          "uinteger": 1241604528
+        },
+        "pool_observation_seconds": 1.159233994781971,
+        "planning": {
+          "rng_state": {
+            "bit_generator": "PCG64",
+            "state": {
+              "state": 317956785442657990383092895957087155621,
+              "inc": 332724090758049132448979897138935081983
+            },
+            "has_uint32": 0,
+            "uinteger": 1241604528
+          },
+          "algorithm": "all-source shared graph / sparse 64-source bitsets",
+          "pair_compatibility_seconds": 0.0,
+          "lava": {
+            "N": 0,
+            "p": null,
+            "selected": [],
+            "fallback": false,
+            "cap": 4
+          },
+          "precompute_wall_seconds": 0.05435237498022616,
+          "metrics": {
+            "lava": {
+              "legal_source_count": 34207,
+              "evaluated_source_count": 34207,
+              "reachable_candidate_count": 14,
+              "qualified_candidate_count": 0,
+              "mathematically_pruned_count": 0,
+              "visited_nodes": 1472784,
+              "reachability_seconds": 0.023355042096227407,
+              "shared_graph_build_seconds": 0.30048891599290073,
+              "kernel_working_bytes": 25657344,
+              "batch_size": 64,
+              "uncertain_pruning_disabled": true,
+              "candidates_per_second": 1464651.6096635738,
+              "semantics": "10 scheduled-wave seconds: optimistic potential, NOT deterministic native GT",
+              "uncertainty": "native queue ordering, fluid renewal/competition and ABM randomness are not fixed; lower bound0, no finite stochastic upper bound"
+            }
+          },
+          "reason": "no_qualified_temporal_center_potential",
+          "selected_sources": []
+        }
+      },
+      "wall_seconds": 2.1632511250209063
+    },
+    {
+      "unique_type": "D4-A",
+      "category": "D4",
+      "subtype": "A",
+      "attempt": 3,
+      "trace": "traces/D4-A/attempt_3",
+      "source": "real_native",
+      "status": "rejected",
+      "reason": "no_qualified_temporal_center_potential",
+      "world_seed": 191664964,
+      "center_origin": [
+        128,
+        1968,
+        -16
+      ],
+      "intervention": {
+        "mode": "native_initialization",
+        "rng_state": {
+          "bit_generator": "PCG64",
+          "state": {
+            "state": 164709834072950601764137869892818268024,
+            "inc": 332724090758049132448979897138935081983
+          },
+          "has_uint32": 0,
+          "uinteger": 3155620408
+        },
+        "pool_observation_seconds": 1.1755880005657673,
+        "planning": {
+          "rng_state": {
+            "bit_generator": "PCG64",
+            "state": {
+              "state": 164709834072950601764137869892818268024,
+              "inc": 332724090758049132448979897138935081983
+            },
+            "has_uint32": 0,
+            "uinteger": 3155620408
+          },
+          "algorithm": "all-source shared graph / sparse 64-source bitsets",
+          "pair_compatibility_seconds": 0.0,
+          "lava": {
+            "N": 0,
+            "p": null,
+            "selected": [],
+            "fallback": false,
+            "cap": 4
+          },
+          "precompute_wall_seconds": 0.052163624903187156,
+          "metrics": {
+            "lava": {
+              "legal_source_count": 29753,
+              "evaluated_source_count": 29753,
+              "reachable_candidate_count": 0,
+              "qualified_candidate_count": 0,
+              "mathematically_pruned_count": 0,
+              "visited_nodes": 1356287,
+              "reachability_seconds": 0.024518624879419804,
+              "shared_graph_build_seconds": 0.2834466660860926,
+              "kernel_working_bytes": 25657344,
+              "batch_size": 64,
+              "uncertain_pruning_disabled": true,
+              "candidates_per_second": 1213485.6724764272,
+              "semantics": "10 scheduled-wave seconds: optimistic potential, NOT deterministic native GT",
+              "uncertainty": "native queue ordering, fluid renewal/competition and ABM randomness are not fixed; lower bound0, no finite stochastic upper bound"
+            }
+          },
+          "reason": "no_qualified_temporal_center_potential",
+          "selected_sources": []
+        }
+      },
+      "wall_seconds": 1.937505291076377
+    },
+    {
+      "unique_type": "D4-B",
+      "category": "D4",
+      "subtype": "B",
+      "attempt": 1,
+      "trace": "traces/D4-B/attempt_1",
+      "source": "real_native",
+      "status": "rejected",
+      "reason": "existing_pool_in_D4_B",
+      "world_seed": 191664964,
+      "center_origin": [
+        800,
+        -1232,
+        0
+      ],
+      "intervention": {
+        "mode": "native_initialization",
+        "rng_state": {
+          "bit_generator": "PCG64",
+          "state": {
+            "state": 231694143931762751199483696553781364567,
+            "inc": 332724090758049132448979897138935081983
+          },
+          "has_uint32": 1,
+          "uinteger": 2432758171
+        },
+        "planning": {
+          "reason": "existing_pool_in_D4_B",
+          "rng_state": {
+            "bit_generator": "PCG64",
+            "state": {
+              "state": 231694143931762751199483696553781364567,
+              "inc": 332724090758049132448979897138935081983
+            },
+            "has_uint32": 1,
+            "uinteger": 2432758171
+          },
+          "algorithm": "all-source shared graph / sparse 64-source bitsets",
+          "pair_compatibility_seconds": 0.0,
+          "selected_sources": []
+        }
+      },
+      "wall_seconds": 20.275281708920375
+    },
+    {
+      "unique_type": "D4-B",
+      "category": "D4",
+      "subtype": "B",
+      "attempt": 2,
+      "trace": "traces/D4-B/attempt_2",
+      "source": "real_native",
+      "status": "rejected",
+      "reason": "existing_pool_in_D4_B",
+      "world_seed": 191664964,
+      "center_origin": [
+        816,
+        -1216,
+        0
+      ],
+      "intervention": {
+        "mode": "native_initialization",
+        "rng_state": {
+          "bit_generator": "PCG64",
+          "state": {
+            "state": 231694143931762751199483696553781364567,
+            "inc": 332724090758049132448979897138935081983
+          },
+          "has_uint32": 0,
+          "uinteger": 2432758171
+        },
+        "planning": {
+          "reason": "existing_pool_in_D4_B",
+          "rng_state": {
+            "bit_generator": "PCG64",
+            "state": {
+              "state": 231694143931762751199483696553781364567,
+              "inc": 332724090758049132448979897138935081983
+            },
+            "has_uint32": 0,
+            "uinteger": 2432758171
+          },
+          "algorithm": "all-source shared graph / sparse 64-source bitsets",
+          "pair_compatibility_seconds": 0.0,
+          "selected_sources": []
+        }
+      },
+      "wall_seconds": 1.397423166083172
+    },
+    {
+      "unique_type": "D4-B",
+      "category": "D4",
+      "subtype": "B",
+      "attempt": 3,
+      "trace": "traces/D4-B/attempt_3",
+      "source": "real_native",
+      "status": "rejected",
+      "reason": "existing_pool_in_D4_B",
+      "world_seed": 191664964,
+      "center_origin": [
+        -288,
+        1456,
+        0
+      ],
+      "intervention": {
+        "mode": "native_initialization",
+        "rng_state": {
+          "bit_generator": "PCG64",
+          "state": {
+            "state": 211188547240978903204768023678097899634,
+            "inc": 332724090758049132448979897138935081983
+          },
+          "has_uint32": 1,
+          "uinteger": 2366135143
+        },
+        "planning": {
+          "reason": "existing_pool_in_D4_B",
+          "rng_state": {
+            "bit_generator": "PCG64",
+            "state": {
+              "state": 211188547240978903204768023678097899634,
+              "inc": 332724090758049132448979897138935081983
+            },
+            "has_uint32": 1,
+            "uinteger": 2366135143
+          },
+          "algorithm": "all-source shared graph / sparse 64-source bitsets",
+          "pair_compatibility_seconds": 0.0,
+          "selected_sources": []
+        }
+      },
+      "wall_seconds": 2.228820249903947
+    },
+    {
+      "unique_type": "D4-C",
+      "category": "D4",
+      "subtype": "C",
+      "attempt": 1,
+      "trace": "traces/D4-C/attempt_1",
+      "source": "real_native",
+      "status": "success",
+      "reason": null,
+      "candidate_states": 10,
+      "center_target_changes": 83,
+      "center_transition_observations": 10,
+      "simulated_seconds": 8.547162998467684,
+      "stop_reason": "candidate_limit",
+      "legal_windows": 6,
+      "world_seed": 191664964,
+      "center_origin": [
+        816,
+        -1232,
+        -64
+      ],
+      "audit": {
+        "blocked_entities": {
+          "mcl_chests:chest": 15.0,
+          "mcl_wieldview:wieldview": 461.0,
+          "mobs_mc:pig": 1.0
+        },
+        "blocked_item_attempts": 1.0,
+        "compatible": true,
+        "dropped_items": 0.0,
+        "entity_callbacks": 0.0,
+        "entity_induced_changes": 0.0,
+        "nontechnical_entities": 0.0,
+        "unsupported_falling_attempts": 0.0
+      },
+      "observed_reaction_count": 32,
+      "contact_observed": true,
+      "center_contact_observed": true,
+      "structural_fire_changes": 0,
+      "fire_age_only_changes": 0,
+      "intervention": {
+        "mode": "native_initialization",
+        "rng_state": {
+          "bit_generator": "PCG64",
+          "state": {
+            "state": 191951893225733970432319074982592091833,
+            "inc": 332724090758049132448979897138935081983
+          },
+          "has_uint32": 1,
+          "uinteger": 3558581945
+        },
+        "pool_observation_seconds": 1.1806379966437817,
+        "planning": {
+          "rng_state": {
+            "bit_generator": "PCG64",
+            "state": {
+              "state": 191951893225733970432319074982592091833,
+              "inc": 332724090758049132448979897138935081983
+            },
+            "has_uint32": 1,
+            "uinteger": 3558581945
+          },
+          "algorithm": "all-source shared graph / sparse 64-source bitsets",
+          "pair_compatibility_seconds": 0.0,
+          "water": {
+            "N": 201,
+            "p": 0.004975124378109453,
+            "selected": [
+              1445,
+              1665
+            ],
+            "fallback": false,
+            "cap": 4,
+            "distribution": "independent Bernoulli then uniform fallback/cap"
+          },
+          "precompute_wall_seconds": 0.01632416690699756,
+          "metrics": {
+            "water": {
+              "legal_source_count": 1780,
+              "evaluated_source_count": 1780,
+              "reachable_candidate_count": 494,
+              "qualified_candidate_count": 201,
+              "mathematically_pruned_count": 299,
+              "visited_nodes": 135918,
+              "reachability_seconds": 0.007959957933053374,
+              "shared_graph_build_seconds": 0.2822047080844641,
+              "kernel_working_bytes": 36274176,
+              "batch_size": 64,
+              "uncertain_pruning_disabled": false,
+              "candidates_per_second": 223619.27223366703,
+              "semantics": "10 scheduled-wave seconds: optimistic potential, NOT deterministic native GT",
+              "uncertainty": "native queue ordering, fluid renewal/competition and ABM randomness are not fixed; lower bound0, no finite stochastic upper bound"
+            }
+          },
+          "selected_sources": [
+            {
+              "kind": "water",
+              "source_index": 1445,
+              "position": [
+                816,
+                -1218,
+                -51
+              ],
+              "reachable_voxels": 28,
+              "center_reachable_voxels": 22,
+              "potential_transition_times": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7
+              ]
+            },
+            {
+              "kind": "water",
+              "source_index": 1665,
+              "position": [
+                820,
+                -1221,
+                -47
+              ],
+              "reachable_voxels": 57,
+              "center_reachable_voxels": 44,
+              "potential_transition_times": [
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10
+              ]
+            }
+          ]
+        },
+        "requested_actions": [
+          {
+            "type": "water",
+            "position": [
+              816,
+              -1218,
+              -51
+            ]
+          },
+          {
+            "type": "water",
+            "position": [
+              820,
+              -1221,
+              -47
+            ]
+          }
+        ],
+        "actual_actions": [
+          {
+            "after": "mcl_core:water_source",
+            "before": "air",
+            "clock": {
+              "engine_us": 2290847090029.0,
+              "sim_time": 14.5950559489429,
+              "simulation_step": 305.0
+            },
+            "position": [
+              816.0,
+              -1218.0,
+              -51.0
+            ],
+            "type": "water"
+          },
+          {
+            "after": "mcl_core:water_source",
+            "before": "air",
+            "clock": {
+              "engine_us": 2290847090060.0,
+              "sim_time": 14.5950559489429,
+              "simulation_step": 305.0
+            },
+            "position": [
+              820.0,
+              -1221.0,
+              -47.0
+            ],
+            "type": "water"
+          }
+        ]
+      },
+      "output": "examples/D4-C",
+      "wall_seconds": 31.15690620802343
+    }
+  ],
+  "wall_budget": 900.0,
+  "attempts_per_type": 3,
+  "max_successes_per_type": 1,
+  "formal_shard_generated": false,
+  "models_or_training": false,
+  "wall_seconds": 202.49002033402212,
+  "not_attempted": [],
+  "interpretation": "Native attempts only. Failure is not replaced by synthetic data; formal 1K/100K throughput is unverified.",
+  "post_run_change": "D4-B isolated-source pool guard and center-contact unary candidate filter fixed/profiled offline only; no extra native attempts.",
+  "native_source_base_commit": "c9c7bbe3940078b0b56938186224b519c9788ac9",
+  "native_collector_worktree_dirty": true
+}

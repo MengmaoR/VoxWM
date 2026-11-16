@@ -4,7 +4,9 @@
 
 [当前数据协议](VAE_DATA_COLLECTION_PROTOCOL.md) · [服务器生成/恢复/检查命令](vae_data/README.md) · [本轮Native结果](vae_data/SHARDED_RESULTS.md)。最新用户指令覆盖旧200K/植物协议，VAE架构不变。活动代码为`vae_data/sharded/`，默认入口`python -m vae_data`。
 
-代码已实现，原生验证 **INCONCLUSIVE**：8次有限尝试中Water成功2条，其他类别未得到合格链；不宣称1K/100K或完整Biome分布已验证。JSON交接错误已修正，未为追成功追加Native。47项快速Unit通过，Fixture不作物理证据。
+当前原生验证 **INCONCLUSIVE**：本轮六型、12次尝试，总墙钟202.49秒，D1/D2/D3/D4-C各成功一条，D4-A/B仍有缺口。全点共享图预计算、失败Trace及独立GT-only Viewer已实现；[本轮报告/轻量预览](vae_data/reports/exhaustive_20261116/README.md)。没有正式1K/100K、模型或训练。
+
+[Node-state 审计与 Viewer](vae_data/reports/transition_audit_20261116/README.md)：已核对D2 attempt_2的18.9–19.2秒；消失的是Flowing Lava，被替换的是红蘑菇。支持原生液面/Firelike、固定世界坐标Before/After和点击Inspector。没有额外Native生成。
 
 ```bash
 # 全部真实生成由用户在CPU服务器手动启动，下面只展示入口

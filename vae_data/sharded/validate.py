@@ -63,7 +63,9 @@ def validate_chain(chain,vocabulary,require_native=True):
             if not all(event.get(role)in keys for role in('pre','reaction','post')):continue
             pre,reaction,post=[keys[event[role]]for role in('pre','reaction','post')]
             if not pre.time<reaction.time<post.time:continue
-            if not any(confirmed_transition(t,pre,reaction,vocabulary)for t in event['transitions']):continue
+            observed=event.get('pre_observation')
+            if observed and(not observed['equal_center_to_reference']or observed['sim_time']<pre.time or observed['sim_time']>=reaction.time):continue
+            if not any(confirmed_transition(t,pre,reaction,vocabulary)and(not observed or observed['engine_us']<t['clock']['engine_us'])for t in event['transitions']):continue
             if not all(dict(event_id=event['id'],role=role)in keys[event[role]].meta.get('event_roles',[])for role in('pre','reaction','post')):continue
             complete=True
         if not complete:raise ValueError('No complete central Pre-Reaction-Post event in window')

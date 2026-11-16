@@ -1,0 +1,535 @@
+{
+  "status": {
+    "status": "success",
+    "reason": null,
+    "candidate_states": 10,
+    "center_target_changes": 20,
+    "center_transition_observations": 9,
+    "simulated_seconds": 8.341752965003252,
+    "stop_reason": "candidate_limit",
+    "legal_windows": 6,
+    "subtype": "",
+    "world_seed": 191664964,
+    "center_origin": [
+      -272,
+      1440,
+      -16
+    ],
+    "audit": {
+      "blocked_entities": {
+        "mcl_chests:chest": 11.0,
+        "mcl_wieldview:wieldview": 467.0,
+        "mobs_mc:pig": 1.0
+      },
+      "blocked_item_attempts": 1.0,
+      "compatible": true,
+      "dropped_items": 0.0,
+      "entity_callbacks": 0.0,
+      "entity_induced_changes": 0.0,
+      "nontechnical_entities": 0.0,
+      "unsupported_falling_attempts": 0.0
+    },
+    "observed_reaction_count": 0,
+    "contact_observed": false,
+    "center_contact_observed": false,
+    "structural_fire_changes": 0,
+    "fire_age_only_changes": 0,
+    "intervention": {
+      "mode": "native_initialization",
+      "rng_state": {
+        "bit_generator": "PCG64",
+        "state": {
+          "state": 101187285527920527669479332927494043465,
+          "inc": 332724090758049132448979897138935081983
+        },
+        "has_uint32": 0,
+        "uinteger": 732691220
+      },
+      "planning": {
+        "rng_state": {
+          "bit_generator": "PCG64",
+          "state": {
+            "state": 101187285527920527669479332927494043465,
+            "inc": 332724090758049132448979897138935081983
+          },
+          "has_uint32": 0,
+          "uinteger": 732691220
+        },
+        "algorithm": "all-source shared graph / sparse 64-source bitsets",
+        "pair_compatibility_seconds": 0.0,
+        "lava": {
+          "N": 20,
+          "p": 0.05,
+          "selected": [
+            17173,
+            17436
+          ],
+          "fallback": false,
+          "cap": 4,
+          "distribution": "independent Bernoulli then uniform fallback/cap"
+        },
+        "precompute_wall_seconds": 0.03368687490001321,
+        "metrics": {
+          "lava": {
+            "legal_source_count": 18854,
+            "evaluated_source_count": 18854,
+            "reachable_candidate_count": 156,
+            "qualified_candidate_count": 20,
+            "mathematically_pruned_count": 0,
+            "visited_nodes": 825608,
+            "reachability_seconds": 0.015851542120799422,
+            "shared_graph_build_seconds": 0.28969537490047514,
+            "kernel_working_bytes": 14155776,
+            "batch_size": 64,
+            "uncertain_pruning_disabled": true,
+            "candidates_per_second": 1189411.090499576,
+            "semantics": "10 scheduled-wave seconds: optimistic potential, NOT deterministic native GT",
+            "uncertainty": "native queue ordering, fluid renewal/competition and ABM randomness are not fixed; lower bound0, no finite stochastic upper bound"
+          }
+        },
+        "selected_sources": [
+          {
+            "kind": "lava",
+            "source_index": 17173,
+            "position": [
+              -257,
+              1439,
+              -2
+            ],
+            "reachable_voxels": 64,
+            "center_reachable_voxels": 3,
+            "potential_transition_times": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "reachable_region_indices": [
+              67370,
+              67418,
+              67419,
+              67467,
+              67468,
+              67516,
+              69673,
+              69674,
+              69722,
+              69723,
+              69771,
+              69772,
+              69820,
+              69821,
+              69869,
+              69870,
+              69918,
+              71929,
+              71977,
+              71978,
+              72026,
+              72074,
+              72075,
+              72123,
+              72124,
+              72125,
+              72126,
+              72172,
+              72173,
+              72174,
+              72222,
+              72270,
+              74281,
+              74282,
+              74330,
+              74378,
+              74379,
+              74427,
+              74475,
+              74476,
+              74477,
+              74478,
+              74524,
+              74525,
+              74526,
+              74573,
+              74574,
+              76586,
+              76634,
+              76635,
+              76683,
+              76731,
+              76732,
+              76780,
+              76828,
+              76829,
+              76877,
+              79036,
+              79084,
+              79132,
+              79133,
+              79181,
+              79229,
+              81485
+            ],
+            "estimated_arrival_seconds": [
+              10,
+              9,
+              8,
+              7,
+              6,
+              5,
+              10,
+              9,
+              8,
+              7,
+              6,
+              5,
+              4,
+              3,
+              2,
+              1,
+              2,
+              10,
+              9,
+              8,
+              7,
+              6,
+              5,
+              4,
+              3,
+              2,
+              1,
+              2,
+              1,
+              0,
+              1,
+              2,
+              10,
+              9,
+              8,
+              7,
+              6,
+              5,
+              4,
+              3,
+              2,
+              1,
+              4,
+              3,
+              2,
+              4,
+              3,
+              10,
+              9,
+              10,
+              7,
+              6,
+              7,
+              6,
+              5,
+              6,
+              5,
+              10,
+              7,
+              6,
+              7,
+              6,
+              7,
+              7
+            ]
+          },
+          {
+            "kind": "lava",
+            "source_index": 17436,
+            "position": [
+              -256,
+              1441,
+              -1
+            ],
+            "reachable_voxels": 55,
+            "center_reachable_voxels": 4,
+            "potential_transition_times": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "reachable_region_indices": [
+              67468,
+              67516,
+              69771,
+              69772,
+              69820,
+              69821,
+              69869,
+              69870,
+              69918,
+              72074,
+              72075,
+              72123,
+              72124,
+              72172,
+              72173,
+              72174,
+              72222,
+              72270,
+              72271,
+              74330,
+              74378,
+              74379,
+              74427,
+              74475,
+              74476,
+              74524,
+              74525,
+              74526,
+              74527,
+              74573,
+              74574,
+              74575,
+              74623,
+              76635,
+              76683,
+              76731,
+              76732,
+              76780,
+              76828,
+              76829,
+              76877,
+              76878,
+              76879,
+              76926,
+              76927,
+              78988,
+              79036,
+              79084,
+              79132,
+              79133,
+              79181,
+              79229,
+              79230,
+              81437,
+              81485
+            ],
+            "estimated_arrival_seconds": [
+              10,
+              9,
+              10,
+              9,
+              8,
+              7,
+              6,
+              5,
+              4,
+              10,
+              9,
+              8,
+              7,
+              6,
+              5,
+              4,
+              3,
+              2,
+              1,
+              10,
+              9,
+              8,
+              7,
+              6,
+              5,
+              4,
+              3,
+              2,
+              1,
+              2,
+              1,
+              0,
+              1,
+              10,
+              9,
+              8,
+              7,
+              6,
+              5,
+              4,
+              3,
+              2,
+              1,
+              3,
+              2,
+              9,
+              8,
+              7,
+              6,
+              5,
+              4,
+              5,
+              4,
+              6,
+              5
+            ]
+          }
+        ]
+      },
+      "requested_actions": [
+        {
+          "type": "lava",
+          "position": [
+            -257,
+            1439,
+            -2
+          ]
+        },
+        {
+          "type": "lava",
+          "position": [
+            -256,
+            1441,
+            -1
+          ]
+        }
+      ],
+      "actual_actions": [
+        {
+          "after": "mcl_core:lava_source",
+          "before": "air",
+          "clock": {
+            "engine_us": 2290718697123.0,
+            "sim_time": 14.927035957574844,
+            "simulation_step": 313.0
+          },
+          "position": [
+            -257.0,
+            1439.0,
+            -2.0
+          ],
+          "type": "lava"
+        },
+        {
+          "after": "mcl_core:lava_source",
+          "before": "air",
+          "clock": {
+            "engine_us": 2290718697190.0,
+            "sim_time": 14.927035957574844,
+            "simulation_step": 313.0
+          },
+          "position": [
+            -256.0,
+            1441.0,
+            -1.0
+          ],
+          "type": "lava"
+        }
+      ]
+    }
+  },
+  "planning": {
+    "rng_state": {
+      "bit_generator": "PCG64",
+      "state": {
+        "state": 101187285527920527669479332927494043465,
+        "inc": 332724090758049132448979897138935081983
+      },
+      "has_uint32": 0,
+      "uinteger": 732691220
+    },
+    "algorithm": "all-source shared graph / sparse 64-source bitsets",
+    "pair_compatibility_seconds": 0.0,
+    "lava": {
+      "N": 20,
+      "p": 0.05,
+      "selected": [
+        17173,
+        17436
+      ],
+      "fallback": false,
+      "cap": 4,
+      "distribution": "independent Bernoulli then uniform fallback/cap"
+    },
+    "precompute_wall_seconds": 0.03368687490001321,
+    "metrics": {
+      "lava": {
+        "legal_source_count": 18854,
+        "evaluated_source_count": 18854,
+        "reachable_candidate_count": 156,
+        "qualified_candidate_count": 20,
+        "mathematically_pruned_count": 0,
+        "visited_nodes": 825608,
+        "reachability_seconds": 0.015851542120799422,
+        "shared_graph_build_seconds": 0.28969537490047514,
+        "kernel_working_bytes": 14155776,
+        "batch_size": 64,
+        "uncertain_pruning_disabled": true,
+        "candidates_per_second": 1189411.090499576,
+        "semantics": "10 scheduled-wave seconds: optimistic potential, NOT deterministic native GT",
+        "uncertainty": "native queue ordering, fluid renewal/competition and ABM randomness are not fixed; lower bound0, no finite stochastic upper bound"
+      }
+    },
+    "selected_sources": [
+      {
+        "kind": "lava",
+        "source_index": 17173,
+        "position": [
+          -257,
+          1439,
+          -2
+        ],
+        "reachable_voxels": 64,
+        "center_reachable_voxels": 3,
+        "potential_transition_times": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ]
+      },
+      {
+        "kind": "lava",
+        "source_index": 17436,
+        "position": [
+          -256,
+          1441,
+          -1
+        ],
+        "reachable_voxels": 55,
+        "center_reachable_voxels": 4,
+        "potential_transition_times": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10
+        ]
+      }
+    ]
+  },
+  "native_frames": 32,
+  "accepted_indices": [
+    1,
+    2,
+    5,
+    9,
+    13
+  ],
+  "actual_center_changes": 20,
+  "actual_neighbor_changes": 186,
+  "native_events": []
+}

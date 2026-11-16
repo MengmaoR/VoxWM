@@ -1,3 +1,11 @@
+# 最新：2026-11-16 全点预计算 / 六型 GT
+
+**INCONCLUSIVE**：唯一一轮202.49秒，D1/D2/D3/D4-C成功，D4-A/B未通过。[完整实测、六型PNG/GIF、命令及限制](reports/exhaustive_20261116/README.md)。本次没有正式Shard或训练。
+
+---
+
+以下为2026-11-15历史报告，原文保留；其中“本轮”指当日旧测试。
+
 INCONCLUSIVE — VAE 100K / 1K Shard Generator
 
 数据生成器已实现；有限Native测试只得到D1合格样例，不能宣称四类物理产出、正式1K或100K已验证。只改数据系统，无模型、训练器、DataLoader或GPU任务。旧版代码、数据、报告及日志保留。

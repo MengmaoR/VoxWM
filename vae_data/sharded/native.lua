@@ -55,7 +55,13 @@ local function prepare(r)
                 if mt.forceload_block(p,true)then held[#held+1]=p else active=false end
             end end end
             region={center=r.center,low=low,high=high,origins=origins,surface_y=r.surface_y}
-            if not active then reply(r,{status='activation_failed'})else capture(r,{status='prepared'})end
+            if not active then reply(r,{status='activation_failed'})else
+                local protected={};local index=0;local player_name=mt.get_connected_players()[1]:get_player_name()
+                for x=low.x,high.x do for z=low.z,high.z do for y=low.y,high.y do
+                    if mt.is_protected({x=x,y=y,z=z},player_name)then protected[#protected+1]=index end;index=index+1
+                end end end
+                capture(r,{status='prepared',protected_source_indices=protected})
+            end
         end)
     end)
 end
@@ -89,17 +95,13 @@ local function inspect(r)
             if mt.get_item_group(n.name,'puts_out_fire')>0 then wet=true end
         end
         local c=eng(region.center)
-        if p.x>=c.x and p.x<c.x+16 and p.z>=c.z and p.z<c.z+16 and p.y>=c.y and p.y<c.y+24 then
+        if not mt.is_protected(p,mt.get_connected_players()[1]:get_player_name())then
             local row={position=enu(p),attached=support}
             if support then attached[#attached+1]=row else suspended[#suspended+1]=row end
             if under and not wet then fire[#fire+1]={position=enu(p),under=enu(under)};count=count+1 end
         end
     end
-    local rng=PcgRandom(r.seed or 42)
-    local function subset(list)
-        local out={};for i=1,math.min(#list,256)do local j=rng:next(i,#list);list[i],list[j]=list[j],list[i];out[#out+1]=list[i]end;return out
-    end
-    reply(r,{status='inspected',attached=subset(attached),suspended=subset(suspended),fire=fire,fire_legal_count=count})
+    reply(r,{status='inspected',attached=attached,suspended=suspended,fire=fire,fire_legal_count=count})
 end
 mt.register_on_joinplayer(function(player)
     player:set_physics_override({gravity=0,speed=0,jump=0});player:set_properties({is_visible=false,pointable=false,collide_with_objects=false})
@@ -115,7 +117,7 @@ mt.register_globalstep(function(dt)
             local id=mt.get_content_id(name)
             if not seen[id]then seen[id]=true;local n=mt.get_name_from_content_id(id);local d=mt.registered_nodes[n]or def
                 nodes[#nodes+1]={id,n,d.walkable~=false,(d.groups and(d.groups.water or 0)>0)or false,d.liquidtype or'none'}
-                records[#records+1]={id=id,name=n,groups=d.groups or{},walkable=d.walkable,liquid_range=d.liquid_range,liquid_viscosity=d.liquid_viscosity,floodable=d.floodable or false}
+                records[#records+1]={id=id,name=n,groups=d.groups or{},walkable=d.walkable,liquid_range=d.liquid_range,liquid_viscosity=d.liquid_viscosity,floodable=d.floodable or false,buildable_to=d.buildable_to or false}
             end
         end
         write('pilot_boot.json',{nodes=records,liquid_update=mt.settings:get('liquid_update')or'1.0'});write('gt_nodes.json',nodes);started=true
@@ -133,7 +135,8 @@ mt.register_globalstep(function(dt)
                     reactions={};local actions={}
                     for _,a in ipairs(r.actions)do
                         local p=eng(a.position);local before=mt.get_node(p).name
-                        if before=='air'then
+                        local def=mt.registered_nodes[before]
+                        if not mt.is_protected(p,player:get_player_name())and(before=='air'or a.type~='fire'and def and def.buildable_to and def.liquidtype=='none')then
                             if a.type=='fire'then mcl_fire.set_fire({type='node',under=eng(a.under),above=p},player)
                             else mt.set_node(p,{name=a.type=='water'and'mcl_core:water_source'or'mcl_core:lava_source'})end
                         end

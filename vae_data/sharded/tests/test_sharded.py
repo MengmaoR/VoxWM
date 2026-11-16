@@ -7,7 +7,8 @@ from unittest.mock import patch
 import numpy as np
 from vae_data.sharded.protocol import Frame,Chain,Vocabulary,BIOMES,STRATA,split_for_seed,d4_targets,assemble,kind_mask
 from vae_data.sharded.sampling import Collector,Registry
-from vae_data.sharded.reachability import potential,plan,pool_components
+from vae_data.sharded.reachability import pool_components
+from vae_data.history.reachability_pre_exhaustive import potential,plan
 from vae_data.sharded.storage import Writer,initialize,globalize,rows_at
 from vae_data.sharded.validate import validate_chain,check_shard,quota_errors
 

@@ -1,6 +1,6 @@
 # VoxWM — VAE 100K / 1K Shard 数据采集协议
 
-版本：2026-11-15 / `vae-region48-shards-v1`。最新用户《VAE 数据生成系统重构》指令为本次最高权威。本协议只修改数据生成，不改变 VAE 架构、不实现模型、训练器或 DataLoader。旧 200K 协议保存在 `vae_data/history/UNIFIED_200K_2026-11-15.md`，旧代码、结果和日志保留，不混入当前数据。
+版本：2026-11-16 / `vae-region48-shards-v1`。最新用户《Exhaustive Intervention Planning, Six-Type Native Validation & GT Viewer》为本次最高权威。本协议只修改数据生成，不改变 VAE 架构、不实现模型、训练器或 DataLoader。旧 200K 协议保存在 `vae_data/history/UNIFIED_200K_2026-11-15.md`，旧代码、结果和日志保留，不混入当前数据。
 
 ## 1. 数量和空间单位
 
@@ -36,13 +36,21 @@ VoxGen原始空间协议要求真实连续27个Chunk，细分配额原为建议�
 
 每片25条，按A/B/C中一个9条、另两个8条轮换（shard0为8/8/9，shard1为9/8/8，shard2为8/9/8）。缺失不替代。
 
-源点先做当前48³几何可达性筛选：Water range7、Lava range3，考虑重力优先、向下流动、水平level衰减、可floodable节点及固体/另一流体障碍，优先中心接触。筛选是有界空间潜势包络，不预测准确时间，不模拟source renewal、两流竞争或全部黏度过程；实际接触与固化只能由native确认。A/C先短时观测已有自然source池的稳定性；不新建池或改地形。
+全部合法源点参与预计算，不使用inspect256或预随机32/64子集。共享原生Node合法性/障碍图，反向乐观不可达判定、10秒时间分层和64-source稀疏bitset批处理；所有合法点有结果或明确的不可达依据。仅选中点保留详细可达域，不保存N×48³密集矩阵。编译小型C++17 CPU内核，不引入新的Python依赖。
+
+Water range7、Lava range3，考虑向下流动、水平level衰减、source与flowing差异、floodable及另一流体阻挡。Lava黏度产生的level调整、Fire ABM机会与湿度均存在不确定性：10个scheduled-wave秒是可解释的传播潜力，不是原生确定性预报；随机过程最低实际产出可为0，不能声称10秒必达。可能存在未建模的可燃/冰雪移除时，禁用据此不安全的反向剪枝。
+
+区分完整可达、中心可达、到达时间及时间阶段；至少四个不同的中心潜在变化时间带，首带不晚于2秒、前四带间隔不超过2秒。一个时间带影响多个体素仍只算一次。D4只统计预计Stone/Cobble/Obsidian实际产物位于中心的接触，不把邻接触点当产物。初始化后基准可作D1–D3首帧，D4 Anchor仍独立。
+
+合格集合N上逐点独立Bernoulli p=1/N；零命中均匀保底、最多4源点、超限无放回随机裁剪。D4-B完整评估两类源点：先过滤10秒内能进入中心/产物接触halo的单源潜力集合，分别p=1/N，再查询隐式水–岩浆接触因子图。组合必须同时满足真实产物位置和联合四时间阶段潜力；一次有界条件保底评估全部lava并均匀选择兼容点，明确记录条件概率/分布变化；不枚举完整笛卡尔积，不保证每个场景一定找到配对。A/C短时观测真实天然source池稳定性；B按连通二维source池判定，散落4–5个水方块不是水池。不新建池、不改地形。
+
+Fire枚举全部合法air点火位置（无保护、下方非水），再评估原生传播邻域、中心可燃结构连通性及falling风险。仅相同Fire节点的raw param2年龄变化不计结构传播；不修改原生ABM、随机规则或falling排除策略。
 
 用原生cooling写入的被动观测确认：真实Water/Lava接触、原状态以及Stone/Cobblestone/Obsidian新转换。观察器转发原始set_node，不改变规则、参数或结果。已有固体不是事件证据；未被可靠捕获的转换不伪造为成功。
 
 Initial Anchor为全部source放置完的原始48³初态，独立保存且不进入VAE候选。Pre为reaction前最后一个已捕获中心状态；Reaction为首次观察到对应真实转换的帧；Post为其后第一次中心相关动态改变；后续reaction同样记录。采样不是每引擎step全量轨迹，原生写入step/us与包含该写入的观察帧step分别记录，不能声称捕获了所有未采样中间状态。
 
-统一Frame Registry以 `(rollout_id,simulation_step)`标识物理帧，重叠角色/Reaction IDs合并，Snapshot不重复存储。不同时间相同中心状态不能补数；若重复状态无法同时满足最后pre与唯一性，相关事件不算完整。候选最多10，从中随机选连续五状态窗口，必须中心各不同，至少有一组完整Pre–Reaction–Post，时间严格递增、反应在中心、实际contact/write证据有效。没有合法窗口就拒绝。只有最终成功D4场景保留Anchor。
+统一Frame Registry以 `(rollout_id,simulation_step)`标识物理帧，重叠角色/Reaction IDs合并，Snapshot不重复存储。不同时间相同中心状态不能补数；角色可引用已有相同中心状态，但保留该引用的原始物理时间，并另存实际最后Pre观察的frame ID/time/step/us及中心相等证据，不伪造时间。无法满足真实Pre–Reaction–Post时间关系的事件仍拒绝。候选最多10，从中随机选连续五状态窗口，必须中心各不同，至少有一组完整Pre–Reaction–Post，时间严格递增、反应在中心、实际contact/write证据有效。没有合法窗口就拒绝。只有最终成功D4场景保留Anchor。
 
 ## 5. 存储、恢复和发布
 
@@ -71,6 +79,8 @@ dataset/
 
 继续从引擎入口禁止非技术实体、掉落和实体导致的Voxel变化；技术player不可见无交互。当前不支持falling-entity物理，发生该请求则排除当前rollout，不发布被冻结的物理。保留原生液体、cooling、fire，不加速ABM或模拟时钟。
 
-允许单元/静态和有界native样例。每类最多2条成功五状态48³链，总计最多8；本轮采用每类最多2次尝试、总墙钟300秒。未成功实报，不扩测试规模追成功。D4第三子类型用单元测试覆盖。
+本轮仅允许六个Unique Types D1/D2/D3/D4-A/D4-B/D4-C：每型最多3次Native Attempt，成功1条即停止，整轮硬墙钟900秒。已执行一次，202.49秒，成功D1/D2/D3/D4-C；A/B缺口保留，不追加追成功。正式Shard不保存全轨迹；本轮专用Debug Trace另外保存每次真实观察的48³ tokens/light、原生时间/step、所有源点统计、选中点时间网格、干预前后、原生事件/产物及选中五帧索引。VWT1首帧+稀疏增量可无损重建，包括失败观察；无观测则明确报错而不补造状态。
+
+GT-only Viewer独立于docs展示站，复用其只读Three/OrbitControls资源与ABV1格式；按真实sim_time播放实际观察帧，支持48³/中心16³、切片、27边界、类型高亮、source及估计/实际变化叠加、事件/接收帧标记。每型轻量PNG/GIF/JSON/Markdown入Git，全部Trace留outputs并忽略。所有预计算、Actual Native、Accepted VAE States和Synthetic Tests明确区分。
 
 不运行正式1K片、100K、广域扫描、其他原生动态任务或训练。服务器正式生成全部由用户手动启动。本轮验收是代码完成、检查通过、有限native测试完成或如实失败，而非虚构数据集已就绪。

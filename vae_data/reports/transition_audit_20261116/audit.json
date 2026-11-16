@@ -1,0 +1,4410 @@
+{
+  "status": "NO_SOURCE_LOSS_OR_UNEXPLAINED_SOLID_TO_LIQUID_IN_OBSERVED_WINDOW",
+  "trace": "outputs/vae_native_six_20261116/traces/D2/attempt_2",
+  "unique_type": "D2",
+  "attempt": "attempt_2",
+  "rollout_id": "e14fc750b7614f6887e2b8552ac49b4f",
+  "requested_interval": [
+    18.9,
+    19.2
+  ],
+  "observed_range": [
+    14.789308957755566,
+    23.268788922578096
+  ],
+  "observed_frames": 32,
+  "region_origin": [
+    -288,
+    1424,
+    -32
+  ],
+  "center_origin": [
+    -272,
+    1440,
+    -16
+  ],
+  "transition_counts": {
+    "flowing_liquid_appearance_observed": 8,
+    "liquid_level_or_flow_down_update": 15,
+    "flowing_liquid_recession_observed": 1,
+    "lava_replaced_lava_destructible_node_observed": 1
+  },
+  "transitions": [
+    {
+      "sim_time": 19.17777892947197,
+      "world_xyz": [
+        -266,
+        1434,
+        -2
+      ],
+      "before_name": "air",
+      "before_param2": 0,
+      "after_name": "mcl_core:water_flowing",
+      "after_param2": 7,
+      "transition_type": "flowing_liquid_appearance_observed",
+      "before_frame": 15,
+      "after_frame": 16,
+      "before_time": 18.9037409350276,
+      "after_time": 19.17777892947197,
+      "region_local": [
+        22,
+        10,
+        30
+      ],
+      "center_chunk_local": null,
+      "in_center": false,
+      "before_neighbors": [
+        {
+          "world_xyz": [
+            -265,
+            1434,
+            -2
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -267,
+            1434,
+            -2
+          ],
+          "name": "mcl_core:sand",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -266,
+            1435,
+            -2
+          ],
+          "name": "mcl_core:sand",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -266,
+            1433,
+            -2
+          ],
+          "name": "mcl_core:water_flowing",
+          "param2": 7
+        },
+        {
+          "world_xyz": [
+            -266,
+            1434,
+            -1
+          ],
+          "name": "mcl_core:water_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -266,
+            1434,
+            -3
+          ],
+          "name": "mcl_core:sand",
+          "param2": 0
+        }
+      ],
+      "after_neighbors": [
+        {
+          "world_xyz": [
+            -265,
+            1434,
+            -2
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -267,
+            1434,
+            -2
+          ],
+          "name": "mcl_core:sand",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -266,
+            1435,
+            -2
+          ],
+          "name": "mcl_core:sand",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -266,
+            1433,
+            -2
+          ],
+          "name": "mcl_core:water_flowing",
+          "param2": 7
+        },
+        {
+          "world_xyz": [
+            -266,
+            1434,
+            -1
+          ],
+          "name": "mcl_core:water_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -266,
+            1434,
+            -3
+          ],
+          "name": "mcl_core:sand",
+          "param2": 0
+        }
+      ],
+      "confirmed_cooling_events": []
+    },
+    {
+      "sim_time": 19.17777892947197,
+      "world_xyz": [
+        -265,
+        1433,
+        -2
+      ],
+      "before_name": "air",
+      "before_param2": 0,
+      "after_name": "mcl_core:water_flowing",
+      "after_param2": 15,
+      "transition_type": "flowing_liquid_appearance_observed",
+      "before_frame": 15,
+      "after_frame": 16,
+      "before_time": 18.9037409350276,
+      "after_time": 19.17777892947197,
+      "region_local": [
+        23,
+        9,
+        30
+      ],
+      "center_chunk_local": null,
+      "in_center": false,
+      "before_neighbors": [
+        {
+          "world_xyz": [
+            -264,
+            1433,
+            -2
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -266,
+            1433,
+            -2
+          ],
+          "name": "mcl_core:water_flowing",
+          "param2": 7
+        },
+        {
+          "world_xyz": [
+            -265,
+            1434,
+            -2
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -265,
+            1432,
+            -2
+          ],
+          "name": "mcl_core:water_flowing",
+          "param2": 7
+        },
+        {
+          "world_xyz": [
+            -265,
+            1433,
+            -1
+          ],
+          "name": "mcl_core:water_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -265,
+            1433,
+            -3
+          ],
+          "name": "air",
+          "param2": 0
+        }
+      ],
+      "after_neighbors": [
+        {
+          "world_xyz": [
+            -264,
+            1433,
+            -2
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -266,
+            1433,
+            -2
+          ],
+          "name": "mcl_core:water_flowing",
+          "param2": 7
+        },
+        {
+          "world_xyz": [
+            -265,
+            1434,
+            -2
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -265,
+            1432,
+            -2
+          ],
+          "name": "mcl_core:water_flowing",
+          "param2": 7
+        },
+        {
+          "world_xyz": [
+            -265,
+            1433,
+            -1
+          ],
+          "name": "mcl_core:water_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -265,
+            1433,
+            -3
+          ],
+          "name": "air",
+          "param2": 0
+        }
+      ],
+      "confirmed_cooling_events": []
+    },
+    {
+      "sim_time": 19.17777892947197,
+      "world_xyz": [
+        -265,
+        1434,
+        -1
+      ],
+      "before_name": "air",
+      "before_param2": 0,
+      "after_name": "mcl_core:water_flowing",
+      "after_param2": 15,
+      "transition_type": "flowing_liquid_appearance_observed",
+      "before_frame": 15,
+      "after_frame": 16,
+      "before_time": 18.9037409350276,
+      "after_time": 19.17777892947197,
+      "region_local": [
+        23,
+        10,
+        31
+      ],
+      "center_chunk_local": null,
+      "in_center": false,
+      "before_neighbors": [
+        {
+          "world_xyz": [
+            -264,
+            1434,
+            -1
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -266,
+            1434,
+            -1
+          ],
+          "name": "mcl_core:water_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -265,
+            1435,
+            -1
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -265,
+            1433,
+            -1
+          ],
+          "name": "mcl_core:water_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -265,
+            1434,
+            0
+          ],
+          "name": "mcl_core:water_source",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -265,
+            1434,
+            -2
+          ],
+          "name": "air",
+          "param2": 0
+        }
+      ],
+      "after_neighbors": [
+        {
+          "world_xyz": [
+            -264,
+            1434,
+            -1
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -266,
+            1434,
+            -1
+          ],
+          "name": "mcl_core:water_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -265,
+            1435,
+            -1
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -265,
+            1433,
+            -1
+          ],
+          "name": "mcl_core:water_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -265,
+            1434,
+            0
+          ],
+          "name": "mcl_core:water_source",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -265,
+            1434,
+            -2
+          ],
+          "name": "air",
+          "param2": 0
+        }
+      ],
+      "confirmed_cooling_events": []
+    },
+    {
+      "sim_time": 19.17777892947197,
+      "world_xyz": [
+        -264,
+        1431,
+        -2
+      ],
+      "before_name": "air",
+      "before_param2": 0,
+      "after_name": "mcl_core:water_flowing",
+      "after_param2": 7,
+      "transition_type": "flowing_liquid_appearance_observed",
+      "before_frame": 15,
+      "after_frame": 16,
+      "before_time": 18.9037409350276,
+      "after_time": 19.17777892947197,
+      "region_local": [
+        24,
+        7,
+        30
+      ],
+      "center_chunk_local": null,
+      "in_center": false,
+      "before_neighbors": [
+        {
+          "world_xyz": [
+            -263,
+            1431,
+            -2
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -265,
+            1431,
+            -2
+          ],
+          "name": "mcl_core:sand",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -264,
+            1432,
+            -2
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -264,
+            1430,
+            -2
+          ],
+          "name": "mcl_core:stone",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -264,
+            1431,
+            -1
+          ],
+          "name": "mcl_core:water_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -264,
+            1431,
+            -3
+          ],
+          "name": "mcl_core:sand",
+          "param2": 0
+        }
+      ],
+      "after_neighbors": [
+        {
+          "world_xyz": [
+            -263,
+            1431,
+            -2
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -265,
+            1431,
+            -2
+          ],
+          "name": "mcl_core:sand",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -264,
+            1432,
+            -2
+          ],
+          "name": "mcl_core:water_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -264,
+            1430,
+            -2
+          ],
+          "name": "mcl_core:stone",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -264,
+            1431,
+            -1
+          ],
+          "name": "mcl_core:water_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -264,
+            1431,
+            -3
+          ],
+          "name": "mcl_core:sand",
+          "param2": 0
+        }
+      ],
+      "confirmed_cooling_events": []
+    },
+    {
+      "sim_time": 19.17777892947197,
+      "world_xyz": [
+        -264,
+        1432,
+        -2
+      ],
+      "before_name": "air",
+      "before_param2": 0,
+      "after_name": "mcl_core:water_flowing",
+      "after_param2": 15,
+      "transition_type": "flowing_liquid_appearance_observed",
+      "before_frame": 15,
+      "after_frame": 16,
+      "before_time": 18.9037409350276,
+      "after_time": 19.17777892947197,
+      "region_local": [
+        24,
+        8,
+        30
+      ],
+      "center_chunk_local": null,
+      "in_center": false,
+      "before_neighbors": [
+        {
+          "world_xyz": [
+            -263,
+            1432,
+            -2
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -265,
+            1432,
+            -2
+          ],
+          "name": "mcl_core:water_flowing",
+          "param2": 7
+        },
+        {
+          "world_xyz": [
+            -264,
+            1433,
+            -2
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -264,
+            1431,
+            -2
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -264,
+            1432,
+            -1
+          ],
+          "name": "mcl_core:water_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -264,
+            1432,
+            -3
+          ],
+          "name": "air",
+          "param2": 0
+        }
+      ],
+      "after_neighbors": [
+        {
+          "world_xyz": [
+            -263,
+            1432,
+            -2
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -265,
+            1432,
+            -2
+          ],
+          "name": "mcl_core:water_flowing",
+          "param2": 7
+        },
+        {
+          "world_xyz": [
+            -264,
+            1433,
+            -2
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -264,
+            1431,
+            -2
+          ],
+          "name": "mcl_core:water_flowing",
+          "param2": 7
+        },
+        {
+          "world_xyz": [
+            -264,
+            1432,
+            -1
+          ],
+          "name": "mcl_core:water_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -264,
+            1432,
+            -3
+          ],
+          "name": "air",
+          "param2": 0
+        }
+      ],
+      "confirmed_cooling_events": []
+    },
+    {
+      "sim_time": 19.17777892947197,
+      "world_xyz": [
+        -264,
+        1433,
+        -1
+      ],
+      "before_name": "air",
+      "before_param2": 0,
+      "after_name": "mcl_core:water_flowing",
+      "after_param2": 15,
+      "transition_type": "flowing_liquid_appearance_observed",
+      "before_frame": 15,
+      "after_frame": 16,
+      "before_time": 18.9037409350276,
+      "after_time": 19.17777892947197,
+      "region_local": [
+        24,
+        9,
+        31
+      ],
+      "center_chunk_local": null,
+      "in_center": false,
+      "before_neighbors": [
+        {
+          "world_xyz": [
+            -263,
+            1433,
+            -1
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -265,
+            1433,
+            -1
+          ],
+          "name": "mcl_core:water_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -264,
+            1434,
+            -1
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -264,
+            1432,
+            -1
+          ],
+          "name": "mcl_core:water_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -264,
+            1433,
+            0
+          ],
+          "name": "mcl_core:water_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -264,
+            1433,
+            -2
+          ],
+          "name": "air",
+          "param2": 0
+        }
+      ],
+      "after_neighbors": [
+        {
+          "world_xyz": [
+            -263,
+            1433,
+            -1
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -265,
+            1433,
+            -1
+          ],
+          "name": "mcl_core:water_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -264,
+            1434,
+            -1
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -264,
+            1432,
+            -1
+          ],
+          "name": "mcl_core:water_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -264,
+            1433,
+            0
+          ],
+          "name": "mcl_core:water_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -264,
+            1433,
+            -2
+          ],
+          "name": "air",
+          "param2": 0
+        }
+      ],
+      "confirmed_cooling_events": []
+    },
+    {
+      "sim_time": 19.17777892947197,
+      "world_xyz": [
+        -264,
+        1434,
+        0
+      ],
+      "before_name": "air",
+      "before_param2": 0,
+      "after_name": "mcl_core:water_flowing",
+      "after_param2": 15,
+      "transition_type": "flowing_liquid_appearance_observed",
+      "before_frame": 15,
+      "after_frame": 16,
+      "before_time": 18.9037409350276,
+      "after_time": 19.17777892947197,
+      "region_local": [
+        24,
+        10,
+        32
+      ],
+      "center_chunk_local": null,
+      "in_center": false,
+      "before_neighbors": [
+        {
+          "world_xyz": [
+            -263,
+            1434,
+            0
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -265,
+            1434,
+            0
+          ],
+          "name": "mcl_core:water_source",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -264,
+            1435,
+            0
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -264,
+            1433,
+            0
+          ],
+          "name": "mcl_core:water_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -264,
+            1434,
+            1
+          ],
+          "name": "mcl_core:water_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -264,
+            1434,
+            -1
+          ],
+          "name": "air",
+          "param2": 0
+        }
+      ],
+      "after_neighbors": [
+        {
+          "world_xyz": [
+            -263,
+            1434,
+            0
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -265,
+            1434,
+            0
+          ],
+          "name": "mcl_core:water_source",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -264,
+            1435,
+            0
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -264,
+            1433,
+            0
+          ],
+          "name": "mcl_core:water_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -264,
+            1434,
+            1
+          ],
+          "name": "mcl_core:water_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -264,
+            1434,
+            -1
+          ],
+          "name": "air",
+          "param2": 0
+        }
+      ],
+      "confirmed_cooling_events": []
+    },
+    {
+      "sim_time": 19.17777892947197,
+      "world_xyz": [
+        -264,
+        1435,
+        1
+      ],
+      "before_name": "air",
+      "before_param2": 0,
+      "after_name": "mcl_core:water_flowing",
+      "after_param2": 14,
+      "transition_type": "flowing_liquid_appearance_observed",
+      "before_frame": 15,
+      "after_frame": 16,
+      "before_time": 18.9037409350276,
+      "after_time": 19.17777892947197,
+      "region_local": [
+        24,
+        11,
+        33
+      ],
+      "center_chunk_local": null,
+      "in_center": false,
+      "before_neighbors": [
+        {
+          "world_xyz": [
+            -263,
+            1435,
+            1
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -265,
+            1435,
+            1
+          ],
+          "name": "mcl_core:water_flowing",
+          "param2": 7
+        },
+        {
+          "world_xyz": [
+            -264,
+            1436,
+            1
+          ],
+          "name": "mcl_core:dirt_with_grass",
+          "param2": 13
+        },
+        {
+          "world_xyz": [
+            -264,
+            1434,
+            1
+          ],
+          "name": "mcl_core:water_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -264,
+            1435,
+            2
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -264,
+            1435,
+            0
+          ],
+          "name": "air",
+          "param2": 0
+        }
+      ],
+      "after_neighbors": [
+        {
+          "world_xyz": [
+            -263,
+            1435,
+            1
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -265,
+            1435,
+            1
+          ],
+          "name": "mcl_core:water_flowing",
+          "param2": 7
+        },
+        {
+          "world_xyz": [
+            -264,
+            1436,
+            1
+          ],
+          "name": "mcl_core:dirt_with_grass",
+          "param2": 13
+        },
+        {
+          "world_xyz": [
+            -264,
+            1434,
+            1
+          ],
+          "name": "mcl_core:water_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -264,
+            1435,
+            2
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -264,
+            1435,
+            0
+          ],
+          "name": "air",
+          "param2": 0
+        }
+      ],
+      "confirmed_cooling_events": []
+    },
+    {
+      "sim_time": 19.17777892947197,
+      "world_xyz": [
+        -258,
+        1439,
+        -3
+      ],
+      "before_name": "mcl_core:lava_flowing",
+      "before_param2": 2,
+      "after_name": "mcl_core:lava_flowing",
+      "after_param2": 3,
+      "transition_type": "liquid_level_or_flow_down_update",
+      "before_frame": 15,
+      "after_frame": 16,
+      "before_time": 18.9037409350276,
+      "after_time": 19.17777892947197,
+      "region_local": [
+        30,
+        15,
+        29
+      ],
+      "center_chunk_local": null,
+      "in_center": false,
+      "before_neighbors": [
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -3
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -259,
+            1439,
+            -3
+          ],
+          "name": "mcl_core:andesite",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -258,
+            1440,
+            -3
+          ],
+          "name": "mcl_core:andesite",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -258,
+            1438,
+            -3
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -258,
+            1439,
+            -2
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -258,
+            1439,
+            -4
+          ],
+          "name": "mcl_core:andesite",
+          "param2": 0
+        }
+      ],
+      "after_neighbors": [
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -3
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -259,
+            1439,
+            -3
+          ],
+          "name": "mcl_core:andesite",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -258,
+            1440,
+            -3
+          ],
+          "name": "mcl_core:andesite",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -258,
+            1438,
+            -3
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -258,
+            1439,
+            -2
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -258,
+            1439,
+            -4
+          ],
+          "name": "mcl_core:andesite",
+          "param2": 0
+        }
+      ],
+      "confirmed_cooling_events": []
+    },
+    {
+      "sim_time": 19.17777892947197,
+      "world_xyz": [
+        -258,
+        1440,
+        -2
+      ],
+      "before_name": "mcl_core:lava_flowing",
+      "before_param2": 2,
+      "after_name": "air",
+      "after_param2": 0,
+      "transition_type": "flowing_liquid_recession_observed",
+      "before_frame": 15,
+      "after_frame": 16,
+      "before_time": 18.9037409350276,
+      "after_time": 19.17777892947197,
+      "region_local": [
+        30,
+        16,
+        30
+      ],
+      "center_chunk_local": [
+        14,
+        0,
+        14
+      ],
+      "in_center": true,
+      "before_neighbors": [
+        {
+          "world_xyz": [
+            -257,
+            1440,
+            -2
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 7
+        },
+        {
+          "world_xyz": [
+            -259,
+            1440,
+            -2
+          ],
+          "name": "mcl_core:stone",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -258,
+            1441,
+            -2
+          ],
+          "name": "mcl_core:stone",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -258,
+            1439,
+            -2
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -258,
+            1440,
+            -1
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -258,
+            1440,
+            -3
+          ],
+          "name": "mcl_core:andesite",
+          "param2": 0
+        }
+      ],
+      "after_neighbors": [
+        {
+          "world_xyz": [
+            -257,
+            1440,
+            -2
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -259,
+            1440,
+            -2
+          ],
+          "name": "mcl_core:stone",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -258,
+            1441,
+            -2
+          ],
+          "name": "mcl_core:stone",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -258,
+            1439,
+            -2
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -258,
+            1440,
+            -1
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -258,
+            1440,
+            -3
+          ],
+          "name": "mcl_core:andesite",
+          "param2": 0
+        }
+      ],
+      "confirmed_cooling_events": []
+    },
+    {
+      "sim_time": 19.17777892947197,
+      "world_xyz": [
+        -257,
+        1438,
+        -4
+      ],
+      "before_name": "mcl_core:lava_flowing",
+      "before_param2": 8,
+      "after_name": "mcl_core:lava_flowing",
+      "after_param2": 9,
+      "transition_type": "liquid_level_or_flow_down_update",
+      "before_frame": 15,
+      "after_frame": 16,
+      "before_time": 18.9037409350276,
+      "after_time": 19.17777892947197,
+      "region_local": [
+        31,
+        14,
+        28
+      ],
+      "center_chunk_local": null,
+      "in_center": false,
+      "before_neighbors": [
+        {
+          "world_xyz": [
+            -256,
+            1438,
+            -4
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -258,
+            1438,
+            -4
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -4
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 2
+        },
+        {
+          "world_xyz": [
+            -257,
+            1437,
+            -4
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -257,
+            1438,
+            -3
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 10
+        },
+        {
+          "world_xyz": [
+            -257,
+            1438,
+            -5
+          ],
+          "name": "air",
+          "param2": 0
+        }
+      ],
+      "after_neighbors": [
+        {
+          "world_xyz": [
+            -256,
+            1438,
+            -4
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -258,
+            1438,
+            -4
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -4
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 3
+        },
+        {
+          "world_xyz": [
+            -257,
+            1437,
+            -4
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -257,
+            1438,
+            -3
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 11
+        },
+        {
+          "world_xyz": [
+            -257,
+            1438,
+            -5
+          ],
+          "name": "air",
+          "param2": 0
+        }
+      ],
+      "confirmed_cooling_events": []
+    },
+    {
+      "sim_time": 19.17777892947197,
+      "world_xyz": [
+        -257,
+        1438,
+        -3
+      ],
+      "before_name": "mcl_core:lava_flowing",
+      "before_param2": 10,
+      "after_name": "mcl_core:lava_flowing",
+      "after_param2": 11,
+      "transition_type": "liquid_level_or_flow_down_update",
+      "before_frame": 15,
+      "after_frame": 16,
+      "before_time": 18.9037409350276,
+      "after_time": 19.17777892947197,
+      "region_local": [
+        31,
+        14,
+        29
+      ],
+      "center_chunk_local": null,
+      "in_center": false,
+      "before_neighbors": [
+        {
+          "world_xyz": [
+            -256,
+            1438,
+            -3
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -258,
+            1438,
+            -3
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -3
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -257,
+            1437,
+            -3
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -257,
+            1438,
+            -2
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -257,
+            1438,
+            -4
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 8
+        }
+      ],
+      "after_neighbors": [
+        {
+          "world_xyz": [
+            -256,
+            1438,
+            -3
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -258,
+            1438,
+            -3
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -3
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -257,
+            1437,
+            -3
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -257,
+            1438,
+            -2
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -257,
+            1438,
+            -4
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 9
+        }
+      ],
+      "confirmed_cooling_events": []
+    },
+    {
+      "sim_time": 19.17777892947197,
+      "world_xyz": [
+        -257,
+        1439,
+        -4
+      ],
+      "before_name": "mcl_core:lava_flowing",
+      "before_param2": 2,
+      "after_name": "mcl_core:lava_flowing",
+      "after_param2": 3,
+      "transition_type": "liquid_level_or_flow_down_update",
+      "before_frame": 15,
+      "after_frame": 16,
+      "before_time": 18.9037409350276,
+      "after_time": 19.17777892947197,
+      "region_local": [
+        31,
+        15,
+        28
+      ],
+      "center_chunk_local": null,
+      "in_center": false,
+      "before_neighbors": [
+        {
+          "world_xyz": [
+            -256,
+            1439,
+            -4
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 8
+        },
+        {
+          "world_xyz": [
+            -258,
+            1439,
+            -4
+          ],
+          "name": "mcl_core:andesite",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -257,
+            1440,
+            -4
+          ],
+          "name": "mcl_core:andesite",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -257,
+            1438,
+            -4
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 8
+        },
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -3
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -5
+          ],
+          "name": "mcl_core:andesite",
+          "param2": 0
+        }
+      ],
+      "after_neighbors": [
+        {
+          "world_xyz": [
+            -256,
+            1439,
+            -4
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 9
+        },
+        {
+          "world_xyz": [
+            -258,
+            1439,
+            -4
+          ],
+          "name": "mcl_core:andesite",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -257,
+            1440,
+            -4
+          ],
+          "name": "mcl_core:andesite",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -257,
+            1438,
+            -4
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 9
+        },
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -3
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -5
+          ],
+          "name": "mcl_core:andesite",
+          "param2": 0
+        }
+      ],
+      "confirmed_cooling_events": []
+    },
+    {
+      "sim_time": 19.17777892947197,
+      "world_xyz": [
+        -257,
+        1440,
+        -3
+      ],
+      "before_name": "mcl_mushrooms:mushroom_red",
+      "before_param2": 0,
+      "after_name": "mcl_core:lava_flowing",
+      "after_param2": 0,
+      "transition_type": "lava_replaced_lava_destructible_node_observed",
+      "before_frame": 15,
+      "after_frame": 16,
+      "before_time": 18.9037409350276,
+      "after_time": 19.17777892947197,
+      "region_local": [
+        31,
+        16,
+        29
+      ],
+      "center_chunk_local": [
+        15,
+        0,
+        13
+      ],
+      "in_center": true,
+      "before_neighbors": [
+        {
+          "world_xyz": [
+            -256,
+            1440,
+            -3
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 8
+        },
+        {
+          "world_xyz": [
+            -258,
+            1440,
+            -3
+          ],
+          "name": "mcl_core:andesite",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -257,
+            1441,
+            -3
+          ],
+          "name": "mcl_core:andesite",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -3
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -257,
+            1440,
+            -2
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 7
+        },
+        {
+          "world_xyz": [
+            -257,
+            1440,
+            -4
+          ],
+          "name": "mcl_core:andesite",
+          "param2": 0
+        }
+      ],
+      "after_neighbors": [
+        {
+          "world_xyz": [
+            -256,
+            1440,
+            -3
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 9
+        },
+        {
+          "world_xyz": [
+            -258,
+            1440,
+            -3
+          ],
+          "name": "mcl_core:andesite",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -257,
+            1441,
+            -3
+          ],
+          "name": "mcl_core:andesite",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -3
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -257,
+            1440,
+            -2
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -257,
+            1440,
+            -4
+          ],
+          "name": "mcl_core:andesite",
+          "param2": 0
+        }
+      ],
+      "confirmed_cooling_events": []
+    },
+    {
+      "sim_time": 19.17777892947197,
+      "world_xyz": [
+        -257,
+        1440,
+        -2
+      ],
+      "before_name": "mcl_core:lava_flowing",
+      "before_param2": 7,
+      "after_name": "mcl_core:lava_flowing",
+      "after_param2": 15,
+      "transition_type": "liquid_level_or_flow_down_update",
+      "before_frame": 15,
+      "after_frame": 16,
+      "before_time": 18.9037409350276,
+      "after_time": 19.17777892947197,
+      "region_local": [
+        31,
+        16,
+        30
+      ],
+      "center_chunk_local": [
+        15,
+        0,
+        14
+      ],
+      "in_center": true,
+      "before_neighbors": [
+        {
+          "world_xyz": [
+            -256,
+            1440,
+            -2
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 10
+        },
+        {
+          "world_xyz": [
+            -258,
+            1440,
+            -2
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 2
+        },
+        {
+          "world_xyz": [
+            -257,
+            1441,
+            -2
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 2
+        },
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -2
+          ],
+          "name": "mcl_core:lava_source",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -257,
+            1440,
+            -1
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -257,
+            1440,
+            -3
+          ],
+          "name": "mcl_mushrooms:mushroom_red",
+          "param2": 0
+        }
+      ],
+      "after_neighbors": [
+        {
+          "world_xyz": [
+            -256,
+            1440,
+            -2
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 11
+        },
+        {
+          "world_xyz": [
+            -258,
+            1440,
+            -2
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -257,
+            1441,
+            -2
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 3
+        },
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -2
+          ],
+          "name": "mcl_core:lava_source",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -257,
+            1440,
+            -1
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -257,
+            1440,
+            -3
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 0
+        }
+      ],
+      "confirmed_cooling_events": []
+    },
+    {
+      "sim_time": 19.17777892947197,
+      "world_xyz": [
+        -257,
+        1441,
+        -2
+      ],
+      "before_name": "mcl_core:lava_flowing",
+      "before_param2": 2,
+      "after_name": "mcl_core:lava_flowing",
+      "after_param2": 3,
+      "transition_type": "liquid_level_or_flow_down_update",
+      "before_frame": 15,
+      "after_frame": 16,
+      "before_time": 18.9037409350276,
+      "after_time": 19.17777892947197,
+      "region_local": [
+        31,
+        17,
+        30
+      ],
+      "center_chunk_local": [
+        15,
+        1,
+        14
+      ],
+      "in_center": true,
+      "before_neighbors": [
+        {
+          "world_xyz": [
+            -256,
+            1441,
+            -2
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -258,
+            1441,
+            -2
+          ],
+          "name": "mcl_core:stone",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -257,
+            1442,
+            -2
+          ],
+          "name": "mcl_core:stone",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -257,
+            1440,
+            -2
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 7
+        },
+        {
+          "world_xyz": [
+            -257,
+            1441,
+            -1
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -257,
+            1441,
+            -3
+          ],
+          "name": "mcl_core:andesite",
+          "param2": 0
+        }
+      ],
+      "after_neighbors": [
+        {
+          "world_xyz": [
+            -256,
+            1441,
+            -2
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -258,
+            1441,
+            -2
+          ],
+          "name": "mcl_core:stone",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -257,
+            1442,
+            -2
+          ],
+          "name": "mcl_core:stone",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -257,
+            1440,
+            -2
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -257,
+            1441,
+            -1
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -257,
+            1441,
+            -3
+          ],
+          "name": "mcl_core:andesite",
+          "param2": 0
+        }
+      ],
+      "confirmed_cooling_events": []
+    },
+    {
+      "sim_time": 19.17777892947197,
+      "world_xyz": [
+        -256,
+        1439,
+        -4
+      ],
+      "before_name": "mcl_core:lava_flowing",
+      "before_param2": 8,
+      "after_name": "mcl_core:lava_flowing",
+      "after_param2": 9,
+      "transition_type": "liquid_level_or_flow_down_update",
+      "before_frame": 15,
+      "after_frame": 16,
+      "before_time": 18.9037409350276,
+      "after_time": 19.17777892947197,
+      "region_local": [
+        32,
+        15,
+        28
+      ],
+      "center_chunk_local": null,
+      "in_center": false,
+      "before_neighbors": [
+        {
+          "world_xyz": [
+            -255,
+            1439,
+            -4
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -4
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 2
+        },
+        {
+          "world_xyz": [
+            -256,
+            1440,
+            -4
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -256,
+            1438,
+            -4
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -256,
+            1439,
+            -3
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 10
+        },
+        {
+          "world_xyz": [
+            -256,
+            1439,
+            -5
+          ],
+          "name": "air",
+          "param2": 0
+        }
+      ],
+      "after_neighbors": [
+        {
+          "world_xyz": [
+            -255,
+            1439,
+            -4
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -4
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 3
+        },
+        {
+          "world_xyz": [
+            -256,
+            1440,
+            -4
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -256,
+            1438,
+            -4
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -256,
+            1439,
+            -3
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 11
+        },
+        {
+          "world_xyz": [
+            -256,
+            1439,
+            -5
+          ],
+          "name": "air",
+          "param2": 0
+        }
+      ],
+      "confirmed_cooling_events": []
+    },
+    {
+      "sim_time": 19.17777892947197,
+      "world_xyz": [
+        -256,
+        1439,
+        -3
+      ],
+      "before_name": "mcl_core:lava_flowing",
+      "before_param2": 10,
+      "after_name": "mcl_core:lava_flowing",
+      "after_param2": 11,
+      "transition_type": "liquid_level_or_flow_down_update",
+      "before_frame": 15,
+      "after_frame": 16,
+      "before_time": 18.9037409350276,
+      "after_time": 19.17777892947197,
+      "region_local": [
+        32,
+        15,
+        29
+      ],
+      "center_chunk_local": null,
+      "in_center": false,
+      "before_neighbors": [
+        {
+          "world_xyz": [
+            -255,
+            1439,
+            -3
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -3
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -256,
+            1440,
+            -3
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 8
+        },
+        {
+          "world_xyz": [
+            -256,
+            1438,
+            -3
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -256,
+            1439,
+            -2
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -256,
+            1439,
+            -4
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 8
+        }
+      ],
+      "after_neighbors": [
+        {
+          "world_xyz": [
+            -255,
+            1439,
+            -3
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -3
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -256,
+            1440,
+            -3
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 9
+        },
+        {
+          "world_xyz": [
+            -256,
+            1438,
+            -3
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -256,
+            1439,
+            -2
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -256,
+            1439,
+            -4
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 9
+        }
+      ],
+      "confirmed_cooling_events": []
+    },
+    {
+      "sim_time": 19.17777892947197,
+      "world_xyz": [
+        -256,
+        1440,
+        -3
+      ],
+      "before_name": "mcl_core:lava_flowing",
+      "before_param2": 8,
+      "after_name": "mcl_core:lava_flowing",
+      "after_param2": 9,
+      "transition_type": "liquid_level_or_flow_down_update",
+      "before_frame": 15,
+      "after_frame": 16,
+      "before_time": 18.9037409350276,
+      "after_time": 19.17777892947197,
+      "region_local": [
+        32,
+        16,
+        29
+      ],
+      "center_chunk_local": null,
+      "in_center": false,
+      "before_neighbors": [
+        {
+          "world_xyz": [
+            -255,
+            1440,
+            -3
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -257,
+            1440,
+            -3
+          ],
+          "name": "mcl_mushrooms:mushroom_red",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -256,
+            1441,
+            -3
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 2
+        },
+        {
+          "world_xyz": [
+            -256,
+            1439,
+            -3
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 10
+        },
+        {
+          "world_xyz": [
+            -256,
+            1440,
+            -2
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 10
+        },
+        {
+          "world_xyz": [
+            -256,
+            1440,
+            -4
+          ],
+          "name": "air",
+          "param2": 0
+        }
+      ],
+      "after_neighbors": [
+        {
+          "world_xyz": [
+            -255,
+            1440,
+            -3
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -257,
+            1440,
+            -3
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -256,
+            1441,
+            -3
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 3
+        },
+        {
+          "world_xyz": [
+            -256,
+            1439,
+            -3
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 11
+        },
+        {
+          "world_xyz": [
+            -256,
+            1440,
+            -2
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 11
+        },
+        {
+          "world_xyz": [
+            -256,
+            1440,
+            -4
+          ],
+          "name": "air",
+          "param2": 0
+        }
+      ],
+      "confirmed_cooling_events": []
+    },
+    {
+      "sim_time": 19.17777892947197,
+      "world_xyz": [
+        -256,
+        1440,
+        -2
+      ],
+      "before_name": "mcl_core:lava_flowing",
+      "before_param2": 10,
+      "after_name": "mcl_core:lava_flowing",
+      "after_param2": 11,
+      "transition_type": "liquid_level_or_flow_down_update",
+      "before_frame": 15,
+      "after_frame": 16,
+      "before_time": 18.9037409350276,
+      "after_time": 19.17777892947197,
+      "region_local": [
+        32,
+        16,
+        30
+      ],
+      "center_chunk_local": null,
+      "in_center": false,
+      "before_neighbors": [
+        {
+          "world_xyz": [
+            -255,
+            1440,
+            -2
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -257,
+            1440,
+            -2
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 7
+        },
+        {
+          "world_xyz": [
+            -256,
+            1441,
+            -2
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -256,
+            1439,
+            -2
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -256,
+            1440,
+            -1
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -256,
+            1440,
+            -3
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 8
+        }
+      ],
+      "after_neighbors": [
+        {
+          "world_xyz": [
+            -255,
+            1440,
+            -2
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -257,
+            1440,
+            -2
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -256,
+            1441,
+            -2
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -256,
+            1439,
+            -2
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -256,
+            1440,
+            -1
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -256,
+            1440,
+            -3
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 9
+        }
+      ],
+      "confirmed_cooling_events": []
+    },
+    {
+      "sim_time": 19.17777892947197,
+      "world_xyz": [
+        -256,
+        1441,
+        -3
+      ],
+      "before_name": "mcl_core:lava_flowing",
+      "before_param2": 2,
+      "after_name": "mcl_core:lava_flowing",
+      "after_param2": 3,
+      "transition_type": "liquid_level_or_flow_down_update",
+      "before_frame": 15,
+      "after_frame": 16,
+      "before_time": 18.9037409350276,
+      "after_time": 19.17777892947197,
+      "region_local": [
+        32,
+        17,
+        29
+      ],
+      "center_chunk_local": null,
+      "in_center": false,
+      "before_neighbors": [
+        {
+          "world_xyz": [
+            -255,
+            1441,
+            -3
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -257,
+            1441,
+            -3
+          ],
+          "name": "mcl_core:andesite",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -256,
+            1442,
+            -3
+          ],
+          "name": "mcl_core:stone",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -256,
+            1440,
+            -3
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 8
+        },
+        {
+          "world_xyz": [
+            -256,
+            1441,
+            -2
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -256,
+            1441,
+            -4
+          ],
+          "name": "mcl_core:andesite",
+          "param2": 0
+        }
+      ],
+      "after_neighbors": [
+        {
+          "world_xyz": [
+            -255,
+            1441,
+            -3
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 1
+        },
+        {
+          "world_xyz": [
+            -257,
+            1441,
+            -3
+          ],
+          "name": "mcl_core:andesite",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -256,
+            1442,
+            -3
+          ],
+          "name": "mcl_core:stone",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -256,
+            1440,
+            -3
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 9
+        },
+        {
+          "world_xyz": [
+            -256,
+            1441,
+            -2
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -256,
+            1441,
+            -4
+          ],
+          "name": "mcl_core:andesite",
+          "param2": 0
+        }
+      ],
+      "confirmed_cooling_events": []
+    },
+    {
+      "sim_time": 19.17777892947197,
+      "world_xyz": [
+        -255,
+        1441,
+        -3
+      ],
+      "before_name": "mcl_core:lava_flowing",
+      "before_param2": 0,
+      "after_name": "mcl_core:lava_flowing",
+      "after_param2": 1,
+      "transition_type": "liquid_level_or_flow_down_update",
+      "before_frame": 15,
+      "after_frame": 16,
+      "before_time": 18.9037409350276,
+      "after_time": 19.17777892947197,
+      "region_local": [
+        33,
+        17,
+        29
+      ],
+      "center_chunk_local": null,
+      "in_center": false,
+      "before_neighbors": [
+        {
+          "world_xyz": [
+            -254,
+            1441,
+            -3
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -256,
+            1441,
+            -3
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 2
+        },
+        {
+          "world_xyz": [
+            -255,
+            1442,
+            -3
+          ],
+          "name": "mcl_core:stone",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -255,
+            1440,
+            -3
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -255,
+            1441,
+            -2
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 10
+        },
+        {
+          "world_xyz": [
+            -255,
+            1441,
+            -4
+          ],
+          "name": "mcl_core:andesite",
+          "param2": 0
+        }
+      ],
+      "after_neighbors": [
+        {
+          "world_xyz": [
+            -254,
+            1441,
+            -3
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -256,
+            1441,
+            -3
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 3
+        },
+        {
+          "world_xyz": [
+            -255,
+            1442,
+            -3
+          ],
+          "name": "mcl_core:stone",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -255,
+            1440,
+            -3
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -255,
+            1441,
+            -2
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 11
+        },
+        {
+          "world_xyz": [
+            -255,
+            1441,
+            -4
+          ],
+          "name": "mcl_core:andesite",
+          "param2": 0
+        }
+      ],
+      "confirmed_cooling_events": []
+    },
+    {
+      "sim_time": 19.17777892947197,
+      "world_xyz": [
+        -255,
+        1441,
+        -2
+      ],
+      "before_name": "mcl_core:lava_flowing",
+      "before_param2": 10,
+      "after_name": "mcl_core:lava_flowing",
+      "after_param2": 11,
+      "transition_type": "liquid_level_or_flow_down_update",
+      "before_frame": 15,
+      "after_frame": 16,
+      "before_time": 18.9037409350276,
+      "after_time": 19.17777892947197,
+      "region_local": [
+        33,
+        17,
+        30
+      ],
+      "center_chunk_local": null,
+      "in_center": false,
+      "before_neighbors": [
+        {
+          "world_xyz": [
+            -254,
+            1441,
+            -2
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -256,
+            1441,
+            -2
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -255,
+            1442,
+            -2
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -255,
+            1440,
+            -2
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -255,
+            1441,
+            -1
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -255,
+            1441,
+            -3
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 0
+        }
+      ],
+      "after_neighbors": [
+        {
+          "world_xyz": [
+            -254,
+            1441,
+            -2
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -256,
+            1441,
+            -2
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -255,
+            1442,
+            -2
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 1
+        },
+        {
+          "world_xyz": [
+            -255,
+            1440,
+            -2
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -255,
+            1441,
+            -1
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -255,
+            1441,
+            -3
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 1
+        }
+      ],
+      "confirmed_cooling_events": []
+    },
+    {
+      "sim_time": 19.17777892947197,
+      "world_xyz": [
+        -255,
+        1442,
+        -2
+      ],
+      "before_name": "mcl_core:lava_flowing",
+      "before_param2": 0,
+      "after_name": "mcl_core:lava_flowing",
+      "after_param2": 1,
+      "transition_type": "liquid_level_or_flow_down_update",
+      "before_frame": 15,
+      "after_frame": 16,
+      "before_time": 18.9037409350276,
+      "after_time": 19.17777892947197,
+      "region_local": [
+        33,
+        18,
+        30
+      ],
+      "center_chunk_local": null,
+      "in_center": false,
+      "before_neighbors": [
+        {
+          "world_xyz": [
+            -254,
+            1442,
+            -2
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -256,
+            1442,
+            -2
+          ],
+          "name": "mcl_core:stone",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -255,
+            1443,
+            -2
+          ],
+          "name": "mcl_core:stone",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -255,
+            1441,
+            -2
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 10
+        },
+        {
+          "world_xyz": [
+            -255,
+            1442,
+            -1
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 10
+        },
+        {
+          "world_xyz": [
+            -255,
+            1442,
+            -3
+          ],
+          "name": "mcl_core:stone",
+          "param2": 0
+        }
+      ],
+      "after_neighbors": [
+        {
+          "world_xyz": [
+            -254,
+            1442,
+            -2
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -256,
+            1442,
+            -2
+          ],
+          "name": "mcl_core:stone",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -255,
+            1443,
+            -2
+          ],
+          "name": "mcl_core:stone",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -255,
+            1441,
+            -2
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 11
+        },
+        {
+          "world_xyz": [
+            -255,
+            1442,
+            -1
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 11
+        },
+        {
+          "world_xyz": [
+            -255,
+            1442,
+            -3
+          ],
+          "name": "mcl_core:stone",
+          "param2": 0
+        }
+      ],
+      "confirmed_cooling_events": []
+    },
+    {
+      "sim_time": 19.17777892947197,
+      "world_xyz": [
+        -255,
+        1442,
+        -1
+      ],
+      "before_name": "mcl_core:lava_flowing",
+      "before_param2": 10,
+      "after_name": "mcl_core:lava_flowing",
+      "after_param2": 11,
+      "transition_type": "liquid_level_or_flow_down_update",
+      "before_frame": 15,
+      "after_frame": 16,
+      "before_time": 18.9037409350276,
+      "after_time": 19.17777892947197,
+      "region_local": [
+        33,
+        18,
+        31
+      ],
+      "center_chunk_local": null,
+      "in_center": false,
+      "before_neighbors": [
+        {
+          "world_xyz": [
+            -254,
+            1442,
+            -1
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -256,
+            1442,
+            -1
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 7
+        },
+        {
+          "world_xyz": [
+            -255,
+            1443,
+            -1
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -255,
+            1441,
+            -1
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -255,
+            1442,
+            0
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -255,
+            1442,
+            -2
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 0
+        }
+      ],
+      "after_neighbors": [
+        {
+          "world_xyz": [
+            -254,
+            1442,
+            -1
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -256,
+            1442,
+            -1
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 7
+        },
+        {
+          "world_xyz": [
+            -255,
+            1443,
+            -1
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -255,
+            1441,
+            -1
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 15
+        },
+        {
+          "world_xyz": [
+            -255,
+            1442,
+            0
+          ],
+          "name": "air",
+          "param2": 0
+        },
+        {
+          "world_xyz": [
+            -255,
+            1442,
+            -2
+          ],
+          "name": "mcl_core:lava_flowing",
+          "param2": 1
+        }
+      ],
+      "confirmed_cooling_events": []
+    }
+  ],
+  "observation_intervals": [
+    {
+      "before_frame": 14,
+      "after_frame": 15,
+      "before_time": 18.609989941120148,
+      "after_time": 18.9037409350276,
+      "changed_voxels": 0
+    },
+    {
+      "before_frame": 15,
+      "after_frame": 16,
+      "before_time": 18.9037409350276,
+      "after_time": 19.17777892947197,
+      "changed_voxels": 25
+    },
+    {
+      "before_frame": 16,
+      "after_frame": 17,
+      "before_time": 19.17777892947197,
+      "after_time": 19.453057933598757,
+      "changed_voxels": 0
+    }
+  ],
+  "source_history": [
+    {
+      "frame": 0,
+      "sim_time": 14.789308957755566,
+      "states": [
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -2
+          ],
+          "node_state": [
+            "air",
+            0
+          ]
+        },
+        {
+          "world_xyz": [
+            -256,
+            1441,
+            -1
+          ],
+          "node_state": [
+            "air",
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 1,
+      "sim_time": 14.927035957574844,
+      "states": [
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -2
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        },
+        {
+          "world_xyz": [
+            -256,
+            1441,
+            -1
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 2,
+      "sim_time": 15.209247954189777,
+      "states": [
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -2
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        },
+        {
+          "world_xyz": [
+            -256,
+            1441,
+            -1
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 3,
+      "sim_time": 15.492965955287218,
+      "states": [
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -2
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        },
+        {
+          "world_xyz": [
+            -256,
+            1441,
+            -1
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 4,
+      "sim_time": 15.807215958833694,
+      "states": [
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -2
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        },
+        {
+          "world_xyz": [
+            -256,
+            1441,
+            -1
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 5,
+      "sim_time": 16.081338956952095,
+      "states": [
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -2
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        },
+        {
+          "world_xyz": [
+            -256,
+            1441,
+            -1
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 6,
+      "sim_time": 16.361512951552868,
+      "states": [
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -2
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        },
+        {
+          "world_xyz": [
+            -256,
+            1441,
+            -1
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 7,
+      "sim_time": 16.64108195155859,
+      "states": [
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -2
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        },
+        {
+          "world_xyz": [
+            -256,
+            1441,
+            -1
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 8,
+      "sim_time": 16.926351949572563,
+      "states": [
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -2
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        },
+        {
+          "world_xyz": [
+            -256,
+            1441,
+            -1
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 9,
+      "sim_time": 17.257716942578554,
+      "states": [
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -2
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        },
+        {
+          "world_xyz": [
+            -256,
+            1441,
+            -1
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 10,
+      "sim_time": 17.514442939311266,
+      "states": [
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -2
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        },
+        {
+          "world_xyz": [
+            -256,
+            1441,
+            -1
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 11,
+      "sim_time": 17.79758493974805,
+      "states": [
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -2
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        },
+        {
+          "world_xyz": [
+            -256,
+            1441,
+            -1
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 12,
+      "sim_time": 18.04172493889928,
+      "states": [
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -2
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        },
+        {
+          "world_xyz": [
+            -256,
+            1441,
+            -1
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 13,
+      "sim_time": 18.320504937320948,
+      "states": [
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -2
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        },
+        {
+          "world_xyz": [
+            -256,
+            1441,
+            -1
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 14,
+      "sim_time": 18.609989941120148,
+      "states": [
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -2
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        },
+        {
+          "world_xyz": [
+            -256,
+            1441,
+            -1
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 15,
+      "sim_time": 18.9037409350276,
+      "states": [
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -2
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        },
+        {
+          "world_xyz": [
+            -256,
+            1441,
+            -1
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 16,
+      "sim_time": 19.17777892947197,
+      "states": [
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -2
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        },
+        {
+          "world_xyz": [
+            -256,
+            1441,
+            -1
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 17,
+      "sim_time": 19.453057933598757,
+      "states": [
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -2
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        },
+        {
+          "world_xyz": [
+            -256,
+            1441,
+            -1
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 18,
+      "sim_time": 19.740636933594942,
+      "states": [
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -2
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        },
+        {
+          "world_xyz": [
+            -256,
+            1441,
+            -1
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 19,
+      "sim_time": 19.995073933154345,
+      "states": [
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -2
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        },
+        {
+          "world_xyz": [
+            -256,
+            1441,
+            -1
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 20,
+      "sim_time": 20.28323592990637,
+      "states": [
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -2
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        },
+        {
+          "world_xyz": [
+            -256,
+            1441,
+            -1
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 21,
+      "sim_time": 20.54438292980194,
+      "states": [
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -2
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        },
+        {
+          "world_xyz": [
+            -256,
+            1441,
+            -1
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 22,
+      "sim_time": 20.79616792500019,
+      "states": [
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -2
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        },
+        {
+          "world_xyz": [
+            -256,
+            1441,
+            -1
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 23,
+      "sim_time": 21.071747925132513,
+      "states": [
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -2
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        },
+        {
+          "world_xyz": [
+            -256,
+            1441,
+            -1
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 24,
+      "sim_time": 21.327197920531034,
+      "states": [
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -2
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        },
+        {
+          "world_xyz": [
+            -256,
+            1441,
+            -1
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 25,
+      "sim_time": 21.6101099178195,
+      "states": [
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -2
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        },
+        {
+          "world_xyz": [
+            -256,
+            1441,
+            -1
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 26,
+      "sim_time": 21.89297091960907,
+      "states": [
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -2
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        },
+        {
+          "world_xyz": [
+            -256,
+            1441,
+            -1
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 27,
+      "sim_time": 22.184278920292854,
+      "states": [
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -2
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        },
+        {
+          "world_xyz": [
+            -256,
+            1441,
+            -1
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 28,
+      "sim_time": 22.469628922641277,
+      "states": [
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -2
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        },
+        {
+          "world_xyz": [
+            -256,
+            1441,
+            -1
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 29,
+      "sim_time": 22.74343592301011,
+      "states": [
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -2
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        },
+        {
+          "world_xyz": [
+            -256,
+            1441,
+            -1
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 30,
+      "sim_time": 23.02094992250204,
+      "states": [
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -2
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        },
+        {
+          "world_xyz": [
+            -256,
+            1441,
+            -1
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 31,
+      "sim_time": 23.268788922578096,
+      "states": [
+        {
+          "world_xyz": [
+            -257,
+            1439,
+            -2
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        },
+        {
+          "world_xyz": [
+            -256,
+            1441,
+            -1
+          ],
+          "node_state": [
+            "mcl_core:lava_source",
+            0
+          ]
+        }
+      ]
+    }
+  ],
+  "checks": {
+    "raw_viewer_tensor_equal": true,
+    "viewer_pair_mapping_equal": true,
+    "world_origin_fixed": true,
+    "native_time_strictly_increasing": true,
+    "frame_indices_match": true
+  },
+  "captured_cooling_events": [],
+  "full_native_write_journal_available": false,
+  "limitations": [
+    "sim_time in the table is AFTER-observation time; each actual transition occurred within (before_time, after_time].",
+    "Native trace records observed states and cooling writes, not all Lua/C++ node writes. Intermediate air after mushroom destruction is not observed.",
+    "No engine regeneration, map alteration or GT/token modification. Absence of a cooling log is not proof of every unobserved write."
+  ]
+}

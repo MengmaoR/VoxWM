@@ -1,0 +1,310 @@
+{
+  "note": "Viewer-only geometry subset transcribed from pinned upstream definitions; unknown nodes use an explicitly labelled semantic cube fallback. No GT or vocabulary conversion. Colors, source markers and mushroom/fire materials are viewer annotations, not native texture/shader replicas.",
+  "craftium_commit": "ca8b2762aea46d10a88c53f6411ff1f0dbdf3b49",
+  "voxelibre_commit": "178c71b1e7d6ec35c0d9c481c55eb306d6f330bc",
+  "sources": [
+    "src/mapnode.h",
+    "src/client/content_mapblock.cpp::getLiquidNeighborhood/getCornerLevel/drawFirelikeNode",
+    "VoxeLibre/mods/ITEMS/mcl_core/nodes_liquid.lua",
+    "VoxeLibre/mods/ITEMS/mcl_core/functions.lua",
+    "VoxeLibre/mods/ITEMS/mcl_fire/init.lua",
+    "VoxeLibre/mods/ITEMS/mcl_mushrooms/small.lua",
+    "VoxeLibre/mods/ITEMS/mclx_core/init.lua"
+  ],
+  "nodes": {
+    "mcl_core:water_source": {
+      "drawtype": "liquid",
+      "liquidtype": "source",
+      "liquid_range": 7,
+      "liquid_alternative_source": "mcl_core:water_source",
+      "liquid_alternative_flowing": "mcl_core:water_flowing",
+      "paramtype2": "color",
+      "walkable": false,
+      "groups": {
+        "water": 3
+      },
+      "color": "#318bd1"
+    },
+    "mcl_core:water_flowing": {
+      "drawtype": "flowingliquid",
+      "liquidtype": "flowing",
+      "liquid_range": 7,
+      "liquid_alternative_source": "mcl_core:water_source",
+      "liquid_alternative_flowing": "mcl_core:water_flowing",
+      "paramtype2": "flowingliquid",
+      "walkable": false,
+      "groups": {
+        "water": 3
+      },
+      "color": "#318bd1"
+    },
+    "mcl_core:lava_source": {
+      "drawtype": "liquid",
+      "liquidtype": "source",
+      "liquid_range": 3,
+      "liquid_alternative_source": "mcl_core:lava_source",
+      "liquid_alternative_flowing": "mcl_core:lava_flowing",
+      "paramtype2": "none",
+      "walkable": false,
+      "groups": {
+        "lava": 3
+      },
+      "color": "#ed691e"
+    },
+    "mcl_core:lava_flowing": {
+      "drawtype": "flowingliquid",
+      "liquidtype": "flowing",
+      "liquid_range": 3,
+      "liquid_alternative_source": "mcl_core:lava_source",
+      "liquid_alternative_flowing": "mcl_core:lava_flowing",
+      "paramtype2": "flowingliquid",
+      "walkable": false,
+      "groups": {
+        "lava": 3
+      },
+      "color": "#ed691e"
+    },
+    "mclx_core:river_water_source": {
+      "drawtype": "liquid",
+      "liquidtype": "source",
+      "liquid_range": 2,
+      "liquid_alternative_source": "mclx_core:river_water_source",
+      "liquid_alternative_flowing": "mclx_core:river_water_flowing",
+      "paramtype2": "none",
+      "walkable": false,
+      "groups": {
+        "water": 3
+      },
+      "color": "#318bd1"
+    },
+    "mclx_core:river_water_flowing": {
+      "drawtype": "flowingliquid",
+      "liquidtype": "flowing",
+      "liquid_range": 2,
+      "liquid_alternative_source": "mclx_core:river_water_source",
+      "liquid_alternative_flowing": "mclx_core:river_water_flowing",
+      "paramtype2": "flowingliquid",
+      "walkable": false,
+      "groups": {
+        "water": 3
+      },
+      "color": "#318bd1"
+    },
+    "mcl_fire:fire": {
+      "drawtype": "firelike",
+      "liquidtype": "none",
+      "walkable": false,
+      "param2_semantics": "age",
+      "groups": {
+        "fire": 1
+      },
+      "color": "#ffbf42"
+    },
+    "mcl_fire:eternal_fire": {
+      "drawtype": "firelike",
+      "liquidtype": "none",
+      "walkable": false,
+      "param2_semantics": "raw",
+      "groups": {
+        "fire": 1
+      },
+      "color": "#ffbf42"
+    },
+    "mcl_mushrooms:mushroom_red": {
+      "drawtype": "plantlike",
+      "liquidtype": "none",
+      "walkable": false,
+      "groups": {
+        "destroy_by_lava_flow": 1,
+        "dig_by_water": 1,
+        "mushroom": 1
+      },
+      "color": "#c3453a"
+    },
+    "mcl_mushrooms:mushroom_brown": {
+      "drawtype": "plantlike",
+      "liquidtype": "none",
+      "walkable": false,
+      "groups": {
+        "destroy_by_lava_flow": 1,
+        "dig_by_water": 1,
+        "mushroom": 1
+      },
+      "color": "#9d7650"
+    },
+    "mcl_core:stone": {
+      "drawtype": "normal",
+      "liquidtype": "none",
+      "walkable": true,
+      "groups": {},
+      "color": "#89939c"
+    },
+    "mcl_core:andesite": {
+      "drawtype": "normal",
+      "liquidtype": "none",
+      "walkable": true,
+      "groups": {},
+      "color": "#92908e"
+    },
+    "mcl_core:dirt": {
+      "drawtype": "normal",
+      "liquidtype": "none",
+      "walkable": true,
+      "groups": {},
+      "color": "#89613d"
+    },
+    "mcl_core:dirt_with_grass": {
+      "drawtype": "normal",
+      "liquidtype": "none",
+      "walkable": true,
+      "groups": {},
+      "color": "#739b46"
+    },
+    "mcl_core:cobble": {
+      "drawtype": "normal",
+      "liquidtype": "none",
+      "walkable": true,
+      "groups": {},
+      "color": "#687884"
+    },
+    "mcl_core:obsidian": {
+      "drawtype": "normal",
+      "liquidtype": "none",
+      "walkable": true,
+      "groups": {},
+      "color": "#533369"
+    },
+    "mcl_core:leaves": {
+      "drawtype": "allfaces_optional",
+      "liquidtype": "none",
+      "walkable": true,
+      "groups": {
+        "leaves": 1,
+        "flammable": 2
+      },
+      "color": "#3c8652"
+    },
+    "mcl_core:leaves_orphan": {
+      "drawtype": "allfaces_optional",
+      "liquidtype": "none",
+      "walkable": true,
+      "groups": {
+        "leaves": 1,
+        "flammable": 2
+      },
+      "color": "#3c8652"
+    },
+    "mcl_core:jungleleaves": {
+      "drawtype": "allfaces_optional",
+      "liquidtype": "none",
+      "walkable": true,
+      "groups": {
+        "leaves": 1,
+        "flammable": 2
+      },
+      "color": "#3c8652"
+    },
+    "mcl_core:jungleleaves_orphan": {
+      "drawtype": "allfaces_optional",
+      "liquidtype": "none",
+      "walkable": true,
+      "groups": {
+        "leaves": 1,
+        "flammable": 2
+      },
+      "color": "#3c8652"
+    },
+    "mcl_core:spruceleaves": {
+      "drawtype": "allfaces_optional",
+      "liquidtype": "none",
+      "walkable": true,
+      "groups": {
+        "leaves": 1,
+        "flammable": 2
+      },
+      "color": "#3c8652"
+    },
+    "mcl_core:spruceleaves_orphan": {
+      "drawtype": "allfaces_optional",
+      "liquidtype": "none",
+      "walkable": true,
+      "groups": {
+        "leaves": 1,
+        "flammable": 2
+      },
+      "color": "#3c8652"
+    },
+    "mcl_core:birchleaves": {
+      "drawtype": "allfaces_optional",
+      "liquidtype": "none",
+      "walkable": true,
+      "groups": {
+        "leaves": 1,
+        "flammable": 2
+      },
+      "color": "#3c8652"
+    },
+    "mcl_core:birchleaves_orphan": {
+      "drawtype": "allfaces_optional",
+      "liquidtype": "none",
+      "walkable": true,
+      "groups": {
+        "leaves": 1,
+        "flammable": 2
+      },
+      "color": "#3c8652"
+    },
+    "mcl_core:darkleaves": {
+      "drawtype": "allfaces_optional",
+      "liquidtype": "none",
+      "walkable": true,
+      "groups": {
+        "leaves": 1,
+        "flammable": 2
+      },
+      "color": "#3c8652"
+    },
+    "mcl_core:darkleaves_orphan": {
+      "drawtype": "allfaces_optional",
+      "liquidtype": "none",
+      "walkable": true,
+      "groups": {
+        "leaves": 1,
+        "flammable": 2
+      },
+      "color": "#3c8652"
+    },
+    "mcl_core:acacialeaves": {
+      "drawtype": "allfaces_optional",
+      "liquidtype": "none",
+      "walkable": true,
+      "groups": {
+        "leaves": 1,
+        "flammable": 2
+      },
+      "color": "#3c8652"
+    },
+    "mcl_core:acacialeaves_orphan": {
+      "drawtype": "allfaces_optional",
+      "liquidtype": "none",
+      "walkable": true,
+      "groups": {
+        "leaves": 1,
+        "flammable": 2
+      },
+      "color": "#3c8652"
+    },
+    "air": {
+      "drawtype": "airlike",
+      "liquidtype": "none",
+      "walkable": false,
+      "groups": {}
+    },
+    "ignore": {
+      "drawtype": "airlike",
+      "liquidtype": "none",
+      "walkable": false,
+      "groups": {}
+    }
+  }
+}
