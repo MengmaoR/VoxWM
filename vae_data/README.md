@@ -117,6 +117,31 @@ Ctrl-C、总墙钟到限、基础设施错误或无进度时，停止本命令�
 
 `--stall-seconds 300`为默认值：连续300秒没有提交样本且没有新增Token即FAIL；失败attempt增长不算进度。较低产出任务可手动调大，`0`关闭此检测。诊断分别写`stalled.json`（退出125）、`infrastructure_failure.json`（退出1）、`wall_timeout.json`（退出124）或`interrupted.json`（退出130）；基础设施原因也存`.runtime/infrastructure_<run_id>.json`，下一次运行不会误读旧标记。Shard的`progress`只是成功提交标记，不属于Voxel数据。
 
+## 外部监控与自动重启
+
+服务器正式长跑优先使用独立监控器。先停止原来手工启动的同目录采集，再检查并按需修改配置中的`dataset`：
+
+```bash
+git pull --ff-only origin master
+bash scripts/build_fixed24.sh
+.venv/bin/python scripts/supervise_collection.py \
+  --config vae_data/configs/collection_64x1.json --check-config
+.venv/bin/python scripts/supervise_collection.py \
+  --config vae_data/configs/collection_64x1.json
+```
+
+`collection_64x1`表示同时最多64个世界、每个未完成Shard只有1个世界；默认目标仍是Shard 0..99。若剩余未完成Shard少于64，实际world数随之降低，不会把多余world堆到同一片。原100片×1000配额、fixed24、批传输与Collector均不变。
+
+监控器每5秒检查一次本批Shard的持久进度；完成一次attempt、正式样本提交或READY都算进展，日志刷新和进程存活不算。连续600秒无进展时：
+
+1. 用本次启动独有的随机环境标记枚举同一用户下的Python、Craftium/Luanti及私有Xvfb；不按程序名匹配，不调用全局`pkill`。
+2. 先TERM、再KILL，并再次确认该标记下没有残留进程；若存在无法杀死的进程（例如内核不可中断I/O），拒绝重启，避免新旧采集重叠。
+3. 清理成功后等待10秒，以相同配置和`--resume`重启。默认无限恢复，`max_restarts`可在JSON中设为有限次数。
+
+终端每60秒输出一次进度年龄、所属PID数和各片sample/attempt数。每次尝试的合并stdout/stderr、实际命令、事件流及最新状态保存在`outputs/vae_100k_fixed24_supervisor/run_*/`。Ctrl-C同样只清理本监控器启动的进程；已提交数据保留。配置将采集器内部`--stall-seconds`设为0，避免旧的300秒门限先退出，唯一的长跑停滞门限由外部600秒监控器负责。
+
+如需只跑片20..39，复制配置并设置`shard:20, count:20`；不要同时用两个监控器操作相同数据集。配置文件本身不会启动采集，Codex本地也未运行真实Native或模拟卡死服务器。
+
 ## 检查某片、查看全局进度
 
 ```bash
