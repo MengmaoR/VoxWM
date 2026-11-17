@@ -135,3 +135,7 @@ dataset/
 GT-only Viewer独立于docs展示站，复用其只读Three/OrbitControls资源与ABV1格式；按真实sim_time播放实际观察帧，支持48³/中心16³、切片、27边界、类型高亮、source及估计/实际变化叠加、相对干预时间、事件/接收帧标记。每型轻量PNG/GIF/JSON/Markdown入Git，全部Trace留outputs并忽略。所有预计算、Actual Native、Accepted VAE States和Synthetic Tests明确区分。
 
 不运行正式1K片、100K、广域扫描、其他原生动态任务或训练。服务器正式生成全部由用户手动启动。本轮验收是代码完成、检查通过、有限native测试完成或如实失败，而非虚构数据集已就绪。
+
+## 动态观察传输补充 — 2026-11-17
+
+`advance`仍是单物理拍。新增`advance_batch(n)`仅改变传输（默认24、可选48）：引擎保留每拍fixed24 Server/Client屏障、post-step 48³捕获及真实reaction；每批首帧完整RAW，后续每拍稀疏delta含Node/light/param2。Python逐拍校验Server/Client/Lua tick严格+1、dt=1/24、绝对时间=tick/24，再使用原Collector；首次stop后剩余批尾不能进入Token词表/Registry/事件或五状态链。尾巴已推进过的世界不复用。批包只驻留本次内存/socket，不存正式Shard；正式五帧及成功D4 Anchor规则不变。最大观察时长仍按整数Tick限制，末批不超过剩余上限。本补充不调整并行数、配额或原生物理。

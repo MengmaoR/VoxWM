@@ -1,6 +1,7 @@
 """Bounded read-only native clock test; does not create a dynamic chain or shard."""
 from pathlib import Path
 import json,time,traceback,resource,sys
+from contextlib import closing
 import numpy as np
 from .native import Native
 from .protocol import Vocabulary,SIMULATION_HZ,dump
@@ -12,22 +13,31 @@ def run(args):
     if root.exists():raise FileExistsError('Use a fresh clock-test directory')
     root.mkdir(parents=True);started=time.perf_counter()
     result=dict(status='INCONCLUSIVE',purpose='clock verification only, not six-type native acceptance',simulation_hz=SIMULATION_HZ,
-        requested_ticks=args.ticks,dynamic_examples_generated=0,formal_shard_generated=False,consumer_work_ms=args.consumer_work_ms)
+        requested_ticks=args.ticks,tick_batch_size=args.tick_batch_size,dynamic_examples_generated=0,formal_shard_generated=False,consumer_work_ms=args.consumer_work_ms)
     trace=None
     try:
         with Native(args.seed,Vocabulary(),time.monotonic()+args.wall_seconds-10,args.craftium_dir,args.renderer)as world:
+            world.tick_batch_size=args.tick_batch_size
             world.prepare_at([96,1968,0],1);anchor,_=world.place([])
             trace=Trace(root/'trace',world.v,'clock_verification');trace.observe(anchor,'clock_baseline')
             loop=time.perf_counter();changed=0;previous=anchor;clocks=[]
-            for index in range(1,args.ticks+1):
-                if args.consumer_work_ms:
-                    # Diagnostic CPU workload ONLY; never a production FPS limiter/sleep.
-                    until=time.perf_counter()+args.consumer_work_ms/1000
-                    while time.perf_counter()<until:sum(i*i for i in range(100))
-                frame,_=world.tick()
-                if frame.meta['frame_index']!=index:raise ValueError('Relative tick mismatch')
-                changed+=int(np.count_nonzero(frame.tokens!=previous.tokens));previous=frame
-                trace.observe(frame,'native_tick');clocks.append(frame.meta['native_clock'])
+            def ticks():
+                left=args.ticks
+                while left:
+                    if args.tick_batch_size==1:yield world.tick();left-=1
+                    else:
+                        n=min(args.tick_batch_size,left)
+                        with closing(world.tick_batch(n))as batch:yield from batch
+                        left-=n
+            with closing(ticks())as observed:
+                for index in range(1,args.ticks+1):
+                    if args.consumer_work_ms:
+                        until=time.perf_counter()+args.consumer_work_ms/1000
+                        while time.perf_counter()<until:sum(i*i for i in range(100))
+                    frame,_=next(observed)
+                    if frame.meta['frame_index']!=index:raise ValueError('Relative tick mismatch')
+                    changed+=int(np.count_nonzero(frame.tokens!=previous.tokens));previous=frame
+                    trace.observe(frame,'native_tick');clocks.append(frame.meta['native_clock'])
             elapsed=time.perf_counter()-loop
             result.update(clock_verified=True,consecutive_native_ticks=True,ticks_observed=args.ticks,
                 clock_checkpoints={str(n):n/SIMULATION_HZ for n in(24,48,120,240)if n<=args.ticks},

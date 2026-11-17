@@ -4,6 +4,8 @@
 
 [当前数据协议](VAE_DATA_COLLECTION_PROTOCOL.md) · [服务器生成/恢复/检查命令](vae_data/README.md) · [本轮Native结果](vae_data/SHARDED_RESULTS.md)。最新用户指令覆盖旧200K/植物协议，VAE架构不变。活动代码为`vae_data/sharded/`，默认入口`python -m vae_data`。
 
+新增[动态观察批传输](vae_data/reports/advance_batch_20261117/README.md)：默认24拍/可选48拍，物理仍逐拍24Hz、每拍捕获；首帧+稀疏delta在内存中经socket返回，原Collector决定停止并丢弃批尾。启用前由用户运行`bash scripts/build_fixed24.sh`增量编译；本次不调整并行数，续跑示例固定`--workers 64`。没有运行Native或实测吞吐。
+
 已修复[服务器高并行采集停滞](vae_data/reports/parallel_runtime_20261117/README.md)：独立Xvfb、无新增Token免写词表、新词表写盘移出全局锁、锁等待/无提交停滞检测。`--workers auto`按可用CPU分配世界进程，也可显式指定200等任意正整数，不受100片限制；每片仍只有一个写入器。仅完成本地快速进程测试，真实高并行续跑由用户执行。
 
 已完成[10群落Static真实试采与旧预览集成](vae_data/reports/static_ten_20261117/README.md)，高度分配4/2/2/2，数据位于本地outputs，不入Git。

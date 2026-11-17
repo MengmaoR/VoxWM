@@ -3,7 +3,7 @@ local mt=minetest;local mod=mt.get_modpath('craftium_env');local p0=dofile(mod..
 local biome_search=dofile(mod..'/biome_search.lua')
 local world=mt.get_worldpath();local elapsed,step,last=0,0,0;local ready,armed,started=false,false,false
 assert(voxwm_clock and voxwm_region,'Build the VoxWM fixed24 timing patch before collection')
-local region=nil;local pending_capture=nil;local held={};local reactions={};local zero_tick=nil;local lua_tick=0
+local region=nil;local batch=nil;local pending_capture=nil;local held={};local reactions={};local zero_tick=nil;local lua_tick=0
 local function clock()
     local c=voxwm_clock();local n=c.server_tick
     return {sim_time=n/24,absolute_sim_time=n/24,simulation_step=n,native_simulation_step=n,simulation_hz=24,
@@ -61,6 +61,21 @@ local function capture(r,extra)
             region.reference_equal=true;emit()
         end)
     else emit()end
+end
+-- Keep only one bounded wire batch. Sampling/stop decisions remain in Python.
+local function capture_batch()
+    local start=mt.get_us_time();local payload=voxwm_region(region.low)
+    local changed=voxwm_batch_push(payload)
+    local data=clock();data.status='captured';data.audit=voxel_only.audit()
+    data.capture_us=mt.get_us_time()-start;data.capture_method='post_server_step_MapBlock'
+    data.reaction_events=reactions;reactions={};data.changed_raw_cells=changed
+    batch.frames[#batch.frames+1]=data
+    if #batch.frames==batch.n then
+        local done=batch;batch=nil
+        reply(done.request,{status='batch_captured',batch_transport_version='voxwm-advance-batch-v1',
+            count=#done.frames,frames=done.frames,chunks=region.chunks,center_origin=region.center,
+            capture_reference_equal=region.reference_equal,engine_mapblock_count=region.engine_mapblock_count})
+    end
 end
 local function prepare(r)
     for _,p in ipairs(held)do mt.forceload_free_block(p,true)end;held={};reactions={}
@@ -213,6 +228,7 @@ local function post_step(dt)
         end
         write('pilot_boot.json',{nodes=records,liquid_update=mt.settings:get('liquid_update')or'1.0'});write('gt_nodes.json',nodes);started=true
     end
+    if batch then capture_batch();return end
     if pending_capture then local job=pending_capture;pending_capture=nil;capture(job.request,job.extra)end
     if started then
         local text=read('pilot_command.json')
@@ -223,6 +239,11 @@ local function post_step(dt)
                 elseif r.kind=='locate'then locate(r)
                 elseif r.kind=='prepare'then prepare(r)
                 elseif r.kind=='capture'or r.kind=='advance'then capture(r)
+                elseif r.kind=='advance_batch'then
+                    assert(voxwm_batch_begin and voxwm_batch_push,'Rebuild fixed24 with advance_batch support')
+                    assert(region and region.chunks and zero_tick,'Batch requires a prepared, initialized region')
+                    assert(r.n==math.floor(r.n)and r.n>=1 and r.n<=48,'Invalid native batch size')
+                    voxwm_batch_begin(r.n);batch={request=r,n=r.n,frames={}};capture_batch()
                 elseif r.kind=='clock'then reply(r,{status='clock'})
                 elseif r.kind=='inspect'then inspect(r)
                 elseif r.kind=='intervene'then

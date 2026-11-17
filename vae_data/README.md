@@ -75,16 +75,40 @@ Static中心高度C逐整数随机，不吸附到16格引擎网格；完整Regio
 
 全局词表仅有新Token时写；JSON序列化和fsync在锁外，短锁只做版本复核/原子替换，冲突重新合并，已发布ID不重排。已有Token提交不加词表锁、不重写。等锁默认最多30秒，失败记录在本片attempt中，其余世界可以继续。
 
+## 动态逐拍批传输
+
+这是放源之后的观察循环优化，与规划阶段64源bitset无关。默认`--tick-batch-size 24`，可选48；`1`保留旧单拍路径。批内仍逐拍完成1/24秒物理、post-step捕获与Server/Client/Lua同步。首帧RAW+后续稀疏delta（含light/param2）和实际Client完成时钟通过现有socket返回，不逐拍落盘。JSON命令/响应及Client stamp每批一次。
+
+每拍都交给原Collector；48/120 Tick无变化、最多10候选和D1=30/D2=D3=40/D4=60秒不变。第一次stop之后的批尾不进词表、Registry、Trace事件或五帧；有尾巴的世界关闭后重新创建，不能在下一场景继续使用额外演化的世界。正式Shard格式不变。performance新增`batch_transfer`：往返数、捕获/消费/丢弃Tick数、wire_bytes、传输耗时；保留原loop_wall_seconds作为完整循环实测口径，不能用摊销耗时或空载时钟外推100K产能。
+
+启用前需要用户增量构建（不是运行采集）：
+
+```bash
+git pull --ff-only origin master
+bash scripts/build_fixed24.sh
+```
+
+可选的单世界只读时钟检查，**用户手动启动**，不采正式Shard/不放源：
+
+```bash
+.venv/bin/python -m vae_data clock-verify \
+  --dataset outputs/clock_batch24_new --ticks 240 --tick-batch-size 24 \
+  --wall-seconds 120 --renderer software
+```
+
+输出`clock_results.json`及debug Trace。48拍对照使用新目录并改为`--tick-batch-size 48`；旧单拍clock-verify仍默认1。本地只通过合成时钟/跨语言编码/停止点检查，未编译完整引擎、运行Native或证明速度提升；不同原生运行的全局RNG未快照，不声称独立重跑轨迹逐字节相同。
+
 ## 中断恢复 / 当前服务器续跑
 
-先停止同一数据目录的旧采集命令，保留数据和锁文件；不要同时运行新旧采集器。运行时修复无需重编译引擎，也不再依赖之前手改的minetest wrapper或人工Xvfb。
+先停止同一数据目录的旧采集命令，保留数据和锁文件；不要同时运行新旧采集器。词表/Xvfb修复本身无需编译；本轮批传输需先执行上方`build_fixed24.sh`。不依赖之前手改的minetest wrapper或人工Xvfb。
 
 ```bash
 git pull --ff-only origin master
 .venv/bin/python -m vae_data generate \
-  --dataset outputs/vae_100k_fixed24 --shard 0 --count 100 --workers auto --resume \
-  --max-attempts 5000 --wall-seconds 86400 --stall-seconds 300 --renderer software
-# 如需明确200个世界，把 --workers auto 改为 --workers 200。
+  --dataset outputs/vae_100k_fixed24 --shard 0 --count 100 --workers 64 --resume \
+  --tick-batch-size 24 --max-attempts 5000 --wall-seconds 86400 \
+  --stall-seconds 300 --renderer software
+# 本次保留用户实测64世界；需要测试48拍批次时只改 --tick-batch-size 48。
 ```
 
 此命令适用于**同一当前格式/Static高度策略**的原数据；目录名不证明版本兼容。现有manifest检查保留，遇到版本不符会报错，不能删除manifest或改写旧样本来强行混入。用户服务器约49,411已提交样本来自现场报告，本地未验证该目录。

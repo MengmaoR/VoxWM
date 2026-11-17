@@ -1,6 +1,7 @@
 """Bounded native attempts, strict center-only collection, and per-shard scheduling."""
 from pathlib import Path
 from collections import Counter
+from contextlib import closing
 import json,time,subprocess
 import numpy as np
 from .protocol import CONFIG,BIOMES,STRATA,Frame,Chain,kind_mask,biome_group,dump,fire_change_counts
@@ -40,6 +41,16 @@ def prepare_static(world,target,origin,rng,attempt):
     frame.meta.update(phase='static_snapshot',static_selection=dict(target_biome=group,target_stratum=stratum,
         actual_surface_biome=location['biome'],search=search))
     return frame
+
+
+def observation_ticks(world,monitor):
+    """Yield every real tick, stopping consumption exactly at Collector's decision."""
+    while not monitor.reason:
+        size=getattr(world,'tick_batch_size',24)
+        if size==1:yield world.tick();continue
+        remaining=round(monitor.max_seconds*24)-(monitor.previous.step-monitor.anchor.step)
+        with closing(world.tick_batch(min(size,remaining)))as batch:
+            yield from batch
 
 
 def collect(world,frame,category,rng,subtype='',max_seconds=None,trace=None):
@@ -96,19 +107,20 @@ def collect(world,frame,category,rng,subtype='',max_seconds=None,trace=None):
     loop_start=time.perf_counter()
     fire_counts={}
     all_reactions=[];contact_observed=False;contact_center=False;structural=0;age_only=0
-    while True:
-        current,result=world.tick();current.meta['phase']='native_evolution'
-        events=result.get('reaction_events')or[];all_reactions.extend(events)
-        if category=='D4':
-            from .protocol import adjacent,CENTER
-            contacts=kind_mask(current.tokens,world.v,'water')&adjacent(kind_mask(current.tokens,world.v,'lava'))
-            contact_observed|=bool(contacts.any());contact_center|=bool(contacts[CENTER].any())
-        if category=='D3':
-            kinds=fire_change_counts(monitor.previous,current,world.v)
-            for key,count in kinds.items():fire_counts[key]=fire_counts.get(key,0)+count
-            age_only+=kinds['fire_age_update'];structural+=sum(n for k,n in kinds.items()if k!='fire_age_update')
-        if trace:trace.observe(current,'native_observation',events)
-        if monitor.observe(current,events):break
+    with closing(observation_ticks(world,monitor))as observations:
+        for current,result in observations:
+            current.meta['phase']='native_evolution'
+            events=result.get('reaction_events')or[];all_reactions.extend(events)
+            if category=='D4':
+                from .protocol import adjacent,CENTER
+                contacts=kind_mask(current.tokens,world.v,'water')&adjacent(kind_mask(current.tokens,world.v,'lava'))
+                contact_observed|=bool(contacts.any());contact_center|=bool(contacts[CENTER].any())
+            if category=='D3':
+                kinds=fire_change_counts(monitor.previous,current,world.v)
+                for key,count in kinds.items():fire_counts[key]=fire_counts.get(key,0)+count
+                age_only+=kinds['fire_age_update'];structural+=sum(n for k,n in kinds.items()if k!='fire_age_update')
+            if trace:trace.observe(current,'native_observation',events)
+            if monitor.observe(current,events):break
     chain=monitor.select(rng,intervention,subtype)
     reason=None
     if not chain:
@@ -138,10 +150,10 @@ def choose_category(writer,rng):
     return str(rng.choice(available,p=weights)),missing
 
 
-def generate_shard(root,shard,resume,deadline,craftium,renderer,seed,max_attempts,sites_per_world,worlds=1):
+def generate_shard(root,shard,resume,deadline,craftium,renderer,seed,max_attempts,sites_per_world,worlds=1,tick_batch_size=24):
     if worlds>1:
         from .parallel import generate_parallel
-        return generate_parallel(root,shard,resume,deadline,craftium,renderer,seed,max_attempts,sites_per_world,worlds)
+        return generate_parallel(root,shard,resume,deadline,craftium,renderer,seed,max_attempts,sites_per_world,worlds,tick_batch_size)
     final=Path(root)/'shards'/f'shard_{shard:04d}'
     if (final/'READY').exists():return dict(shard=shard,status='skipped_ready')
     started=time.monotonic();world=None;rng=np.random.default_rng(seed+shard);attempts=0
@@ -160,7 +172,7 @@ def generate_shard(root,shard,resume,deadline,craftium,renderer,seed,max_attempt
                     if world is None or attempts%sites_per_world==1:
                         if world:world.__exit__(None,None,None)
                         vocabulary=__import__('vae_p0.codec',fromlist=['Vocabulary']).Vocabulary()
-                        world=Native(int(rng.integers(1,2147483647)),vocabulary,deadline,craftium,renderer);world.__enter__()
+                        world=Native(int(rng.integers(1,2147483647)),vocabulary,deadline,craftium,renderer);world.__enter__();world.tick_batch_size=tick_batch_size
                     site=rng.integers(-8192,8193,2)//16*16
                     subtype=''
                     if category=='D4':
@@ -180,6 +192,7 @@ def generate_shard(root,shard,resume,deadline,craftium,renderer,seed,max_attempt
                 except Exception as exc:
                     entry.update(status='failed',reason=f'{type(exc).__name__}: {exc}')
                     if world:world.__exit__(None,None,None);world=None
+                if world and world.retire_after_batch:world.__exit__(None,None,None);world=None
                 writer.attempt(entry);atomic_json(cursor,dict(attempts=attempts,rng=rng.bit_generator.state))
                 if attempts%10==0:writer.export()
             if not any(writer.missing()['categories'].values()):

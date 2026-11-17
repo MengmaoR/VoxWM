@@ -1,0 +1,83 @@
+--- a/src/client/client.cpp
++++ b/src/client/client.cpp
+@@ -57,6 +57,7 @@
+ #include "item_visuals_manager.h"
+ 
+ #include "craftium.h"
++#include "voxwm_batch.h"
+ #include <fstream>
+ #include <iomanip>
+ #include "gui/mainmenumanager.h"
+@@ -372,6 +373,9 @@
+     /* Send the obs_rwd_buffer over TCP to Python */
+     n_send = send(py_sockfd, obs_rwd_buffer, obs_rwd_buffer_size, 0);
+ 
++    // One bounded batch follows the ordinary final observation on the same socket.
++    if (voxwmFixed24()) voxwm_batch::send_ready(py_sockfd);
++
+     /* Receive a buffer of bytes with the actions to take */
+     n_recv = recv(py_sockfd, &actions, sizeof(actions), 0);
+ 
+@@ -1119,11 +1123,13 @@
+ 		Handle environment
+ 	*/
+ 	auto begin = std::chrono::steady_clock::now();
+-    if (voxwmFixed24()) {
++    const bool inside_batch=voxwmFixed24() &&
++        voxwm_batch::buffer.client_complete(voxwmClientTick.load(),dtime);
++    if (voxwmFixed24() && !inside_batch) {
+         std::ofstream stamp(g_settings->get("voxwm_client_clock_file"),std::ios::trunc);
+         stamp << voxwmClientTick.load() << " " << std::setprecision(17) << dtime << "\n";
+     }
+-    pyConnStep(player, m_camera, dtime);
++    if (!inside_batch) pyConnStep(player, m_camera, dtime);
+ 	auto end = std::chrono::steady_clock::now();
+ 	std::chrono::duration<float> duration = end - begin;
+     float seconds = duration.count();
+--- a/src/script/scripting_server.cpp
++++ b/src/script/scripting_server.cpp
+@@ -36,6 +36,7 @@
+ #include "common/c_content.h"
+ #include "serverenvironment.h"
+ #include "mapblock.h"
++#include "client/voxwm_batch.h"
+ 
+ extern "C" {
+ #include <lualib.h>
+@@ -145,6 +146,19 @@
+         lua_pushlstring(L,buffer.data(),buffer.size());return 1;
+     } catch(const std::exception &e) {return luaL_error(L,"%s",e.what());}
+ }
++// Called only by the post-step observation loop; each push is one real tick.
++inline static int lua_voxwm_batch_begin(lua_State *L) {
++    try {
++        if(!voxwmFixed24()) throw std::runtime_error("Batch requires fixed24 scheduler");
++        voxwm_batch::buffer.begin(luaL_checkinteger(L,1));return 0;
++    } catch(const std::exception &e) {return luaL_error(L,"%s",e.what());}
++}
++inline static int lua_voxwm_batch_push(lua_State *L) {
++    try {
++        size_t size;const char *raw=luaL_checklstring(L,1,&size);
++        lua_pushinteger(L,voxwm_batch::buffer.push(raw,size));return 1;
++    } catch(const std::exception &e) {return luaL_error(L,"%s",e.what());}
++}
+ inline static int lua_voxwm_clock(lua_State *L) {
+     lua_newtable(L);
+     const auto tick=voxwmServerTick.load();
+@@ -155,6 +169,7 @@
+     lua_pushnumber(L,voxwmPhysicsUs);lua_setfield(L,-2,"physics_us");
+     lua_pushstring(L,"voxwm-fixed24-v1");lua_setfield(L,-2,"patch_version");
+     lua_pushstring(L,"voxwm-region-integer-v1");lua_setfield(L,-2,"region_capture_version");
++    lua_pushstring(L,voxwm_batch::version);lua_setfield(L,-2,"batch_transport_version");
+     return 1;
+ }
+ 
+@@ -200,6 +215,8 @@
+         lua_register(L, "get_voxel_data_cpp", lua_get_voxel_data_cpp);
+         lua_register(L, "voxwm_region", lua_voxwm_region);
+         lua_register(L, "voxwm_clock", lua_voxwm_clock);
++        lua_register(L, "voxwm_batch_begin", lua_voxwm_batch_begin);
++        lua_register(L, "voxwm_batch_push", lua_voxwm_batch_push);
+ 
+ 	// Initialize our lua_api modules
+ 	InitializeModApi(L, top);

@@ -27,7 +27,7 @@ def competing_publication(root,name,barrier,channel):
     finally:channel.close()
 
 
-def fixture_world(channel,deadline,craftium,renderer,sites_per_world):
+def fixture_world(channel,deadline,craftium,renderer,sites_per_world,tick_batch_size=24):
     job=channel.recv();v=Vocabulary();f=frame(v,0,seed=os.getpid())
     channel.send(dict(row=dict(worker_pid=os.getpid()),chain=Chain('Static',[f]),pairs=v.entries,rng=job['rng'],fatal=False))
     channel.recv();channel.close()

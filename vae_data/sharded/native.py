@@ -10,6 +10,8 @@ from .protocol import Vocabulary,assemble,BIOMES,biome_group,split_for_seed,chec
 HERE=Path(__file__).parent
 
 class Native(World):
+    tick_batch_size=24
+    retire_after_batch=False
     def __enter__(self):
         self.temp=tempfile.TemporaryDirectory(prefix='voxwm-shard-')
         root=overlay(self.source,Path(self.temp.name)/'engine')
@@ -35,7 +37,7 @@ class Native(World):
             if float(boot['liquid_update'])!=1.0:raise ValueError('This protocol expects native liquid_update=1.0; no override applied')
             for kind,value in(('water',7),('lava',3)):
                 if self.defs['mcl_core:'+kind+'_source']['liquid_range']!=value:raise ValueError('Native liquid_range differs from the fixed protocol')
-            self.rollout=uuid.uuid4().hex;self.center=None;self._last_tick=None;self._performance=[];return self
+            self.rollout=uuid.uuid4().hex;self.center=None;self._last_tick=None;self._performance=[];self._batches=[];return self
         except BaseException:self.__exit__(None,None,None);raise
     def checked(self,result):
         self.last_result=result
@@ -50,6 +52,7 @@ class Native(World):
     def find_centers(self,site,height_type,pool_kind=''):
         return self.checked(self.probe.command('find_centers',x=int(site[0])//16*16,z=int(site[1])//16*16,height_type=height_type,pool_kind=pool_kind))
     def prepare_at(self,center,surface_y,static_window=False):
+        if self.retire_after_batch:raise ValueError('Discard this world after an unused batch tail')
         raw=np.asarray(center)
         if raw.shape!=(3,)or raw.dtype.kind not in'iuf'or not np.all(np.isfinite(raw)&(raw==np.floor(raw))):raise ValueError('Sampling origin must be integer-valued ENU')
         origin=raw.astype(int)
@@ -61,12 +64,13 @@ class Native(World):
         if result['status']!='prepared':raise RuntimeError(result['status'])
         self.protected_indices=result.get('protected_source_indices')or[]
         return self.frame(result)
-    def frame(self,result):
-        started=time.perf_counter();verify_clock(result,self.session.info)
-        chunks=self.decode(result);central=chunks[tuple(self.center)];meta=dict(central.meta)
+    def frame(self,result,cells=None,client_info=None):
+        client_info=self.session.info if client_info is None else client_info
+        started=time.perf_counter();verify_clock(result,client_info)
+        chunks=self.decode(result)if cells is None else self.probe.decode_capture(result,cells);central=chunks[tuple(self.center)];meta=dict(central.meta)
         meta.update(simulation_hz=SIMULATION_HZ,capture_method=result['capture_method'],pixel_capture=False,frame_index=result.get('frame_index'),relative_sim_time=result.get('relative_sim_time'),
             absolute_sim_time=int(result['simulation_step'])/SIMULATION_HZ,native_simulation_step=int(result['simulation_step']),
-            native_clock=dict(result['native_clock'],client_completed_tick=self.session.info['native_client_tick'],client_dt=self.session.info['native_client_dt'],lua_tick=result['lua_tick']),
+            native_clock=dict(result['native_clock'],client_completed_tick=client_info['native_client_tick'],client_dt=client_info['native_client_dt'],lua_tick=result['lua_tick']),
             sim_time=int(result['simulation_step'])/SIMULATION_HZ,simulation_step=int(result['simulation_step']),engine_us=int(result['engine_us']),
             rollout_id=self.rollout,world_seed=self.seed,center_origin=self.center,region_origin=(np.asarray(self.center)-16).tolist(),
             native_provenance=dict(engine_build=self.build,settings=dict(SETTINGS,voxwm_fixed24=True,voxwm_skip_rgb=True,frameskip=1,sync_env_mode=True,vsync=False),mapgen='v7',voxel_only=result['audit'],liquid_update=1.0,collector_revision=self.collector_revision,collector_worktree_dirty=self.collector_dirty,timing_patch=PATCH_VERSION),
@@ -80,7 +84,7 @@ class Native(World):
         meta['biome_groups_present']=sorted({group for info in result['chunks']for name in info['biome_points']if(group:=biome_group(name,BIOMES))})
         meta['biome_transition']=len(meta['biome_groups_present'])>1
         frame=assemble(chunks,self.center,meta)
-        result['decode_seconds']=time.perf_counter()-started
+        result['decode_seconds']=time.perf_counter()-started;self.last_frame=frame
         return frame,result
     def capture48(self):
         if self._last_tick is not None:raise ValueError('After initialization, use tick() for every capture')
@@ -92,9 +96,10 @@ class Native(World):
         check_sources(result.get('actions')or[],self.center)
         frame,result=self.frame(result)
         if frame.meta['frame_index']!=0:raise ValueError('Intervention baseline must be relative tick zero')
-        self._last_tick=frame.step;self._performance=[]
+        self._last_tick=frame.step;self._performance=[];self._batches=[]
         return frame,result
     def tick(self):
+        if self.retire_after_batch:raise ValueError('Discard this world after an unused batch tail')
         if self._last_tick is None:raise ValueError('Initialize sources before dynamic ticks')
         start=time.perf_counter();ipc=self.probe.communication_seconds
         result=self.checked(self.probe.command('advance'))
@@ -103,6 +108,30 @@ class Native(World):
         self._performance.append(dict(total=time.perf_counter()-start,simulation=result['native_clock']['physics_us']/1e6,
             capture=result['capture_us']/1e6,communication=self.probe.communication_seconds-ipc,decode=result['decode_seconds']))
         return frame,result
+    def tick_batch(self,n=24):
+        if self._last_tick is None:raise ValueError('Initialize sources before dynamic ticks')
+        if self.retire_after_batch:raise ValueError('Discard this world after an unused batch tail')
+        if not 1<=n<=48:raise ValueError('Native batch size must be 1..48')
+        started=time.perf_counter();ipc=self.probe.communication_seconds
+        response,packet=self.probe.advance_batch(n,self._last_tick)
+        transfer=time.perf_counter()-started;communication=self.probe.communication_seconds-ipc;consumed=0
+        shared={key:response[key]for key in('chunks','center_origin','capture_reference_equal','engine_mapblock_count')}
+        try:
+            for row,cells in zip(response['frames'],packet.states()):
+                result=dict(shared,**row);info=result.pop('batch_client_info')
+                verify_clock(result,info,self._last_tick);self.checked(result)
+                frame,result=self.frame(result,cells,info);self._last_tick=frame.step;consumed+=1
+                frame.meta['native_provenance']['batch_transport']='voxwm-advance-batch-v1'
+                frame.meta['native_provenance']['tick_batch_size']=self.tick_batch_size
+                self._performance.append(dict(total=transfer/packet.count+result['decode_seconds'],
+                    simulation=result['native_clock']['physics_us']/1e6,capture=result['capture_us']/1e6,
+                    communication=communication/packet.count,decode=result['decode_seconds']))
+                yield frame,result
+        finally:
+            discarded=packet.count-consumed
+            self.retire_after_batch|=bool(discarded)
+            self._batches.append(dict(captured_ticks=packet.count,consumed_ticks=consumed,discarded_tail_ticks=discarded,
+                wire_bytes=len(packet.payload),transfer_wall_seconds=transfer,communication_seconds=communication))
     def performance(self):
         rows=self._performance;totals={k:sum(r[k]for r in rows)for k in('total','simulation','capture','communication','decode')}
         n=len(rows);wall=totals['total']
@@ -111,7 +140,9 @@ class Native(World):
             simulation_ticks_per_wall_second=n/wall if wall else None,simulation_seconds_per_wall_second=n/SIMULATION_HZ/wall if wall else None,
             capture_to_simulation_ratio=totals['capture']/totals['simulation']if totals['simulation']else None,
             peak_python_rss_mb=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/(1024**2 if sys.platform=='darwin'else 1024),
-            scope='Per-tick wall includes client synchronization/blank packet, IPC and decode; excludes planning, setup and Trace persistence. Native capture is post-update and before completion release.')
+            batch_transfer=dict(python_roundtrips=len(getattr(self,'_batches',[])),
+                **{key:sum(row[key]for row in getattr(self,'_batches',[]))for key in('captured_ticks','consumed_ticks','discarded_tail_ticks','wire_bytes','transfer_wall_seconds','communication_seconds')}),
+            scope='Batch transfer is amortized per captured tick, with tail cost separately reported. Per-tick wall includes client synchronization/blank packet, IPC and decode; excludes planning, setup and Trace persistence. Native capture is post-update and before completion release.')
     def wait(self,target):
         # Setup-only stability observation; production dynamics always use tick().
         while True:

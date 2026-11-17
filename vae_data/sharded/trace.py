@@ -54,7 +54,9 @@ class Trace:
         result=getattr(world,'last_result',{})
         if result.get('chunks'):
             try:
-                frame,_=world.frame(result);self.observe(frame,'native_failure_observation',result.get('reaction_events')or[])
+                frame=getattr(world,'last_frame',None)
+                if frame is None or frame.step!=result['simulation_step']:frame,_=world.frame(result)
+                self.observe(frame,'native_failure_observation',result.get('reaction_events')or[])
             except Exception:pass
 
 class TraceReader:

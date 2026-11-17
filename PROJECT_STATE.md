@@ -1,10 +1,10 @@
 # VoxWM 当前状态
 
-**服务器高并行采集停滞的代码修复完成，待用户续跑验证。**
+**动态观察批传输实现完成，待用户构建并在服务器实测。**
 
-- 用户服务器报告`outputs/vae_100k_fixed24`约49,411样本后停滞；本机未访问该服务器/数据。源码确认词表每次提交全量fsync且持全局锁、等锁无超时、worker受片数限制、Linux没有显示分配及无进度检测。[修复与检查](vae_data/reports/parallel_runtime_20261117/README.md)。
-- 当前默认按可用CPU启动世界进程，可手动指定任意正整数；每片唯一Writer不变。Linux每会话管理独立Xvfb，显示失败停止重试；已知Token免锁免写，新Token写盘在锁外，锁等待有上限；无进度时停止本命令进程树。
-- 本地18项针对性合成/进程测试通过（约2秒）。没有运行Native采集、Linux多显示压力测试、1K/100K或GPU。数据配额、去重、词表ID、Static高度和Fixed24原生物理不变。
-- 已有[10群落Static样例](vae_data/reports/static_ten_20261117/README.md)、[固定时钟动态样例及旧D2](vae_data/reports/fixed24_rerun_20261117/README.md)和预览完整保留。
+- `advance_batch`默认24拍，可选48；引擎内部每拍保留fixed24同步/post-step真实48³捕获。首帧+RAW稀疏delta与实际Client时钟经现有socket返回；不逐拍写RAW文件。
+- Python仍逐拍验证时钟并调用原Collector。48/120拍无变化、10候选、最大观察时长、D4真实事件/五帧与Anchor不变。首次stop后的尾巴不进入候选，有尾巴的世界不复用。
+- 不调整并行数；服务器运行示例保持用户实测的64世界。此前Xvfb/词表锁修复保留，已有数据只读，原格式续跑检查不放宽。
+- 本地16项针对性检查通过（3.317秒），包括CPU编码/解码、时钟/停止点合成测试；另做补丁静态应用、语法/CLI检查；未运行Native、完整引擎构建或吞吐测试。[实现与检查报告](vae_data/reports/advance_batch_20261117/README.md)。既有Static/动态样例、Viewer和结果保留。
 
-唯一下一步：用户在服务器停止旧采集命令，pull后以兼容的同一数据目录`--resume --workers auto`续跑，观察正式提交是否恢复；[完整命令](vae_data/README.md#中断恢复--当前服务器续跑)。Codex不自动启动。
+唯一下一步：用户停止旧采集，pull并执行`bash scripts/build_fixed24.sh`，随后以`--workers 64 --tick-batch-size 24 --resume`手动续跑，观察完整循环的实测吞吐；[命令](vae_data/README.md#中断恢复--当前服务器续跑)。不自动启动1K/100K或GPU。

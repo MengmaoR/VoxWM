@@ -18,7 +18,7 @@ def infrastructure_failure(root,shard,error):
     atomic_json(path,dict(status='FAIL',shard=shard,pid=os.getpid(),reason=str(error)),sync=False)
 
 
-def world_process(channel,deadline,craftium,renderer,sites_per_world):
+def world_process(channel,deadline,craftium,renderer,sites_per_world,tick_batch_size=24):
     # No Native objects, sockets or mutable vocabulary are shared across worlds.
     from .native import Native
     from .generate import prepare_static,collect
@@ -32,7 +32,7 @@ def world_process(channel,deadline,craftium,renderer,sites_per_world):
             try:
                 if world is None or uses>=sites_per_world:
                     if world:world.__exit__(None,None,None);world=None
-                    world=Native(int(rng.integers(1,2147483647)),Vocabulary(),deadline,craftium,renderer);world.__enter__();uses=0
+                    world=Native(int(rng.integers(1,2147483647)),Vocabulary(),deadline,craftium,renderer);world.__enter__();world.tick_batch_size=tick_batch_size;uses=0
                 uses+=1;row['world_seed']=world.seed
                 site=rng.integers(-8192,8193,2)//16*16;category=job['category'];subtype=job['subtype']
                 if category=='Static':chain=Chain('Static',[prepare_static(world,job['target'],site,rng,row)])
@@ -45,13 +45,14 @@ def world_process(channel,deadline,craftium,renderer,sites_per_world):
                 if world:world.__exit__(None,None,None);world=None
             channel.send(dict(row=row,chain=chain,pairs=list(world.v.entries)if chain is not None else[],rng=rng.bit_generator.state,fatal=fatal))
             if fatal:break
+            if world and world.retire_after_batch:world.__exit__(None,None,None);world=None
     except (EOFError,BrokenPipeError):pass
     finally:
         if world:world.__exit__(None,None,None)
         channel.close()
 
 
-def generate_parallel(root,shard,resume,deadline,craftium,renderer,seed,max_attempts,sites_per_world,worlds):
+def generate_parallel(root,shard,resume,deadline,craftium,renderer,seed,max_attempts,sites_per_world,worlds,tick_batch_size=24):
     from .generate import choose_category,choose_static_target
     final=Path(root)/'shards'/f'shard_{shard:04d}'
     if(final/'READY').exists():return dict(shard=shard,status='skipped_ready')
@@ -65,7 +66,7 @@ def generate_parallel(root,shard,resume,deadline,craftium,renderer,seed,max_atte
                 saved=states.get(str(slot),old.get('rng')if slot==0 else None)
                 if saved:rng.bit_generator.state=saved
                 rngs.append(rng);states[str(slot)]=rng.bit_generator.state
-                parent,child=ctx.Pipe();process=ctx.Process(target=world_process,args=(child,deadline,craftium,renderer,sites_per_world))
+                parent,child=ctx.Pipe();process=ctx.Process(target=world_process,args=(child,deadline,craftium,renderer,sites_per_world,tick_batch_size))
                 process.start();child.close();processes.append(process);channels.append(parent)
             def dispatch(slot):
                 nonlocal issued,attempts
