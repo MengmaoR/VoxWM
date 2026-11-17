@@ -31,7 +31,8 @@ DEFAULTS = {
     "collector_stall_seconds": 0,
     "no_progress_seconds": 600,
     "monitor_interval_seconds": 5,
-    "status_interval_seconds": 60,
+    "status_interval_seconds": 30,
+    "terminal_dashboard": True,
     "restart_delay_seconds": 10,
     "shutdown_grace_seconds": 10,
     "shutdown_kill_seconds": 10,
@@ -87,8 +88,9 @@ def load_config(path):
         raise ValueError("renderer must be auto, window or software")
     if config["resume"] is not True:
         raise ValueError("resume must remain true so a supervised restart can preserve committed data")
-    if not isinstance(config["restart_on_exit"], bool):
-        raise ValueError("restart_on_exit must be boolean")
+    for key in ("restart_on_exit", "terminal_dashboard"):
+        if not isinstance(config[key], bool):
+            raise ValueError(f"{key} must be boolean")
     if not isinstance(config["environment"], dict) or not all(
             isinstance(k, str) and isinstance(v, str) for k, v in config["environment"].items()):
         raise ValueError("environment must contain string keys and values")
@@ -174,6 +176,15 @@ def shard_status(config):
         final, partial = root / name, root / ("." + name + ".partial")
         folder = final if final.exists() else partial
         row = {"ready": (final / "READY").is_file(), "samples": 0, "attempts": 0}
+        if row["ready"]:
+            row["samples"] = 1000
+            statistics = final / "statistics.json"
+            try:
+                row["attempts"] = int(json.loads(statistics.read_text()).get("attempts", 0))
+            except (FileNotFoundError, OSError, ValueError, json.JSONDecodeError):
+                pass
+            result[name] = row
+            continue
         database = folder / "journal.sqlite"
         if database.is_file():
             connection = None
@@ -197,6 +208,102 @@ def status_totals(status):
             "samples": sum(row["samples"] for row in status.values()),
             "attempts": sum(row["attempts"] for row in status.values()),
             "read_busy": sum(bool(row.get("read_busy")) for row in status.values())}
+
+
+def _duration(seconds):
+    seconds = max(0, int(seconds))
+    days, seconds = divmod(seconds, 86400)
+    hours, seconds = divmod(seconds, 3600)
+    minutes, seconds = divmod(seconds, 60)
+    prefix = f"{days}d " if days else ""
+    return f"{prefix}{hours:02d}:{minutes:02d}:{seconds:02d}"
+
+
+def _bar(value, total, width=30):
+    ratio = 0 if total <= 0 else max(0., min(1., value / total))
+    filled = round(width * ratio)
+    return "[" + "#" * filled + "-" * (width - filled) + "]"
+
+
+def _shard_grid(status, columns=10):
+    cells = []
+    for name, row in status.items():
+        shard = int(name.rsplit("_", 1)[1])
+        if row["ready"]:
+            value = "R"
+        elif row.get("read_busy"):
+            value = "BUSY"
+        elif row["samples"]:
+            value = str(row["samples"])
+        else:
+            value = "---"
+        cells.append(f"{shard:02d}:{value}".ljust(8))
+    return ["".join(cells[i:i + columns]).rstrip()
+            for i in range(0, len(cells), columns)]
+
+
+class TerminalDashboard:
+    """ANSI dashboard for a TTY; concise periodic records for redirected output."""
+    def __init__(self, enabled=True, stream=None):
+        self.enabled = enabled
+        self.stream = stream or sys.stdout
+        self.tty = bool(getattr(self.stream, "isatty", lambda: False)())
+        self.drawn = False
+        self.baseline_samples = None
+        self.baseline_time = None
+
+    def render(self, phase, config, status, supervisor_started, last_progress,
+               status_updated, restarts, pid, owned_count, active_worlds,
+               attempt_log, force=False, reason=None):
+        if not self.enabled:
+            return
+        now = time.monotonic()
+        totals = status_totals(status)
+        if self.baseline_samples is None:
+            self.baseline_samples = totals["samples"]
+            self.baseline_time = now
+        shard_target = len(status)
+        sample_target = shard_target * 1000
+        progress_age = max(0., now - last_progress)
+        stall_left = max(0., config["no_progress_seconds"] - progress_age)
+        measured = max(1e-9, now - self.baseline_time)
+        rate = max(0., totals["samples"] - self.baseline_samples) / measured * 3600
+        remaining = max(0, sample_target - totals["samples"])
+        eta = _duration(remaining / rate * 3600) if rate else "--"
+        if not self.tty:
+            if force:
+                self.stream.write(
+                    f"[dashboard] phase={phase} shards={totals['ready']}/{shard_target} "
+                    f"samples={totals['samples']}/{sample_target} attempts={totals['attempts']} "
+                    f"owned={owned_count} worlds={active_worlds} restarts={restarts} "
+                    f"rate={rate:.1f}/h eta={eta} progress_age={int(progress_age)}s "
+                    f"stall_in={int(stall_left)}s"
+                    + (f" reason={reason}" if reason else "") + "\n")
+                self.stream.flush()
+            return
+        lines = [
+            "VoxWM Native Collection Supervisor",
+            f"{phase:<10} uptime {_duration(now - supervisor_started)} | restart {restarts} | "
+            f"collector pid {pid or '-'} | owned processes {owned_count}",
+            f"Shards  {totals['ready']:>3}/{shard_target:<3} {_bar(totals['ready'], shard_target)}",
+            f"Samples {totals['samples']:>7}/{sample_target:<7} "
+            f"{_bar(totals['samples'], sample_target)}",
+            f"Rate {rate:.1f} samples/hour | ETA {eta}",
+            f"Attempts {totals['attempts']} | requested worlds {active_worlds} "
+            f"(max {config['workers']}, 1/shard) | busy reads {totals['read_busy']}",
+            f"Last durable progress {int(progress_age)}s ago | automatic restart in {_duration(stall_left)} "
+            f"| counts age {int(now - status_updated)}s",
+            f"Dataset: {config['dataset']}",
+            f"Attempt log: {attempt_log or '-'}",
+            "Shard grid: R=READY, number=committed samples, ---=not started",
+            *_shard_grid(status),
+        ]
+        if reason:
+            lines.append("Reason: " + str(reason))
+        prefix = "\x1b[2J\x1b[H" if not self.drawn else "\x1b[H"
+        self.stream.write(prefix + "\n".join(lines) + "\x1b[J\n")
+        self.stream.flush()
+        self.drawn = True
 
 
 def _linux_tagged_pids(run_id, proc=Path("/proc")):
@@ -351,6 +458,7 @@ def supervise(config):
     command = build_command(config)
     lock = _acquire_dataset_lock(config)
     recorder = Recorder(config["log_dir"], config, command)
+    dashboard = TerminalDashboard(config["terminal_dashboard"])
     stop = threading.Event()
     old_handlers = {}
 
@@ -364,13 +472,21 @@ def supervise(config):
     process = None
     run_id = None
     exit_code = 1
+    supervisor_started = last_progress = status_updated = time.monotonic()
+    status = shard_status(config)
+    pids = []
+    active_worlds = 0
+    log_path = None
+    final_reason = None
     try:
         while not stop.is_set():
             if targets_ready(config):
-                recorder.event("complete", restarts=restarts, shards=shard_status(config))
+                status = shard_status(config);status_updated = time.monotonic()
+                recorder.event("complete", restarts=restarts, shards=status)
                 exit_code = 0
                 break
             command = build_command(config)
+            active_worlds = int(command[command.index("--workers") + 1])
             run_id = uuid.uuid4().hex
             environment = dict(os.environ, **config["environment"])
             environment[MARKER] = run_id
@@ -380,8 +496,14 @@ def supervise(config):
                 start_new_session=True, stdout=log, stderr=subprocess.STDOUT)
             launched = last_progress = last_status = time.monotonic()
             signature = progress_signature(config)
+            status = shard_status(config);status_updated = launched
             recorder.event("launch", restart=restarts, pid=process.pid, run_id=run_id,
                            log=log_path.name, argv=command)
+            dashboard.render("RUNNING", config, status, supervisor_started, last_progress,
+                status_updated, restarts, process.pid, 1, active_worlds, log_path, force=True)
+            recorder.state(status="RUNNING", restart=restarts, pid=process.pid,
+                           run_id=run_id, owned_pids=[process.pid], progress_age_seconds=0,
+                           shards=status, totals=status_totals(status), attempt_log=str(log_path))
             reason = None
             while not stop.is_set():
                 try:
@@ -395,34 +517,48 @@ def supervise(config):
                     last_progress = now
                     recorder.event("progress", restart=restarts)
                 pids = sorted(owned_pids(run_id))
+                refreshed = False
                 if now - last_status >= config["status_interval_seconds"]:
                     last_status = now
                     status = shard_status(config)
-                    age = round(now - last_progress, 1)
-                    print(f"[supervisor] restart={restarts} pid={process.pid} owned={len(pids)} "
-                          f"progress_age={age}s totals={status_totals(status)}", flush=True)
+                    status_updated = now
+                    refreshed = True
                     recorder.state(status="RUNNING", restart=restarts, pid=process.pid,
-                                   run_id=run_id, owned_pids=pids, progress_age_seconds=age,
-                                   shards=status, attempt_log=log_path.name)
+                                   run_id=run_id, owned_pids=pids,
+                                   progress_age_seconds=round(now - last_progress, 1),
+                                   shards=status, totals=status_totals(status),
+                                   attempt_log=str(log_path))
+                dashboard.render("RUNNING", config, status, supervisor_started, last_progress,
+                    status_updated, restarts, process.pid, len(pids), active_worlds,
+                    log_path, force=refreshed)
                 if code is not None:
                     reason = f"collector exited with code {code} before all requested shards were READY"
+                    status = shard_status(config);status_updated = now
                     recorder.event("collector_exit", restart=restarts, code=code,
-                                   runtime_seconds=round(now - launched, 3), shards=shard_status(config))
+                                   runtime_seconds=round(now - launched, 3), shards=status)
                     if targets_ready(config):
                         reason = None
                         exit_code = 0
                     elif not config["restart_on_exit"]:
                         exit_code = code or 1
+                    dashboard.render("COMPLETE" if reason is None else "EXITED", config,
+                        status, supervisor_started, last_progress, status_updated, restarts,
+                        process.pid, len(pids), active_worlds, log_path, force=True, reason=reason)
                     break
                 if now - last_progress >= config["no_progress_seconds"]:
                     reason = f"no completed attempt, sample commit or READY marker for {config['no_progress_seconds']}s"
+                    status = shard_status(config);status_updated = now
                     recorder.event("stalled", restart=restarts, reason=reason,
-                                   owned_pids=pids, shards=shard_status(config))
+                                   owned_pids=pids, shards=status)
+                    dashboard.render("STALLED", config, status, supervisor_started,
+                        last_progress, status_updated, restarts, process.pid, len(pids),
+                        active_worlds, log_path, force=True, reason=reason)
                     break
             lingering = terminate_owned(process, run_id,
                 config["shutdown_grace_seconds"], config["shutdown_kill_seconds"])
             log.close()
             if lingering:
+                final_reason = "Tagged collection processes survived SIGKILL"
                 recorder.event("cleanup_failed", run_id=run_id, lingering_pids=lingering)
                 recorder.state(status="FAIL", reason="tagged processes survived SIGKILL",
                                lingering_pids=lingering)
@@ -434,24 +570,34 @@ def supervise(config):
                 exit_code = 130
                 break
             if reason is None:
-                recorder.event("complete", restarts=restarts, shards=shard_status(config))
+                status = shard_status(config);status_updated = time.monotonic()
+                recorder.event("complete", restarts=restarts, shards=status)
                 break
             if process.returncode is not None and not config["restart_on_exit"]:
+                final_reason = reason
                 recorder.state(status="FAIL", reason=reason, shards=shard_status(config))
                 print(reason, file=sys.stderr)
                 break
             if config["max_restarts"] and restarts >= config["max_restarts"]:
+                final_reason = f"Restart limit reached after: {reason}"
                 recorder.event("restart_limit", restarts=restarts, reason=reason)
                 exit_code = 2
                 break
             restarts += 1
             recorder.event("restart", restart=restarts, reason=reason,
                            delay_seconds=config["restart_delay_seconds"])
-            print(f"[supervisor] {reason}; clean restart #{restarts} in "
-                  f"{config['restart_delay_seconds']}s", flush=True)
+            dashboard.render("RESTARTING", config, status, supervisor_started,
+                last_progress, status_updated, restarts, None, 0, 0, log_path,
+                force=True, reason=reason)
             stop.wait(config["restart_delay_seconds"])
         final = "COMPLETE" if exit_code == 0 else "INTERRUPTED" if exit_code == 130 else "FAIL"
-        recorder.state(status=final, restarts=restarts, shards=shard_status(config))
+        status = shard_status(config);status_updated = time.monotonic()
+        if stop.is_set():final_reason = "Supervisor interrupted by user"
+        dashboard.render(final, config, status, supervisor_started, last_progress,
+            status_updated, restarts, None, 0, 0, log_path, force=True,
+            reason=final_reason)
+        recorder.state(status=final, restarts=restarts, shards=status,
+                       totals=status_totals(status), reason=final_reason)
         return exit_code
     finally:
         if process is not None and run_id is not None and (process.poll() is None or owned_pids(run_id)):
@@ -483,7 +629,9 @@ def main(argv=None):
             print(json.dumps({"command": command,
                 "dataset": str(config["dataset"]), "log_dir": str(config["log_dir"]),
                 "defaults": {"count": config["count"], "workers": config["workers"],
-                             "no_progress_seconds": config["no_progress_seconds"]}}, indent=2))
+                             "no_progress_seconds": config["no_progress_seconds"],
+                             "terminal_dashboard": config["terminal_dashboard"],
+                             "status_interval_seconds": config["status_interval_seconds"]}}, indent=2))
             return 0
         return supervise(config)
     except (OSError, ValueError, RuntimeError, json.JSONDecodeError) as exc:

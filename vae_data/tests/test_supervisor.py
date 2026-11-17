@@ -1,4 +1,5 @@
 import json
+import io
 import os
 import subprocess
 import sys
@@ -8,8 +9,13 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from vae_data.supervisor import (MARKER, _linux_tagged_pids, build_command, load_config,
-    owned_pids, progress_signature, supervise, terminate_owned)
+from vae_data.supervisor import (MARKER, TerminalDashboard, _linux_tagged_pids,
+    build_command, load_config, owned_pids, progress_signature, supervise,
+    terminate_owned)
+
+
+class TTYBuffer(io.StringIO):
+    def isatty(self):return True
 
 
 class SupervisorTests(unittest.TestCase):
@@ -58,14 +64,30 @@ class SupervisorTests(unittest.TestCase):
                 (entry / "environ").write_bytes(value)
             self.assertEqual(_linux_tagged_pids("wanted", proc), {101})
 
+    def test_terminal_dashboard_renders_progress_grid_and_stall_countdown(self):
+        with tempfile.TemporaryDirectory() as folder:
+            config = self.config(folder)
+            stream = TTYBuffer();dashboard = TerminalDashboard(True, stream)
+            now = time.monotonic()
+            status = {"shard_0000": {"ready": True, "samples": 1000, "attempts": 11},
+                      "shard_0001": {"ready": False, "samples": 250, "attempts": 7}}
+            dashboard.render("RUNNING", config, status, now - 60, now - 12, now - 3,
+                             1, 123, 70, 2, "attempt.log", force=True)
+            output = stream.getvalue()
+            self.assertIn("Shards    1/2", output)
+            self.assertIn("Samples    1250/2000", output)
+            self.assertIn("00:R", output)
+            self.assertIn("01:250", output)
+            self.assertIn("automatic restart in 00:09:47", output)
+
     def test_stall_stops_and_restarts_the_same_command(self):
         with tempfile.TemporaryDirectory() as folder:
             config = self.config(folder)
             config.update(no_progress_seconds=.04, monitor_interval_seconds=.01,
                           status_interval_seconds=10, restart_delay_seconds=0,
                           shutdown_grace_seconds=.1, shutdown_kill_seconds=.1,
-                          max_restarts=1)
-            sleeping = [sys.executable, "-c", "import time;time.sleep(30)"]
+                          max_restarts=1, terminal_dashboard=False)
+            sleeping = [sys.executable, "-c", "import time;time.sleep(30)", "--workers", "1"]
             with mock.patch("vae_data.supervisor.verify_process_tracking"), \
                  mock.patch("vae_data.supervisor.build_command", return_value=sleeping):
                 self.assertEqual(supervise(config), 2)

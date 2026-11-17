@@ -138,7 +138,9 @@ bash scripts/build_fixed24.sh
 2. 先TERM、再KILL，并再次确认该标记下没有残留进程；若存在无法杀死的进程（例如内核不可中断I/O），拒绝重启，避免新旧采集重叠。
 3. 清理成功后等待10秒，以相同配置和`--resume`重启。默认无限恢复，`max_restarts`可在JSON中设为有限次数。
 
-终端每60秒输出一次进度年龄、所属PID数和各片sample/attempt数。每次尝试的合并stdout/stderr、实际命令、事件流及最新状态保存在`outputs/vae_100k_fixed24_supervisor/run_*/`。Ctrl-C同样只清理本监控器启动的进程；已提交数据保留。配置将采集器内部`--stall-seconds`设为0，避免旧的300秒门限先退出，唯一的长跑停滞门限由外部600秒监控器负责。
+直接在终端或tmux运行时，会原位刷新Dashboard：总Shard/样本进度条、每片已提交样本、attempt总数、实测速率/ETA、所属PID数、重启次数，以及距600秒停滞线的倒计时。进程数与倒计时每5秒刷新；为避免监控增加磁盘压力，SQLite样本/attempt计数默认每30秒只读刷新一次，可通过`status_interval_seconds`调整。stdout被nohup/文件重定向时不写ANSI控制码，改为每30秒一条摘要。设置`terminal_dashboard:false`可关闭展示，不影响保护逻辑。
+
+每次尝试的合并stdout/stderr、实际命令、事件流及机器可读`state.json`保存在`outputs/vae_100k_fixed24_supervisor/run_*/`。Dashboard刷新和日志写入不算采集进展。Ctrl-C同样只清理本监控器启动的进程；已提交数据保留。配置将采集器内部`--stall-seconds`设为0，避免旧的300秒门限先退出，唯一的长跑停滞门限由外部600秒监控器负责。
 
 如需只跑片20..39，复制配置并设置`shard:20, count:20`；不要同时用两个监控器操作相同数据集。配置文件本身不会启动采集，Codex本地也未运行真实Native或模拟卡死服务器。
 
