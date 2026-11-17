@@ -7,6 +7,7 @@ from voxwm_gt.storage import DeltaWriter
 from .trace import TraceReader
 from .protocol import Vocabulary,dump
 from .native_six import TYPES
+from .storage import atomic_json
 
 COLORS={'water':'#298ad1','lava':'#fa6b16','fire':'#f8b12d','stone':'#89939c','cobble':'#687884','obsidian':'#533369'}
 
@@ -98,6 +99,9 @@ def one_trace(source,destination):
     text+=f"Relevant native center voxel updates: {status.get('center_target_changes','not reached')}; relevant change observations: {status.get('center_transition_observations','not reached')}; sampled raw reaction writes: {len(summary['native_events'])}.\n\n"
     text+='Accepted state times/steps: '+str([(rows[i]['metadata']['sim_time'],rows[i]['metadata']['simulation_step'])for i in chosen])+'.\n\n'
     text+='See `frames.json` for all observed times/stages and reaction/product positions; `report.json` has machine-readable statistics. Full raw trace and all-point source tables remain in the parent attempt.\n'
+    if summary['unique_type']=='Static'and rows:
+        m=rows[0]['metadata']
+        text=f"# Static — {status_text}\n\nOne actual native snapshot, not a dynamic chain.\n\nBiome: {m['biome_group']} ({m['surface_biome']}); stratum: {m['stratum']}.\n\nS={m['surface_reference_y']}, C={m['selected_chunk_center_y']}; full Region Up=[{m['region_height_min']},{m['region_height_max']}].\n\nAir={m['air_fraction']:.6f}; Void={m['void_fraction']:.6f}. See frames.json for native coordinates and source metadata.\n"
     (destination/'report.md').write_text(text)
     dump(destination/'report.json',dict(status=status,planning=plan,native_frames=len(rows),accepted_indices=chosen,
         actual_center_changes=sum(row['center_changes']for row in rows if'native_observation'in row['stages']),
@@ -109,12 +113,17 @@ def export(root,report_dir=None):
     prior=json.loads((out/'manifest.json').read_text()).get('types',[])if(out/'manifest.json').exists()else[]
     retained={entry['id']:entry for entry in prior if entry.get('retained_from')}
     native=json.loads((root/'native_results.json').read_text())if(root/'native_results.json').exists()else{}
-    for label in TYPES:
-        attempts=sorted((root/'traces'/label).glob('attempt_*/trace.json'));candidates=[];options=[]
+    labels=[*TYPES,'Static']if(root/'traces/Static').exists()or'Static'in retained else TYPES
+    for label in labels:
+        pattern='scene_*/trace.json'if label=='Static'else'attempt_*/trace.json'
+        attempts=sorted((root/'traces'/label).glob(pattern));candidates=[];options=[]
         for attempt in attempts:
             meta=json.loads(attempt.read_text());source=attempt.parent
             relative=f'{label}/{source.name}';one_trace(source,out/relative)
-            options.append(dict(attempt=source.name,path=relative,available=bool(meta['frames'])))
+            option=dict(attempt=source.name,path=relative,available=bool(meta['frames']))
+            if label=='Static'and meta['frames']:
+                m=meta['frames'][0]['metadata'];option['label']=f"{m['biome_group']} / {m['stratum']} / C={m['selected_chunk_center_y']}"
+            options.append(option)
             candidates.append((bool(meta.get('selected_indices')),bool(meta['frames']),attempt))
         chosen=max(candidates,key=lambda item:(item[0],item[1],str(item[2])))if candidates else None
         if chosen:
@@ -123,10 +132,25 @@ def export(root,report_dir=None):
             if report_dir:
                 dest=Path(report_dir)/label;dest.mkdir(parents=True,exist_ok=True)
                 for name in('contact_sheet.png','evolution.gif','report.md','report.json'):shutil.copy2(out/relative/name,dest/name)
-        elif label in native.get('skipped_types',[])and label in retained and(out/retained[label]['path']/'frames.json').exists():entries.append(retained[label])
+        elif(label=='Static'or label in native.get('skipped_types',[]))and label in retained and(out/retained[label]['path']/'frames.json').exists():entries.append(retained[label])
         else:entries.append(dict(id=label,path=None,available=False,attempts=[],reason='skipped by user; not rerun'if label in native.get('skipped_types',[])else'not attempted within native budget'))
     dump(out/'manifest.json',dict(source='Actual Native GT only',types=entries,run_directory=str(root),retained_types=[entry['id']for entry in entries if entry.get('retained_from')]))
     return out
+
+
+def publish_static(source,target):
+    """Append only the new derived Static preview; old native GT stays untouched."""
+    source,target=Path(source),Path(target);out=target/'viewer'
+    manifest=json.loads((out/'manifest.json').read_text())
+    if any(entry['id']=='Static'for entry in manifest['types']):raise FileExistsError('This viewer already has a Static collection; do not overwrite it')
+    current=json.loads((source/'viewer/manifest.json').read_text())
+    entry=dict(next(item for item in current['types']if item['id']=='Static'),retained_from=str(source))
+    shutil.copytree(source/'viewer/Static',out/'Static')
+    manifest['types'].append(entry)
+    manifest['retained_types']=list(dict.fromkeys([*manifest.get('retained_types',[]),'Static']))
+    atomic_json(out/'manifest.json',manifest)
+    return out
+
 
 if __name__=='__main__':
     import argparse

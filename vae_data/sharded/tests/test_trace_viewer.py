@@ -42,6 +42,27 @@ if(JSON.stringify(worldToLocal([4,4,4],[-16,-16,-16]))!==JSON.stringify([-3.5,-3
             export(root);manifest=json.loads((out/'manifest.json').read_text())
             self.assertEqual(next(t for t in manifest['types']if t['id']=='D2'),entry)
             self.assertEqual(manifest['retained_types'],['D2'])
+    def test_static_snapshot_roundtrip_and_append_preserve_old_preview(self):
+        from vae_data.sharded.export_trace import export,publish_static
+        with tempfile.TemporaryDirectory()as tmp:
+            root=Path(tmp)/'new';root.mkdir();f,v=fixture()
+            f.meta.update(data_source='native',sampling_window_kind='static',biome_group='Forest',surface_biome='Forest',stratum='shallow_underground',
+                surface_reference_y=32,selected_chunk_center_y=8,region_height_min=-16,region_height_max=31,air_fraction=.3,void_fraction=0.)
+            trace=Trace(root/'traces/Static/scene_01',v,'Static');trace.observe(f,'static_snapshot');trace.finish(status=dict(status='accepted_static'))
+            export(root);entry=next(e for e in json.loads((root/'viewer/manifest.json').read_text())['types']if e['id']=='Static')
+            np.testing.assert_array_equal(DeltaReader(root/'viewer'/entry['path']/'voxels.bin').frame(0),f.tokens)
+            old=Path(tmp)/'old';folder=old/'viewer/D2/retained';folder.mkdir(parents=True)
+            (folder/'frames.json').write_text('{}');(folder/'old_note.txt').write_text('unchanged')
+            previous=dict(id='D2',path='D2/retained',available=True,retained_from='old accepted D2')
+            (old/'viewer/manifest.json').write_text(json.dumps(dict(types=[previous])))
+            (old/'native_results.json').write_text(json.dumps(dict(skipped_types=['D2'])))
+            publish_static(root,old);export(old)
+            entries=json.loads((old/'viewer/manifest.json').read_text())['types']
+            self.assertEqual(next(e for e in entries if e['id']=='D2'),previous)
+            self.assertEqual((folder/'old_note.txt').read_text(),'unchanged')
+            retained=next(e for e in entries if e['id']=='Static');self.assertTrue(retained['available'])
+            with self.assertRaises(FileExistsError):publish_static(root,old)
+
     def test_native_six_stops_each_type_after_one_success_and_three_attempts(self):
         from vae_data.sharded.native_six import run,TYPES
         class World:

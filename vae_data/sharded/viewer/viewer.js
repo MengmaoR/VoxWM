@@ -124,7 +124,8 @@ async function load(){
   if(stream.frames!==m.frames.length||stream.shape.some(v=>v!==48))throw Error('Voxel and metadata shape/index mismatch');
   if(m.frames.some(f=>f.metadata.region_origin.some((v,i)=>v!==m.frames[0].metadata.region_origin[i])))throw Error('Moving native region: this fixed-region comparison cannot assume equal local indices');
   index=0;const init=data.frames.findIndex(f=>f.stages.includes('after_intervention')),ri=Math.max(0,init);reference=stream.frame(ri).slice();baseTime=init<0?null:data.frames[ri].metadata.sim_time;
-  const status=m.selection.status||{};$('status').textContent=`${type.id} / ${entry.attempt}\n${status.status}: ${status.reason||'accepted native chain'}\nRollout: ${m.frames[0].metadata.rollout_id}${m.planning.native_intervention_executed===false?'\nOffline plan only; proposed sources NOT executed':''}`;
+  const status=m.selection.status||{};$('status').textContent=`${type.id} / ${entry.attempt}\n${status.status}: ${status.reason||(type.id==='Static'?'accepted static snapshot':'accepted native chain')}\nRollout: ${m.frames[0].metadata.rollout_id}${m.planning.native_intervention_executed===false?'\nOffline plan only; proposed sources NOT executed':''}`;
+  if(type.id==='Static'){const s=m.frames[0].metadata;$('status').textContent+=`\nBiome: ${s.biome_group} (${s.surface_biome})\n${s.stratum} · S=${s.surface_reference_y} · C=${s.selected_chunk_center_y}\nRegion Up: ${s.region_height_min}..${s.region_height_max}\nAir ${(s.air_fraction*100).toFixed(2)}% · Void ${(s.void_fraction*100).toFixed(2)}%`;}
   if(m.retained_from)$('status').textContent+=`\n保留的旧结果（本轮未重跑）: ${m.retained_from}`;
   $('planning').textContent=JSON.stringify(m.planning,null,2);$('timeline').max=m.frames.length-1;for(const id of['beforeFrame','afterFrame'])$(id).max=m.frames.length-1;
   $('stages').replaceChildren();const notes=[];m.frames.forEach((row,i)=>{const roles=row.stages.filter(s=>!['native_observation','original_scene'].includes(s));if(m.selected_indices.includes(i))roles.push('VAE');if(roles.length){const o=document.createElement('option');o.value=i;o.label=roles.join('/');$('stages').append(o);notes.push(`#${i} ${row.metadata.sim_time.toFixed(3)}s ${roles.join('/')}`);}});$('markers').textContent=notes.join(' · ');
@@ -140,7 +141,7 @@ async function load(){
   renderState();
  }catch(e){if(token===loadId)$('error').textContent=e.stack||String(e);}
 }
-function attempts(){const entry=manifest.types.find(t=>t.id===$('type').value);$('attempt').replaceChildren();for(const a of entry?.attempts||[]){const o=document.createElement('option');o.value=a.attempt;o.textContent=a.attempt;$('attempt').append(o);}$('attempt').value=entry?.attempt||'';}
+function attempts(){const entry=manifest.types.find(t=>t.id===$('type').value);$('attempt').replaceChildren();for(const a of entry?.attempts||[]){const o=document.createElement('option');o.value=a.attempt;o.textContent=a.label||a.attempt;$('attempt').append(o);}$('attempt').value=entry?.attempt||'';}
 function jump(i){if(!data)return;playing=false;$('play').textContent='Play';index=Math.max(0,Math.min(data.frames.length-1,i));renderState();}
 $('play').onclick=()=>{if(!data)return;playing=!playing;$('play').textContent=playing?'Pause':'Play';if(playing&&index===data.frames.length-1){index=0;renderState();}playStart=performance.now();playTime=data.frames[index].metadata.sim_time;};
 $('back').onclick=()=>jump(index-1);$('next').onclick=()=>jump(index+1);$('timeline').oninput=()=>jump(Number($('timeline').value));

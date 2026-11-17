@@ -4,6 +4,8 @@
 
 [当前数据协议](VAE_DATA_COLLECTION_PROTOCOL.md) · [服务器生成/恢复/检查命令](vae_data/README.md) · [本轮Native结果](vae_data/SHARDED_RESULTS.md)。最新用户指令覆盖旧200K/植物协议，VAE架构不变。活动代码为`vae_data/sharded/`，默认入口`python -m vae_data`。
 
+已完成[10群落Static真实试采与旧预览集成](vae_data/reports/static_ten_20261117/README.md)，高度分配4/2/2/2，数据位于本地outputs，不入Git。
+
 Static已支持逐整数中心高度与完整48³世界边界；任意高度Capture通过13个合法高度的C++/VoxelManip逐体素核对，并取得Elevated/Shallow/Deep真实示例。[高度修订报告](vae_data/reports/static_height_20261117/README.md)。开始新策略采集前运行`bash scripts/build_fixed24.sh`，使用新目录，不能把新Static混入旧策略数据；Dynamic网格及Fixed24规则不变。
 
 当前用户指定的 **D1/D3/D4-A/B/C fixed24重跑全部通过**，D2沿用已通过的旧结果、不重跑。源点中心14³、D3超时120 Tick、逐Tick GT已在新样例中运行；Viewer 8766已切到新目录并标记D2历史来源。[本轮结果/预览](vae_data/reports/fixed24_rerun_20261117/README.md)。完整受控RNG跨吞吐等价仍未证明；未运行正式1K/100K或训练。

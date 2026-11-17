@@ -1,0 +1,320 @@
+{
+  "status": "GO",
+  "sampling_seed": 42,
+  "wall_seconds": 107.28571283401106,
+  "attempts": 15,
+  "counts": {
+    "elevated_complex": 2,
+    "surface": 4,
+    "shallow_underground": 2,
+    "deep_cave": 2
+  },
+  "distinct_biomes": 10,
+  "distinct_heights": 10,
+  "samples": [
+    {
+      "scene": "scene_01_MegaTaiga_elevated_complex",
+      "biome_group": "MegaTaiga",
+      "native_biome": "MegaTaiga",
+      "stratum": "elevated_complex",
+      "world_seed": 1405681632,
+      "center_y": 61,
+      "center_origin": [
+        -816,
+        -1808,
+        53
+      ],
+      "region_origin": [
+        -832,
+        -1824,
+        37
+      ],
+      "surface_reference_y": 44,
+      "region_height_min": 37,
+      "region_height_max": 84,
+      "air_fraction": 0.96142578125,
+      "void_fraction": 0.0,
+      "height_attempt_count": 2,
+      "trace": "traces/Static/scene_01_MegaTaiga_elevated_complex"
+    },
+    {
+      "scene": "scene_02_Forest_elevated_complex",
+      "biome_group": "Forest",
+      "native_biome": "Forest",
+      "stratum": "elevated_complex",
+      "world_seed": 197860369,
+      "center_y": 18,
+      "center_origin": [
+        880,
+        6416,
+        10
+      ],
+      "region_origin": [
+        864,
+        6400,
+        -6
+      ],
+      "surface_reference_y": 8,
+      "region_height_min": -6,
+      "region_height_max": 41,
+      "air_fraction": 0.909912109375,
+      "void_fraction": 0.0,
+      "height_attempt_count": 4,
+      "trace": "traces/Static/scene_02_Forest_elevated_complex"
+    },
+    {
+      "scene": "scene_03_Plains_surface",
+      "biome_group": "Plains",
+      "native_biome": "Plains",
+      "stratum": "surface",
+      "world_seed": 1627981024,
+      "center_y": 9,
+      "center_origin": [
+        3536,
+        -2128,
+        1
+      ],
+      "region_origin": [
+        3520,
+        -2144,
+        -15
+      ],
+      "surface_reference_y": 15,
+      "region_height_min": -15,
+      "region_height_max": 32,
+      "air_fraction": 0.549560546875,
+      "void_fraction": 0.0,
+      "height_attempt_count": 1,
+      "trace": "traces/Static/scene_03_Plains_surface"
+    },
+    {
+      "scene": "scene_04_Desert_surface",
+      "biome_group": "Desert",
+      "native_biome": "Desert",
+      "stratum": "surface",
+      "world_seed": 1627981024,
+      "center_y": 28,
+      "center_origin": [
+        7584,
+        448,
+        20
+      ],
+      "region_origin": [
+        7568,
+        432,
+        4
+      ],
+      "surface_reference_y": 21,
+      "region_height_min": 4,
+      "region_height_max": 51,
+      "air_fraction": 0.88037109375,
+      "void_fraction": 0.0,
+      "height_attempt_count": 1,
+      "trace": "traces/Static/scene_04_Desert_surface"
+    },
+    {
+      "scene": "scene_05_Swampland_surface",
+      "biome_group": "Swampland",
+      "native_biome": "Swampland",
+      "stratum": "surface",
+      "world_seed": 1627981024,
+      "center_y": 11,
+      "center_origin": [
+        2848,
+        4560,
+        3
+      ],
+      "region_origin": [
+        2832,
+        4544,
+        -13
+      ],
+      "surface_reference_y": 6,
+      "region_height_min": -13,
+      "region_height_max": 34,
+      "air_fraction": 0.719482421875,
+      "void_fraction": 0.0,
+      "height_attempt_count": 1,
+      "trace": "traces/Static/scene_05_Swampland_surface"
+    },
+    {
+      "scene": "scene_06_MushroomIsland_surface",
+      "biome_group": "MushroomIsland",
+      "native_biome": "MushroomIslandShore",
+      "stratum": "surface",
+      "world_seed": 1627981024,
+      "center_y": 1,
+      "center_origin": [
+        -5776,
+        -1984,
+        -7
+      ],
+      "region_origin": [
+        -5792,
+        -2000,
+        -23
+      ],
+      "surface_reference_y": 1,
+      "region_height_min": -23,
+      "region_height_max": 24,
+      "air_fraction": 0.4375,
+      "void_fraction": 0.0,
+      "height_attempt_count": 1,
+      "trace": "traces/Static/scene_06_MushroomIsland_surface"
+    },
+    {
+      "scene": "scene_07_Taiga_shallow_underground",
+      "biome_group": "Taiga",
+      "native_biome": "Taiga",
+      "stratum": "shallow_underground",
+      "world_seed": 1627981024,
+      "center_y": -10,
+      "center_origin": [
+        912,
+        -6464,
+        -18
+      ],
+      "region_origin": [
+        896,
+        -6480,
+        -34
+      ],
+      "surface_reference_y": 5,
+      "region_height_min": -34,
+      "region_height_max": 13,
+      "air_fraction": 0.03076171875,
+      "void_fraction": 0.0,
+      "height_attempt_count": 1,
+      "trace": "traces/Static/scene_07_Taiga_shallow_underground"
+    },
+    {
+      "scene": "scene_08_Jungle_shallow_underground",
+      "biome_group": "Jungle",
+      "native_biome": "Jungle",
+      "stratum": "shallow_underground",
+      "world_seed": 1627981024,
+      "center_y": -12,
+      "center_origin": [
+        -5408,
+        4624,
+        -20
+      ],
+      "region_origin": [
+        -5424,
+        4608,
+        -36
+      ],
+      "surface_reference_y": 1,
+      "region_height_min": -36,
+      "region_height_max": 11,
+      "air_fraction": 0.35400390625,
+      "void_fraction": 0.0,
+      "height_attempt_count": 1,
+      "trace": "traces/Static/scene_08_Jungle_shallow_underground"
+    },
+    {
+      "scene": "scene_09_Mesa_deep_cave",
+      "biome_group": "Mesa",
+      "native_biome": "Mesa_sandlevel",
+      "stratum": "deep_cave",
+      "world_seed": 1627981024,
+      "center_y": -36,
+      "center_origin": [
+        6400,
+        4256,
+        -44
+      ],
+      "region_origin": [
+        6384,
+        4240,
+        -60
+      ],
+      "surface_reference_y": 1,
+      "region_height_min": -60,
+      "region_height_max": -13,
+      "air_fraction": 0.037109375,
+      "void_fraction": 0.0,
+      "height_attempt_count": 1,
+      "trace": "traces/Static/scene_09_Mesa_deep_cave"
+    },
+    {
+      "scene": "scene_10_IcePlains_deep_cave",
+      "biome_group": "IcePlains",
+      "native_biome": "IcePlains",
+      "stratum": "deep_cave",
+      "world_seed": 1627981024,
+      "center_y": -30,
+      "center_origin": [
+        7200,
+        -1408,
+        -38
+      ],
+      "region_origin": [
+        7184,
+        -1424,
+        -54
+      ],
+      "surface_reference_y": 19,
+      "region_height_min": -54,
+      "region_height_max": -7,
+      "air_fraction": 0.0,
+      "void_fraction": 0.0,
+      "height_attempt_count": 1,
+      "trace": "traces/Static/scene_10_IcePlains_deep_cave"
+    }
+  ],
+  "rejected": [
+    {
+      "attempt": 1,
+      "target_biome": "MegaTaiga",
+      "target_stratum": "elevated_complex",
+      "world_seed": 191664964,
+      "reason": "ConnectionError: Failed to receive from MT. Connection closed by peer: is MT down?"
+    },
+    {
+      "attempt": 3,
+      "target_biome": "RoofedForest",
+      "target_stratum": "elevated_complex",
+      "world_seed": 1405681632,
+      "reason": "ConnectionError: Failed to receive from MT. Connection closed by peer: is MT down?"
+    },
+    {
+      "attempt": 4,
+      "target_biome": "RoofedForest",
+      "target_stratum": "elevated_complex",
+      "world_seed": 2095133045,
+      "reason": "HeightExhausted: height_candidates_exhausted: elevated_complex"
+    },
+    {
+      "attempt": 5,
+      "target_biome": "RoofedForest",
+      "target_stratum": "elevated_complex",
+      "world_seed": 1074497556,
+      "reason": "HeightExhausted: height_candidates_exhausted: elevated_complex"
+    },
+    {
+      "attempt": 7,
+      "target_biome": "Plains",
+      "target_stratum": "surface",
+      "world_seed": 197860369,
+      "reason": "ValueError: Target biome differs from loaded surface: SunflowerPlains"
+    }
+  ],
+  "viewer_raw_voxel_equality": "10/10 exact uint16 token and coordinate equality",
+  "preview": {
+    "url": "http://127.0.0.1:8766/?type=Static&attempt=scene_03_Plains_surface&region=48&run=static_ten_20261117",
+    "browser": "Playwright; Browser plugin not available",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "scenes_checked": 10,
+    "old_d2_retained": true,
+    "console_errors": [],
+    "warning_note": "Only screenshot ReadPixels GPU-stall driver messages",
+    "center_slice_and_inspector_passed": true
+  },
+  "original_outputs": "outputs/vae_static_ten_20261117",
+  "formal_shard_generated": false,
+  "dynamic_rerun": false
+}

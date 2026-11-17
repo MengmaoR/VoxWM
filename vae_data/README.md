@@ -45,6 +45,21 @@ Static中心高度C逐整数随机，不吸附到16格引擎网格；完整Regio
 
 单世界、最多180秒，检查13个合法C及两个非法边界；C++/VoxelManip同Tick逐体素比较，另尝试Elevated/Shallow/Deep各一个真实样例。输出`static_verification.json`、`examples.png`、小型`examples/*/state.npz`及metadata/vocabulary；无法找到结构时明确保留NO_CANDIDATE，不追加无界搜索。macOS可用`--renderer auto`。正式采集仍需用户手动启动。
 
+## 已完成的10群落Static试采
+
+[实测表及原预览入口](reports/static_ten_20261117/README.md)：10个不同群落组、不同C，总高度分配4/2/2/2；107.29秒采齐，未创建正式Shard。原8766预览选择`Static`，通过`Scene / native attempt`切换；原动态数据保留。
+
+需要用户自行重复时使用新目录：
+
+```bash
+.venv/bin/python -m vae_data static-ten \
+  --dataset outputs/vae_static_ten_new --wall-seconds 600 --renderer software
+.venv/bin/python -m vae_data view --dataset outputs/vae_static_ten_new --port 8767
+# http://127.0.0.1:8767/?type=Static
+```
+
+`--preview-dataset EXISTING`仅向尚无Static分类的既有预览追加派生数据，不覆盖已有Static。正式配额、动态采集和材质不变。
+
 ## 连续多片 / 多CPU workers
 
 ```bash

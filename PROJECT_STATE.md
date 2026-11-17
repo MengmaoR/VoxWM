@@ -1,11 +1,11 @@
 # VoxWM 当前状态
 
-**Static连续整数高度与任意坐标Capture已完成并通过有限Native核验。**
+**10个不同群落的真实Static试采完成，已接入原预览。**
 
-- 中心C∈[-38,170]，完整48³不越[-62,193]；Surface/Elevated/Shallow/Deep按Native S选连续整数。Static配额仍25×20、8/4/4/4，目标群落主动定位保留。
-- 13个合法高度的C++/独立VoxelManip Node/light/param2逐体素完全一致，-39/171采集前拒绝；新Forceload实际覆盖27或36引擎块。
-- 初地点Elevated不合格如实保留；相邻已有GT树木地点补一例C=30。Shallow C=-21、Deep C=-37均为全实心。两段Native合计34.45秒，20项针对性Unit及语法/CLI检查通过。[报告与预览](vae_data/reports/static_height_20261117/README.md)。
-- Static按seed+真实中心跨片去重；允许窗口重叠。48³ Token/light布局、Dynamic全局网格与Fixed24时序保持；旧数据不改写，新策略需新输出目录及增量编译Capture补丁。
-- 前轮D1/D3/D4-A/B/C fixed24样例已通过，D2保留旧结果，本轮未重跑动态。[前轮报告](vae_data/reports/fixed24_rerun_20261117/README.md)。未启动正式1K/100K、GPU或训练；正式群落覆盖及吞吐尚未测量。
+- Surface/Elevated/Shallow/Deep为4/2/2/2；10个Biome Group、10个不同中心高度，107.29秒、15次位置尝试。本轮不要求每群落独立高度配比，不创建正式Shard。[结果表](vae_data/reports/static_ten_20261117/README.md)。
+- 新数据`outputs/vae_static_ten_20261117/`；原8766预览增加Static分类和十场景下拉，展示Native S/C、群落与Air/Void。原动态GT及旧D2保留。
+- 10/10导出体素与原始GT完全一致；浏览器十场景切换、地下中心切片/Inspector、旧D2标签检查通过，应用console error为0。没有重跑动态或训练。
+- 原连续高度/Capture修订保留：完整Region在[-62,193]，Static逐整数高度，Dynamic网格与Fixed24时序不变。[前轮核验](vae_data/reports/static_height_20261117/README.md)。
+- 正式1K/100K及25群落全配额吞吐尚未运行；旧数据只读，正式新策略需新输出目录。
 
-唯一下一步：用户在服务器手动采集一个有时间上限的1K分片，检查实际配额缺口和吞吐；Codex不自动启动。
+唯一下一步：用户在现有预览检查这10个Static样例，再决定是否启动首个正式1K分片；Codex不自动追加采集。
