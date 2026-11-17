@@ -56,6 +56,17 @@ class SupervisorTests(unittest.TestCase):
             status["shard_0001"]["categories"]["Static"] = 499
             self.assertFalse(targets_complete(config,status))
 
+    def test_incompatible_old_manifest_fails_before_collection_starts(self):
+        with tempfile.TemporaryDirectory() as folder:
+            dataset=Path(folder)/"data";dataset.mkdir()
+            (dataset/"dataset_manifest.json").write_text(json.dumps(dict(
+                version="vae-region48-fixed24-v2",source_mode="native",
+                static_height_policy_version="old-static-policy")))
+            path=Path(folder)/"supervisor.json"
+            path.write_text(json.dumps({"dataset":str(dataset),"only_category":"Static"}))
+            with self.assertRaisesRegex(ValueError,"Use a new empty dataset directory"):
+                load_config(path)
+
     def test_completed_attempt_is_progress_even_without_a_sample_commit(self):
         with tempfile.TemporaryDirectory() as folder:
             config = self.config(folder)

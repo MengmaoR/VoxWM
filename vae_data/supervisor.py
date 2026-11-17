@@ -18,7 +18,7 @@ import threading
 import time
 import uuid
 from pathlib import Path
-from .sharded.protocol import CATEGORIES
+from .sharded.protocol import CATEGORIES,STATIC_HEIGHT_POLICY_VERSION,VERSION
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -105,12 +105,31 @@ def load_config(path):
     else:
         dataset = config["dataset"]
         config["log_dir"] = dataset.parent / (dataset.name + "_supervisor")
+    validate_existing_dataset(config)
     return config
 
 
 def _root_path(value):
     path = Path(value).expanduser()
     return path.resolve() if path.is_absolute() else (ROOT / path).resolve()
+
+
+def validate_existing_dataset(config):
+    """Mirror initialize() compatibility checks without writing the dataset."""
+    path=config["dataset"]/'dataset_manifest.json'
+    if not path.is_file():return
+    try:manifest=json.loads(path.read_text())
+    except (OSError,json.JSONDecodeError)as exc:
+        raise ValueError(f'Cannot read dataset manifest {path}: {exc}')from exc
+    expected=dict(version=VERSION,source_mode='native',
+        static_height_policy_version=STATIC_HEIGHT_POLICY_VERSION)
+    mismatches={key:(manifest.get(key),value)for key,value in expected.items()
+                if manifest.get(key)!=value}
+    if mismatches:
+        details=', '.join(f'{key}={actual!r}, expected {wanted!r}'
+                         for key,(actual,wanted)in mismatches.items())
+        raise ValueError(f'Incompatible dataset manifest at {path}: {details}. '
+            'Use a new empty dataset directory; do not edit the manifest or delete lock files.')
 
 
 def incomplete_target_count(config):

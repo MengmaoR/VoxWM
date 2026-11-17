@@ -13,7 +13,7 @@
 - 正式采集并行度按用户11/17要求取消片数/固定CPU上限：`--workers auto`默认使用当前CPU affinity（不可用时CPU数），手动正整数不封顶；超出片数以多个独立世界进程供给每片唯一Writer，不能并发直接操作同一Writer。Linux软件渲染每会话自动分配私有Xvfb并清理，不依赖固定DISPLAY或手改引擎wrapper。词表只在新增Token时发布，序列化/fsync在全局锁外，等待锁有超时；仅正式提交/新增词表算进度，失败重试不算。用户手动启动真实采集；本轮只做轻量合成/进程测试。
 - 动态观察批传输按11/17最新指令：默认每批24个真实fixed24 Tick，可选48；旧单拍advance保留，clock-verify默认单拍。批内Server/Client/Lua每拍对齐并post-step捕获，内存中首帧RAW+逐拍稀疏delta经socket一次返回；Python按序逐拍调用原Collector，首次stop之后尾巴不解码为Token、不进候选/事件/五状态链，存在尾巴的世界结束后不复用。48/120 Tick无变化、10候选、30/40/60秒上限和正式五帧/Anchor格式不变。不改并行策略，用户本次实测使用64世界；不得自动启动Native采集或声称已实测提速。
 - 正式长跑默认由外部`vae_data/supervisor.py`按配置启动：同时至多64个世界且每个未完成Shard恰好1个世界，连续600秒没有完成attempt、样本提交或READY即停止本次唯一标记的全部Python/Craftium/Xvfb进程，确认无标记进程残留后用原配置`--resume`重启。内置终端Dashboard每5秒刷新进程/停滞倒计时，样本/Shard/attempt/速率每30秒只读刷新；Dashboard本身不计进展。禁止按进程名或全局`pkill`清理，不能碰其他用户任务；真实服务器稳定性仍由用户手动运行验证。
-- 缺额补采可用`--only-category Static|D1|D2|D3|D4`；调度器只发所选类别，达到该类别原配额即停止，绝不能用其他类别补位或改100片×1000配额。Static补采配置为`vae_data/configs/collection_64x1_static.json`，Dashboard单列Focus Static；原有动态样本只读。
+- 缺额补采可用`--only-category Static|D1|D2|D3|D4`；调度器只发所选类别，达到该类别原配额即停止，绝不能用其他类别补位或改100片×1000配额。新高度策略Static必须写入兼容的新目录`outputs/vae_100k_heightadaptive`，不能混入旧`vae_100k_fixed24`；配置为`vae_data/configs/collection_64x1_static.json`，Dashboard单列Focus Static，原动态目录只读。
 - 低缓存：Static立即提交或丢弃；Dynamic保留至多10候选和必要Anchor/事件引用；不写完整raw轨迹、不积累Discovery Cache。分片独占写入，全局词表短锁，完成QA后原子READY；READY片只读。
 - 动态中心先按真实固体—Air Surface或地下连通Cave选择；D1/D3仅Surface，D2/D4两高度各有50%机会。D1/D2/D3/D4-B不天然目标体素定位，A/C仅对应稳定天然池。全点规划前中心最大六连通Air≥65；A/C最大连通稳定对应流体≥19（Source/Flowing可，不跨中心、不加面积/比例门槛）。保留现有16³对齐与48³ Assembly。按类/高度记录attempt/空间合格/规划合格/接受数。
 - 所有人工source仅中心local[1..14]^3，即region[17:31]^3，先域限制再合法枚举；Python调用前后及Lua放置前复核，任何越界整次拒绝。传播仍在完整48³原生世界，不裁剪到14³；天然池不受人工source域约束。

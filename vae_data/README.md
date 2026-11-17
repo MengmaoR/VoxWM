@@ -146,7 +146,7 @@ bash scripts/build_fixed24.sh
 
 ### 仅补齐Static缺额
 
-已有D1–D4、只补Static时使用独立配置。先确认`collection_64x1_static.json`中的`dataset`就是服务器现有数据目录，再执行：
+旧`outputs/vae_100k_fixed24`中的动态数据使用旧manifest，不能直接补入新高度策略Static。独立配置默认把Static写入新的`outputs/vae_100k_heightadaptive`；该目录必须不存在、为空，或已经具有当前兼容manifest。不要把它改回旧动态目录。
 
 ```bash
 git pull --ff-only origin master
@@ -157,9 +157,11 @@ bash scripts/build_fixed24.sh
   --config vae_data/configs/collection_64x1_static.json
 ```
 
-配置会向底层生成器明确传入`--only-category Static`。每个Shard读取已提交类别计数：Static达到原配额500的片直接跳过；缺额片只创建Static任务，不会重采、覆盖或删除已有D1–D4。默认仍为最多64个并行世界、每片1个世界、10分钟无持久进展后安全重启。Dashboard增加`Focus Static current/50000`进度条。
+配置会向底层生成器明确传入`--only-category Static`。新目录中Static达到原配额500的片直接跳过；缺额片只创建Static任务。默认仍为最多64个并行世界、每片1个世界、10分钟无持久进展后安全重启。Dashboard增加`Focus Static current/50000`进度条，日志位于`outputs/vae_100k_heightadaptive_supervisor/run_*/`。
 
-如果Static完成而其他类别仍有缺额，本次范围会以`CATEGORY_COMPLETE`正常停止，但该Shard不会被伪装成READY；只有五类原配额都齐全时才发布正式READY。`only_category`不改变任何配额、Static群落×高度策略、去重规则或已有数据。
+Static完成后本次范围会以`CATEGORY_COMPLETE`正常停止，但Static-only Shard不会被伪装成正式READY；只有五类原配额位于同一兼容数据集并全部齐全时才能发布READY。当前命令不合并旧动态与新Static；后续组合必须另做明确、可验证的数据整合。`only_category`不改变任何配额、Static群落×高度策略、去重规则或旧数据。
+
+Supervisor现在会在启动采集前只读检查已有`dataset_manifest.json`。若版本、source mode或`static_height_policy_version`不兼容，会直接指出必须换新目录，不再先启动collector后只显示泛化的exit 1；不得编辑manifest或删除锁来绕过。
 
 ## 检查某片、查看全局进度
 

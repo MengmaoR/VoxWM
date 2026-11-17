@@ -1,5 +1,5 @@
 {
-  "dataset": "outputs/vae_100k_fixed24",
+  "dataset": "outputs/vae_100k_heightadaptive",
   "shard": 0,
   "count": 100,
   "workers": 64,
