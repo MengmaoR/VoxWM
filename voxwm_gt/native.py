@@ -1,9 +1,9 @@
 """Native GT capture helpers extracted from the completed Test A environment."""
 import os
-import signal
 import subprocess
 import sys
 import numpy as np
+from .runtime import InfrastructureError,stop_process
 
 VOXEL_RADIUS = 24
 FPS = 24
@@ -74,7 +74,8 @@ def renderer_config(mode, platform=None):
     environment = os.environ.copy()
     environment['CUDA_VISIBLE_DEVICES'] = ''
     if renderer == 'software':
-        environment.update(SDL_VIDEODRIVER='offscreen', LIBGL_ALWAYS_SOFTWARE='1', GALLIUM_DRIVER='llvmpipe')
+        environment.update(SDL_VIDEODRIVER='x11', LIBGL_ALWAYS_SOFTWARE='1', GALLIUM_DRIVER='llvmpipe')
+        environment.setdefault('LP_NUM_THREADS','1')
     else:
         environment.pop('SDL_VIDEODRIVER', None)
         environment.pop('LIBGL_ALWAYS_SOFTWARE', None)
@@ -89,34 +90,52 @@ def renderer_config(mode, platform=None):
     return renderer, environment
 
 
-def close_env(env):
-    """Official wait_close() has no timeout; macOS OpenAL often never returns from exit()."""
-    mt = env.unwrapped.mt
-    chann = env.unwrapped.mt_chann
-    proc = mt.proc
-    if chann.is_open():
-        try:
-            chann.send_kill()
-        except OSError:
-            pass
-        try:
-            chann.close()
-        except OSError:
-            pass
-        mt.close_pipes()
-        if proc is not None and proc.poll() is None:
-            try:
-                proc.wait(timeout=8)
-            except subprocess.TimeoutExpired:
-                try:
-                    os.killpg(proc.pid, signal.SIGKILL)
-                except OSError:
-                    proc.kill()
-                proc.wait(timeout=5)
+def connect_engine(channel,engine,opener):
+    """Short connection polls notice an exited engine instead of waiting 60s."""
+    import time
+    original=channel.listen_timeout;deadline=time.monotonic()+original/1000
     try:
-        mt.clear()
-    except OSError:
-        pass
+        while True:
+            if engine.proc is not None and engine.proc.poll()is not None:raise RuntimeError('Native engine exited during startup')
+            remaining=deadline-time.monotonic()
+            if remaining<=0:raise TimeoutError('Native engine connection timed out')
+            channel.listen_timeout=max(1,min(250,int(remaining*1000)))
+            try:return opener()
+            except ConnectionError as exc:
+                if 'listen timeout'not in str(exc).lower():raise
+    finally:channel.listen_timeout=original
+
+
+def startup_error(engine,exc):
+    """Classify observed display failures, never silently retry a full display."""
+    from pathlib import Path
+    path=Path(engine.run_dir)/'stderr.txt'
+    text=path.read_text(errors='replace')[-8000:]if path.exists()else''
+    signals=('maximum number of clients reached','unable to initialize sdl','x11 not available','invalid window','could not open display','cannot open display')
+    if any(part in text.lower()for part in signals):return InfrastructureError('Native display startup failed: '+text[-3000:])
+    return exc
+
+
+def close_env(env):
+    """Close sockets/pipes and the process even if the initial connection failed."""
+    mt=env.unwrapped.mt;channel=env.unwrapped.mt_chann;proc=mt.proc;connected=channel.is_open()
+    try:
+        if connected:
+            try:channel.send_kill()
+            except OSError:pass
+        try:channel.close()
+        except OSError:
+            try:os.close(channel.sockfd)
+            except OSError:pass
+        if connected and proc is not None and proc.poll()is None:
+            try:proc.wait(timeout=8)
+            except subprocess.TimeoutExpired:pass
+    finally:
+        try:stop_process(proc)
+        finally:
+            mt.close_pipes()
+            try:mt.clear()
+            except OSError:pass
 
 
 def water_signature(voxel, origin, classes):

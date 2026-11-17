@@ -1,11 +1,10 @@
 # VoxWM 当前状态
 
-**10个不同群落的真实Static试采完成，已接入原预览。**
+**服务器高并行采集停滞的代码修复完成，待用户续跑验证。**
 
-- Surface/Elevated/Shallow/Deep为4/2/2/2；10个Biome Group、10个不同中心高度，107.29秒、15次位置尝试。本轮不要求每群落独立高度配比，不创建正式Shard。[结果表](vae_data/reports/static_ten_20261117/README.md)。
-- 新数据`outputs/vae_static_ten_20261117/`；原8766预览增加Static分类和十场景下拉，展示Native S/C、群落与Air/Void。原动态GT及旧D2保留。
-- 10/10导出体素与原始GT完全一致；浏览器十场景切换、地下中心切片/Inspector、旧D2标签检查通过，应用console error为0。没有重跑动态或训练。
-- 原连续高度/Capture修订保留：完整Region在[-62,193]，Static逐整数高度，Dynamic网格与Fixed24时序不变。[前轮核验](vae_data/reports/static_height_20261117/README.md)。
-- 正式1K/100K及25群落全配额吞吐尚未运行；旧数据只读，正式新策略需新输出目录。
+- 用户服务器报告`outputs/vae_100k_fixed24`约49,411样本后停滞；本机未访问该服务器/数据。源码确认词表每次提交全量fsync且持全局锁、等锁无超时、worker受片数限制、Linux没有显示分配及无进度检测。[修复与检查](vae_data/reports/parallel_runtime_20261117/README.md)。
+- 当前默认按可用CPU启动世界进程，可手动指定任意正整数；每片唯一Writer不变。Linux每会话管理独立Xvfb，显示失败停止重试；已知Token免锁免写，新Token写盘在锁外，锁等待有上限；无进度时停止本命令进程树。
+- 本地18项针对性合成/进程测试通过（约2秒）。没有运行Native采集、Linux多显示压力测试、1K/100K或GPU。数据配额、去重、词表ID、Static高度和Fixed24原生物理不变。
+- 已有[10群落Static样例](vae_data/reports/static_ten_20261117/README.md)、[固定时钟动态样例及旧D2](vae_data/reports/fixed24_rerun_20261117/README.md)和预览完整保留。
 
-唯一下一步：用户在现有预览检查这10个Static样例，再决定是否启动首个正式1K分片；Codex不自动追加采集。
+唯一下一步：用户在服务器停止旧采集命令，pull后以兼容的同一数据目录`--resume --workers auto`续跑，观察正式提交是否恢复；[完整命令](vae_data/README.md#中断恢复--当前服务器续跑)。Codex不自动启动。

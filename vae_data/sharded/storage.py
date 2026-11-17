@@ -2,7 +2,7 @@
 from contextlib import contextmanager
 from pathlib import Path
 from collections import Counter
-import fcntl,hashlib,json,os,sqlite3,tempfile
+import fcntl,hashlib,json,os,sqlite3,tempfile,time
 import numpy as np
 import zarr
 from numcodecs import Blosc
@@ -11,21 +11,38 @@ import pyarrow.parquet as pq
 from .protocol import CONFIG,VERSION,CATEGORIES,STRATA,BIOMES,Vocabulary,Frame,Chain,dump,d4_targets,STATIC_HEIGHT_POLICY_VERSION
 
 @contextmanager
-def lock(path,blocking=True):
+def lock(path,blocking=True,timeout=30.):
     path=Path(path);path.parent.mkdir(parents=True,exist_ok=True)
     with open(path,'a+')as stream:
-        fcntl.flock(stream,fcntl.LOCK_EX|(0 if blocking else fcntl.LOCK_NB))
+        deadline=time.monotonic()+timeout
+        while True:
+            try:fcntl.flock(stream,fcntl.LOCK_EX|fcntl.LOCK_NB);break
+            except BlockingIOError:
+                if not blocking:raise
+                if time.monotonic()>=deadline:raise TimeoutError('File lock wait exceeded '+str(timeout)+'s: '+str(path))
+                time.sleep(min(.05,max(0,deadline-time.monotonic())))
         try:yield
         finally:fcntl.flock(stream,fcntl.LOCK_UN)
 
-def atomic_json(path,value):
+
+def stage_json(path,value,sync=True):
     path=Path(path);fd,name=tempfile.mkstemp(prefix='.'+path.name,dir=path.parent)
     try:
         with os.fdopen(fd,'w')as stream:
-            json.dump(value,stream,ensure_ascii=False,allow_nan=False,indent=2);stream.write('\n');stream.flush();os.fsync(stream.fileno())
-        os.replace(name,path)
+            json.dump(value,stream,ensure_ascii=False,allow_nan=False,indent=2);stream.write('\n');stream.flush()
+            if sync:os.fsync(stream.fileno())
+        return name
+    except BaseException:
+        if os.path.exists(name):os.unlink(name)
+        raise
+
+
+def atomic_json(path,value,sync=True):
+    name=stage_json(path,value,sync)
+    try:os.replace(name,path)
     finally:
         if os.path.exists(name):os.unlink(name)
+
 
 def initialize(root,fixture=False):
     root=Path(root);root.mkdir(parents=True,exist_ok=True)
@@ -44,15 +61,37 @@ def initialize(root,fixture=False):
             positions.execute('CREATE TABLE IF NOT EXISTS positions(position_key TEXT PRIMARY KEY,shard INTEGER NOT NULL,snapshot INTEGER NOT NULL)')
     return root
 
-def globalize(root,frames,local_vocabulary):
-    with lock(Path(root)/'.vocabulary.lock'):
-        v=Vocabulary(Path(root)/'vocabulary.json');mapping=np.zeros(len(local_vocabulary.entries),np.uint16)
-        used=np.unique(np.concatenate([f.tokens.ravel()for f in frames]))
-        for token in used:mapping[token]=v.add(*local_vocabulary.entries[int(token)])
+def globalize(root,frames,local_vocabulary,timeout=30.):
+    """Durable append-only IDs; known tokens never acquire the publication lock.
+
+    New snapshots are written/fsynced BEFORE taking the short compare/replace
+    lock. A slow filesystem sync cannot hold every shard behind vocabulary.lock.
+    Concurrent publishers retry against the newly published prefix, never expose
+    tentative IDs and never overwrite another worker's appended tokens.
+    """
+    root=Path(root);path=root/'vocabulary.json';deadline=time.monotonic()+timeout
+    used=np.unique(np.concatenate([f.tokens.ravel()for f in frames]))
+    wanted={int(token):local_vocabulary.entries[int(token)]for token in used}
+    while True:
+        v=Vocabulary(path);base=list(v.entries);mapping=np.zeros(len(local_vocabulary.entries),np.uint16)
+        for token,pair in wanted.items():mapping[token]=v.add(*pair)
+        if len(v.entries)==len(base):
+            return [Frame(mapping[f.tokens],f.light,dict(f.meta))for f in frames],len(v.entries)
         data=dict(version=1,representation='VocabularyID(Node Name, raw param2)',K=len(v.entries),light_in_token=False,
             tokens=[dict(id=i,node_name=name,param2=param)for i,(name,param)in enumerate(v.entries)])
-        atomic_json(Path(root)/'vocabulary.json',data)
-        return [Frame(mapping[f.tokens],f.light,dict(f.meta))for f in frames],len(v.entries)
+        # Expensive serialization and fsync occur outside any cross-shard lock.
+        staged=stage_json(path,data);published=False
+        try:
+            remaining=deadline-time.monotonic()
+            if remaining<=0:raise TimeoutError('Vocabulary publication exceeded time budget')
+            with lock(root/'.vocabulary.lock',timeout=remaining):
+                if Vocabulary(path).entries==base:
+                    os.replace(staged,path);published=True
+        finally:
+            if os.path.exists(staged):os.unlink(staged)
+        if published:return [Frame(mapping[f.tokens],f.light,dict(f.meta))for f in frames],len(v.entries)
+        if time.monotonic()>=deadline:raise TimeoutError('Vocabulary changed repeatedly during publication')
+
 
 def source_key(frame,vocabulary):
     # Used only for same-source duplicate detection, not a provenance/hash audit.
@@ -166,7 +205,10 @@ class Writer:
                 data=dict(id=chain_id,category=category,snapshot_indices=list(range(start,start+n)),frame_ids=[f.key for f in frames],
                     events=chain.events,intervention=chain.intervention,subtype=chain.subtype,anchor_idx=anchor_idx,anchor_metadata=chain.anchor.meta if chain.anchor else None,anchor_vocabulary_size_at_commit=vsize if chain.anchor else None)
                 self.db.execute('INSERT INTO chains VALUES(?,?,?)',(chain_id,json.dumps(data),anchor_idx))
-            self.db.commit();return True
+            self.db.commit()
+            try:(self.path/'progress').touch()
+            except OSError:pass
+            return True
         except BaseException as exc:
             self.db.rollback()
             for name in('tokens','light'):

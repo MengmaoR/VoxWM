@@ -10,6 +10,7 @@
 - 全局uint16 Combined Token=(Node Name,raw param2)，词表只追加；uint8 light辅助。48³无损存储，中心16³仍是VAE目标。World Seed固定80/10/10 split，不跨split。
 - 纯Voxel：从原生入口禁非技术实体、掉落及实体引起的Voxel变化；技术player不可见无交互。当前falling-entity动态不支持，出现即排除该rollout，不默默冻结物理后发布数据。
 - 使用Craftium/VoxeLibre原生液体、固化与火。不写流体轨迹，不改规则/ABM概率/黏度；固定24Hz物理时间、整数Tick为权威，无墙钟FPS限速。允许维护固定版本的最小Timing/Scheduler补丁，默认旧GT会话不启用。几何可达性只筛源点，不能冒充native事件证据；初始化操作不能计native演化。
+- 正式采集并行度按用户11/17要求取消片数/固定CPU上限：`--workers auto`默认使用当前CPU affinity（不可用时CPU数），手动正整数不封顶；超出片数以多个独立世界进程供给每片唯一Writer，不能并发直接操作同一Writer。Linux软件渲染每会话自动分配私有Xvfb并清理，不依赖固定DISPLAY或手改引擎wrapper。词表只在新增Token时发布，序列化/fsync在全局锁外，等待锁有超时；仅正式提交/新增词表算进度，失败重试不算。用户手动启动真实采集；本轮只做轻量合成/进程测试。
 - 低缓存：Static立即提交或丢弃；Dynamic保留至多10候选和必要Anchor/事件引用；不写完整raw轨迹、不积累Discovery Cache。分片独占写入，全局词表短锁，完成QA后原子READY；READY片只读。
 - 动态中心先按真实固体—Air Surface或地下连通Cave选择；D1/D3仅Surface，D2/D4两高度各有50%机会。D1/D2/D3/D4-B不天然目标体素定位，A/C仅对应稳定天然池。全点规划前中心最大六连通Air≥65；A/C最大连通稳定对应流体≥19（Source/Flowing可，不跨中心、不加面积/比例门槛）。保留现有16³对齐与48³ Assembly。按类/高度记录attempt/空间合格/规划合格/接受数。
 - 所有人工source仅中心local[1..14]^3，即region[17:31]^3，先域限制再合法枚举；Python调用前后及Lua放置前复核，任何越界整次拒绝。传播仍在完整48³原生世界，不裁剪到14³；天然池不受人工source域约束。

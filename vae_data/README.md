@@ -17,7 +17,7 @@ uv pip install --python .venv/bin/python -r vae_p0/requirements.txt
 bash scripts/build_fixed24.sh
 ```
 
-Linux示例使用 `--renderer software`，macOS可改为 `--renderer auto`。不改变原生液体/火规则，不做时钟加速。
+Linux示例使用 `--renderer software`，需要已安装Xvfb（缺少时由用户执行 `sudo apt-get install xvfb`）。每个引擎自动取得独立显示编号，不再使用SDL offscreen、固定`:99`或构建树中的手写wrapper；无需手工启动Xvfb。退出/启动失败时清理所属引擎进程组、连接和显示。macOS仍可用 `--renderer auto`。不改变原生液体/火规则，不做时钟加速。
 
 ## 生成指定一个1K片
 
@@ -60,26 +60,38 @@ Static中心高度C逐整数随机，不吸附到16格引擎网格；完整Regio
 
 `--preview-dataset EXISTING`仅向尚无Static分类的既有预览追加派生数据，不覆盖已有Static。正式配额、动态采集和材质不变。
 
-## 连续多片 / 多CPU workers
+## 连续多片 / 使用可用CPU
 
 ```bash
-# 生成 shard_0010 .. shard_0013，最多4个独立CPU世界并行
+# 全部100片；默认auto使用当前CPU affinity内的核数（不可用则os.cpu_count）
 .venv/bin/python -m vae_data generate \
-  --dataset outputs/vae_100k_heightadaptive --shard 10 --count 4 --workers 4 \
-  --max-attempts 5000 --wall-seconds 14400 --renderer software
+  --dataset outputs/vae_100k_heightadaptive --shard 0 --count 100 --workers auto \
+  --max-attempts 5000 --wall-seconds 86400 --stall-seconds 300 --renderer software
 ```
 
-Worker按片独占目录与锁；Native世界/临时引擎独立；全局词表用短锁追加ID。只需要一个命令调度同一批片；相同片被另一个进程占用时明确失败，避免并发写入。
+`workers`表示并行Native世界数，默认auto；可指定任意正整数，如`--workers 200`，不按CPU数或100片强制截断。100片/200世界分配为每片2个独立世界进程；每片仍仅一个进程写Zarr/SQLite，配额/同源去重/每seed上限不变。使用进程避免Craftium阻塞C扩展持有GIL造成同进程世界线程串行。每世界只保留一条待提交结果，不能无界排队。
 
-## 中断恢复
+只需要一个命令调度同一批片；相同片被另一个命令占用会明确失败。READY片跳过。并行数不保证等于CPU利用率；内存、磁盘和引擎自身线程仍会影响实际吞吐。Mesa每世界默认`LP_NUM_THREADS=1`，避免每个软件渲染器各自启动整机规模线程池；可在启动命令前用环境变量覆盖，不限制世界数。
+
+全局词表仅有新Token时写；JSON序列化和fsync在锁外，短锁只做版本复核/原子替换，冲突重新合并，已发布ID不重排。已有Token提交不加词表锁、不重写。等锁默认最多30秒，失败记录在本片attempt中，其余世界可以继续。
+
+## 中断恢复 / 当前服务器续跑
+
+先停止同一数据目录的旧采集命令，保留数据和锁文件；不要同时运行新旧采集器。运行时修复无需重编译引擎，也不再依赖之前手改的minetest wrapper或人工Xvfb。
 
 ```bash
+git pull --ff-only origin master
 .venv/bin/python -m vae_data generate \
-  --dataset outputs/vae_100k_heightadaptive --shard 10 --count 4 --workers 4 --resume \
-  --max-attempts 5000 --wall-seconds 14400 --renderer software
+  --dataset outputs/vae_100k_fixed24 --shard 0 --count 100 --workers auto --resume \
+  --max-attempts 5000 --wall-seconds 86400 --stall-seconds 300 --renderer software
+# 如需明确200个世界，把 --workers auto 改为 --workers 200。
 ```
 
-Ctrl-C会停止本命令拥有的worker和引擎进程；已提交数据可恢复。已READY片直接跳过，保持原文件；partial片恢复已提交样本/词表/RNG cursor，去除未提交Zarr尾部。未完成场景开启新的native rollout，不恢复旧模拟物理时间。`max-attempts`是本次每片尝试上限，墙钟为整条命令总上限；到限可不满配额，需要用户决定是否继续。
+此命令适用于**同一当前格式/Static高度策略**的原数据；目录名不证明版本兼容。现有manifest检查保留，遇到版本不符会报错，不能删除manifest或改写旧样本来强行混入。用户服务器约49,411已提交样本来自现场报告，本地未验证该目录。
+
+Ctrl-C、总墙钟到限、基础设施错误或无进度时，停止本命令拥有的worker/引擎/Xvfb树，不碰其他任务或手工显示，不删除其他进程的锁。已提交数据可恢复；partial恢复已提交样本/词表/每世界RNG cursor，去除未提交Zarr尾部。未完成场景重新开启native rollout，不恢复模拟物理时间。`max-attempts`仍是本次**每片总尝试数**，不会乘以世界数。
+
+`--stall-seconds 300`为默认值：连续300秒没有提交样本且没有新增Token即FAIL；失败attempt增长不算进度。较低产出任务可手动调大，`0`关闭此检测。诊断分别写`stalled.json`（退出125）、`infrastructure_failure.json`（退出1）、`wall_timeout.json`（退出124）或`interrupted.json`（退出130）；基础设施原因也存`.runtime/infrastructure_<run_id>.json`，下一次运行不会误读旧标记。Shard的`progress`只是成功提交标记，不属于Voxel数据。
 
 ## 检查某片、查看全局进度
 

@@ -1,5 +1,5 @@
 """Native 100K generator: explicit independent 1K shards; never starts by default."""
-import argparse,json,time,multiprocessing
+import argparse,json,time,multiprocessing,os
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 from .protocol import CONFIG,dump
@@ -7,6 +7,23 @@ from .storage import initialize
 from .generate import generate_shard
 
 ROOT=Path(__file__).resolve().parents[2]
+
+
+def worker_count(value):
+    if value=='auto':
+        try:return max(1,len(os.sched_getaffinity(0)))
+        except (AttributeError,OSError):return os.cpu_count()or 1
+    try:count=int(value)
+    except ValueError:raise argparse.ArgumentTypeError('workers must be auto or a positive integer')
+    if count<1:raise argparse.ArgumentTypeError('workers must be positive')
+    return count
+
+
+def world_allocation(count,workers):
+    if workers<count:return [1]*count,workers
+    base,extra=divmod(workers,count)
+    return [base+(i<extra)for i in range(count)],count
+
 
 def parser(argv=None):
     p=argparse.ArgumentParser(description=__doc__);sub=p.add_subparsers(dest='command',required=True)
@@ -17,7 +34,8 @@ def parser(argv=None):
             q.add_argument('--renderer',choices=('auto','window','software'),default='auto');q.add_argument('--seed',type=int,default=42)
         if name in('generate','check'):q.add_argument('--shard',type=int,default=0)
         if name=='generate':
-            q.add_argument('--count',type=int,default=1);q.add_argument('--workers',type=int,default=1);q.add_argument('--resume',action='store_true')
+            q.add_argument('--count',type=int,default=1);q.add_argument('--workers',type=worker_count,default='auto',help='Concurrent native worlds; auto uses available CPU affinity, no shard-count cap');q.add_argument('--resume',action='store_true')
+            q.add_argument('--stall-seconds',type=float,default=300,help='Fail when neither commits nor vocabulary advance; 0 disables')
             q.add_argument('--max-attempts',type=int,default=5000);q.add_argument('--sites-per-world',type=int,default=8)
         if name=='static-ten':q.add_argument('--preview-dataset',type=Path)
         if name=='static-verify':
@@ -41,6 +59,7 @@ def parser(argv=None):
     if hasattr(a,'wall_seconds')and(not 0<a.wall_seconds<float('inf')):p.error('Wall budget must be finite and positive')
     if hasattr(a,'shard')and not 0<=a.shard<100:p.error('--shard must be 0..99')
     if a.command=='generate'and(a.count<1 or a.shard+a.count>100 or a.workers<1 or a.max_attempts<1 or a.sites_per_world<1):p.error('Positive counts within 100 shards required')
+    if a.command=='generate'and not 0<=a.stall_seconds<float('inf'):p.error('stall-seconds must be finite and nonnegative')
     if a.command=='native-smoke'and not 1<=a.attempts_per_category<=4:p.error('Native smoke has a finite 1..4 attempts/category cap')
     if a.command=='native-six'and a.wall_seconds>900:p.error('Six-type native validation has a 900 second total cap')
     if a.command=='static-ten'and a.wall_seconds>600:p.error('Ten-Static collection wall cap <=600s')
@@ -94,12 +113,20 @@ def main(argv=None):
         result=run(a)
     else:
         initialize(a.dataset);deadline=time.monotonic()+max(1,a.wall_seconds-10)
-        tasks=[(a.dataset,i,a.resume,deadline,a.craftium_dir,a.renderer,a.seed,a.max_attempts,a.sites_per_world)for i in range(a.shard,a.shard+a.count)]
-        if a.workers==1:results=[generate_shard(*task)for task in tasks]
+        requested=list(range(a.shard,a.shard+a.count))
+        skipped=[dict(shard=i,status='skipped_ready')for i in requested if(a.dataset/'shards'/f'shard_{i:04d}'/'READY').exists()]
+        active=[i for i in requested if not(a.dataset/'shards'/f'shard_{i:04d}'/'READY').exists()]
+        slots,writers=world_allocation(len(active),a.workers)if active else([],0)
+        tasks=[(a.dataset,i,a.resume,deadline,a.craftium_dir,a.renderer,a.seed,a.max_attempts,a.sites_per_world,n)for i,n in zip(active,slots)]
+        if writers<=1:results=[generate_shard(*task)for task in tasks]
         else:
-            with ProcessPoolExecutor(max_workers=min(a.workers,a.count),mp_context=multiprocessing.get_context('spawn'))as executor:
+            with ProcessPoolExecutor(max_workers=writers,mp_context=multiprocessing.get_context('spawn'))as executor:
                 futures=[executor.submit(generate_shard,*task)for task in tasks];results=[future.result()for future in futures]
-        result=dict(shards=results,progress=status(a.dataset));dump(a.dataset/'last_generation.json',result)
+        results+=skipped
+        failed=any(item['status']in('failed','infrastructure_error')for item in results)
+        result=dict(status='FAIL'if failed else'GO'if all(item['status']in('ready','skipped_ready')for item in results)else'INCONCLUSIVE',
+            requested_worlds=a.workers,writer_processes=writers,worlds_per_shard=dict(zip(active,slots)),shards=results,progress=status(a.dataset))
+        dump(a.dataset/'last_generation.json',result)
     print(json.dumps(result,indent=2));return 1 if result.get('status')=='FAIL'else 0
 
 if __name__=='__main__':raise SystemExit(main())

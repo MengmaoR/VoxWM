@@ -4,6 +4,8 @@
 
 [当前数据协议](VAE_DATA_COLLECTION_PROTOCOL.md) · [服务器生成/恢复/检查命令](vae_data/README.md) · [本轮Native结果](vae_data/SHARDED_RESULTS.md)。最新用户指令覆盖旧200K/植物协议，VAE架构不变。活动代码为`vae_data/sharded/`，默认入口`python -m vae_data`。
 
+已修复[服务器高并行采集停滞](vae_data/reports/parallel_runtime_20261117/README.md)：独立Xvfb、无新增Token免写词表、新词表写盘移出全局锁、锁等待/无提交停滞检测。`--workers auto`按可用CPU分配世界进程，也可显式指定200等任意正整数，不受100片限制；每片仍只有一个写入器。仅完成本地快速进程测试，真实高并行续跑由用户执行。
+
 已完成[10群落Static真实试采与旧预览集成](vae_data/reports/static_ten_20261117/README.md)，高度分配4/2/2/2，数据位于本地outputs，不入Git。
 
 Static已支持逐整数中心高度与完整48³世界边界；任意高度Capture通过13个合法高度的C++/VoxelManip逐体素核对，并取得Elevated/Shallow/Deep真实示例。[高度修订报告](vae_data/reports/static_height_20261117/README.md)。开始新策略采集前运行`bash scripts/build_fixed24.sh`，使用新目录，不能把新Static混入旧策略数据；Dynamic网格及Fixed24规则不变。
@@ -41,7 +43,7 @@ HANDOFF_PROMPT.md     给新对话的交接prompt
 
 ## 1. 安装（用户执行）
 
-从本目录执行，要求git、uv、CMake、make/C++编译器和原生图形/音视频库。脚本不执行sudo/brew、不修改旧环境。CPU仿真不要求CUDA；RGB仍需要图形栈，macOS使用原生窗口，Linux默认Mesa软件渲染。
+从本目录执行，要求git、uv、CMake、make/C++编译器和原生图形/音视频库。脚本不执行sudo/brew、不修改旧环境。CPU仿真不要求CUDA；RGB仍需要图形栈，macOS使用原生窗口，Linux默认Mesa软件渲染，每会话自动启动并回收独立Xvfb，不需要预先设置DISPLAY。
 
 macOS系统依赖参考（已安装则无需重复）：
 
@@ -52,7 +54,7 @@ brew install cmake pkg-config sdl2 jpeg-turbo libpng freetype sqlite zstd luajit
 Ubuntu系统依赖参考（由用户手动执行）：
 
 ```bash
-sudo apt-get install build-essential cmake pkg-config libsdl2-dev libgl1-mesa-dev libx11-dev libxi-dev libjpeg-dev libpng-dev libfreetype6-dev libsqlite3-dev libzstd-dev libluajit-5.1-dev libogg-dev libvorbis-dev libopenal-dev libcurl4-openssl-dev gettext libgmp-dev zlib1g-dev
+sudo apt-get install build-essential cmake pkg-config libsdl2-dev libgl1-mesa-dev libx11-dev libxi-dev libjpeg-dev libpng-dev libfreetype6-dev libsqlite3-dev libzstd-dev libluajit-5.1-dev libogg-dev libvorbis-dev libopenal-dev libcurl4-openssl-dev gettext libgmp-dev zlib1g-dev xvfb
 ```
 
 ```bash

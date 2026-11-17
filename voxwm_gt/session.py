@@ -7,7 +7,8 @@ import time
 from pathlib import Path
 import numpy as np
 from .encoding import Encoder
-from .native import close_env, parse_nodes, renderer_config
+from .native import close_env, parse_nodes, renderer_config,connect_engine,startup_error
+from .display import SoftwareDisplay
 from .storage import read_json
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -67,7 +68,7 @@ class GTSession:
         self.image_size=image_size
         self.scene_assets=tuple(Path(p) for p in scene_assets)
         self.fixed_step=fixed_step;self.voxel_observation=voxel_observation;self.render_rgb=render_rgb
-        self.env=None; self.work=None
+        self.env=None; self.work=None;self.display=None
         self.elapsed=0.
 
     def __enter__(self):
@@ -83,6 +84,9 @@ class GTSession:
             if self.scene_script: shutil.copy2(self.scene_script,folder/"mods/craftium_env/init.lua")
             for asset in self.scene_assets: shutil.copy2(asset,folder/"mods/craftium_env"/asset.name)
             mode,environment=renderer_config(self.renderer)
+            if mode=='software':
+                self.display=SoftwareDisplay(self.work.name)
+                environment['DISPLAY']=self.display.start()
             name='Craftium/OpenWorldCreative-v0' if self.scene=='procedural' else 'Craftium/OpenWorldDataset-v0'
             kwargs=copy.deepcopy(gym.spec(name).kwargs)
             kwargs.update(env_dir=str(folder),minetest_dir=str(self.craftium_dir),
@@ -109,7 +113,12 @@ class GTSession:
             self.world=Path(self.env.unwrapped.mt.run_dir)/'worlds/world'
             if self.fixed_step:
                 self.env.unwrapped.mt.overwrite_config({'voxwm_client_clock_file':str(self.world/'client_clock.txt')})
-            self.env.unwrapped.mt.proc_env=environment
+            engine=self.env.unwrapped.mt
+            # Use the copied native binary, bypassing any local minetest shell wrapper.
+            if (Path(engine.run_dir)/'bin/luanti').is_file():engine.launch_cmd[0]='./bin/luanti'
+            engine.proc_env=environment
+            channel=self.env.unwrapped.mt_chann;opener=channel.open_conn
+            channel.open_conn=lambda:connect_engine(channel,engine,opener)
             self.rgb,self.info=self.env.reset(seed=self.seed)
             self.world=Path(self.env.unwrapped.mt.run_dir)/'worlds/world'
             noop=np.zeros(4,dtype=np.int64)
@@ -129,8 +138,10 @@ class GTSession:
             self.encoder=Encoder(parse_nodes(read_json(self.world/'gt_nodes.json')))
             self.elapsed=0.
             return self
-        except BaseException:
+        except BaseException as exc:
+            failure=startup_error(self.env.unwrapped.mt,exc)if self.env is not None else exc
             self.close()
+            if failure is not exc:raise failure from exc
             raise
 
     def step(self,action):
@@ -145,6 +156,7 @@ class GTSession:
         try:
             if self.env is not None: close_env(self.env)
         finally:
+            if self.display is not None:self.display.close();self.display=None
             if self.work is not None: self.work.cleanup()
             self.env=None;self.work=None
 

@@ -9,6 +9,7 @@ from .sampling import Collector
 from .centers import prepare_dynamic,choose_height,spatial_gate,stable_pool,natural_interaction
 from .planning import Planner
 from .storage import Writer,atomic_json
+from voxwm_gt.runtime import InfrastructureError
 
 
 def prepare(world,site,stratum,rng,location=None,attempt=None):
@@ -137,7 +138,10 @@ def choose_category(writer,rng):
     return str(rng.choice(available,p=weights)),missing
 
 
-def generate_shard(root,shard,resume,deadline,craftium,renderer,seed,max_attempts,sites_per_world):
+def generate_shard(root,shard,resume,deadline,craftium,renderer,seed,max_attempts,sites_per_world,worlds=1):
+    if worlds>1:
+        from .parallel import generate_parallel
+        return generate_parallel(root,shard,resume,deadline,craftium,renderer,seed,max_attempts,sites_per_world,worlds)
     final=Path(root)/'shards'/f'shard_{shard:04d}'
     if (final/'READY').exists():return dict(shard=shard,status='skipped_ready')
     started=time.monotonic();world=None;rng=np.random.default_rng(seed+shard);attempts=0
@@ -169,6 +173,10 @@ def generate_shard(root,shard,resume,deadline,craftium,renderer,seed,max_attempt
                         frame,_=prepare_dynamic(world,site,category,rng,subtype,height)
                         chain,result=collect(world,frame,category,rng,subtype);entry.update(result)
                         if chain:entry['status']='committed'if writer.submit(chain,world.v)else'rejected_duplicate_or_quota'
+                except InfrastructureError as exc:
+                    from .parallel import infrastructure_failure
+                    entry.update(status='infrastructure_error',reason=str(exc))
+                    infrastructure_failure(root,shard,exc);writer.attempt(entry);raise
                 except Exception as exc:
                     entry.update(status='failed',reason=f'{type(exc).__name__}: {exc}')
                     if world:world.__exit__(None,None,None);world=None
@@ -177,6 +185,7 @@ def generate_shard(root,shard,resume,deadline,craftium,renderer,seed,max_attempt
             if not any(writer.missing()['categories'].values()):
                 result=writer.publish();return dict(shard=shard,status='ready',quality=result)
             stats=writer.export();return dict(shard=shard,status='incomplete',statistics=stats,wall_seconds=time.monotonic()-started)
+    except InfrastructureError as exc:return dict(shard=shard,status='infrastructure_error',error=str(exc))
     except Exception as exc:return dict(shard=shard,status='failed',error=f'{type(exc).__name__}: {exc}')
     finally:
         if world:world.__exit__(None,None,None)

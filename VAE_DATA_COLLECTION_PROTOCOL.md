@@ -118,7 +118,7 @@ dataset/
       READY
 ```
 
-未完成片暂存为 `.shard_XXXX.partial/`。每片一个worker独占锁，各片独立并行；全局仅词表分配短时加锁。Zarr写完后一次事务提交完整5状态链，恢复去除未提交数组尾部，保留已提交数据。原生模拟时间不恢复；中断场景在新世界/新rollout重新尝试，不伪装时间回放。
+未完成片暂存为 `.shard_XXXX.partial/`。每片一个Writer进程独占锁，可由多个独立Native世界进程供给，世界数不受片数限制；全局词表仅新增Token发布时短时加锁，写盘/fsync在锁外。Zarr写完后一次事务提交完整5状态链，恢复去除未提交数组尾部，保留已提交数据。原生模拟时间不恢复；中断场景在新世界/新rollout重新尝试，不伪装时间回放。
 
 只保存选中五状态、成功D4 Anchor及必要事件引用；未选候选释放，不保留Raw Trajectory或发现缓存。记录Seed、坐标、Biome/地形、真实时间/步、source初始化、事件标签、engine/game版本、原生接口与Voxel-only证据。QA检查类别、Biome/地形硬配额、5状态完整性、中心变化、D4完整事件、同源重复、词表、Parquet与journal一致以及Native Provenance。
 
