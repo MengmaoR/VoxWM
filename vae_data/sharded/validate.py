@@ -57,6 +57,7 @@ def validate_chain(chain,vocabulary,require_native=True):
         if indices!=list(range(indices[0],indices[0]+5))or not isinstance(count,int)or not 5<=count<=10 or indices[0]<0 or indices[-1]>=count:raise ValueError('Selected states are not a consecutive candidate window')
     for frame in frames:
         if frame.meta['center_origin']!=first.meta['center_origin']or frame.meta['world_seed']!=first.meta['world_seed']or frame.meta['rollout_id']!=first.meta['rollout_id']:raise ValueError('Chain mixes source chunks/worlds/rollouts')
+        if np.any(np.asarray(frame.meta['center_origin'])%16):raise ValueError('Dynamic center must remain on the world chunk grid')
         if require_native:validate_native(frame)
     for pre,post in zip(frames,frames[1:]):
         if pre.step>=post.step or pre.time>=post.time:raise ValueError('Chain time/step not increasing')
@@ -64,6 +65,7 @@ def validate_chain(chain,vocabulary,require_native=True):
     if chain.category=='D4':
         if chain.anchor is None:raise ValueError('D4 anchor missing')
         if chain.anchor.key in{frame.key for frame in frames}:raise ValueError('Initial anchor was used as a candidate')
+        if np.any(np.asarray(chain.anchor.meta['center_origin'])%16):raise ValueError('Dynamic anchor must remain on the world chunk grid')
         if require_native:validate_native(chain.anchor)
         if chain.anchor.time>=first.time:raise ValueError('Anchor must precede all selected states')
         if any(chain.anchor.meta[key]!=first.meta[key]for key in('world_seed','center_origin','rollout_id')):raise ValueError('Anchor comes from a different world/region/rollout')
@@ -95,7 +97,7 @@ def quota_errors(rows,chains,shard):
 
 
 def check_shard(root,path,require_complete=True,require_native=True):
-    from .storage import rows_at,source_key
+    from .storage import rows_at,source_key,static_position_key
     root,path=Path(root),Path(path);errors=[]
     if not path.exists():return dict(valid=False,complete=False,errors=['Shard directory not found'])
     try:
@@ -112,7 +114,7 @@ def check_shard(root,path,require_complete=True,require_native=True):
             frame=Frame(arrays['tokens'][index],arrays['light'][index],rows[index])
             if frame.tokens.max()>=min(len(vocabulary.entries),int(rows[index]['vocabulary_size_at_commit'])):raise ValueError('Token is outside its committed vocabulary prefix')
             return frame
-        seen=set();physical=set();seed_splits={};seed_counts=Counter()
+        seen=set();static_positions=set();physical=set();seed_splits={};seed_counts=Counter()
         for i,row in enumerate(rows):
             if row['snapshot_id']!=i:raise ValueError('Non-contiguous snapshot rows')
             frame=frame_at(i)
@@ -126,16 +128,16 @@ def check_shard(root,path,require_complete=True,require_native=True):
             seen.add(key)
             if frame.key in physical:raise ValueError('Physical frame stored twice')
             physical.add(frame.key)
-            if require_native and row['category']=='Static':
-                from .protocol import biome_group
-                if biome_group(row['surface_biome'],BIOMES)!=row['biome_group']:raise ValueError('Static biome label differs from native source')
-                surface=row['sample_surface_y'];height=row['center_origin'][2];stratum=row['stratum']
-                if stratum=='surface'and not height<=surface<height+16:raise ValueError('Surface sample misses native surface')
-                if stratum=='shallow_underground'and not 8<=surface-(height+8)<32:raise ValueError('Shallow stratum differs from native height')
-                if stratum=='deep_cave'and surface-(height+8)<24:raise ValueError('Deep stratum differs from native height')
-                if stratum=='elevated_complex':
-                    air=np.array([name=='air'for name,_ in vocabulary.entries],bool)[frame.center].mean()
-                    if not .02<air<.98 or height<=surface:raise ValueError('Elevated sample is not a mixed native structure')
+            if row['category']=='Static':
+                position=static_position_key(frame)
+                if position in static_positions:raise ValueError('Repeated Static world seed/center position')
+                static_positions.add(position)
+                if row.get('static_position_key')!=position:raise ValueError('Static position key differs from real coordinates')
+                if require_native:
+                    from .protocol import biome_group
+                    from .static_height import validate_static
+                    if biome_group(row['surface_biome'],BIOMES)!=row['biome_group']:raise ValueError('Static biome label differs from native source')
+                    validate_static(frame,vocabulary)
             if row['category']=='Static'and row.get('biome_transition')and len(set(row.get('biome_groups_present',[])))<2:raise ValueError('Unsupported biome transition label')
         if any(n>100 for n in seed_counts.values()):errors.append('One seed exceeds 100 samples in this shard')
         used=[];anchor_ids=[]

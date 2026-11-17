@@ -23,7 +23,7 @@ Linux示例使用 `--renderer software`，macOS可改为 `--renderer auto`。不
 
 ```bash
 .venv/bin/python -m vae_data generate \
-  --dataset outputs/vae_100k_fixed24 --shard 0 --count 1 --workers 1 \
+  --dataset outputs/vae_100k_heightadaptive --shard 0 --count 1 --workers 1 \
   --max-attempts 5000 --wall-seconds 7200 --renderer software
 ```
 
@@ -31,14 +31,26 @@ Linux示例使用 `--renderer software`，macOS可改为 `--renderer auto`。不
 
 Static现在先按剩余“群落×高度”配额选目标，再在当前seed内主动查询群落；不再随机生成地点后碰运气匹配配额。使用原生Biome噪声接口，64格间隔螺旋、每次最多16,384点；只在候选命中后加载该处地形，并检查真实地表群落。原生变体沿用既有25组映射。未命中或实际群落不符会记录原因并换位置/seed，受原有时间/尝试上限约束，不能拿其他群落补齐。搜索不会创建地形缓存；目标/命中/实际群落保存在现有attempt和样本`static_selection`中。
 
-高度配额及原有选择规则不变；深地下允许全实心，`deep_cave`静态桶不保证是真洞穴，高处复杂结构仍需空气与非空气混合。主动查群落不保证这些结构一定存在。本次只做Unit/语法检查，尚未实测稀有群落命中率或整片吞吐。生成与`--resume`命令保持不变。
+Static中心高度C逐整数随机，不吸附到16格引擎网格；完整Region=[C−24,C+23]必须位于[-62,193]，即−38≤C≤170。Native地表S与采样中心C分别记录。Surface选包含S的中心；Elevated取[S+9,170]且0.10≤Air<0.98；Shallow取[S−24,S−8]；Deep(`deep_cave`)取[−38,S−32]，均裁到允许域。地下允许全实心、全Air及混合结构，只排除全`mcl_core:void`；完整Region的`ignore`另作完整性错误。每地点最多16个不重复高度，过于空旷的Elevated仅向下重试。
+
+需先运行`bash scripts/build_fixed24.sh`增量编译世界坐标Capture补丁；不改变原生物理或Fixed24时间。每次Prepare与同Tick独立P0/VoxelManip逐体素比较Node/light/param2，实际相交引擎块全部Forceload。Static按seed+真实中心跨片去重，允许窗口部分重叠。Token/light布局和Dynamic网格不变；旧目录不混入新Static策略，请使用上面的新输出目录，原数据不修改。稀有群落命中率和正式1K吞吐尚未实测。
+
+## 有限Native Static核验（不生成正式Shard）
+
+```bash
+.venv/bin/python -m vae_data static-verify \
+  --dataset outputs/vae_static_height_check_new --wall-seconds 180 \
+  --seed 191664964 --site -272 1456 --renderer software
+```
+
+单世界、最多180秒，检查13个合法C及两个非法边界；C++/VoxelManip同Tick逐体素比较，另尝试Elevated/Shallow/Deep各一个真实样例。输出`static_verification.json`、`examples.png`、小型`examples/*/state.npz`及metadata/vocabulary；无法找到结构时明确保留NO_CANDIDATE，不追加无界搜索。macOS可用`--renderer auto`。正式采集仍需用户手动启动。
 
 ## 连续多片 / 多CPU workers
 
 ```bash
 # 生成 shard_0010 .. shard_0013，最多4个独立CPU世界并行
 .venv/bin/python -m vae_data generate \
-  --dataset outputs/vae_100k_fixed24 --shard 10 --count 4 --workers 4 \
+  --dataset outputs/vae_100k_heightadaptive --shard 10 --count 4 --workers 4 \
   --max-attempts 5000 --wall-seconds 14400 --renderer software
 ```
 
@@ -48,7 +60,7 @@ Worker按片独占目录与锁；Native世界/临时引擎独立；全局词表�
 
 ```bash
 .venv/bin/python -m vae_data generate \
-  --dataset outputs/vae_100k_fixed24 --shard 10 --count 4 --workers 4 --resume \
+  --dataset outputs/vae_100k_heightadaptive --shard 10 --count 4 --workers 4 --resume \
   --max-attempts 5000 --wall-seconds 14400 --renderer software
 ```
 
@@ -57,22 +69,22 @@ Ctrl-C会停止本命令拥有的worker和引擎进程；已提交数据可恢�
 ## 检查某片、查看全局进度
 
 ```bash
-.venv/bin/python -m vae_data check --dataset outputs/vae_100k_fixed24 --shard 10
+.venv/bin/python -m vae_data check --dataset outputs/vae_100k_heightadaptive --shard 10
 # 检查partial中已提交数据，允许数量尚未齐；complete=false不会发布READY
-.venv/bin/python -m vae_data check --dataset outputs/vae_100k_fixed24 --shard 10 --allow-incomplete
-.venv/bin/python -m vae_data status --dataset outputs/vae_100k_fixed24
+.venv/bin/python -m vae_data check --dataset outputs/vae_100k_heightadaptive --shard 10 --allow-incomplete
+.venv/bin/python -m vae_data status --dataset outputs/vae_100k_heightadaptive
 ```
 
 Check为只读，不自动修数据。错误返回非零；status只报告READY与partial统计，100个READY才是正式100K完成。检查结果包含Transition软目标缺口；不能把不足4的真实区域伪装成transition。
 
 ## 格式和无损读取
 
-每个正式样本：`tokens:uint16[48,48,48]`、`light:uint8[48,48,48]`，ENU。目标中心为 `[16:32]*3`，region origin = center origin −16。上下文保存完整，动态判定与VAE目标都限定中心。
+每个正式样本：`tokens:uint16[48,48,48]`、`light:uint8[48,48,48]`，ENU。目标中心为 `[16:32]*3`，region origin = center origin −16。Static高度起点可以不是16的倍数；27个采样窗口仍相对16格连续。上下文保存完整，动态判定与VAE目标都限定中心。
 
 ```python
 import zarr, pyarrow.parquet as pq
 from vae_p0.codec import Vocabulary
-root='outputs/vae_100k_fixed24'
+root='outputs/vae_100k_heightadaptive'
 path=root+'/shards/shard_0010'
 a=zarr.open_group(path+'/snapshots.zarr',mode='r')
 tokens=a['tokens'][0]                 # 完整48³原生状态

@@ -1,3 +1,5 @@
+最新Static高度修订：[20项Unit、13个真实高度Capture对照及三类实际样例](reports/static_height_20261117/README.md)。未采集正式Shard；以下历史结果原样保留。
+
 GO — requested five-type fixed24 rerun, D2 retained
 
 11/17修复后7次尝试，D1/D3/D4-A/B/C各成功一条；D2不重跑。两段原生工作约254.52秒，Viewer已更新并标记旧D2。此GO仅指本轮请求的五种样例，不包含受控RNG跨吞吐等价或正式Shard验收。[实测/预览](reports/fixed24_rerun_20261117/README.md)。

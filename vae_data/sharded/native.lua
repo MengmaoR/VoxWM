@@ -8,7 +8,7 @@ local function clock()
     local c=voxwm_clock();local n=c.server_tick
     return {sim_time=n/24,absolute_sim_time=n/24,simulation_step=n,native_simulation_step=n,simulation_hz=24,
         frame_index=zero_tick and n-zero_tick or nil,relative_sim_time=zero_tick and(n-zero_tick)/24 or nil,
-        lua_tick=lua_tick,native_clock=c,engine_us=mt.get_us_time()}
+        lua_tick=lua_tick,native_clock=c,engine_us=mt.get_us_time(),region_capture_version=c.region_capture_version}
 end
 local function enu(p)return {p.x,p.z,p.y}end
 local function eng(p)return {x=p[1],y=p[3],z=p[2]}end
@@ -49,7 +49,7 @@ local function capture(r,extra)
         local start=mt.get_us_time();local payload=voxwm_region(region.low)
         local out=assert(io.open(world..'/native48.bin','wb'));out:write(payload);out:close()
         local data={status='captured',chunks=region.chunks,capture_us=mt.get_us_time()-start,capture_method='post_server_step_MapBlock',
-            reaction_events=reactions,center_origin=region.center};reactions={}
+            reaction_events=reactions,center_origin=region.center,capture_reference_equal=region.reference_equal,engine_mapblock_count=region.engine_mapblock_count};reactions={}
         if extra then for k,v in pairs(extra)do data[k]=v end end
         reply(r,data)
     end
@@ -58,23 +58,27 @@ local function capture(r,extra)
         p0.handle({kind='p0_capture',origins=region.origins,surface_y=region.surface_y,verify=true},nil,function(_,data)
             region.chunks=data.chunks
             assert(voxwm_region(region.low)==read('p0_capture.bin'),'C++ capture differs from the original P0 same-tick state')
-            emit()
+            region.reference_equal=true;emit()
         end)
     else emit()end
 end
 local function prepare(r)
     for _,p in ipairs(held)do mt.forceload_free_block(p,true)end;held={};reactions={}
     zero_tick=nil
+    if r.static_window then assert(voxwm_clock().region_capture_version=='voxwm-region-integer-v1','Rebuild integer-origin capture before Static sampling')end
     local center=eng(r.center);local low=vector.subtract(center,16);local high=vector.add(center,31)
     mt.emerge_area(vector.subtract(low,16),vector.add(high,16),function(_,_,left)
         if left~=0 then return end
         mt.after(0,function()
             local origins={};local active=true
             for x=low.x,high.x,16 do for z=low.z,high.z,16 do for y=low.y,high.y,16 do
-                origins[#origins+1]={x,z,y};local p={x=x,y=y,z=z}
-                if mt.forceload_block(p,true)then held[#held+1]=p else active=false end
+                origins[#origins+1]={x,z,y}
             end end end
-            region={center=r.center,low=low,high=high,origins=origins,surface_y=r.surface_y}
+            local blocks=geometry.mapblocks(low,high)
+            for _,p in ipairs(blocks)do
+                if mt.forceload_block(p,true)then held[#held+1]=p else active=false end
+            end
+            region={center=r.center,low=low,high=high,origins=origins,surface_y=r.surface_y,engine_mapblock_count=#blocks}
             if not active then reply(r,{status='activation_failed'})else
                 local protected={};local index=0;local player_name=mt.get_connected_players()[1]:get_player_name()
                 for x=low.x,high.x do for z=low.z,high.z do for y=low.y,high.y do

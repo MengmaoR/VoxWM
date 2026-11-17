@@ -11,17 +11,11 @@ from .planning import Planner
 from .storage import Writer,atomic_json
 
 
-def prepare(world,site,stratum,rng,location=None):
+def prepare(world,site,stratum,rng,location=None,attempt=None):
+    from .static_height import sample
     if location is None:location=world.locate(int(site[0])//16*16,int(site[1])//16*16)
     if location['status']!='located':raise ValueError(location['status'])
-    surface=location['surface_y'];depth={'surface':0,'elevated_complex':-16,'shallow_underground':16,'deep_cave':int(rng.integers(4,9))*16}[stratum]
-    center=[int(site[0])//16*16,int(site[1])//16*16,int(np.floor((surface-depth)/16)*16)]
-    frame,result=world.prepare_at(center,surface);frame.meta['stratum']=stratum
-    frame.meta['terrain_heights']=location['heights'];frame.meta['terrain_native']=result['chunks'][13]['stratum']
-    if stratum=='elevated_complex':
-        air=np.mean(np.array([name=='air'for name,_ in world.v.entries],bool)[frame.center])
-        if not .02<air<.98:raise ValueError('Elevated candidate is empty/simple solid; not used to fill quota')
-    return frame,result
+    return sample(world,site,stratum,rng,location,attempt)
 
 
 def choose_static_target(missing,rng):
@@ -39,7 +33,7 @@ def prepare_static(world,target,origin,rng,attempt):
     attempt['actual_surface_biome']=location['biome']
     if biome_group(location['biome'],BIOMES)!=group:
         raise ValueError('Target biome differs from loaded surface: '+location['biome'])
-    frame,_=prepare(world,search['site'],stratum,rng,location)
+    frame,_=prepare(world,search['site'],stratum,rng,location,attempt)
     if frame.meta['biome_group']!=group:
         raise ValueError('Target biome differs from captured surface: '+str(frame.meta['biome_group']))
     frame.meta.update(phase='static_snapshot',static_selection=dict(target_biome=group,target_stratum=stratum,

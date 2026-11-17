@@ -1,12 +1,11 @@
 # VoxWM 当前状态
 
-**Static主动查找群落已接入；未运行真实定位或正式分片采集。**
+**Static连续整数高度与任意坐标Capture已完成并通过有限Native核验。**
 
-- Static按剩余群落/高度联合配额选目标，使用原生Biome噪声有限定位后才加载目标地形；复核实际群落，不符拒绝。配额、高度规则和动态物理保持原样；稀有群落命中率及1K吞吐尚未实测。
-- 新增5项针对性Unit（含Lua假接口搜索）以及Python/Lua语法、CLI参数检查通过；没有启动引擎或重新生成数据。
-- D1、D4-A、D4-B首次成功；D3、D4-C第二次成功，各保留一条真实五状态链。修复段7次尝试127.47秒；含接口错误初段总计约254.52秒，低于用户批准的900秒。
-- 已修复Lua把整数坐标返回为浮点时的误拒绝；位置必须为有限整数值且中心偏移1..14，不取整或改数据。源点域与连续24Hz Tick检查通过。
-- 当前Viewer 8766已服务`outputs/vae_fixed24_native_20261117_fixed_no_d2/`；D2明确标为保留旧结果。Playwright验证新数据目录、六型切换、逐帧交互和无console error通过。[本轮结果/预览](vae_data/reports/fixed24_rerun_20261117/README.md)。
-- 原始GT/失败记录保存在outputs，不入Git；旧数据不覆盖。未运行正式Shard、100K、GPU或训练；受控RNG跨吞吐严格等价仍未证明。
+- 中心C∈[-38,170]，完整48³不越[-62,193]；Surface/Elevated/Shallow/Deep按Native S选连续整数。Static配额仍25×20、8/4/4/4，目标群落主动定位保留。
+- 13个合法高度的C++/独立VoxelManip Node/light/param2逐体素完全一致，-39/171采集前拒绝；新Forceload实际覆盖27或36引擎块。
+- 初地点Elevated不合格如实保留；相邻已有GT树木地点补一例C=30。Shallow C=-21、Deep C=-37均为全实心。两段Native合计34.45秒，20项针对性Unit及语法/CLI检查通过。[报告与预览](vae_data/reports/static_height_20261117/README.md)。
+- Static按seed+真实中心跨片去重；允许窗口重叠。48³ Token/light布局、Dynamic全局网格与Fixed24时序保持；旧数据不改写，新策略需新输出目录及增量编译Capture补丁。
+- 前轮D1/D3/D4-A/B/C fixed24样例已通过，D2保留旧结果，本轮未重跑动态。[前轮报告](vae_data/reports/fixed24_rerun_20261117/README.md)。未启动正式1K/100K、GPU或训练；正式群落覆盖及吞吐尚未测量。
 
-唯一下一步：用户在服务器手动采集一个有明确时间上限的1K分片，检查实际群落命中、配额缺口和吞吐；Codex不自动启动采集。
+唯一下一步：用户在服务器手动采集一个有时间上限的1K分片，检查实际配额缺口和吞吐；Codex不自动启动。

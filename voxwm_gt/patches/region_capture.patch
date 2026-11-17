@@ -1,0 +1,40 @@
+--- a/src/script/scripting_server.cpp
++++ b/src/script/scripting_server.cpp
+@@ -115,5 +115,5 @@
+ }
+
+-// Read-only capture, chunk-major ENU, same 27 aligned16-cubes as the P0 path.
++// Read-only world-coordinate capture. Sampling cubes may cross engine MapBlocks.
+ inline static int lua_voxwm_region(lua_State *L) {
+     try {
+@@ -121,12 +121,21 @@
+         const v3s16 low=read_v3s16(L,1);
+         auto *env=dynamic_cast<ServerEnvironment*>(ModApiBase::getEnv(L));
++        const v3s16 first=getNodeBlockPos(low),last=getNodeBlockPos(low+v3s16(47,47,47));
++        MapBlock *blocks[4][4][4]={};
++        for(int bx=first.X;bx<=last.X;bx++)for(int bz=first.Z;bz<=last.Z;bz++)for(int by=first.Y;by<=last.Y;by++) {
++            auto *block=env->getServerMap().getBlockNoCreateNoEx(v3s16(bx,by,bz));
++            if(!block) throw std::runtime_error("Missing active block in fixed24 capture");
++            blocks[bx-first.X][by-first.Y][bz-first.Z]=block;
++        }
+         static std::vector<char> buffer(48*48*48*4);
+         size_t at=0;
++        // Preserve the original chunk-major and intra-chunk ENU byte ordering.
+         for(int bx=0;bx<3;bx++)for(int bz=0;bz<3;bz++)for(int by=0;by<3;by++) {
+             const v3s16 origin=low+v3s16(bx*16,by*16,bz*16);
+-            auto *block=env->getServerMap().getBlockNoCreateNoEx(getNodeBlockPos(origin));
+-            if(!block) throw std::runtime_error("Missing active block in fixed24 capture");
+             for(int x=0;x<16;x++)for(int z=0;z<16;z++)for(int y=0;y<16;y++) {
+-                const auto node=block->getNodeNoCheck(x,y,z);const auto id=node.getContent();
++                v3s16 blockpos,relative;
++                getNodeBlockPosWithOffset(origin+v3s16(x,y,z),blockpos,relative);
++                auto *block=blocks[blockpos.X-first.X][blockpos.Y-first.Y][blockpos.Z-first.Z];
++                const auto node=block->getNodeNoCheck(relative);const auto id=node.getContent();
+                 if(id==CONTENT_IGNORE) throw std::runtime_error("Ignore voxel in fixed24 capture");
+                 buffer[at++]=id&255;buffer[at++]=(id>>8)&255;
+@@ -146,4 +155,5 @@
+     lua_pushnumber(L,voxwmPhysicsUs);lua_setfield(L,-2,"physics_us");
+     lua_pushstring(L,"voxwm-fixed24-v1");lua_setfield(L,-2,"patch_version");
++    lua_pushstring(L,"voxwm-region-integer-v1");lua_setfield(L,-2,"region_capture_version");
+     return 1;
+ }

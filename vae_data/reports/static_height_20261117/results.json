@@ -1,0 +1,664 @@
+{
+  "scope": "Static height/capture implementation only; no formal shard or dataset throughput acceptance",
+  "status": "GO",
+  "unit_tests_passed": 20,
+  "unit_seconds": 0.362,
+  "capture_check_status": "PASS",
+  "first_site_run_status": "INCONCLUSIVE",
+  "invalid_centers_rejected": [
+    -39,
+    171
+  ],
+  "capture_checks": [
+    {
+      "center_y": -38,
+      "center_origin": [
+        -288,
+        1456,
+        -46
+      ],
+      "region_origin": [
+        -304,
+        1440,
+        -62
+      ],
+      "region_height_min": -62,
+      "region_height_max": -15,
+      "cpp_voxelmanip_equal": true,
+      "compared_voxels": 110592,
+      "compared_fields": [
+        "node_content_id",
+        "param1_light",
+        "raw_param2"
+      ],
+      "engine_mapblock_count": 36.0,
+      "native_clock": {
+        "absolute_sim_time": 56.25,
+        "client_request_tick": 1350.0,
+        "patch_version": "voxwm-fixed24-v1",
+        "physics_us": 307.0,
+        "region_capture_version": "voxwm-region-integer-v1",
+        "server_dt": 0.0416666679084301,
+        "server_tick": 1350.0,
+        "client_completed_tick": 1350,
+        "client_dt": 0.0416666679084301,
+        "lua_tick": 1350.0
+      },
+      "air_fraction": 0.0,
+      "void_fraction": 0.0
+    },
+    {
+      "center_y": -37,
+      "center_origin": [
+        -288,
+        1456,
+        -45
+      ],
+      "region_origin": [
+        -304,
+        1440,
+        -61
+      ],
+      "region_height_min": -61,
+      "region_height_max": -14,
+      "cpp_voxelmanip_equal": true,
+      "compared_voxels": 110592,
+      "compared_fields": [
+        "node_content_id",
+        "param1_light",
+        "raw_param2"
+      ],
+      "engine_mapblock_count": 36.0,
+      "native_clock": {
+        "absolute_sim_time": 56.333333333333336,
+        "client_request_tick": 1352.0,
+        "patch_version": "voxwm-fixed24-v1",
+        "physics_us": 337.0,
+        "region_capture_version": "voxwm-region-integer-v1",
+        "server_dt": 0.0416666679084301,
+        "server_tick": 1352.0,
+        "client_completed_tick": 1352,
+        "client_dt": 0.0416666679084301,
+        "lua_tick": 1352.0
+      },
+      "air_fraction": 0.0,
+      "void_fraction": 0.0
+    },
+    {
+      "center_y": 0,
+      "center_origin": [
+        -288,
+        1456,
+        -8
+      ],
+      "region_origin": [
+        -304,
+        1440,
+        -24
+      ],
+      "region_height_min": -24,
+      "region_height_max": 23,
+      "cpp_voxelmanip_equal": true,
+      "compared_voxels": 110592,
+      "compared_fields": [
+        "node_content_id",
+        "param1_light",
+        "raw_param2"
+      ],
+      "engine_mapblock_count": 36.0,
+      "native_clock": {
+        "absolute_sim_time": 56.416666666666664,
+        "client_request_tick": 1354.0,
+        "patch_version": "voxwm-fixed24-v1",
+        "physics_us": 368.0,
+        "region_capture_version": "voxwm-region-integer-v1",
+        "server_dt": 0.0416666679084301,
+        "server_tick": 1354.0,
+        "client_completed_tick": 1354,
+        "client_dt": 0.0416666679084301,
+        "lua_tick": 1354.0
+      },
+      "air_fraction": 0.357421875,
+      "void_fraction": 0.0
+    },
+    {
+      "center_y": 8,
+      "center_origin": [
+        -288,
+        1456,
+        0
+      ],
+      "region_origin": [
+        -304,
+        1440,
+        -16
+      ],
+      "region_height_min": -16,
+      "region_height_max": 31,
+      "cpp_voxelmanip_equal": true,
+      "compared_voxels": 110592,
+      "compared_fields": [
+        "node_content_id",
+        "param1_light",
+        "raw_param2"
+      ],
+      "engine_mapblock_count": 27.0,
+      "native_clock": {
+        "absolute_sim_time": 56.541666666666664,
+        "client_request_tick": 1357.0,
+        "patch_version": "voxwm-fixed24-v1",
+        "physics_us": 533.0,
+        "region_capture_version": "voxwm-region-integer-v1",
+        "server_dt": 0.0416666679084301,
+        "server_tick": 1357.0,
+        "client_completed_tick": 1357,
+        "client_dt": 0.0416666679084301,
+        "lua_tick": 1357.0
+      },
+      "air_fraction": 0.857421875,
+      "void_fraction": 0.0
+    },
+    {
+      "center_y": 9,
+      "center_origin": [
+        -288,
+        1456,
+        1
+      ],
+      "region_origin": [
+        -304,
+        1440,
+        -15
+      ],
+      "region_height_min": -15,
+      "region_height_max": 32,
+      "cpp_voxelmanip_equal": true,
+      "compared_voxels": 110592,
+      "compared_fields": [
+        "node_content_id",
+        "param1_light",
+        "raw_param2"
+      ],
+      "engine_mapblock_count": 36.0,
+      "native_clock": {
+        "absolute_sim_time": 56.625,
+        "client_request_tick": 1359.0,
+        "patch_version": "voxwm-fixed24-v1",
+        "physics_us": 308.0,
+        "region_capture_version": "voxwm-region-integer-v1",
+        "server_dt": 0.0416666679084301,
+        "server_tick": 1359.0,
+        "client_completed_tick": 1359,
+        "client_dt": 0.0416666679084301,
+        "lua_tick": 1359.0
+      },
+      "air_fraction": 0.919921875,
+      "void_fraction": 0.0
+    },
+    {
+      "center_y": 10,
+      "center_origin": [
+        -288,
+        1456,
+        2
+      ],
+      "region_origin": [
+        -304,
+        1440,
+        -14
+      ],
+      "region_height_min": -14,
+      "region_height_max": 33,
+      "cpp_voxelmanip_equal": true,
+      "compared_voxels": 110592,
+      "compared_fields": [
+        "node_content_id",
+        "param1_light",
+        "raw_param2"
+      ],
+      "engine_mapblock_count": 36.0,
+      "native_clock": {
+        "absolute_sim_time": 56.708333333333336,
+        "client_request_tick": 1361.0,
+        "patch_version": "voxwm-fixed24-v1",
+        "physics_us": 314.0,
+        "region_capture_version": "voxwm-region-integer-v1",
+        "server_dt": 0.0416666679084301,
+        "server_tick": 1361.0,
+        "client_completed_tick": 1361,
+        "client_dt": 0.0416666679084301,
+        "lua_tick": 1361.0
+      },
+      "air_fraction": 0.982421875,
+      "void_fraction": 0.0
+    },
+    {
+      "center_y": 15,
+      "center_origin": [
+        -288,
+        1456,
+        7
+      ],
+      "region_origin": [
+        -304,
+        1440,
+        -9
+      ],
+      "region_height_min": -9,
+      "region_height_max": 38,
+      "cpp_voxelmanip_equal": true,
+      "compared_voxels": 110592,
+      "compared_fields": [
+        "node_content_id",
+        "param1_light",
+        "raw_param2"
+      ],
+      "engine_mapblock_count": 36.0,
+      "native_clock": {
+        "absolute_sim_time": 56.833333333333336,
+        "client_request_tick": 1364.0,
+        "patch_version": "voxwm-fixed24-v1",
+        "physics_us": 549.0,
+        "region_capture_version": "voxwm-region-integer-v1",
+        "server_dt": 0.0416666679084301,
+        "server_tick": 1364.0,
+        "client_completed_tick": 1364,
+        "client_dt": 0.0416666679084301,
+        "lua_tick": 1364.0
+      },
+      "air_fraction": 1.0,
+      "void_fraction": 0.0
+    },
+    {
+      "center_y": 16,
+      "center_origin": [
+        -288,
+        1456,
+        8
+      ],
+      "region_origin": [
+        -304,
+        1440,
+        -8
+      ],
+      "region_height_min": -8,
+      "region_height_max": 39,
+      "cpp_voxelmanip_equal": true,
+      "compared_voxels": 110592,
+      "compared_fields": [
+        "node_content_id",
+        "param1_light",
+        "raw_param2"
+      ],
+      "engine_mapblock_count": 36.0,
+      "native_clock": {
+        "absolute_sim_time": 56.916666666666664,
+        "client_request_tick": 1366.0,
+        "patch_version": "voxwm-fixed24-v1",
+        "physics_us": 277.0,
+        "region_capture_version": "voxwm-region-integer-v1",
+        "server_dt": 0.0416666679084301,
+        "server_tick": 1366.0,
+        "client_completed_tick": 1366,
+        "client_dt": 0.0416666679084301,
+        "lua_tick": 1366.0
+      },
+      "air_fraction": 1.0,
+      "void_fraction": 0.0
+    },
+    {
+      "center_y": 17,
+      "center_origin": [
+        -288,
+        1456,
+        9
+      ],
+      "region_origin": [
+        -304,
+        1440,
+        -7
+      ],
+      "region_height_min": -7,
+      "region_height_max": 40,
+      "cpp_voxelmanip_equal": true,
+      "compared_voxels": 110592,
+      "compared_fields": [
+        "node_content_id",
+        "param1_light",
+        "raw_param2"
+      ],
+      "engine_mapblock_count": 36.0,
+      "native_clock": {
+        "absolute_sim_time": 57.0,
+        "client_request_tick": 1368.0,
+        "patch_version": "voxwm-fixed24-v1",
+        "physics_us": 2165.0,
+        "region_capture_version": "voxwm-region-integer-v1",
+        "server_dt": 0.0416666679084301,
+        "server_tick": 1368.0,
+        "client_completed_tick": 1368,
+        "client_dt": 0.0416666679084301,
+        "lua_tick": 1368.0
+      },
+      "air_fraction": 1.0,
+      "void_fraction": 0.0
+    },
+    {
+      "center_y": 23,
+      "center_origin": [
+        -288,
+        1456,
+        15
+      ],
+      "region_origin": [
+        -304,
+        1440,
+        -1
+      ],
+      "region_height_min": -1,
+      "region_height_max": 46,
+      "cpp_voxelmanip_equal": true,
+      "compared_voxels": 110592,
+      "compared_fields": [
+        "node_content_id",
+        "param1_light",
+        "raw_param2"
+      ],
+      "engine_mapblock_count": 36.0,
+      "native_clock": {
+        "absolute_sim_time": 57.125,
+        "client_request_tick": 1371.0,
+        "patch_version": "voxwm-fixed24-v1",
+        "physics_us": 398.0,
+        "region_capture_version": "voxwm-region-integer-v1",
+        "server_dt": 0.0416666679084301,
+        "server_tick": 1371.0,
+        "client_completed_tick": 1371,
+        "client_dt": 0.0416666679084301,
+        "lua_tick": 1371.0
+      },
+      "air_fraction": 1.0,
+      "void_fraction": 0.0
+    },
+    {
+      "center_y": 24,
+      "center_origin": [
+        -288,
+        1456,
+        16
+      ],
+      "region_origin": [
+        -304,
+        1440,
+        0
+      ],
+      "region_height_min": 0,
+      "region_height_max": 47,
+      "cpp_voxelmanip_equal": true,
+      "compared_voxels": 110592,
+      "compared_fields": [
+        "node_content_id",
+        "param1_light",
+        "raw_param2"
+      ],
+      "engine_mapblock_count": 27.0,
+      "native_clock": {
+        "absolute_sim_time": 57.208333333333336,
+        "client_request_tick": 1373.0,
+        "patch_version": "voxwm-fixed24-v1",
+        "physics_us": 291.0,
+        "region_capture_version": "voxwm-region-integer-v1",
+        "server_dt": 0.0416666679084301,
+        "server_tick": 1373.0,
+        "client_completed_tick": 1373,
+        "client_dt": 0.0416666679084301,
+        "lua_tick": 1373.0
+      },
+      "air_fraction": 1.0,
+      "void_fraction": 0.0
+    },
+    {
+      "center_y": 169,
+      "center_origin": [
+        -288,
+        1456,
+        161
+      ],
+      "region_origin": [
+        -304,
+        1440,
+        145
+      ],
+      "region_height_min": 145,
+      "region_height_max": 192,
+      "cpp_voxelmanip_equal": true,
+      "compared_voxels": 110592,
+      "compared_fields": [
+        "node_content_id",
+        "param1_light",
+        "raw_param2"
+      ],
+      "engine_mapblock_count": 36.0,
+      "native_clock": {
+        "absolute_sim_time": 58.833333333333336,
+        "client_request_tick": 1412.0,
+        "patch_version": "voxwm-fixed24-v1",
+        "physics_us": 311.0,
+        "region_capture_version": "voxwm-region-integer-v1",
+        "server_dt": 0.0416666679084301,
+        "server_tick": 1412.0,
+        "client_completed_tick": 1412,
+        "client_dt": 0.0416666679084301,
+        "lua_tick": 1412.0
+      },
+      "air_fraction": 1.0,
+      "void_fraction": 0.0
+    },
+    {
+      "center_y": 170,
+      "center_origin": [
+        -288,
+        1456,
+        162
+      ],
+      "region_origin": [
+        -304,
+        1440,
+        146
+      ],
+      "region_height_min": 146,
+      "region_height_max": 193,
+      "cpp_voxelmanip_equal": true,
+      "compared_voxels": 110592,
+      "compared_fields": [
+        "node_content_id",
+        "param1_light",
+        "raw_param2"
+      ],
+      "engine_mapblock_count": 36.0,
+      "native_clock": {
+        "absolute_sim_time": 58.916666666666664,
+        "client_request_tick": 1414.0,
+        "patch_version": "voxwm-fixed24-v1",
+        "physics_us": 294.0,
+        "region_capture_version": "voxwm-region-integer-v1",
+        "server_dt": 0.0416666679084301,
+        "server_tick": 1414.0,
+        "client_completed_tick": 1414,
+        "client_dt": 0.0416666679084301,
+        "lua_tick": 1414.0
+      },
+      "air_fraction": 1.0,
+      "void_fraction": 0.0
+    }
+  ],
+  "first_site": [
+    -288,
+    1456
+  ],
+  "first_site_surface_y": 1.0,
+  "first_site_elevated": {
+    "height_attempts": [
+      {
+        "center_y": 138,
+        "air_fraction": 1.0,
+        "void_fraction": 0.0,
+        "rejection_reason": "air_too_high"
+      },
+      {
+        "center_y": 36,
+        "air_fraction": 1.0,
+        "void_fraction": 0.0,
+        "rejection_reason": "air_too_high"
+      },
+      {
+        "center_y": 20,
+        "air_fraction": 1.0,
+        "void_fraction": 0.0,
+        "rejection_reason": "air_too_high"
+      },
+      {
+        "center_y": 13,
+        "air_fraction": 1.0,
+        "void_fraction": 0.0,
+        "rejection_reason": "air_too_high"
+      },
+      {
+        "center_y": 10,
+        "air_fraction": 0.982421875,
+        "void_fraction": 0.0,
+        "rejection_reason": "air_too_high"
+      }
+    ],
+    "height_rejection_reason": "height_candidates_exhausted",
+    "status": "NO_CANDIDATE",
+    "reason": "height_candidates_exhausted: elevated_complex"
+  },
+  "shallow": {
+    "height_attempts": [
+      {
+        "center_y": -21,
+        "air_fraction": 0.0,
+        "void_fraction": 0.0,
+        "rejection_reason": null
+      }
+    ],
+    "status": "PASS",
+    "center_origin": [
+      -288,
+      1456,
+      -29
+    ],
+    "center_y": -21,
+    "region_height_min": -45,
+    "region_height_max": 2,
+    "air_fraction": 0.0,
+    "void_fraction": 0.0
+  },
+  "deep": {
+    "height_attempts": [
+      {
+        "center_y": -37,
+        "air_fraction": 0.0,
+        "void_fraction": 0.0,
+        "rejection_reason": null
+      }
+    ],
+    "status": "PASS",
+    "center_origin": [
+      -288,
+      1456,
+      -45
+    ],
+    "center_y": -37,
+    "region_height_min": -61,
+    "region_height_max": -14,
+    "air_fraction": 0.0,
+    "void_fraction": 0.0
+  },
+  "elevated": {
+    "status": "PASS",
+    "world_seed": 191664964,
+    "site": [
+      -272,
+      1456
+    ],
+    "wall_budget": 60,
+    "site_selection": "Existing original D3 GT contains a natural tree here; no terrain intervention",
+    "formal_shard_generated": false,
+    "native_surface": {
+      "absolute_sim_time": 52.041666666666664,
+      "audit": {
+        "blocked_entities": {
+          "mcl_wieldview:wieldview": 1237.0
+        },
+        "blocked_item_attempts": 0.0,
+        "compatible": true,
+        "dropped_items": 0.0,
+        "entity_callbacks": 0.0,
+        "entity_induced_changes": 0.0,
+        "nontechnical_entities": 0.0,
+        "unsupported_falling_attempts": 0.0
+      },
+      "biome": "Forest",
+      "engine_us": 73523779193.0,
+      "heights": [
+        11.0,
+        1.0,
+        20.0,
+        1.0,
+        1.0
+      ],
+      "lua_tick": 1248.0,
+      "native_clock": {
+        "absolute_sim_time": 52.041666666666664,
+        "client_request_tick": 1249.0,
+        "patch_version": "voxwm-fixed24-v1",
+        "physics_us": 26830.0,
+        "region_capture_version": "voxwm-region-integer-v1",
+        "server_dt": 0.0416666679084301,
+        "server_tick": 1249.0
+      },
+      "native_simulation_step": 1249.0,
+      "region_capture_version": "voxwm-region-integer-v1",
+      "request_id": 1.0,
+      "sim_time": 52.041666666666664,
+      "simulation_hz": 24.0,
+      "simulation_step": 1249.0,
+      "status": "located",
+      "surface_y": 11.0,
+      "command_ticks": 214
+    },
+    "height_attempts": [
+      {
+        "center_y": 33,
+        "air_fraction": 0.998779296875,
+        "void_fraction": 0.0,
+        "rejection_reason": "air_too_high"
+      },
+      {
+        "center_y": 30,
+        "air_fraction": 0.9794921875,
+        "void_fraction": 0.0,
+        "rejection_reason": null
+      }
+    ],
+    "center_y": 30,
+    "center_origin": [
+      -272,
+      1456,
+      22
+    ],
+    "region_height_min": 6,
+    "region_height_max": 53,
+    "air_fraction": 0.9794921875,
+    "void_fraction": 0.0,
+    "cpp_voxelmanip_equal": true,
+    "compared_voxels": 110592,
+    "wall_seconds": 16.108324542001355
+  },
+  "native_wall_seconds": 34.44781266700011,
+  "original_outputs": "outputs/vae_static_height_20261117",
+  "formal_shard_generated": false,
+  "full_100k_generated": false
+}

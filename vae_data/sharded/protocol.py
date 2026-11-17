@@ -16,8 +16,12 @@ STRATA={'surface':8,'elevated_complex':4,'shallow_underground':4,'deep_cave':4}
 CENTER=(slice(16,32),)*3
 INTERIOR=(slice(17,31),)*3
 PRODUCTS={'mcl_core:stone','mcl_core:cobble','mcl_core:obsidian'}
+STATIC_HEIGHT_POLICY_VERSION='static-height-integer-v1'
+REGION_CAPTURE_VERSION='voxwm-region-integer-v1'
+WORLD_BOTTOM,WORLD_TOP=-62,193
+STATIC_CENTER_MIN,STATIC_CENTER_MAX=WORLD_BOTTOM+24,WORLD_TOP-23
 CONFIG=dict(version=VERSION,shards=100,shard_size=1000,region_size=48,chunk_size=16,axes='ENU',
-    categories=CATEGORIES,static_per_biome=STRATA,biome_transition_soft_target=4,chain_states=5,
+    categories=CATEGORIES,static_per_biome=STRATA,static_height_policy_version=STATIC_HEIGHT_POLICY_VERSION,biome_transition_soft_target=4,chain_states=5,
     candidate_limit=10,simulation_hz=SIMULATION_HZ,fixed_dt=FIXED_DT,no_change_ticks=NO_CHANGE_TICKS,liquid_update=1.0,liquid_ranges={'water':7,'lava':3},
     capture_schedule="every completed native tick",intervention_local_bounds=[1,14],max_observation_seconds={'D1':30.,'D2':40.,'D3':40.,'D4':60.},
     split_percent=[80,10,10],max_samples_per_seed_per_shard=100,biome_groups=BIOMES,
@@ -51,8 +55,12 @@ class Frame:
         raw_center=np.asarray(self.meta['center_origin'])
         if raw_center.dtype.kind not in 'iu':raise ValueError('Chunk origin must contain integer node coordinates')
         center=raw_center.astype(int)
-        if center.shape!=(3,) or np.any(center%16):raise ValueError('Center must be world-aligned in ENU')
-        if self.meta.get('region_origin')!=list((center-16).tolist()):raise ValueError('Region is not the 3³ neighborhood of its center')
+        if center.shape!=(3,):raise ValueError('Center must be a three-coordinate ENU origin')
+        static=self.meta.get('sampling_window_kind')=='static'
+        if np.any(center[:2]%16)or(not static and center[2]%16):raise ValueError('Dynamic grid stays aligned; only Static height may be offset')
+        if static and not STATIC_CENTER_MIN<=center[2]+8<=STATIC_CENTER_MAX:raise ValueError('Full Static region exceeds overworld bounds')
+        region=np.asarray(self.meta.get('region_origin'))
+        if region.shape!=(3,)or region.dtype.kind not in'iu'or not np.array_equal(region,center-16):raise ValueError('Region must have integer origin at center origin minus16')
     @property
     def center(self):return self.tokens[CENTER]
     @property
@@ -73,10 +81,13 @@ class Chain:
 
 
 def assemble(chunks,center_origin,meta):
-    low=np.asarray(center_origin,dtype=int)-16;tokens=np.empty((48,)*3,np.uint16);light=np.empty((48,)*3,np.uint8)
+    raw=np.asarray(center_origin)
+    if raw.shape!=(3,)or raw.dtype.kind not in'iu':raise ValueError('Sampling origin must contain integer coordinates')
+    low=raw.astype(int)-16;tokens=np.empty((48,)*3,np.uint16);light=np.empty((48,)*3,np.uint8)
     expected={tuple((low+np.array([x,y,z])*16).tolist()) for x in range(3)for y in range(3)for z in range(3)}
     if set(chunks)!=expected:raise ValueError('Incomplete or moved 27-chunk region')
     for origin,state in chunks.items():
+        if np.asarray(origin).dtype.kind not in'iu'or state.tokens.shape!=(16,)*3 or state.light.shape!=(16,)*3:raise ValueError('Sampling chunks must be integer-origin 16³ cubes')
         offset=np.asarray(origin)-low;sl=tuple(slice(int(i),int(i+16))for i in offset)
         tokens[sl]=state.tokens;light[sl]=state.light
     return Frame(tokens,light,dict(meta,center_origin=list(map(int,center_origin)),region_origin=low.tolist()))

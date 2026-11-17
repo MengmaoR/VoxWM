@@ -1,12 +1,12 @@
 # VoxWM — VAE 100K / 1K Shard 数据采集协议
 
-版本：2026-11-16 / `vae-region48-fixed24-v2`。最新用户《Unified Revision: Interior Intervention, Fixed 24Hz Simulation & High-Throughput GT Collection》为本次最高权威。本协议只修改数据生成，不改变 VAE 架构、不实现模型、训练器或 DataLoader。旧 200K 协议保存在 `vae_data/history/UNIFIED_200K_2026-11-15.md`，旧代码、结果和日志保留，不混入当前数据。
+版本：2026-11-17 / `vae-region48-fixed24-v2`，Static策略`static-height-integer-v1`。本次Static以用户《Static Height-Adaptive Continuous Sampling Revision》为最高权威；Dynamic保留此前《Unified Revision: Interior Intervention, Fixed 24Hz Simulation & High-Throughput GT Collection》。本协议只修改数据生成，不改变 VAE 架构、不实现模型、训练器或 DataLoader。旧 200K 协议保存在 `vae_data/history/UNIFIED_200K_2026-11-15.md`，旧代码、结果和日志保留，不混入当前数据。
 
 ## 1. 数量和空间单位
 
 总量100,000个Samples，100个独立Shard。每片严格1,000：Static500，D1 Water125，D2 Lava125，D3 Fire125，D4 Water–Lava Solidification125。每类动态每片25条完整链，每链恰好5个中心不同状态，链不能跨片。D4完全替代旧Vegetation。
 
-每个Sample保存同一原生时刻、真实连续的48³ region，等于3³个世界对齐16³ Chunk。轴为ENU(east,north,up)，region origin = center chunk origin − (16,16,16)，中心目标为数组 `[16:32,16:32,16:32]`。完整48³是上下文，目标仍是中心16³，不改成邻域VAE。
+每个Sample保存同一原生时刻、真实连续的48³ region，等于3³个相邻16³采样窗口。Dynamic沿用世界16格网格；Static水平坐标保持网格，高度允许逐整数偏移，采样窗口不等同于引擎MapBlock。轴为ENU(east,north,up)，region origin = center chunk origin − (16,16,16)，中心目标为数组 `[16:32,16:32,16:32]`。完整48³是上下文，目标仍是中心16³，不改成邻域VAE。
 
 复用单一Combined Token `VocabularyID(Node Name, raw param2)`，uint16；raw light独立uint8，仅辅助。全数据集词表append-only，多个worker在短临界区内分配稳定ID，禁止局部词表ID未经映射就写入正式样本。按World Seed固定80/10/10 split，所有该seed场景归同一split；不要求每片精确80/10/10。
 
@@ -14,9 +14,28 @@
 
 25个主要Biome Groups沿用既有VAE/VoxGen映射，每片每组20：Surface8、Elevated/Complex4、Shallow Underground4、Deep/Cave4，共500。每群落尽量4个真实Biome Transition，作为已有样本附加属性，不另加数量；不足时报告soft-target缺口。
 
-VoxGen原始空间协议要求真实连续27个Chunk，细分配额原为建议；本次按最新用户明确的8/4/4/4执行。不得拼接群落、不拿简单群落顶替缺失群落。Static表示一次真实采样，允许自然动态内容；保留种子、高度、地形差异，每片单seed最多100个样本。Elevated/Complex不接受纯空气或简单全实心块来凑数。
+中心Chunk高度以中心点C计，起点O=C−8；中心为[C−8,C+7]，完整48³为[C−24,C+23]。主世界包含端点[-62,193]，所以C必须在[-38,170]，不能仅检查中心16³。S来自实际Native地表定位，不能把S与C混为一谈。
 
-2026-11-17用户指定主动查找群落：按未完成的“群落×高度”缺额加权选择目标，再调用Craftium原生`get_biome_data`在当前seed中做64格间隔螺旋查询，每次最多16,384个水平点。查询使用既有群落组映射（包含对应原生变体），高度取注册Biome边界内的探测值；此阶段不emerge地形。命中仅是候选，随后加载该处地形，复核真实地表Biome及捕获数据归属；不符即拒绝，不能把目标标签写成实际标签。目标、查询次数/原点、候选坐标与实际群落写入现有attempt和样本metadata。未命中换搜索原点/seed继续，仍受原有总时间和attempt上限约束。有限定位不保证找到所有稀有群落，也不保证该群落存在指定复杂结构；配额、Static高度规则和动态流程不变。
+| Static stratum | 合法整数中心C（含端点） | 真实中心条件 |
+|---|---|---|
+| Surface | [S−7,S+8]∩[-38,170] | 必须包含S |
+| Elevated Complex | [S+9,170]∩[-38,170] | C−8>S；0.10≤Air<0.98 |
+| Shallow Underground | [S−24,S−8]∩[-38,170] | 允许全Stone/Dirt/Ore，拒绝全Void |
+| Deep Underground (`deep_cave`) | [-38,S−32]∩[-38,170] | 不要求Cave、不设Air/连通性门槛；拒绝全Void |
+
+Deep上界由S−24再减8得到，不依赖本次随机Shallow选择。Air仅指`air`，Void仅指`mcl_core:void`；完整Region出现`ignore`/未加载数据属于完整性错误，单独拒绝。禁止人工改地形以满足比例。
+
+先按未完成“群落×高度”缺额加权选目标，再用Craftium原生`get_biome_data`按64格间隔、最多16,384个水平点螺旋定位；噪声查询不加载候选地形，命中后才加载并复核真实地表群落和捕获归属。原生变体沿用25组映射，不把目标标签冒充实际标签。有限查找不保证稀有群落或某种结构一定存在。
+
+高度初次在完整合法区间上用`rng.integers(lower,upper+1)`均匀取整，失败后在剩余整数中均匀抽取，不按16格取整、吸附或从固定深度列表选择。每地点最多16次；每个高度只尝试一次；Elevated发现Air≥98%时把同一地点的上界降到C−1，此后只能向下。范围为空、候选耗尽或到次数上限即换地点/seed，仍受原有总attempt/墙钟限制，不修改配额。
+
+Static唯一位置键为`(world_seed,center_e,center_n,center_u)`，中心等于起点+(8,8,8)。共享SQLite位置表与分片提交同事务，跨片也拒绝相同位置，不因内容变化重复收录；允许不同位置的48³窗口部分重叠。保留原有同源状态去重、seed split及每片单seed≤100。
+
+Metadata保留surface_reference_y、selected_chunk_center_y、center_origin、region_origin、region_height_min/max、height_candidate_lower/upper、height_attempt_count、air_fraction、void_fraction、height_rejection_reason、static_height_policy_version及简短失败高度记录。Validator从实际坐标重算边界/区间，并从完整Token数组重新识别Air/Void/ignore；不会只相信报告比例。
+
+Capture按每个实际世界体素确定底层MapBlock及局部坐标，复用最多4³个引擎块指针，保留27个采样窗口及ENU二进制顺序。Prepare/Forceload覆盖完整Region实际相交块；水平对齐、竖向偏移时通常为36块，不能假定只有27块。每次Prepare使用独立P0/VoxelManip同Tick原始字节核对全部48³=110,592个节点，字段为Node Content ID、param1/light、raw param2，任一不符立即失败。
+
+48³ uint16 Token / uint8 light与Fixed24布局不变；Static新策略写入dataset/shard manifest。旧策略目录拒绝继续写入新Static，请使用新目录；旧文件/词表/结果不改写，历史Dynamic Trace仍可读取。Dynamic继续原有全局Chunk网格、时序、干预与五状态规则。VAE采样窗口偏移不改变持久World State的全局Chunk Grid。
 
 每次只保持当前世界/区域，采集后直接提交或丢弃。不写Discovery Cache、全时间轨迹或不断增长的场景索引。
 
@@ -77,7 +96,7 @@ Initial Anchor为全部source放置完的原始48³初态，独立保存且不�
 - `simulation_hz=24`，物理每step用相同的float32最近可表示`1/24`；计时用整数native tick，绝不累计墙钟dt。相对Tick0是全部人工干预完成后的状态。
 - 固定版本Craftium采用opt-in补丁：Server等待Client请求→执行原生step/液体/ABM/Node Timers/packet处理→post-step捕获→完成信号→Client同dt完成→发送Python观测并阻塞等待下一动作。Python处理、规划和写盘时不额外推进世界。
 - 移除固定模式的FpsControl sleep与Server Receive等待；跳过Client的墙钟lag扣减，禁vsync。ABM扫描不因墙钟预算提前中断；液体queue purge时钟用模拟时间。原生传播范围、黏度、interval/chance及RNG算法不改。
-- 采集用只读C++ MapBlock完整27块快照；与同Tick原P0 VoxelManip结果比较一次后缓存静态几何metadata。每Tick复用native buffer与Combined Token LUT，保留Node/raw param2/light，不重建27个VoxelManip，也不重复跑逐voxel名字回解审计。
+- 采集用只读C++世界坐标完整48³快照（27个采样窗口，底层引擎块数可不同）；与同Tick原P0 VoxelManip结果比较一次后缓存静态几何metadata。每Tick复用native buffer与Combined Token LUT，保留Node/raw param2/light，不重建27个VoxelManip，也不重复跑逐voxel名字回解审计。
 - 保存`frame_index`、`native_simulation_step`、`relative_sim_time`、`absolute_sim_time`、seed、center、rollout ID及Server/Client/Lua时钟。原来的`simulation_step/sim_time`作为绝对Tick/时间别名保留。准备阶段无相对Tick；演化阶段只调用`Native.tick()`，严格+1。
 - 当前VAE模式不渲染RGB，只发小型空白兼容packet；不是实际RGB数据。未来VoxEvolve可启用RGB，但原生截图/Camera在Client渲染循环中的相位及逐像素等价要另行验证。
 - 时序正确不等于完整随机世界可复现：全局RNG、emergence、异步加载及初态/队列未快照；不同吞吐下严格voxel-state等价尚未证明，不将视频24FPS当证据。当前实测见`vae_data/reports/fixed24_20261116/README.md`。

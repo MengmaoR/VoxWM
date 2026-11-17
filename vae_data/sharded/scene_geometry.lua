@@ -18,4 +18,15 @@ function G.largest(mask,n)
     end end
     return largest
 end
+function G.mapblocks(low,high)
+    local blocks={}
+    for x=math.floor(low.x/16)*16,math.floor(high.x/16)*16,16 do
+        for z=math.floor(low.z/16)*16,math.floor(high.z/16)*16,16 do
+            for y=math.floor(low.y/16)*16,math.floor(high.y/16)*16,16 do
+                blocks[#blocks+1]={x=x,y=y,z=z}
+            end
+        end
+    end
+    return blocks
+end
 return G

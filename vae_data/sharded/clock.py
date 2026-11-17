@@ -48,7 +48,10 @@ class TickProbe(Probe):
         if len(raw)!=27*4096*RAW.itemsize:raise ValueError('Incomplete native region')
         cells=np.frombuffer(raw,RAW).reshape(27,16,16,16);tokens=self.encoder.encode(cells);states={}
         for i,info in enumerate(chunks):
-            origin=tuple(info['origin'])
+            if info['missing']or info['mismatches']:raise ValueError('Incomplete/mismatched independent VoxelManip reference')
+            raw_origin=np.asarray(info['origin'])
+            if raw_origin.shape!=(3,)or raw_origin.dtype.kind not in'iuf'or not np.all(np.isfinite(raw_origin)&(raw_origin==np.floor(raw_origin))):raise ValueError('Native sampling origin is not integer-valued')
+            origin=tuple(raw_origin.astype(int).tolist())
             meta=dict(world_seed=self.seed,chunk_origin=list(origin),surface_biome=info['surface_biome'],stratum=info['stratum'],
                 data_source='native',sim_time=result['sim_time'],simulation_step=result['simulation_step'],engine_us=result['engine_us'])
             states[origin]=State(tokens[i],cells[i]['light'].copy(),meta)

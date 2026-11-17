@@ -8,7 +8,7 @@ import zarr
 from numcodecs import Blosc
 import pyarrow as pa
 import pyarrow.parquet as pq
-from .protocol import CONFIG,VERSION,CATEGORIES,STRATA,BIOMES,Vocabulary,Frame,Chain,dump,d4_targets
+from .protocol import CONFIG,VERSION,CATEGORIES,STRATA,BIOMES,Vocabulary,Frame,Chain,dump,d4_targets,STATIC_HEIGHT_POLICY_VERSION
 
 @contextmanager
 def lock(path,blocking=True):
@@ -34,11 +34,14 @@ def initialize(root,fixture=False):
         if path.exists():
             current=json.loads(path.read_text())
             if current.get('version')!=VERSION or current.get('source_mode')!=('unit_fixture'if fixture else'native'):raise ValueError('Choose a new dataset directory for this format/source mode')
+            if current.get('static_height_policy_version')!=STATIC_HEIGHT_POLICY_VERSION:raise ValueError('Static height policy changed; use a new dataset directory, do not mix old samples')
         else:
             if any(p.name not in('.dataset.lock','.locks')for p in root.iterdir()):raise ValueError('New sharded format requires an empty dataset directory')
             atomic_json(path,dict(CONFIG,source_mode='unit_fixture'if fixture else'native',vocabulary='append-only global Node Name/raw param2'))
             Vocabulary().save(root/'vocabulary.json')
         (root/'shards').mkdir(exist_ok=True)
+        with sqlite3.connect(root/'static_positions.sqlite')as positions:
+            positions.execute('CREATE TABLE IF NOT EXISTS positions(position_key TEXT PRIMARY KEY,shard INTEGER NOT NULL,snapshot INTEGER NOT NULL)')
     return root
 
 def globalize(root,frames,local_vocabulary):
@@ -57,6 +60,11 @@ def source_key(frame,vocabulary):
     content=''.join(f'{name}\0{int(p)}\n'for name,p in zip(names.ravel(),param.ravel())).encode()
     key=json.dumps([frame.meta['world_seed'],frame.meta['center_origin']]).encode()+content
     return hashlib.blake2b(key,digest_size=20).hexdigest()
+
+def static_position_key(frame):
+    # The real sampling-window center, not a token/content hash or engine block ID.
+    return json.dumps([int(frame.meta['world_seed']),*[int(v)+8 for v in frame.meta['center_origin']]],separators=(',',':'))
+
 
 def rows_at(path):
     db=sqlite3.connect(f'file:{Path(path)/"journal.sqlite"}?mode=ro',uri=True)
@@ -79,6 +87,7 @@ class Writer:
             if self.path.exists()and not resume:raise FileExistsError('Incomplete shard exists; use --resume')
             self.path.mkdir(parents=True,exist_ok=True)
             self.db=sqlite3.connect(self.path/'journal.sqlite')
+            self.db.execute('ATTACH DATABASE ? AS static_registry',(str(self.root/'static_positions.sqlite'),))
             self.db.executescript('''CREATE TABLE IF NOT EXISTS samples(idx INTEGER PRIMARY KEY,category TEXT,source_key TEXT UNIQUE,metadata TEXT);
                 CREATE TABLE IF NOT EXISTS chains(id TEXT PRIMARY KEY,data TEXT,anchor_idx INTEGER);
                 CREATE TABLE IF NOT EXISTS attempts(id INTEGER PRIMARY KEY,data TEXT);''')
@@ -111,7 +120,13 @@ class Writer:
         if any(f.meta.get('data_source')!=('synthetic_fixture'if self.fixture else'native')for f in frames):raise ValueError('Fixture/native provenance mismatch')
         rows=self.rows();seed=frames[0].meta['world_seed']
         if sum(r['world_seed']==seed for r in rows)+n>CONFIG['max_samples_per_seed_per_shard']:return False
+        position_key=static_position_key(frames[0])if category=='Static'else None
         if category=='Static':
+            if not self.fixture:
+                from .validate import validate_native
+                from .static_height import validate_static
+                validate_native(frames[0]);validate_static(frames[0],vocabulary)
+            if self.db.execute('SELECT 1 FROM static_registry.positions WHERE position_key=?',(position_key,)).fetchone():return False
             biome=frames[0].meta['biome_group'];stratum=frames[0].meta['stratum']
             if biome not in BIOMES or stratum not in STRATA:return False
             if sum(r['category']=='Static'and r['biome_group']==biome and r['stratum']==stratum for r in rows)>=STRATA[stratum]:return False
@@ -138,19 +153,25 @@ class Writer:
                 for name in('tokens','light'):
                     anchor_group[name].resize((anchor_count+1,48,48,48));anchor_group[name][anchor_count]=getattr(mapped[-1],name)
             self.db.execute('BEGIN')
+            if category=='Static':
+                # Both journals participate in one SQLite transaction; a failed
+                # local commit cannot leave a separately committed reservation.
+                self.db.execute('INSERT INTO static_registry.positions VALUES(?,?,?)',(position_key,self.shard,start))
             for i,(frame,key)in enumerate(zip(frames,keys)):
                 meta=dict(frame.meta,snapshot_id=start+i,category=category,chain_id=chain_id if category!='Static'else None,
                     chain_index=i if category!='Static'else None,physical_frame_id=frame.key,vocabulary_size_at_commit=vsize)
+                if category=='Static':meta['static_position_key']=position_key
                 self.db.execute('INSERT INTO samples VALUES(?,?,?,?)',(start+i,category,key,json.dumps(meta)))
             if category!='Static':
                 data=dict(id=chain_id,category=category,snapshot_indices=list(range(start,start+n)),frame_ids=[f.key for f in frames],
                     events=chain.events,intervention=chain.intervention,subtype=chain.subtype,anchor_idx=anchor_idx,anchor_metadata=chain.anchor.meta if chain.anchor else None,anchor_vocabulary_size_at_commit=vsize if chain.anchor else None)
                 self.db.execute('INSERT INTO chains VALUES(?,?,?)',(chain_id,json.dumps(data),anchor_idx))
             self.db.commit();return True
-        except BaseException:
+        except BaseException as exc:
             self.db.rollback()
             for name in('tokens','light'):
                 group[name].resize((start,48,48,48));anchor_group[name].resize((anchor_count,48,48,48))
+            if category=='Static'and isinstance(exc,sqlite3.IntegrityError)and self.db.execute('SELECT 1 FROM static_registry.positions WHERE position_key=?',(position_key,)).fetchone():return False
             raise
     def export(self):
         rows=self.rows();data=[dict(snapshot_id=r['snapshot_id'],category=r['category'],world_seed=r['world_seed'],split=r['split'],

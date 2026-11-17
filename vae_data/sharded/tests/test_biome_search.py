@@ -2,7 +2,7 @@
 import subprocess,tempfile,unittest
 from pathlib import Path
 from types import SimpleNamespace
-from unittest.mock import Mock
+from unittest.mock import Mock,patch
 import numpy as np
 from vae_data.sharded.generate import choose_static_target,prepare_static
 from vae_data.sharded.native import Native
@@ -25,14 +25,16 @@ class BiomeSearchTests(unittest.TestCase):
         self.assertEqual(choose_static_target(missing,rng),missing[1])
         np.testing.assert_allclose(rng.choice.call_args.kwargs['p'],[.8,.2])
 
-    def test_found_group_loads_once_then_checks_and_keeps_original_height_rule(self):
+    def test_found_group_loads_once_then_delegates_to_height_sampling(self):
         world,frame=world_fixture();attempt={}
         target=dict(biome='MushroomIsland',stratum='shallow_underground',remaining=1)
-        result=prepare_static(world,target,[0,0],np.random.default_rng(42),attempt)
+        rng=np.random.default_rng(42)
+        with patch('vae_data.sharded.generate.prepare',return_value=(frame,{}))as sample:
+            result=prepare_static(world,target,[0,0],rng,attempt)
+        sample.assert_called_once_with(world,[192,-64],'shallow_underground',rng,world.locate.return_value,attempt)
         world.find_biome.assert_called_once_with('MushroomIsland',[0,0])
         world.locate.assert_called_once_with(192,-64)
-        world.prepare_at.assert_called_once_with([192,-64,0],21)
-        self.assertIs(result,frame);self.assertEqual(frame.meta['stratum'],'shallow_underground')
+        self.assertIs(result,frame)
         self.assertEqual(frame.meta['static_selection']['actual_surface_biome'],'MushroomIslandShore')
         self.assertEqual(attempt['target_biome'],'MushroomIsland')
 
@@ -48,7 +50,8 @@ class BiomeSearchTests(unittest.TestCase):
                 if status!='wrong_surface':world.locate.assert_not_called()
                 self.assertIn('biome_search',attempt)
         world,frame=world_fixture();frame.meta['biome_group']='Plains'
-        with self.assertRaisesRegex(ValueError,'captured surface'):prepare_static(world,target,[0,0],np.random.default_rng(42),{})
+        with patch('vae_data.sharded.generate.prepare',return_value=(frame,{})):
+            with self.assertRaisesRegex(ValueError,'captured surface'):prepare_static(world,target,[0,0],np.random.default_rng(42),{})
         self.assertEqual(frame.meta['biome_group'],'Plains')
 
     def test_native_command_is_bounded_and_carries_the_existing_group_mapping(self):

@@ -5,7 +5,7 @@ import numpy as np
 from vae_data.engine import World,overlay,SETTINGS
 from .clock import TickProbe,verify_clock,PATCH_VERSION
 from voxwm_gt.session import GTSession
-from .protocol import Vocabulary,assemble,BIOMES,biome_group,split_for_seed,check_sources,SIMULATION_HZ
+from .protocol import Vocabulary,assemble,BIOMES,biome_group,split_for_seed,check_sources,SIMULATION_HZ,STATIC_CENTER_MIN,STATIC_CENTER_MAX
 
 HERE=Path(__file__).parent
 
@@ -49,10 +49,15 @@ class Native(World):
         return {key:result[key]for key in keys if key in result}
     def find_centers(self,site,height_type,pool_kind=''):
         return self.checked(self.probe.command('find_centers',x=int(site[0])//16*16,z=int(site[1])//16*16,height_type=height_type,pool_kind=pool_kind))
-    def prepare_at(self,center,surface_y):
-        self.scene_selection=None;self._last_tick=None
-        self.center=list(map(int,center));self.surface_y=surface_y;self.rollout=uuid.uuid4().hex
-        result=self.checked(self.probe.command('prepare',center=self.center,surface_y=surface_y))
+    def prepare_at(self,center,surface_y,static_window=False):
+        raw=np.asarray(center)
+        if raw.shape!=(3,)or raw.dtype.kind not in'iuf'or not np.all(np.isfinite(raw)&(raw==np.floor(raw))):raise ValueError('Sampling origin must be integer-valued ENU')
+        origin=raw.astype(int)
+        if np.any(origin[:2]%16)or(not static_window and origin[2]%16):raise ValueError('Only Static height may be offset from the engine grid')
+        if static_window and not STATIC_CENTER_MIN<=origin[2]+8<=STATIC_CENTER_MAX:raise ValueError('Full Static region exceeds overworld bounds')
+        self.scene_selection=None;self._last_tick=None;self.static_window=static_window
+        self.center=origin.tolist();self.surface_y=surface_y;self.rollout=uuid.uuid4().hex
+        result=self.checked(self.probe.command('prepare',center=self.center,surface_y=surface_y,static_window=static_window))
         if result['status']!='prepared':raise RuntimeError(result['status'])
         self.protected_indices=result.get('protected_source_indices')or[]
         return self.frame(result)
@@ -66,6 +71,8 @@ class Native(World):
             rollout_id=self.rollout,world_seed=self.seed,center_origin=self.center,region_origin=(np.asarray(self.center)-16).tolist(),
             native_provenance=dict(engine_build=self.build,settings=dict(SETTINGS,voxwm_fixed24=True,voxwm_skip_rgb=True,frameskip=1,sync_env_mode=True,vsync=False),mapgen='v7',voxel_only=result['audit'],liquid_update=1.0,collector_revision=self.collector_revision,collector_worktree_dirty=self.collector_dirty,timing_patch=PATCH_VERSION),
             scene_selection=self.scene_selection,terrain_names=self.terrain,protected_source_indices=self.protected_indices,buildable_names=self.buildable,wet_names=self.wet,falling_names=self.falling,
+            sampling_window_kind='static'if getattr(self,'static_window',False)else'dynamic',
+            region_capture_version=result.get('region_capture_version'),capture_reference_equal=result.get('capture_reference_equal'),engine_mapblock_count=result.get('engine_mapblock_count'),
             sample_surface_y=self.surface_y,flammable_names=self.flammable,floodable_names=self.floodable,biome_group=biome_group(central.meta['surface_biome'],BIOMES),
             split=split_for_seed(self.seed,[80,10,10]),biome_points=result['chunks'][13]['biome_points'])
         if self.scene_selection:meta.update(height_type=self.scene_selection['height_type'],stratum=self.scene_selection['height_type'])
