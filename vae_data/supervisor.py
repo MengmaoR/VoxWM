@@ -18,6 +18,7 @@ import threading
 import time
 import uuid
 from pathlib import Path
+from .sharded.protocol import CATEGORIES
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -43,6 +44,7 @@ DEFAULTS = {
     "max_attempts": 5000,
     "sites_per_world": 8,
     "tick_batch_size": 24,
+    "only_category": None,
     "craftium_dir": "third_party/craftium",
     "environment": {},
 }
@@ -84,6 +86,8 @@ def load_config(path):
         raise ValueError("max_restarts must be an integer")
     if config["tick_batch_size"] not in (1, 24, 48):
         raise ValueError("tick_batch_size must be 1, 24 or 48")
+    if config["only_category"] is not None and config["only_category"] not in CATEGORIES:
+        raise ValueError("only_category must be null or one of " + ", ".join(CATEGORIES))
     if config["renderer"] not in ("auto", "window", "software"):
         raise ValueError("renderer must be auto, window or software")
     if config["resume"] is not True:
@@ -110,6 +114,10 @@ def _root_path(value):
 
 
 def incomplete_target_count(config):
+    if config.get("only_category"):
+        category=config["only_category"];quota=CATEGORIES[category]
+        return sum(row["categories"].get(category,0)<quota
+                   for row in shard_status(config).values())
     root = config["dataset"] / "shards"
     return sum(not (root / f"shard_{shard:04d}" / "READY").is_file()
                for shard in range(config["shard"], config["shard"] + config["count"]))
@@ -137,6 +145,8 @@ def build_command(config, python=None):
         "--seed", str(config["seed"]),
         "--craftium-dir", str(config["craftium_dir"]),
         "--resume"]
+    if config.get("only_category"):
+        command.extend(("--only-category",config["only_category"]))
     return command
 
 
@@ -168,6 +178,14 @@ def targets_ready(config):
                for shard in range(config["shard"], config["shard"] + config["count"]))
 
 
+def targets_complete(config,status=None):
+    if not config.get("only_category"):
+        return targets_ready(config)
+    status=status or shard_status(config);category=config["only_category"]
+    return all(row["categories"].get(category,0)>=CATEGORIES[category]
+               for row in status.values())
+
+
 def shard_status(config):
     root = config["dataset"] / "shards"
     result = {}
@@ -175,9 +193,11 @@ def shard_status(config):
         name = f"shard_{shard:04d}"
         final, partial = root / name, root / ("." + name + ".partial")
         folder = final if final.exists() else partial
-        row = {"ready": (final / "READY").is_file(), "samples": 0, "attempts": 0}
+        row = {"ready": (final / "READY").is_file(), "samples": 0,
+               "attempts": 0, "categories": {category:0 for category in CATEGORIES}}
         if row["ready"]:
             row["samples"] = 1000
+            row["categories"] = dict(CATEGORIES)
             statistics = final / "statistics.json"
             try:
                 row["attempts"] = int(json.loads(statistics.read_text()).get("attempts", 0))
@@ -194,6 +214,8 @@ def shard_status(config):
                 connection.execute("PRAGMA query_only=ON")
                 row["samples"] = connection.execute("SELECT COUNT(*) FROM samples").fetchone()[0]
                 row["attempts"] = connection.execute("SELECT COUNT(*) FROM attempts").fetchone()[0]
+                row["categories"].update(connection.execute(
+                    "SELECT category,COUNT(*) FROM samples GROUP BY category").fetchall())
             except (OSError, sqlite3.Error):
                 row["read_busy"] = True
             finally:
@@ -207,7 +229,9 @@ def status_totals(status):
     return {"ready": sum(row["ready"] for row in status.values()),
             "samples": sum(row["samples"] for row in status.values()),
             "attempts": sum(row["attempts"] for row in status.values()),
-            "read_busy": sum(bool(row.get("read_busy")) for row in status.values())}
+            "read_busy": sum(bool(row.get("read_busy")) for row in status.values()),
+            "categories": {category:sum(row["categories"].get(category,0)for row in status.values())
+                           for category in CATEGORIES}}
 
 
 def _duration(seconds):
@@ -259,17 +283,23 @@ class TerminalDashboard:
             return
         now = time.monotonic()
         totals = status_totals(status)
-        if self.baseline_samples is None:
-            self.baseline_samples = totals["samples"]
-            self.baseline_time = now
         shard_target = len(status)
         sample_target = shard_target * 1000
         progress_age = max(0., now - last_progress)
         stall_left = max(0., config["no_progress_seconds"] - progress_age)
+        focus = config.get("only_category")
+        focus_value = totals["categories"].get(focus,0) if focus else 0
+        focus_target = CATEGORIES[focus] * shard_target if focus else 0
+        measured_value = focus_value if focus else totals["samples"]
+        measured_target = focus_target if focus else sample_target
+        if self.baseline_samples is None:
+            self.baseline_samples = measured_value
+            self.baseline_time = now
         measured = max(1e-9, now - self.baseline_time)
-        rate = max(0., totals["samples"] - self.baseline_samples) / measured * 3600
-        remaining = max(0, sample_target - totals["samples"])
+        rate = max(0., measured_value - self.baseline_samples) / measured * 3600
+        remaining = max(0, measured_target - measured_value)
         eta = _duration(remaining / rate * 3600) if rate else "--"
+        focus_summary = (f" focus={focus}:{focus_value}/{focus_target}" if focus else "")
         if not self.tty:
             if force:
                 self.stream.write(
@@ -277,7 +307,7 @@ class TerminalDashboard:
                     f"samples={totals['samples']}/{sample_target} attempts={totals['attempts']} "
                     f"owned={owned_count} worlds={active_worlds} restarts={restarts} "
                     f"rate={rate:.1f}/h eta={eta} progress_age={int(progress_age)}s "
-                    f"stall_in={int(stall_left)}s"
+                    f"stall_in={int(stall_left)}s" + focus_summary
                     + (f" reason={reason}" if reason else "") + "\n")
                 self.stream.flush()
             return
@@ -288,7 +318,12 @@ class TerminalDashboard:
             f"Shards  {totals['ready']:>3}/{shard_target:<3} {_bar(totals['ready'], shard_target)}",
             f"Samples {totals['samples']:>7}/{sample_target:<7} "
             f"{_bar(totals['samples'], sample_target)}",
-            f"Rate {rate:.1f} samples/hour | ETA {eta}",
+        ]
+        if focus:
+            lines.append(f"Focus {focus:<6} {focus_value:>7}/{focus_target:<7} "
+                         f"{_bar(focus_value,focus_target)}")
+        lines.extend((
+            f"Rate {rate:.1f} {focus or 'all'} samples/hour | ETA {eta}",
             f"Attempts {totals['attempts']} | requested worlds {active_worlds} "
             f"(max {config['workers']}, 1/shard) | busy reads {totals['read_busy']}",
             f"Last durable progress {int(progress_age)}s ago | automatic restart in {_duration(stall_left)} "
@@ -297,7 +332,7 @@ class TerminalDashboard:
             f"Attempt log: {attempt_log or '-'}",
             "Shard grid: R=READY, number=committed samples, ---=not started",
             *_shard_grid(status),
-        ]
+        ))
         if reason:
             lines.append("Reason: " + str(reason))
         prefix = "\x1b[2J\x1b[H" if not self.drawn else "\x1b[H"
@@ -480,10 +515,12 @@ def supervise(config):
     final_reason = None
     try:
         while not stop.is_set():
-            if targets_ready(config):
+            if targets_complete(config,status):
                 status = shard_status(config);status_updated = time.monotonic()
                 recorder.event("complete", restarts=restarts, shards=status)
                 exit_code = 0
+                if config.get("only_category"):
+                    final_reason = config["only_category"] + " quota complete"
                 break
             command = build_command(config)
             active_worlds = int(command[command.index("--workers") + 1])
@@ -536,9 +573,11 @@ def supervise(config):
                     status = shard_status(config);status_updated = now
                     recorder.event("collector_exit", restart=restarts, code=code,
                                    runtime_seconds=round(now - launched, 3), shards=status)
-                    if targets_ready(config):
+                    if targets_complete(config,status):
                         reason = None
                         exit_code = 0
+                        if config.get("only_category"):
+                            final_reason = config["only_category"] + " quota complete"
                     elif not config["restart_on_exit"]:
                         exit_code = code or 1
                     dashboard.render("COMPLETE" if reason is None else "EXITED", config,
@@ -572,6 +611,8 @@ def supervise(config):
             if reason is None:
                 status = shard_status(config);status_updated = time.monotonic()
                 recorder.event("complete", restarts=restarts, shards=status)
+                if config.get("only_category"):
+                    final_reason = config["only_category"] + " quota complete"
                 break
             if process.returncode is not None and not config["restart_on_exit"]:
                 final_reason = reason
@@ -630,6 +671,7 @@ def main(argv=None):
                 "dataset": str(config["dataset"]), "log_dir": str(config["log_dir"]),
                 "defaults": {"count": config["count"], "workers": config["workers"],
                              "no_progress_seconds": config["no_progress_seconds"],
+                             "only_category": config["only_category"],
                              "terminal_dashboard": config["terminal_dashboard"],
                              "status_interval_seconds": config["status_interval_seconds"]}}, indent=2))
             return 0

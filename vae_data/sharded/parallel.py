@@ -52,7 +52,7 @@ def world_process(channel,deadline,craftium,renderer,sites_per_world,tick_batch_
         channel.close()
 
 
-def generate_parallel(root,shard,resume,deadline,craftium,renderer,seed,max_attempts,sites_per_world,worlds,tick_batch_size=24):
+def generate_parallel(root,shard,resume,deadline,craftium,renderer,seed,max_attempts,sites_per_world,worlds,tick_batch_size=24,only_category=None):
     from .generate import choose_category,choose_static_target
     final=Path(root)/'shards'/f'shard_{shard:04d}'
     if(final/'READY').exists():return dict(shard=shard,status='skipped_ready')
@@ -71,7 +71,7 @@ def generate_parallel(root,shard,resume,deadline,craftium,renderer,seed,max_atte
             def dispatch(slot):
                 nonlocal issued,attempts
                 if issued>=max_attempts or time.monotonic()+15>=deadline:return False
-                rng=rngs[slot];category,missing=choose_category(writer,rng)
+                rng=rngs[slot];category,missing=choose_category(writer,rng,only_category)
                 if category is None:return False
                 target=choose_static_target(missing['static'],rng)if category=='Static'else None
                 choices=[k for k,n in missing['d4'].items()if n>0]if category=='D4'else[]
@@ -112,6 +112,9 @@ def generate_parallel(root,shard,resume,deadline,craftium,renderer,seed,max_atte
             for process in processes:
                 if process.is_alive():stop_tree(process.pid);process.join(timeout=1)
             if not any(writer.missing()['categories'].values()):return dict(shard=shard,status='ready',worlds=worlds,quality=writer.publish())
+            if only_category and writer.missing()['categories'][only_category]<=0:
+                return dict(shard=shard,status='category_complete',category=only_category,
+                    worlds=worlds,statistics=writer.export(),wall_seconds=time.monotonic()-started)
             return dict(shard=shard,status='incomplete',worlds=worlds,statistics=writer.export(),wall_seconds=time.monotonic()-started)
     except InfrastructureError as exc:
         infrastructure_failure(root,shard,exc);return dict(shard=shard,status='infrastructure_error',error=str(exc))

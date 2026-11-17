@@ -8,6 +8,8 @@
 
 新增外部[采集监控与自动恢复](vae_data/README.md#外部监控与自动重启)：默认同时最多64个Shard、每片1个世界；终端Dashboard实时显示Shard/样本/attempt、速率、ETA、进程数和停滞倒计时。10分钟没有完成attempt、样本提交或READY时，只终止本次唯一运行标记继承出的Python/Craftium/Xvfb进程，确认清理完成后按同一配置`--resume`。它不修改配额、24Hz或采样协议。
 
+已有动态、仅补Static时使用[Static-only supervisor配置](vae_data/README.md#仅补齐static缺额)：每片仍以Static 500为原目标，只向缺Static的片发Static任务，不重采或覆盖D1–D4。
+
 已修复[服务器高并行采集停滞](vae_data/reports/parallel_runtime_20261117/README.md)：独立Xvfb、无新增Token免写词表、新词表写盘移出全局锁、锁等待/无提交停滞检测。`--workers auto`按可用CPU分配世界进程，也可显式指定200等任意正整数，不受100片限制；每片仍只有一个写入器。仅完成本地快速进程测试，真实高并行续跑由用户执行。
 
 已完成[10群落Static真实试采与旧预览集成](vae_data/reports/static_ten_20261117/README.md)，高度分配4/2/2/2，数据位于本地outputs，不入Git。

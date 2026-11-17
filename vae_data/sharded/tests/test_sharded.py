@@ -50,6 +50,15 @@ def parallel_writer(root,shard):
     return shard
 
 class ShardedTests(unittest.TestCase):
+    def test_only_category_dispatches_static_and_never_falls_back_to_dynamic(self):
+        from vae_data.sharded.generate import choose_category
+        class W:
+            def __init__(self,static):self.static=static
+            def missing(self):return dict(categories={'Static':self.static,'D1':125,'D2':125,'D3':125,'D4':125},static=[],d4={})
+        category,_=choose_category(W(10),np.random.default_rng(1),'Static')
+        self.assertEqual(category,'Static')
+        category,_=choose_category(W(0),np.random.default_rng(1),'Static')
+        self.assertIsNone(category)
     def test_half_integer_chunk_origin_is_not_silently_rounded(self):
         v=Vocabulary();f=frame(v,0);meta=dict(f.meta,center_origin=[.5,0,0])
         with self.assertRaises(ValueError):Frame(f.tokens,f.light,meta)
@@ -189,7 +198,7 @@ class ShardedTests(unittest.TestCase):
         from vae_data.sharded.cli import parser
         with contextlib.redirect_stderr(io.StringIO()):
             with self.assertRaises(SystemExit):parser(['native-smoke','--dataset','unused','--wall-seconds','1','--samples-per-category','3'])
-        args=parser(['generate','--dataset','unused','--wall-seconds','1','--shard','4','--count','2','--workers','2','--resume'])
-        self.assertEqual(args.shard,4);self.assertTrue(args.resume)
+        args=parser(['generate','--dataset','unused','--wall-seconds','1','--shard','4','--count','2','--workers','2','--resume','--only-category','Static'])
+        self.assertEqual(args.shard,4);self.assertTrue(args.resume);self.assertEqual(args.only_category,'Static')
 
 if __name__=='__main__':unittest.main()

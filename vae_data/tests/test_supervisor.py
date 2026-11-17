@@ -11,7 +11,7 @@ from unittest import mock
 
 from vae_data.supervisor import (MARKER, TerminalDashboard, _linux_tagged_pids,
     build_command, load_config, owned_pids, progress_signature, supervise,
-    terminate_owned)
+    targets_complete, terminate_owned)
 
 
 class TTYBuffer(io.StringIO):
@@ -35,7 +35,7 @@ class SupervisorTests(unittest.TestCase):
 
     def test_remaining_shards_reduce_worlds_instead_of_stacking_worlds_on_one_shard(self):
         with tempfile.TemporaryDirectory() as folder:
-            config = self.config(folder)
+            config = self.config(folder);config["only_category"] = "Static"
             shards = config["dataset"] / "shards"
             for shard in range(3, 100):
                 ready = shards / f"shard_{shard:04d}" / "READY"
@@ -43,6 +43,18 @@ class SupervisorTests(unittest.TestCase):
                 ready.write_text("{}")
             command = build_command(config, python=sys.executable)
             self.assertEqual(command[command.index("--workers") + 1], "3")
+
+    def test_static_only_command_and_completion_ignore_other_category_deficits(self):
+        with tempfile.TemporaryDirectory() as folder:
+            config = self.config(folder);config["only_category"] = "Static"
+            with mock.patch("vae_data.supervisor.incomplete_target_count",return_value=2):
+                command = build_command(config, python=sys.executable)
+            self.assertEqual(command[-2:], ["--only-category", "Static"])
+            status = {"shard_0000": {"categories": {"Static": 500}},
+                      "shard_0001": {"categories": {"Static": 500}}}
+            self.assertTrue(targets_complete(config,status))
+            status["shard_0001"]["categories"]["Static"] = 499
+            self.assertFalse(targets_complete(config,status))
 
     def test_completed_attempt_is_progress_even_without_a_sample_commit(self):
         with tempfile.TemporaryDirectory() as folder:
@@ -66,11 +78,14 @@ class SupervisorTests(unittest.TestCase):
 
     def test_terminal_dashboard_renders_progress_grid_and_stall_countdown(self):
         with tempfile.TemporaryDirectory() as folder:
-            config = self.config(folder)
+            config = self.config(folder);config["only_category"] = "Static"
             stream = TTYBuffer();dashboard = TerminalDashboard(True, stream)
             now = time.monotonic()
-            status = {"shard_0000": {"ready": True, "samples": 1000, "attempts": 11},
-                      "shard_0001": {"ready": False, "samples": 250, "attempts": 7}}
+            categories = {"Static": 0, "D1": 0, "D2": 0, "D3": 0, "D4": 0}
+            status = {"shard_0000": {"ready": True, "samples": 1000, "attempts": 11,
+                                      "categories": dict(categories,Static=500,D1=125,D2=125,D3=125,D4=125)},
+                      "shard_0001": {"ready": False, "samples": 250, "attempts": 7,
+                                      "categories": dict(categories,Static=250)}}
             dashboard.render("RUNNING", config, status, now - 60, now - 12, now - 3,
                              1, 123, 70, 2, "attempt.log", force=True)
             output = stream.getvalue()
@@ -78,6 +93,8 @@ class SupervisorTests(unittest.TestCase):
             self.assertIn("Samples    1250/2000", output)
             self.assertIn("00:R", output)
             self.assertIn("01:250", output)
+            self.assertIn("Focus Static", output)
+            self.assertIn("750/1000", output)
             self.assertIn("automatic restart in 00:09:47", output)
 
     def test_stall_stops_and_restarts_the_same_command(self):

@@ -143,17 +143,19 @@ def collect(world,frame,category,rng,subtype='',max_seconds=None,trace=None):
     return chain,status
 
 
-def choose_category(writer,rng):
+def choose_category(writer,rng,only_category=None):
     missing=writer.missing();available=[k for k,n in missing['categories'].items()if n>0]
+    if only_category:
+        return (only_category if missing['categories'][only_category]>0 else None),missing
     if not available:return None,missing
     weights=np.array([missing['categories'][k]for k in available],float);weights/=weights.sum()
     return str(rng.choice(available,p=weights)),missing
 
 
-def generate_shard(root,shard,resume,deadline,craftium,renderer,seed,max_attempts,sites_per_world,worlds=1,tick_batch_size=24):
+def generate_shard(root,shard,resume,deadline,craftium,renderer,seed,max_attempts,sites_per_world,worlds=1,tick_batch_size=24,only_category=None):
     if worlds>1:
         from .parallel import generate_parallel
-        return generate_parallel(root,shard,resume,deadline,craftium,renderer,seed,max_attempts,sites_per_world,worlds,tick_batch_size)
+        return generate_parallel(root,shard,resume,deadline,craftium,renderer,seed,max_attempts,sites_per_world,worlds,tick_batch_size,only_category)
     final=Path(root)/'shards'/f'shard_{shard:04d}'
     if (final/'READY').exists():return dict(shard=shard,status='skipped_ready')
     started=time.monotonic();world=None;rng=np.random.default_rng(seed+shard);attempts=0
@@ -164,7 +166,7 @@ def generate_shard(root,shard,resume,deadline,craftium,renderer,seed,max_attempt
                 old=json.loads(cursor.read_text());rng.bit_generator.state=old['rng'];attempts=old['attempts']
             for _ in range(max_attempts):
                 if time.monotonic()+15>=deadline:break
-                category,missing=choose_category(writer,rng)
+                category,missing=choose_category(writer,rng,only_category)
                 if category is None:break
                 target=choose_static_target(missing['static'],rng)if category=='Static'else None
                 attempts+=1;entry=dict(attempt=attempts,category=category,source='real_native')
@@ -197,6 +199,9 @@ def generate_shard(root,shard,resume,deadline,craftium,renderer,seed,max_attempt
                 if attempts%10==0:writer.export()
             if not any(writer.missing()['categories'].values()):
                 result=writer.publish();return dict(shard=shard,status='ready',quality=result)
+            if only_category and writer.missing()['categories'][only_category]<=0:
+                return dict(shard=shard,status='category_complete',category=only_category,
+                    statistics=writer.export(),wall_seconds=time.monotonic()-started)
             stats=writer.export();return dict(shard=shard,status='incomplete',statistics=stats,wall_seconds=time.monotonic()-started)
     except InfrastructureError as exc:return dict(shard=shard,status='infrastructure_error',error=str(exc))
     except Exception as exc:return dict(shard=shard,status='failed',error=f'{type(exc).__name__}: {exc}')

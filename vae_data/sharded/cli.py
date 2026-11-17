@@ -1,8 +1,8 @@
 """Native 100K generator: explicit independent 1K shards; never starts by default."""
-import argparse,json,time,multiprocessing,os
+import argparse,json,time,multiprocessing,os,sqlite3
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
-from .protocol import CONFIG,dump
+from .protocol import CONFIG,CATEGORIES,dump
 from .storage import initialize
 from .generate import generate_shard
 
@@ -25,6 +25,22 @@ def world_allocation(count,workers):
     return [base+(i<extra)for i in range(count)],count
 
 
+def category_complete(root,shard,category):
+    root=Path(root);final=root/'shards'/f'shard_{shard:04d}'
+    if(final/'READY').exists():return True
+    partial=root/'shards'/f'.shard_{shard:04d}.partial';path=final if final.exists()else partial
+    database=path/'journal.sqlite'
+    if not database.is_file():return False
+    connection=None
+    try:
+        connection=sqlite3.connect(database.resolve().as_uri()+'?mode=ro',uri=True,timeout=.05)
+        count=connection.execute('SELECT COUNT(*) FROM samples WHERE category=?',(category,)).fetchone()[0]
+        return count>=CATEGORIES[category]
+    except sqlite3.Error:return False
+    finally:
+        if connection is not None:connection.close()
+
+
 def parser(argv=None):
     p=argparse.ArgumentParser(description=__doc__);sub=p.add_subparsers(dest='command',required=True)
     for name in('generate','check','status','native-smoke','native-six','clock-verify','static-verify','static-ten'):
@@ -37,6 +53,7 @@ def parser(argv=None):
             q.add_argument('--count',type=int,default=1);q.add_argument('--workers',type=worker_count,default='auto',help='Concurrent native worlds; auto uses available CPU affinity, no shard-count cap');q.add_argument('--resume',action='store_true')
             q.add_argument('--stall-seconds',type=float,default=300,help='Fail when neither commits nor vocabulary advance; 0 disables')
             q.add_argument('--max-attempts',type=int,default=5000);q.add_argument('--sites-per-world',type=int,default=8)
+            q.add_argument('--only-category',choices=tuple(CATEGORIES),help='Fill only this missing category; never dispatch another category')
         if name in('generate','clock-verify'):q.add_argument('--tick-batch-size',type=int,choices=(1,24,48),default=1 if name=='clock-verify'else 24,help='Dynamic observation transport only; 1 retains single-tick advance')
         if name=='static-ten':q.add_argument('--preview-dataset',type=Path)
         if name=='static-verify':
@@ -116,17 +133,23 @@ def main(argv=None):
         initialize(a.dataset);deadline=time.monotonic()+max(1,a.wall_seconds-10)
         requested=list(range(a.shard,a.shard+a.count))
         skipped=[dict(shard=i,status='skipped_ready')for i in requested if(a.dataset/'shards'/f'shard_{i:04d}'/'READY').exists()]
-        active=[i for i in requested if not(a.dataset/'shards'/f'shard_{i:04d}'/'READY').exists()]
-        slots,writers=world_allocation(len(active),a.workers)if active else([],0)
-        tasks=[(a.dataset,i,a.resume,deadline,a.craftium_dir,a.renderer,a.seed,a.max_attempts,a.sites_per_world,n,a.tick_batch_size)for i,n in zip(active,slots)]
+        category_skipped=[dict(shard=i,status='skipped_category_complete',category=a.only_category)for i in requested
+            if a.only_category and not(a.dataset/'shards'/f'shard_{i:04d}'/'READY').exists()and category_complete(a.dataset,i,a.only_category)]
+        inactive={item['shard']for item in skipped+category_skipped}
+        active=[i for i in requested if i not in inactive]
+        allocated_workers=min(a.workers,len(active))if a.only_category else a.workers
+        slots,writers=world_allocation(len(active),allocated_workers)if active else([],0)
+        tasks=[(a.dataset,i,a.resume,deadline,a.craftium_dir,a.renderer,a.seed,a.max_attempts,a.sites_per_world,n,a.tick_batch_size,a.only_category)for i,n in zip(active,slots)]
         if writers<=1:results=[generate_shard(*task)for task in tasks]
         else:
             with ProcessPoolExecutor(max_workers=writers,mp_context=multiprocessing.get_context('spawn'))as executor:
                 futures=[executor.submit(generate_shard,*task)for task in tasks];results=[future.result()for future in futures]
-        results+=skipped
+        results+=skipped+category_skipped
         failed=any(item['status']in('failed','infrastructure_error')for item in results)
-        result=dict(status='FAIL'if failed else'GO'if all(item['status']in('ready','skipped_ready')for item in results)else'INCONCLUSIVE',
-            tick_batch_size=a.tick_batch_size,requested_worlds=a.workers,writer_processes=writers,worlds_per_shard=dict(zip(active,slots)),shards=results,progress=status(a.dataset))
+        complete=('ready','skipped_ready','category_complete','skipped_category_complete')if a.only_category else('ready','skipped_ready')
+        result=dict(status='FAIL'if failed else('CATEGORY_COMPLETE'if a.only_category else'GO')if all(item['status']in complete for item in results)else'INCONCLUSIVE',
+            only_category=a.only_category,tick_batch_size=a.tick_batch_size,configured_worlds=a.workers,requested_worlds=allocated_workers,writer_processes=writers,
+            worlds_per_shard=dict(zip(active,slots)),shards=results,progress=status(a.dataset))
         dump(a.dataset/'last_generation.json',result)
     print(json.dumps(result,indent=2));return 1 if result.get('status')=='FAIL'else 0
 

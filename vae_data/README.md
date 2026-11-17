@@ -144,6 +144,23 @@ bash scripts/build_fixed24.sh
 
 如需只跑片20..39，复制配置并设置`shard:20, count:20`；不要同时用两个监控器操作相同数据集。配置文件本身不会启动采集，Codex本地也未运行真实Native或模拟卡死服务器。
 
+### 仅补齐Static缺额
+
+已有D1–D4、只补Static时使用独立配置。先确认`collection_64x1_static.json`中的`dataset`就是服务器现有数据目录，再执行：
+
+```bash
+git pull --ff-only origin master
+bash scripts/build_fixed24.sh
+.venv/bin/python scripts/supervise_collection.py \
+  --config vae_data/configs/collection_64x1_static.json --check-config
+.venv/bin/python scripts/supervise_collection.py \
+  --config vae_data/configs/collection_64x1_static.json
+```
+
+配置会向底层生成器明确传入`--only-category Static`。每个Shard读取已提交类别计数：Static达到原配额500的片直接跳过；缺额片只创建Static任务，不会重采、覆盖或删除已有D1–D4。默认仍为最多64个并行世界、每片1个世界、10分钟无持久进展后安全重启。Dashboard增加`Focus Static current/50000`进度条。
+
+如果Static完成而其他类别仍有缺额，本次范围会以`CATEGORY_COMPLETE`正常停止，但该Shard不会被伪装成READY；只有五类原配额都齐全时才发布正式READY。`only_category`不改变任何配额、Static群落×高度策略、去重规则或已有数据。
+
 ## 检查某片、查看全局进度
 
 ```bash

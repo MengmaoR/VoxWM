@@ -20,6 +20,7 @@
   "max_attempts": 5000,
   "sites_per_world": 8,
   "tick_batch_size": 24,
+  "only_category": null,
   "craftium_dir": "third_party/craftium",
   "environment": {}
 }
