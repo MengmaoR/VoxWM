@@ -6,7 +6,7 @@
 - 当前规模100K，100个严格1K片；每片Static500，D1/D2/D3/D4各125，动态每类25条完整五状态链。D4是Water–Lava Solidification，完全替代历史Vegetation，不自动恢复旧200K配方。
 - 正式样本保存真实同一时刻48³(27个世界对齐16³)，目标与动态判定仅中心 `[16:32]^3`。邻块变化不能加候选、拼链或重置超时；D1/D2/D4为48 Tick，D3为120 Tick。
 - Dynamic最多10个中心不同候选，随机连续五状态窗口，不足则拒绝。D4必须完整中心Pre–Reaction–Post，物理帧统一去重，成功场景的Anchor独立保存且不计入1K。
-- Static每片25主要Biome各20，Surface8/ElevatedComplex4/Shallow4/DeepCave4，真实Transition尽量每组4且为附加属性。不拼接、不拿其他群落或类别补缺。
+- Static每片25主要Biome各20，Surface8/ElevatedComplex4/Shallow4/DeepCave4，真实Transition尽量每组4且为附加属性。不拼接、不拿其他群落或类别补缺。先按缺额选目标群落/高度，再用原生Biome噪声接口有限定位，命中后加载并复核真实地表群落；失败保留缺额，不退回随机地点凑数，不建Discovery Cache。
 - 全局uint16 Combined Token=(Node Name,raw param2)，词表只追加；uint8 light辅助。48³无损存储，中心16³仍是VAE目标。World Seed固定80/10/10 split，不跨split。
 - 纯Voxel：从原生入口禁非技术实体、掉落及实体引起的Voxel变化；技术player不可见无交互。当前falling-entity动态不支持，出现即排除该rollout，不默默冻结物理后发布数据。
 - 使用Craftium/VoxeLibre原生液体、固化与火。不写流体轨迹，不改规则/ABM概率/黏度；固定24Hz物理时间、整数Tick为权威，无墙钟FPS限速。允许维护固定版本的最小Timing/Scheduler补丁，默认旧GT会话不启用。几何可达性只筛源点，不能冒充native事件证据；初始化操作不能计native演化。

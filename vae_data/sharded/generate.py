@@ -11,8 +11,8 @@ from .planning import Planner
 from .storage import Writer,atomic_json
 
 
-def prepare(world,site,stratum,rng):
-    location=world.locate(int(site[0])//16*16,int(site[1])//16*16)
+def prepare(world,site,stratum,rng,location=None):
+    if location is None:location=world.locate(int(site[0])//16*16,int(site[1])//16*16)
     if location['status']!='located':raise ValueError(location['status'])
     surface=location['surface_y'];depth={'surface':0,'elevated_complex':-16,'shallow_underground':16,'deep_cave':int(rng.integers(4,9))*16}[stratum]
     center=[int(site[0])//16*16,int(site[1])//16*16,int(np.floor((surface-depth)/16)*16)]
@@ -22,6 +22,29 @@ def prepare(world,site,stratum,rng):
         air=np.mean(np.array([name=='air'for name,_ in world.v.entries],bool)[frame.center])
         if not .02<air<.98:raise ValueError('Elevated candidate is empty/simple solid; not used to fill quota')
     return frame,result
+
+
+def choose_static_target(missing,rng):
+    weights=np.array([item['remaining']for item in missing],float)
+    return missing[int(rng.choice(len(missing),p=weights/weights.sum()))]
+
+
+def prepare_static(world,target,origin,rng,attempt):
+    group,stratum=target['biome'],target['stratum']
+    attempt.update(target_biome=group,target_stratum=stratum)
+    search=world.find_biome(group,origin);attempt['biome_search']=search
+    if search['status']!='found':raise ValueError(search['status']+': '+group)
+    location=world.locate(*search['site'])
+    if location['status']!='located':raise ValueError(location['status'])
+    attempt['actual_surface_biome']=location['biome']
+    if biome_group(location['biome'],BIOMES)!=group:
+        raise ValueError('Target biome differs from loaded surface: '+location['biome'])
+    frame,_=prepare(world,search['site'],stratum,rng,location)
+    if frame.meta['biome_group']!=group:
+        raise ValueError('Target biome differs from captured surface: '+str(frame.meta['biome_group']))
+    frame.meta.update(phase='static_snapshot',static_selection=dict(target_biome=group,target_stratum=stratum,
+        actual_surface_biome=location['biome'],search=search))
+    return frame
 
 
 def collect(world,frame,category,rng,subtype='',max_seconds=None,trace=None):
@@ -133,6 +156,7 @@ def generate_shard(root,shard,resume,deadline,craftium,renderer,seed,max_attempt
                 if time.monotonic()+15>=deadline:break
                 category,missing=choose_category(writer,rng)
                 if category is None:break
+                target=choose_static_target(missing['static'],rng)if category=='Static'else None
                 attempts+=1;entry=dict(attempt=attempts,category=category,source='real_native')
                 try:
                     if world is None or attempts%sites_per_world==1:
@@ -140,17 +164,11 @@ def generate_shard(root,shard,resume,deadline,craftium,renderer,seed,max_attempt
                         vocabulary=__import__('vae_p0.codec',fromlist=['Vocabulary']).Vocabulary()
                         world=Native(int(rng.integers(1,2147483647)),vocabulary,deadline,craftium,renderer);world.__enter__()
                     site=rng.integers(-8192,8193,2)//16*16
-                    stratum='surface';subtype=''
+                    subtype=''
                     if category=='D4':
                         choices=[k for k,n in missing['d4'].items()if n>0];subtype=choices[int(rng.integers(len(choices)))]
                     if category=='Static':
-                        location=world.locate(int(site[0]),int(site[1]));group=biome_group(location.get('biome',''),BIOMES)
-                        choices=[m for m in missing['static']if m['biome']==group]
-                        if not choices:raise ValueError('Observed biome quota already full or outside the 25 groups')
-                        stratum=choices[int(rng.integers(len(choices)))]['stratum']
-                    if category=='Static':
-                        frame,_=prepare(world,site,stratum,rng)
-                        frame.meta['stratum']=stratum;frame.meta['phase']='static_snapshot'
+                        frame=prepare_static(world,target,site,rng,entry)
                         saved=writer.submit(Chain('Static',[frame]),world.v);entry.update(status='committed'if saved else'rejected')
                     else:
                         height=choose_height(category,rng);entry.update(height_type=height,subtype=subtype)

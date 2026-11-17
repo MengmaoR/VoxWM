@@ -1,5 +1,6 @@
 -- One fixed 48³ region, no discovery cache or raw trajectory. Original ABMs are untouched.
 local mt=minetest;local mod=mt.get_modpath('craftium_env');local p0=dofile(mod..'/native.lua');local geometry=dofile(mod..'/scene_geometry.lua')
+local biome_search=dofile(mod..'/biome_search.lua')
 local world=mt.get_worldpath();local elapsed,step,last=0,0,0;local ready,armed,started=false,false,false
 assert(voxwm_clock and voxwm_region,'Build the VoxWM fixed24 timing patch before collection')
 local region=nil;local pending_capture=nil;local held={};local reactions={};local zero_tick=nil;local lua_tick=0
@@ -213,7 +214,8 @@ local function post_step(dt)
         local text=read('pilot_command.json')
         if text then local r=assert(mt.parse_json(text))
             if r.request_id>last then last=r.request_id
-                if r.kind=='find_centers'then find_centers(r)
+                if r.kind=='find_biome'then reply(r,biome_search.find(mt,r))
+                elseif r.kind=='find_centers'then find_centers(r)
                 elseif r.kind=='locate'then locate(r)
                 elseif r.kind=='prepare'then prepare(r)
                 elseif r.kind=='capture'or r.kind=='advance'then capture(r)

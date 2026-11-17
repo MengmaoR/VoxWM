@@ -14,7 +14,7 @@ class Native(World):
         self.temp=tempfile.TemporaryDirectory(prefix='voxwm-shard-')
         root=overlay(self.source,Path(self.temp.name)/'engine')
         self.session=GTSession('procedural',self.seed,self.renderer,root,scene_script=HERE/'native.lua',
-            scene_assets=(HERE.parents[1]/'vae_p0/native.lua',HERE/'scene_geometry.lua'),native_settings=dict(SETTINGS),image_size=(32,32),fixed_step=True,voxel_observation=False,render_rgb=False)
+            scene_assets=(HERE.parents[1]/'vae_p0/native.lua',HERE/'scene_geometry.lua',HERE/'biome_search.lua'),native_settings=dict(SETTINGS),image_size=(32,32),fixed_step=True,voxel_observation=False,render_rgb=False)
         try:
             self.session.__enter__();self.probe=TickProbe(self.session,self.deadline,self.v,self.seed)
             self.build={name:subprocess.check_output(['git','-C',str(path),'rev-parse','HEAD'],text=True).strip() for name,path in
@@ -41,6 +41,12 @@ class Native(World):
         self.last_result=result
         return super().checked(result)
     def locate(self,x,z):return self.checked(self.probe.command('locate',x=x,z=z))
+    def find_biome(self,group,site):
+        result=self.checked(self.probe.command('find_biome',biome_group=group,biome_groups=BIOMES,
+            x=int(site[0]),z=int(site[1]),resolution=64,max_checks=16384))
+        # Keep a small search summary, not an index of all queried positions.
+        keys=('status','method','biome_group','origin','resolution','max_checks','checked_points','biome_queries','site','biome','query_y')
+        return {key:result[key]for key in keys if key in result}
     def find_centers(self,site,height_type,pool_kind=''):
         return self.checked(self.probe.command('find_centers',x=int(site[0])//16*16,z=int(site[1])//16*16,height_type=height_type,pool_kind=pool_kind))
     def prepare_at(self,center,surface_y):
