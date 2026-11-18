@@ -192,6 +192,65 @@ Static完成后本次范围会以`CATEGORY_COMPLETE`正常停止，但Static-onl
 
 Supervisor现在会在启动采集前只读检查已有`dataset_manifest.json`。若版本、source mode或`static_height_policy_version`不兼容，会直接指出必须换新目录，不再先启动collector后只显示泛化的exit 1；不得编辑manifest或删除锁来绕过。
 
+## 合并完整100K
+
+服务器2026-11-19只读统计如下：
+
+- `outputs/vae_100k_fixed24`：D1/D2/D3/D4各12,500，共50,000条动态；另有17,174条应丢弃的旧Static。
+- `outputs/vae_100k_heightadaptive`：每片500条，共50,000条新Static。
+- 两套Combined Token词表分别1,444和1,376项，顺序完全不同；新Static有94个pair不在旧词表中。不得直接复制Zarr token数组。
+
+先确认两个supervisor均已停止。停止命令不会删除数据；若本来没有运行也会返回`STOPPED`：
+
+```bash
+.venv/bin/python scripts/supervise_collection.py stop \
+  --config vae_data/configs/collection_64x1.json
+.venv/bin/python scripts/supervise_collection.py stop \
+  --config vae_data/configs/collection_64x1_static.json
+```
+
+默认命令是**只读dry-run**，会获取并立即释放现有采集锁，检查100片的动态/Static/chain/D4子型/群落高度配额、Zarr与SQLite长度、跨源source key/physical frame冲突及每seed上限，并打印完整操作计划：
+
+```bash
+.venv/bin/python scripts/merge_vae_static.py \
+  --dynamic-root outputs/vae_100k_fixed24 \
+  --static-root outputs/vae_100k_heightadaptive
+```
+
+确认输出为`DRY_RUN_OK`后，由用户显式执行真实合并：
+
+```bash
+.venv/bin/python scripts/merge_vae_static.py \
+  --dynamic-root outputs/vae_100k_fixed24 \
+  --static-root outputs/vae_100k_heightadaptive \
+  --apply
+```
+
+真实合并不会原地修改源Shard：
+
+1. 同时独占两套dataset/vocabulary/shard及supervisor锁；任何采集仍活跃会立即失败。
+2. 以旧动态词表1,444项为固定前缀，按真实`(Node Name, raw param2)`追加缺失项；动态token不变，新Static全部重映射。
+3. 每片按原相对顺序保存500条动态，再追加500条新Static；同步重写`snapshot_id`、chain的`snapshot_indices`和Static的`vocabulary_size_at_commit`。
+4. 保留旧动态chains、D4 anchors及非Static attempts；导入新Static attempts。旧Static snapshots/attempts不会进入活动结果。
+5. 重建每片`journal.sqlite`、`snapshots.zarr`、`anchors.zarr`、`metadata.parquet`、`statistics.json`、`manifest.json`、`READY`，并重建根目录`dataset_manifest.json`、`vocabulary.json`和`static_positions.sqlite`。
+6. 对每片运行现有完整native validator；全部100片通过后才切换目录。
+7. 旧活动目录保留为`outputs/vae_100k_fixed24_pre_heightadaptive`，验证后的完整100K继续位于`outputs/vae_100k_fixed24`；`outputs/vae_100k_heightadaptive`保持不变。脚本不自动删除任何备份。
+
+旧目录里的`generate_resume.log`、`last_generation.json`、`wall_timeout.json`等采集过程文件留在备份中，不复制到新的活动数据根；新根使用`merge_record.json`记录合并来源和处理结果。若构建中断，源目录不变；确认原因后可复用已验证的staging Shard：
+
+```bash
+.venv/bin/python scripts/merge_vae_static.py \
+  --dynamic-root outputs/vae_100k_fixed24 \
+  --static-root outputs/vae_100k_heightadaptive \
+  --apply --resume-staging
+```
+
+合并完成后只读确认应显示100个READY / 100,000样本：
+
+```bash
+.venv/bin/python -m vae_data status --dataset outputs/vae_100k_fixed24
+```
+
 ## 检查某片、查看全局进度
 
 ```bash

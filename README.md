@@ -10,6 +10,8 @@
 
 已有旧动态、另采新策略Static时使用[Static-only supervisor配置](vae_data/README.md#仅补齐static缺额)：Static写入新的`vae_100k_heightadaptive`目录，每片仍以500为目标；旧动态目录不重采、不覆盖，也不与不兼容manifest混写。
 
+两批完成后使用[受控合并脚本](vae_data/README.md#合并完整100k)：保留旧目录的50K D1-D4、删除其旧Static，并导入新目录的50K height-adaptive Static。脚本会合并并重映射不同的Combined Token词表，在独立staging中重建/验证100个Shard，再保留备份后切换活动路径；Codex不自动执行真实合并。
+
 已修复[服务器高并行采集停滞](vae_data/reports/parallel_runtime_20261117/README.md)：独立Xvfb、无新增Token免写词表、新词表写盘移出全局锁、锁等待/无提交停滞检测。`--workers auto`按可用CPU分配世界进程，也可显式指定200等任意正整数，不受100片限制；每片仍只有一个写入器。仅完成本地快速进程测试，真实高并行续跑由用户执行。
 
 已完成[10群落Static真实试采与旧预览集成](vae_data/reports/static_ten_20261117/README.md)，高度分配4/2/2/2，数据位于本地outputs，不入Git。
