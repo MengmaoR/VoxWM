@@ -126,21 +126,41 @@ git pull --ff-only origin master
 bash scripts/build_fixed24.sh
 .venv/bin/python scripts/supervise_collection.py \
   --config vae_data/configs/collection_64x1.json --check-config
-.venv/bin/python scripts/supervise_collection.py \
+.venv/bin/python scripts/supervise_collection.py start \
+  --config vae_data/configs/collection_64x1.json
+.venv/bin/python scripts/supervise_collection.py dashboard \
   --config vae_data/configs/collection_64x1.json
 ```
 
 `collection_64x1`表示同时最多64个世界、每个未完成Shard只有1个世界；默认目标仍是Shard 0..99。若剩余未完成Shard少于64，实际world数随之降低，不会把多余world堆到同一片。原100片×1000配额、fixed24、批传输与Collector均不变。
 
-监控器每5秒检查一次本批Shard的持久进度；完成一次attempt、正式样本提交或READY都算进展，日志刷新和进程存活不算。连续600秒无进展时：
+`start`等待后台监控器取得数据集独占锁并报告`RUNNING`后立即返回；后台进程使用独立session、`stdin=/dev/null`，stdout/stderr写入`*_supervisor/daemon.log`，所以SSH断开不会结束它。`dashboard`是另一个纯只读前台进程，不创建任何采集子进程；Ctrl-C或SSH断开只关闭显示。也可随时读取一次机器状态：
+
+```bash
+.venv/bin/python scripts/supervise_collection.py status \
+  --config vae_data/configs/collection_64x1.json
+```
+
+监控器每5秒检查一次每个活跃Shard的持久进度；完成一次attempt、正式样本提交或READY都算进展，日志刷新和进程存活不算。任一活跃Shard连续600秒无进展时：
 
 1. 用本次启动独有的随机环境标记枚举同一用户下的Python、Craftium/Luanti及私有Xvfb；不按程序名匹配，不调用全局`pkill`。
 2. 先TERM、再KILL，并再次确认该标记下没有残留进程；若存在无法杀死的进程（例如内核不可中断I/O），拒绝重启，避免新旧采集重叠。
 3. 清理成功后等待10秒，以相同配置和`--resume`重启。默认无限恢复，`max_restarts`可在JSON中设为有限次数。
 
-直接在终端或tmux运行时，会原位刷新Dashboard：总Shard/样本进度条、每片已提交样本、attempt总数、实测速率/ETA、所属PID数、重启次数，以及距600秒停滞线的倒计时。进程数与倒计时每5秒刷新；为避免监控增加磁盘压力，SQLite样本/attempt计数默认每30秒只读刷新一次，可通过`status_interval_seconds`调整。stdout被nohup/文件重定向时不写ANSI控制码，改为每30秒一条摘要。设置`terminal_dashboard:false`可关闭展示，不影响保护逻辑。
+独立Dashboard原位显示总Shard/样本进度条、每片已提交样本、attempt总数、实测速率/ETA、所属PID数、重启次数，以及距600秒停滞线的倒计时。进程数与倒计时每5秒刷新；为避免监控增加磁盘压力，SQLite样本/attempt计数默认每30秒只读刷新一次，可通过`status_interval_seconds`调整。
 
-每次尝试的合并stdout/stderr、实际命令、事件流及机器可读`state.json`保存在`outputs/vae_100k_fixed24_supervisor/run_*/`。Dashboard刷新和日志写入不算采集进展。Ctrl-C同样只清理本监控器启动的进程；已提交数据保留。配置将采集器内部`--stall-seconds`设为0，避免旧的300秒门限先退出，唯一的长跑停滞门限由外部600秒监控器负责。
+每次尝试的合并stdout/stderr、实际命令、事件流及机器可读`state.json`保存在`outputs/vae_100k_fixed24_supervisor/run_*/`。Dashboard刷新和日志写入不算采集进展。配置将采集器内部`--stall-seconds`设为0，避免旧的300秒门限先退出，唯一的长跑停滞门限由外部600秒监控器负责。
+
+专用停止命令如下。它先让后台监控器有序清理；若监控主进程已异常消失，则只按该次启动继承的随机环境标记TERM/KILL孤儿后代。实现明确拒绝PID 1，不使用进程名、进程组或全局`pkill`。命令只有在标记进程清零、同数据集无未标记collector，且supervisor/dataset/vocabulary/全部Shard文件锁均可非阻塞获取后才返回`STOPPED`：
+
+```bash
+.venv/bin/python scripts/supervise_collection.py stop \
+  --config vae_data/configs/collection_64x1.json
+```
+
+Collector自身还在Linux上设置parent-death SIGTERM；即使后台监控器被强制杀死，也会先尝试执行原有子树清理。所有已提交数据保留。`start`会拒绝已有后台运行、残留带标记进程或指向同一数据集的旧collector，避免新旧采集重叠。
+
+现场出现的Witch Hut / Village mapgen回调错误来自纯Voxel层让`add_entity()`返回`nil`，而VoxeLibre回调立即调用`:get_luaentity()`。现在仍禁止创建真实实体，但返回一个不进入世界、所有方法无副作用的代理对象，使这些原生结构回调可以完成而不改变Voxel状态。
 
 如需只跑片20..39，复制配置并设置`shard:20, count:20`；不要同时用两个监控器操作相同数据集。配置文件本身不会启动采集，Codex本地也未运行真实Native或模拟卡死服务器。
 
@@ -153,11 +173,20 @@ git pull --ff-only origin master
 bash scripts/build_fixed24.sh
 .venv/bin/python scripts/supervise_collection.py \
   --config vae_data/configs/collection_64x1_static.json --check-config
-.venv/bin/python scripts/supervise_collection.py \
+.venv/bin/python scripts/supervise_collection.py start \
+  --config vae_data/configs/collection_64x1_static.json
+.venv/bin/python scripts/supervise_collection.py dashboard \
   --config vae_data/configs/collection_64x1_static.json
 ```
 
 配置会向底层生成器明确传入`--only-category Static`。新目录中Static达到原配额500的片直接跳过；缺额片只创建Static任务。默认仍为最多64个并行世界、每片1个世界、10分钟无持久进展后安全重启。Dashboard增加`Focus Static current/50000`进度条，日志位于`outputs/vae_100k_heightadaptive_supervisor/run_*/`。
+
+停止Static专用运行：
+
+```bash
+.venv/bin/python scripts/supervise_collection.py stop \
+  --config vae_data/configs/collection_64x1_static.json
+```
 
 Static完成后本次范围会以`CATEGORY_COMPLETE`正常停止，但Static-only Shard不会被伪装成正式READY；只有五类原配额位于同一兼容数据集并全部齐全时才能发布READY。当前命令不合并旧动态与新Static；后续组合必须另做明确、可验证的数据整合。`only_category`不改变任何配额、Static群落×高度策略、去重规则或旧数据。
 

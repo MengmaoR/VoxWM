@@ -6,7 +6,7 @@
 
 新增[动态观察批传输](vae_data/reports/advance_batch_20261117/README.md)：默认24拍/可选48拍，物理仍逐拍24Hz、每拍捕获；首帧+稀疏delta在内存中经socket返回，原Collector决定停止并丢弃批尾。启用前由用户运行`bash scripts/build_fixed24.sh`增量编译；本次不调整并行数，续跑示例固定`--workers 64`。没有运行Native或实测吞吐。
 
-新增外部[采集监控与自动恢复](vae_data/README.md#外部监控与自动重启)：默认同时最多64个Shard、每片1个世界；终端Dashboard实时显示Shard/样本/attempt、速率、ETA、进程数和停滞倒计时。10分钟没有完成attempt、样本提交或READY时，只终止本次唯一运行标记继承出的Python/Craftium/Xvfb进程，确认清理完成后按同一配置`--resume`。它不修改配额、24Hz或采样协议。
+新增外部[采集监控与自动恢复](vae_data/README.md#外部监控与自动重启)：`start`把监控器及采集树放入脱离SSH的后台会话，`dashboard`单独只读显示进度，`stop`精确停止该后台运行并确认锁已释放。默认同时最多64个Shard、每片1个世界；每个活跃Shard独立执行10分钟停滞检测，只终止本次唯一随机标记继承出的Python/Craftium/Xvfb进程，确认清理完成后按同一配置`--resume`。它不修改配额、24Hz或采样协议。
 
 已有旧动态、另采新策略Static时使用[Static-only supervisor配置](vae_data/README.md#仅补齐static缺额)：Static写入新的`vae_100k_heightadaptive`目录，每片仍以500为目标；旧动态目录不重采、不覆盖，也不与不兼容manifest混写。
 

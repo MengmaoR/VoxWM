@@ -9,9 +9,11 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from vae_data.supervisor import (MARKER, TerminalDashboard, _linux_tagged_pids,
-    build_command, load_config, owned_pids, progress_signature, supervise,
-    targets_complete, terminate_owned)
+from vae_data.supervisor import (DAEMON_MARKER, MARKER, TerminalDashboard,
+    _daemon_processes, _linux_tagged_pids, build_command,
+    busy_collection_locks, load_config, owned_pids, parser,
+    progress_signature, start_detached, stop_detached, supervise,
+    targets_complete, terminate_owned, update_shard_watch)
 
 
 class TTYBuffer(io.StringIO):
@@ -66,6 +68,7 @@ class SupervisorTests(unittest.TestCase):
             path.write_text(json.dumps({"dataset":str(dataset),"only_category":"Static"}))
             with self.assertRaisesRegex(ValueError,"Use a new empty dataset directory"):
                 load_config(path)
+            self.assertEqual(load_config(path, validate_dataset=False)["dataset"], dataset.resolve())
 
     def test_completed_attempt_is_progress_even_without_a_sample_commit(self):
         with tempfile.TemporaryDirectory() as folder:
@@ -86,6 +89,74 @@ class SupervisorTests(unittest.TestCase):
                 entry.mkdir()
                 (entry / "environ").write_bytes(value)
             self.assertEqual(_linux_tagged_pids("wanted", proc), {101})
+
+    def test_each_active_shard_has_an_independent_stall_clock(self):
+        history = {}
+        self.assertEqual(update_shard_watch(history, {"shard_0000", "shard_0001"},
+            {"shard_0000": (1,), "shard_0001": (1,)}, 10, 600), [])
+        self.assertEqual(update_shard_watch(history, {"shard_0000", "shard_0001"},
+            {"shard_0000": (2,), "shard_0001": (1,)}, 611, 600), ["shard_0001"])
+        self.assertEqual(update_shard_watch(history, {"shard_0000"},
+            {"shard_0000": (2,)}, 612, 600), [])
+
+    def test_control_cli_has_separate_start_dashboard_status_and_stop_actions(self):
+        for action in ("start", "dashboard", "status", "stop"):
+            args = parser([action, "--config", "supervisor.json"])
+            self.assertEqual(args.action, action)
+        self.assertEqual(parser(["--config", "supervisor.json"]).action, "start")
+
+    def test_start_detaches_daemon_and_redirects_stdio(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "supervisor.json"
+            path.write_text(json.dumps({"dataset": str(Path(folder) / "data")}))
+            launched = {}
+            process = mock.Mock(pid=45123)
+            process.poll.return_value = None
+            def launch(command, **kwargs):
+                launched.update(command=command, kwargs=kwargs)
+                startup = Path(command[command.index("--startup-file") + 1])
+                startup.write_text(json.dumps({"status": "RUNNING", "pid": process.pid,
+                    "daemon_id": kwargs["env"][DAEMON_MARKER]}))
+                return process
+            with mock.patch("vae_data.supervisor._dataset_collectors", return_value=set()), \
+                 mock.patch("vae_data.supervisor.subprocess.Popen", side_effect=launch), \
+                 mock.patch("sys.stdout", new=io.StringIO()):
+                self.assertEqual(start_detached(path), 0)
+            self.assertTrue(launched["kwargs"]["start_new_session"])
+            self.assertIs(launched["kwargs"]["stdin"], subprocess.DEVNULL)
+            self.assertIn(DAEMON_MARKER, launched["kwargs"]["env"])
+            self.assertEqual(launched["command"][3], "run")
+
+    def test_lock_release_check_reports_only_actively_held_locks(self):
+        import fcntl
+        with tempfile.TemporaryDirectory() as folder:
+            config = self.config(folder)
+            lock_path = config["dataset"] / ".locks/shard_0003.lock"
+            lock_path.parent.mkdir(parents=True)
+            with lock_path.open("a+") as held:
+                fcntl.flock(held, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                self.assertEqual(busy_collection_locks(config), [str(lock_path)])
+                fcntl.flock(held, fcntl.LOCK_UN)
+            self.assertEqual(busy_collection_locks(config), [])
+
+    def test_stop_can_clean_exact_tagged_orphans_after_daemon_disappears(self):
+        with tempfile.TemporaryDirectory() as folder:
+            config = self.config(folder)
+            control = config["dataset"].parent / ".data.collection_supervisor.json"
+            control.write_text(json.dumps({"daemon_id": "run-1", "pid": 4001}))
+            with mock.patch("vae_data.supervisor._daemon_processes",
+                            side_effect=({4002}, {4002})), \
+                 mock.patch("vae_data.supervisor._terminate_tagged", return_value=[]) as stop, \
+                 mock.patch("vae_data.supervisor._dataset_collectors", return_value=set()), \
+                 mock.patch("vae_data.supervisor.busy_collection_locks", return_value=[]), \
+                 mock.patch("sys.stdout", new=io.StringIO()):
+                self.assertEqual(stop_detached(config), 0)
+            stop.assert_called_once_with("run-1", 10, 10)
+
+    def test_daemon_process_management_refuses_pid_one(self):
+        with mock.patch("vae_data.supervisor.owned_pids", return_value={1}):
+            with self.assertRaisesRegex(RuntimeError, "PID 1"):
+                _daemon_processes("run-1")
 
     def test_terminal_dashboard_renders_progress_grid_and_stall_countdown(self):
         with tempfile.TemporaryDirectory() as folder:

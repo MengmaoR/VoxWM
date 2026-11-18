@@ -7,6 +7,7 @@ program-name match when stopping a stalled run.
 from __future__ import annotations
 
 import argparse
+import ctypes
 import fcntl
 import json
 import os
@@ -23,6 +24,7 @@ from .sharded.protocol import CATEGORIES,STATIC_HEIGHT_POLICY_VERSION,VERSION
 
 ROOT = Path(__file__).resolve().parents[1]
 MARKER = "VOXWM_SUPERVISOR_ID"
+DAEMON_MARKER = "VOXWM_SUPERVISOR_DAEMON_ID"
 DEFAULTS = {
     "shard": 0,
     "count": 100,
@@ -51,6 +53,16 @@ DEFAULTS = {
 ALLOWED = set(DEFAULTS) | {"dataset", "log_dir"}
 
 
+def supervisor_lock_path(config):
+    dataset = config["dataset"]
+    return dataset.parent / ("." + dataset.name + ".collection_supervisor.lock")
+
+
+def control_path(config):
+    dataset = config["dataset"]
+    return dataset.parent / ("." + dataset.name + ".collection_supervisor.json")
+
+
 def _positive(name, value, allow_zero=False):
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise ValueError(f"{name} must be numeric")
@@ -59,7 +71,7 @@ def _positive(name, value, allow_zero=False):
         raise ValueError(f"{name} must be {'nonnegative' if allow_zero else 'positive'}")
 
 
-def load_config(path):
+def load_config(path, validate_dataset=True):
     path = Path(path)
     raw = json.loads(path.read_text())
     if not isinstance(raw, dict):
@@ -105,7 +117,8 @@ def load_config(path):
     else:
         dataset = config["dataset"]
         config["log_dir"] = dataset.parent / (dataset.name + "_supervisor")
-    validate_existing_dataset(config)
+    if validate_dataset:
+        validate_existing_dataset(config)
     return config
 
 
@@ -321,19 +334,21 @@ class TerminalDashboard:
         focus_summary = (f" focus={focus}:{focus_value}/{focus_target}" if focus else "")
         if not self.tty:
             if force:
+                stall_field = (f"stall_in={int(stall_left)}s" if phase == "RUNNING"
+                               else "stall_in=inactive")
                 self.stream.write(
                     f"[dashboard] phase={phase} shards={totals['ready']}/{shard_target} "
                     f"samples={totals['samples']}/{sample_target} attempts={totals['attempts']} "
                     f"owned={owned_count} worlds={active_worlds} restarts={restarts} "
                     f"rate={rate:.1f}/h eta={eta} progress_age={int(progress_age)}s "
-                    f"stall_in={int(stall_left)}s" + focus_summary
+                    + stall_field + focus_summary
                     + (f" reason={reason}" if reason else "") + "\n")
                 self.stream.flush()
             return
         lines = [
             "VoxWM Native Collection Supervisor",
             f"{phase:<10} uptime {_duration(now - supervisor_started)} | restart {restarts} | "
-            f"collector pid {pid or '-'} | owned processes {owned_count}",
+            f"supervisor pid {pid or '-'} | owned processes {owned_count}",
             f"Shards  {totals['ready']:>3}/{shard_target:<3} {_bar(totals['ready'], shard_target)}",
             f"Samples {totals['samples']:>7}/{sample_target:<7} "
             f"{_bar(totals['samples'], sample_target)}",
@@ -341,11 +356,13 @@ class TerminalDashboard:
         if focus:
             lines.append(f"Focus {focus:<6} {focus_value:>7}/{focus_target:<7} "
                          f"{_bar(focus_value,focus_target)}")
+        stall_summary = (f"automatic restart in {_duration(stall_left)}"
+                         if phase == "RUNNING" else "automatic restart inactive")
         lines.extend((
             f"Rate {rate:.1f} {focus or 'all'} samples/hour | ETA {eta}",
             f"Attempts {totals['attempts']} | requested worlds {active_worlds} "
             f"(max {config['workers']}, 1/shard) | busy reads {totals['read_busy']}",
-            f"Last durable progress {int(progress_age)}s ago | automatic restart in {_duration(stall_left)} "
+            f"Last durable progress {int(progress_age)}s ago | {stall_summary} "
             f"| counts age {int(now - status_updated)}s",
             f"Dataset: {config['dataset']}",
             f"Attempt log: {attempt_log or '-'}",
@@ -360,11 +377,11 @@ class TerminalDashboard:
         self.drawn = True
 
 
-def _linux_tagged_pids(run_id, proc=Path("/proc")):
+def _linux_tagged_pids(run_id, proc=Path("/proc"), marker=MARKER):
     proc = Path(proc)
     if not proc.is_dir():
         return None
-    wanted = f"{MARKER}={run_id}".encode()
+    wanted = f"{marker}={run_id}".encode()
     uid = os.geteuid()
     found = set()
     for entry in proc.iterdir():
@@ -381,9 +398,9 @@ def _linux_tagged_pids(run_id, proc=Path("/proc")):
     return found
 
 
-def _ps_tagged_pids(run_id):
+def _ps_tagged_pids(run_id, marker=MARKER):
     """Same-user fallback for macOS development; production Linux uses /proc."""
-    marker = f"{MARKER}={run_id}"
+    wanted = f"{marker}={run_id}"
     try:
         output = subprocess.check_output(
             ["ps", "eww", "-axo", "pid=,uid=,command="], text=True,
@@ -393,14 +410,79 @@ def _ps_tagged_pids(run_id):
     found = set()
     for line in output.splitlines():
         fields = line.strip().split(None, 2)
-        if len(fields) == 3 and fields[1].isdigit() and int(fields[1]) == os.geteuid() and marker in fields[2]:
+        if len(fields) == 3 and fields[1].isdigit() and int(fields[1]) == os.geteuid() and wanted in fields[2]:
             found.add(int(fields[0]))
     return found
 
 
-def owned_pids(run_id):
-    found = _linux_tagged_pids(run_id)
-    return _ps_tagged_pids(run_id) if found is None else found
+def owned_pids(run_id, marker=MARKER):
+    found = _linux_tagged_pids(run_id, marker=marker)
+    return _ps_tagged_pids(run_id, marker=marker) if found is None else found
+
+
+def _parent_death_preexec(expected_parent):
+    """Ask Linux to terminate the collector if its supervisor disappears."""
+    if not sys.platform.startswith("linux"):
+        return None
+
+    def arm():
+        libc = ctypes.CDLL(None, use_errno=True)
+        if libc.prctl(1, signal.SIGTERM, 0, 0, 0) != 0:
+            os._exit(126)
+        if os.getppid() != expected_parent:
+            os.kill(os.getpid(), signal.SIGTERM)
+
+    return arm
+
+
+def active_shards(run_id, config, proc=Path("/proc")):
+    """Return shard writers currently owned by one collector attempt."""
+    proc = Path(proc)
+    if not proc.is_dir():
+        return set()
+    lock_root = (config["dataset"] / ".locks").resolve()
+    result = set()
+    for pid in owned_pids(run_id):
+        folder = proc / str(pid) / "fd"
+        try:
+            descriptors = list(folder.iterdir())
+        except (FileNotFoundError, ProcessLookupError, PermissionError, OSError):
+            continue
+        for descriptor in descriptors:
+            try:
+                target = Path(os.readlink(descriptor))
+            except (FileNotFoundError, ProcessLookupError, PermissionError, OSError):
+                continue
+            if target.parent == lock_root and target.name.startswith("shard_") and target.suffix == ".lock":
+                result.add(target.stem)
+    return result
+
+
+def shard_progress_signature(config, shard):
+    root = config["dataset"] / "shards"
+    signature = []
+    for folder in (root / shard, root / ("." + shard + ".partial")):
+        for name in ("cursor.json", "progress", "READY"):
+            path = folder / name
+            try:
+                stat = path.stat()
+                signature.append((str(path), stat.st_ino, stat.st_mtime_ns, stat.st_size))
+            except FileNotFoundError:
+                pass
+    return tuple(signature)
+
+
+def update_shard_watch(history, active, signatures, now, timeout):
+    """Track each active writer independently so healthy shards cannot hide one stall."""
+    for shard in set(history) - set(active):
+        del history[shard]
+    for shard in active:
+        signature = signatures.get(shard, ())
+        previous = history.get(shard)
+        if previous is None or previous[0] != signature:
+            history[shard] = (signature, now)
+    return sorted(shard for shard, (_, changed) in history.items()
+                  if now - changed >= timeout)
 
 
 def terminate_owned(process, run_id, grace_seconds=10, kill_seconds=10):
@@ -463,9 +545,289 @@ def verify_process_tracking(timeout=2):
 
 def _atomic_json(path, value):
     path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name("." + path.name + f".{os.getpid()}.tmp")
     temporary.write_text(json.dumps(value, ensure_ascii=False, indent=2) + "\n")
     os.replace(temporary, path)
+
+
+def _read_json(path):
+    try:
+        return json.loads(Path(path).read_text())
+    except (FileNotFoundError, OSError, ValueError, json.JSONDecodeError):
+        return {}
+
+
+def _daemon_processes(daemon_id):
+    if not daemon_id:
+        return set()
+    result = owned_pids(daemon_id, marker=DAEMON_MARKER)
+    if 1 in result:
+        raise RuntimeError("Refusing to manage PID 1")
+    return result
+
+
+def _terminate_tagged(daemon_id, grace_seconds=10, kill_seconds=10):
+    """Terminate one detached run by its exact inherited environment tag."""
+    for sig, duration in ((signal.SIGTERM, grace_seconds),
+                          (signal.SIGKILL, kill_seconds)):
+        deadline = time.monotonic() + duration
+        while True:
+            processes = _daemon_processes(daemon_id)
+            if not processes:
+                return []
+            for pid in sorted(processes, reverse=True):
+                if pid == 1:
+                    raise RuntimeError("Refusing to signal PID 1")
+                try:
+                    os.kill(pid, sig)
+                except ProcessLookupError:
+                    pass
+            if time.monotonic() >= deadline:
+                break
+            time.sleep(.2)
+    return sorted(_daemon_processes(daemon_id))
+
+
+def _control_alive(control):
+    pid = control.get("pid")
+    daemon_id = control.get("daemon_id")
+    return isinstance(pid, int) and pid in _daemon_processes(daemon_id)
+
+
+def _write_control(config, **fields):
+    path = control_path(config)
+    current = _read_json(path)
+    current.update(fields, updated=time.time())
+    _atomic_json(path, current)
+    return current
+
+
+def _dataset_collectors(config):
+    """Find exact collectors for this dataset before starting another daemon."""
+    dataset = str(config["dataset"])
+    proc = Path("/proc")
+    if not proc.is_dir():
+        return set()
+    found = set()
+    for entry in proc.iterdir():
+        if not entry.name.isdigit():
+            continue
+        try:
+            if entry.stat().st_uid != os.geteuid():
+                continue
+            command = [part.decode(errors="replace") for part in
+                       (entry / "cmdline").read_bytes().split(b"\0") if part]
+        except (FileNotFoundError, ProcessLookupError, PermissionError, OSError):
+            continue
+        if "-m" in command and "vae_data" in command and "generate" in command and dataset in command:
+            found.add(int(entry.name))
+    return found
+
+
+def collection_lock_paths(config):
+    """Known advisory locks that must be free after a complete stop."""
+    dataset = config["dataset"]
+    paths = [supervisor_lock_path(config), dataset / ".dataset.lock",
+             dataset / ".vocabulary.lock"]
+    lock_root = dataset / ".locks"
+    if lock_root.is_dir():
+        paths.extend(sorted(lock_root.glob("*.lock")))
+    return [path for path in paths if path.exists()]
+
+
+def busy_collection_locks(config):
+    busy = []
+    for path in collection_lock_paths(config):
+        stream = None
+        try:
+            stream = open(path, "a+")
+            fcntl.flock(stream, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            fcntl.flock(stream, fcntl.LOCK_UN)
+        except BlockingIOError:
+            busy.append(str(path))
+        finally:
+            if stream is not None:
+                stream.close()
+    return busy
+
+
+def start_detached(config_path):
+    config_path = Path(config_path).resolve()
+    config = load_config(config_path)
+    current = _read_json(control_path(config))
+    if _control_alive(current):
+        raise RuntimeError(f"Collection supervisor is already running as PID {current['pid']}")
+    stale = _daemon_processes(current.get("daemon_id"))
+    if stale:
+        raise RuntimeError("A detached collection tree still exists; run the stop command first: " +
+                           ", ".join(map(str, sorted(stale))))
+    collectors = _dataset_collectors(config)
+    if collectors:
+        raise RuntimeError("Dataset still has collectors without an active daemon: " +
+                           ", ".join(map(str, sorted(collectors))))
+
+    daemon_id = uuid.uuid4().hex
+    startup = config["log_dir"] / (".startup_" + daemon_id + ".json")
+    daemon_log = config["log_dir"] / "daemon.log"
+    config["log_dir"].mkdir(parents=True, exist_ok=True)
+    command = [sys.executable, "-m", "vae_data.supervisor", "run",
+               "--config", str(config_path), "--startup-file", str(startup)]
+    environment = dict(os.environ)
+    environment.pop(MARKER, None)
+    environment[DAEMON_MARKER] = daemon_id
+    environment["PYTHONUNBUFFERED"] = "1"
+    with daemon_log.open("ab", buffering=0) as log:
+        process = subprocess.Popen(command, cwd=ROOT, env=environment,
+            stdin=subprocess.DEVNULL, stdout=log, stderr=subprocess.STDOUT,
+            start_new_session=True, close_fds=True)
+
+    deadline = time.monotonic() + 15
+    result = {}
+    while time.monotonic() < deadline:
+        result = _read_json(startup)
+        if result:
+            break
+        code = process.poll()
+        if code is not None:
+            lingering = _terminate_tagged(daemon_id, 1, 1)
+            suffix = f"; lingering tagged PIDs: {lingering}" if lingering else ""
+            raise RuntimeError(f"Detached supervisor exited with code {code}; see {daemon_log}{suffix}")
+        time.sleep(.1)
+    try:
+        startup.unlink(missing_ok=True)
+    except OSError:
+        pass
+    if result.get("status") != "RUNNING":
+        lingering = _terminate_tagged(daemon_id, 2, 2)
+        suffix = f"; lingering tagged PIDs: {lingering}" if lingering else ""
+        reason = result.get("reason") or f"Detached supervisor did not become ready; see {daemon_log}"
+        raise RuntimeError(reason + suffix)
+    print(json.dumps(result, indent=2))
+    return 0
+
+
+def stop_detached(config):
+    control = _read_json(control_path(config))
+    daemon_id = control.get("daemon_id")
+    processes = _daemon_processes(daemon_id)
+    pid = control.get("pid")
+    if not processes:
+        collectors = _dataset_collectors(config)
+        if collectors:
+            raise RuntimeError("Legacy collectors have no detached-daemon identity: " +
+                               ", ".join(map(str, sorted(collectors))))
+        busy = busy_collection_locks(config)
+        if busy:
+            raise RuntimeError("No tagged process remains, but collection locks are still held: " +
+                               ", ".join(busy))
+        _write_control(config, status="STOPPED", pid=None, reason="No active supervisor")
+        print(json.dumps({"status": "STOPPED", "reason": "no active supervisor",
+                          "remaining_processes": [], "busy_locks": []}, indent=2))
+        return 0
+
+    # Prefer the daemon's own orderly shutdown. If the daemon itself has
+    # already died, the inherited tag still identifies only its orphaned tree.
+    if pid in processes:
+        os.kill(pid, signal.SIGTERM)
+        deadline = (time.monotonic() + config["shutdown_grace_seconds"] +
+                    config["shutdown_kill_seconds"] + 15)
+        while time.monotonic() < deadline and _daemon_processes(daemon_id):
+            time.sleep(.2)
+    remaining = _daemon_processes(daemon_id)
+    if remaining:
+        remaining = _terminate_tagged(daemon_id, config["shutdown_grace_seconds"],
+                                      config["shutdown_kill_seconds"])
+    if remaining:
+        raise RuntimeError("Tagged collection processes survived stop: " +
+                           ", ".join(map(str, sorted(remaining))))
+    collectors = _dataset_collectors(config)
+    if collectors:
+        raise RuntimeError("Untagged collectors still target this dataset: " +
+                           ", ".join(map(str, sorted(collectors))))
+    busy = busy_collection_locks(config)
+    if busy:
+        raise RuntimeError("Collection processes stopped, but locks are still held: " +
+                           ", ".join(busy))
+    _write_control(config, status="STOPPED", pid=None, reason="Stopped by control command")
+    print(json.dumps({"status": "STOPPED", "daemon_id": daemon_id,
+                      "remaining_processes": [], "busy_locks": []}, indent=2))
+    return 0
+
+
+def collection_status(config):
+    control = _read_json(control_path(config))
+    state = _read_json(Path(control.get("run_dir", "")) / "state.json") if control.get("run_dir") else {}
+    status = shard_status(config)
+    processes = _daemon_processes(control.get("daemon_id"))
+    alive = isinstance(control.get("pid"), int) and control["pid"] in processes
+    phase = control.get("status", "STOPPED")
+    if phase == "RUNNING" and not alive:
+        phase = "ORPHANED" if processes else "LOST"
+    result = {
+        "status": phase,
+        "daemon_pid": control.get("pid"),
+        "daemon_alive": alive,
+        "owned_processes": len(processes),
+        "dataset": str(config["dataset"]),
+        "totals": status_totals(status),
+        "run_dir": control.get("run_dir"),
+        "attempt_log": state.get("attempt_log"),
+        "progress_age_seconds": state.get("progress_age_seconds"),
+        "stalled_shards": state.get("stalled_shards", []),
+        "reason": control.get("reason") or state.get("reason"),
+    }
+    return result
+
+
+def show_status(config):
+    print(json.dumps(collection_status(config), indent=2))
+    return 0
+
+
+def show_dashboard(config, once=False):
+    dashboard = TerminalDashboard(True)
+    viewer_started = time.monotonic()
+    cached_status = shard_status(config)
+    last_refresh = 0.0
+    try:
+        while True:
+            now = time.monotonic()
+            if now - last_refresh >= config["status_interval_seconds"]:
+                cached_status = shard_status(config)
+                last_refresh = now
+            control = _read_json(control_path(config))
+            state_path = (Path(control.get("run_dir", "")) / "state.json"
+                          if control.get("run_dir") else None)
+            state = _read_json(state_path) if state_path else {}
+            processes = _daemon_processes(control.get("daemon_id"))
+            alive = isinstance(control.get("pid"), int) and control["pid"] in processes
+            phase = control.get("status", "STOPPED")
+            if phase == "RUNNING" and not alive:
+                phase = "ORPHANED" if processes else "LOST"
+            state_lag = 0.0
+            if state_path:
+                try:
+                    state_lag = max(0., time.time() - state_path.stat().st_mtime)
+                except OSError:
+                    pass
+            progress_age = (float(state.get("progress_age_seconds") or 0) + state_lag
+                            if phase in ("RUNNING", "ORPHANED", "LOST") else 0.0)
+            run_started = viewer_started
+            if alive and isinstance(control.get("started"), (int, float)):
+                run_started = now - max(0., time.time() - control["started"])
+            dashboard.render(phase, config, cached_status,
+                run_started, now - progress_age, last_refresh,
+                int(state.get("restart", state.get("restarts", 0)) or 0),
+                control.get("pid") if alive else None,
+                len(processes),
+                int(state.get("active_worlds", 0) or 0), state.get("attempt_log"),
+                force=True, reason=control.get("reason") or state.get("reason"))
+            if once:
+                return 0
+            time.sleep(config["monitor_interval_seconds"])
+    except (KeyboardInterrupt, BrokenPipeError):
+        return 0
 
 
 class Recorder:
@@ -490,10 +852,10 @@ class Recorder:
         self.events.close()
 
 
-def _acquire_dataset_lock(config):
+def _acquire_dataset_lock(config, daemon_id=None, config_path=None):
     dataset = config["dataset"]
     dataset.parent.mkdir(parents=True, exist_ok=True)
-    path = dataset.parent / ("." + dataset.name + ".collection_supervisor.lock")
+    path = supervisor_lock_path(config)
     stream = open(path, "a+")
     try:
         fcntl.flock(stream, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -502,17 +864,19 @@ def _acquire_dataset_lock(config):
         raise RuntimeError(f"Another supervisor already owns dataset {dataset}")
     stream.seek(0)
     stream.truncate()
-    stream.write(json.dumps({"pid": os.getpid(), "started": time.time()}))
+    stream.write(json.dumps({"pid": os.getpid(), "started": time.time(),
+                             "daemon_id": daemon_id, "config": str(config_path) if config_path else None}))
     stream.flush()
     return stream
 
 
-def supervise(config):
+def supervise(config, config_path=None, startup_file=None):
     verify_process_tracking()
     command = build_command(config)
-    lock = _acquire_dataset_lock(config)
+    daemon_id = os.environ.get(DAEMON_MARKER)
+    lock = _acquire_dataset_lock(config, daemon_id, config_path)
     recorder = Recorder(config["log_dir"], config, command)
-    dashboard = TerminalDashboard(config["terminal_dashboard"])
+    dashboard = TerminalDashboard(config["terminal_dashboard"] and not daemon_id)
     stop = threading.Event()
     old_handlers = {}
 
@@ -532,6 +896,16 @@ def supervise(config):
     active_worlds = 0
     log_path = None
     final_reason = None
+    final = "FAIL"
+    shard_watch = {}
+    log = None
+    _write_control(config, status="RUNNING", pid=os.getpid(), daemon_id=daemon_id,
+        config_path=str(config_path) if config_path else None, dataset=str(config["dataset"]),
+        run_dir=str(recorder.root), reason=None, started=time.time())
+    if startup_file:
+        _atomic_json(startup_file, {"status": "RUNNING", "pid": os.getpid(),
+            "daemon_id": daemon_id, "dataset": str(config["dataset"]),
+            "run_dir": str(recorder.root), "daemon_log": str(config["log_dir"] / "daemon.log")})
     try:
         while not stop.is_set():
             if targets_complete(config,status):
@@ -549,9 +923,11 @@ def supervise(config):
             log_path = recorder.root / f"attempt_{restarts:04d}.log"
             log = open(log_path, "ab", buffering=0)
             process = subprocess.Popen(command, cwd=ROOT, env=environment,
-                start_new_session=True, stdout=log, stderr=subprocess.STDOUT)
+                start_new_session=True, stdout=log, stderr=subprocess.STDOUT,
+                preexec_fn=_parent_death_preexec(os.getpid()))
             launched = last_progress = last_status = time.monotonic()
             signature = progress_signature(config)
+            shard_watch = {}
             status = shard_status(config);status_updated = launched
             recorder.event("launch", restart=restarts, pid=process.pid, run_id=run_id,
                            log=log_path.name, argv=command)
@@ -559,7 +935,10 @@ def supervise(config):
                 status_updated, restarts, process.pid, 1, active_worlds, log_path, force=True)
             recorder.state(status="RUNNING", restart=restarts, pid=process.pid,
                            run_id=run_id, owned_pids=[process.pid], progress_age_seconds=0,
-                           shards=status, totals=status_totals(status), attempt_log=str(log_path))
+                           shards=status, totals=status_totals(status), attempt_log=str(log_path),
+                           active_worlds=active_worlds, stalled_shards=[])
+            _write_control(config, status="RUNNING", pid=os.getpid(), run_id=run_id,
+                           run_dir=str(recorder.root), reason=None)
             reason = None
             while not stop.is_set():
                 try:
@@ -573,6 +952,10 @@ def supervise(config):
                     last_progress = now
                     recorder.event("progress", restart=restarts)
                 pids = sorted(owned_pids(run_id))
+                active = active_shards(run_id, config)
+                shard_signatures = {shard: shard_progress_signature(config, shard) for shard in active}
+                stalled_shards = update_shard_watch(shard_watch, active, shard_signatures,
+                    now, config["no_progress_seconds"])
                 refreshed = False
                 if now - last_status >= config["status_interval_seconds"]:
                     last_status = now
@@ -583,7 +966,10 @@ def supervise(config):
                                    run_id=run_id, owned_pids=pids,
                                    progress_age_seconds=round(now - last_progress, 1),
                                    shards=status, totals=status_totals(status),
-                                   attempt_log=str(log_path))
+                                   attempt_log=str(log_path), active_worlds=active_worlds,
+                                   stalled_shards=stalled_shards,
+                                   shard_progress_age_seconds={shard: round(now - changed, 1)
+                                       for shard, (_, changed) in shard_watch.items()})
                 dashboard.render("RUNNING", config, status, supervisor_started, last_progress,
                     status_updated, restarts, process.pid, len(pids), active_worlds,
                     log_path, force=refreshed)
@@ -602,6 +988,13 @@ def supervise(config):
                     dashboard.render("COMPLETE" if reason is None else "EXITED", config,
                         status, supervisor_started, last_progress, status_updated, restarts,
                         process.pid, len(pids), active_worlds, log_path, force=True, reason=reason)
+                    break
+                if stalled_shards:
+                    reason = ("active shard made no completed attempt or sample commit for "
+                              f"{config['no_progress_seconds']}s: " + ", ".join(stalled_shards))
+                    status = shard_status(config);status_updated = now
+                    recorder.event("shard_stalled", restart=restarts, reason=reason,
+                                   stalled_shards=stalled_shards, owned_pids=pids, shards=status)
                     break
                 if now - last_progress >= config["no_progress_seconds"]:
                     reason = f"no completed attempt, sample commit or READY marker for {config['no_progress_seconds']}s"
@@ -658,6 +1051,8 @@ def supervise(config):
             reason=final_reason)
         recorder.state(status=final, restarts=restarts, shards=status,
                        totals=status_totals(status), reason=final_reason)
+        _write_control(config, status=final, pid=None, reason=final_reason,
+                       run_dir=str(recorder.root))
         return exit_code
     finally:
         if process is not None and run_id is not None and (process.poll() is None or owned_pids(run_id)):
@@ -665,8 +1060,14 @@ def supervise(config):
                 config["shutdown_grace_seconds"], config["shutdown_kill_seconds"])
             if lingering:
                 recorder.event("final_cleanup_failed", run_id=run_id, lingering_pids=lingering)
+                final = "FAIL"
+                final_reason = "Tagged collection processes survived final cleanup"
+        _write_control(config, status=final, pid=None, reason=final_reason,
+                       run_dir=str(recorder.root))
         for sig, handler in old_handlers.items():
             signal.signal(sig, handler)
+        if log is not None and not log.closed:
+            log.close()
         recorder.close()
         fcntl.flock(lock, fcntl.LOCK_UN)
         lock.close()
@@ -674,16 +1075,21 @@ def supervise(config):
 
 def parser(argv=None):
     p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument("action", nargs="?", default="start",
+                   choices=("start", "run", "dashboard", "status", "stop"))
     p.add_argument("--config", type=Path, required=True)
     p.add_argument("--check-config", action="store_true",
                    help="Validate and print the resolved command without starting collection")
+    p.add_argument("--startup-file", type=Path, help=argparse.SUPPRESS)
+    p.add_argument("--once", action="store_true", help="Render one dashboard refresh and exit")
     return p.parse_args(argv)
 
 
 def main(argv=None):
     args = parser(argv)
     try:
-        config = load_config(args.config)
+        config = load_config(args.config,
+            validate_dataset=args.check_config or args.action in ("start", "run"))
         command = build_command(config)
         if args.check_config:
             print(json.dumps({"command": command,
@@ -694,7 +1100,25 @@ def main(argv=None):
                              "terminal_dashboard": config["terminal_dashboard"],
                              "status_interval_seconds": config["status_interval_seconds"]}}, indent=2))
             return 0
-        return supervise(config)
+        if args.action == "start":
+            return start_detached(args.config)
+        if args.action == "dashboard":
+            return show_dashboard(config, args.once)
+        if args.action == "status":
+            return show_status(config)
+        if args.action == "stop":
+            return stop_detached(config)
+        if not os.environ.get(DAEMON_MARKER):
+            raise RuntimeError("Internal run action requires a detached-daemon identity")
+        if hasattr(signal, "SIGHUP"):
+            signal.signal(signal.SIGHUP, signal.SIG_IGN)
+        try:
+            return supervise(config, args.config.resolve(), args.startup_file)
+        except BaseException as exc:
+            if args.startup_file and not args.startup_file.exists():
+                _atomic_json(args.startup_file, {"status": "FAIL",
+                    "reason": f"{type(exc).__name__}: {exc}"})
+            raise
     except (OSError, ValueError, RuntimeError, json.JSONDecodeError) as exc:
         print(f"Supervisor configuration/runtime error: {exc}", file=sys.stderr)
         return 2

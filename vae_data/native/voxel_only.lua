@@ -3,10 +3,22 @@
 local c=core
 voxel_only={blocked_entities={},blocked_items=0,falling_attempts=0,entity_mutations=0,entity_callbacks=0}
 local v=voxel_only;local depth=0
+local function blocked_object(pos,name)
+    local object,entity={}, {name=name}
+    local methods={
+        get_luaentity=function()return entity end,
+        get_pos=function()return vector.new(pos)end,
+        is_player=function()return false end,
+        get_properties=function()return {}end,
+    }
+    setmetatable(object,{__index=function(_,key)return methods[key]or function()return nil end end})
+    entity.object=object
+    return object
+end
 c.add_entity=function(pos,name,...)
     v.blocked_entities[name]=(v.blocked_entities[name]or 0)+1
     if name=='__builtin:falling_node'then v.falling_attempts=v.falling_attempts+1 end
-    return nil
+    return blocked_object(pos,name)
 end
 c.add_item=function(...)v.blocked_items=v.blocked_items+1;return nil end
 if c.spawn_item then c.spawn_item=c.add_item end

@@ -40,6 +40,12 @@ def nested_fixture_generation(root):
 
 
 class RuntimeTests(unittest.TestCase):
+    def test_voxel_only_entity_proxy_keeps_mapgen_callbacks_nonfatal(self):
+        source = (Path(__file__).parents[2] / "native/voxel_only.lua").read_text()
+        self.assertIn("get_luaentity=function()return entity end", source)
+        self.assertIn("return blocked_object(pos,name)", source)
+        self.assertNotIn("c.add_entity=function(pos,name,...)\n    v.blocked_entities[name]=(v.blocked_entities[name]or 0)+1\n    if name=='__builtin:falling_node'then v.falling_attempts=v.falling_attempts+1 end\n    return nil", source)
+
     def test_known_tokens_skip_lock_and_disk_sync(self):
         with tempfile.TemporaryDirectory()as tmp:
             root=initialize(Path(tmp)/'data',True);v=Vocabulary();f=frame(v,0)

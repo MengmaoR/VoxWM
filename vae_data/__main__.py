@@ -1,5 +1,5 @@
 """Explicit entry with wall, infrastructure and committed-progress watchdogs."""
-import json,os,subprocess,sys,time
+import json,os,signal,subprocess,sys,time
 from pathlib import Path
 from voxwm_gt.runtime import stop_tree
 
@@ -28,30 +28,42 @@ def main():
     started=last_progress=time.monotonic();last_check=started;signature=None
     stall=getattr(parsed,'stall_seconds',0);reason=None;name=None;code=1;status='FAIL'
     fatal=root/'.runtime'/f'infrastructure_{run_id}.json'
+    requested_signal=None
+    old_handlers={}
+    def request_stop(signum,_frame):
+        nonlocal requested_signal
+        requested_signal=signum
+    for sig in (signal.SIGINT,signal.SIGTERM,signal.SIGHUP):
+        old_handlers[sig]=signal.signal(sig,request_stop)
     try:
-        while True:
-            remaining=budget-(time.monotonic()-started)
-            if remaining<=0:
-                name,code,status,reason='wall_timeout.json',124,'INCONCLUSIVE','Explicit native wall limit reached';break
-            try:
-                completed=worker.wait(timeout=min(1.,remaining))
-                if completed==0 or not fatal.exists():return completed
-            except subprocess.TimeoutExpired:pass
-            if fatal.exists():
-                name='infrastructure_failure.json';reason=fatal.read_text();break
-            now=time.monotonic()
-            if stall and now-last_check>=min(5.,stall):
-                last_check=now;current=progress_signature(root,parsed.shard,parsed.count)
-                if signature is None or current!=signature:signature=current;last_progress=now
-                elif now-last_progress>=stall:
-                    name,code,reason='stalled.json',125,f'No committed samples or new vocabulary tokens for {stall}s';break
-    except KeyboardInterrupt:
-        name,code,status,reason='interrupted.json',130,'INCONCLUSIVE','Interrupted; committed samples retained'
-    # Stop the whole owned tree before writing diagnostics, including independent
-    # engine and Xvfb sessions. No attempt is made to delete another run's lock.
-    stop_tree(worker.pid);worker.wait()
-    print(reason,file=sys.stderr,flush=True)
-    if root.exists():(root/name).write_text(json.dumps(dict(status=status,wall_seconds=budget,reason=reason))+'\n')
-    return code
+        try:
+            while True:
+                if requested_signal is not None:
+                    name,code,status,reason='interrupted.json',130,'INCONCLUSIVE',f'Signal {requested_signal}; committed samples retained';break
+                remaining=budget-(time.monotonic()-started)
+                if remaining<=0:
+                    name,code,status,reason='wall_timeout.json',124,'INCONCLUSIVE','Explicit native wall limit reached';break
+                try:
+                    completed=worker.wait(timeout=min(1.,remaining))
+                    if completed==0 or not fatal.exists():return completed
+                except subprocess.TimeoutExpired:pass
+                if fatal.exists():
+                    name='infrastructure_failure.json';reason=fatal.read_text();break
+                now=time.monotonic()
+                if stall and now-last_check>=min(5.,stall):
+                    last_check=now;current=progress_signature(root,parsed.shard,parsed.count)
+                    if signature is None or current!=signature:signature=current;last_progress=now
+                    elif now-last_progress>=stall:
+                        name,code,reason='stalled.json',125,f'No committed samples or new vocabulary tokens for {stall}s';break
+        except KeyboardInterrupt:
+            name,code,status,reason='interrupted.json',130,'INCONCLUSIVE','Interrupted; committed samples retained'
+        # Stop the whole owned tree before restoring the default signal handlers,
+        # including independent engine and Xvfb sessions.
+        stop_tree(worker.pid);worker.wait()
+        print(reason,file=sys.stderr,flush=True)
+        if root.exists():(root/name).write_text(json.dumps(dict(status=status,wall_seconds=budget,reason=reason))+'\n')
+        return code
+    finally:
+        for sig,handler in old_handlers.items():signal.signal(sig,handler)
 
 if __name__=='__main__':raise SystemExit(main())
