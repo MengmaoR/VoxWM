@@ -1,8 +1,8 @@
-# VoxWM — Voxel-Only VAE Data Generation
+# VoxWM — Voxel VAE E00
 
-当前为100K数据生成器，100个严格1K Shards；每片Static500，D1 Water / D2 Lava / D3 Fire / D4 Water–Lava Solidification各125。每样本保留真实48³上下文，目标仍为中心16³；动态每链固定五状态。本轮不实现模型、训练器或DataLoader。
+两个正式100K Clip已完成。当前阶段实现最小Combined-Token 3D ResNet VAE与E00 tiny-overfit闭环；[模型、训练与手动运行命令](voxel_vae/README.md)。每样本保留真实48³上下文，VAE只读取中心16³；动态每链五状态对VAE仍是独立reconstruction samples。
 
-[当前数据协议](VAE_DATA_COLLECTION_PROTOCOL.md) · [服务器生成/恢复/检查命令](vae_data/README.md) · [本轮Native结果](vae_data/SHARDED_RESULTS.md)。最新用户指令覆盖旧200K/植物协议，VAE架构不变。活动代码为`vae_data/sharded/`，默认入口`python -m vae_data`。
+[当前数据协议](VAE_DATA_COLLECTION_PROTOCOL.md) · [历史生成/检查命令](vae_data/README.md) · [E00入口](voxel_vae/README.md)。数据生成代码保持只读兼容；当前模型代码独立位于`voxel_vae/`，不得把训练逻辑混入`vae_data/sharded/`。
 
 新增[动态观察批传输](vae_data/reports/advance_batch_20261117/README.md)：默认24拍/可选48拍，物理仍逐拍24Hz、每拍捕获；首帧+稀疏delta在内存中经socket返回，原Collector决定停止并丢弃批尾。启用前由用户运行`bash scripts/build_fixed24.sh`增量编译；本次不调整并行数，续跑示例固定`--workers 64`。没有运行Native或实测吞吐。
 
