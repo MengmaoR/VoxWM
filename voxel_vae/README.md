@@ -20,10 +20,14 @@ server CUDA. The requirements file deliberately does not replace PyTorch:
 
 ```bash
 .venv/bin/python -m pip install -r voxel_vae/requirements.txt
-.venv/bin/python -c 'import torch; print(torch.__version__, torch.version.cuda, torch.cuda.is_available())'
+CUDA_VISIBLE_DEVICES=0 .venv/bin/python -c \
+  'import torch; print(torch.__version__, torch.version.cuda, torch.cuda.is_available(), torch.cuda.get_device_name(0))'
 ```
 
 The final check must report CUDA available before running E00 on a GPU.
+Commands below explicitly select physical GPU `0`. To use another card, change
+only `CUDA_VISIBLE_DEVICES=0` to that physical GPU ID; keep `--device cuda:0`
+because the selected card is re-indexed to device zero inside the process.
 
 ## E00 commands
 
@@ -41,17 +45,17 @@ Run E00-A in fp32. It repeats the same eight real train samples for at most
 3,000 optimizer steps:
 
 ```bash
-.venv/bin/python -m voxel_vae.e00 run-a \
+CUDA_VISIBLE_DEVICES=0 .venv/bin/python -m voxel_vae.e00 run-a \
   --output-root outputs/voxel_vae/e00 \
-  --device cuda
+  --device cuda:0
 ```
 
 Resume only a compatible E00-A checkpoint:
 
 ```bash
-.venv/bin/python -m voxel_vae.e00 run-a \
+CUDA_VISIBLE_DEVICES=0 .venv/bin/python -m voxel_vae.e00 run-a \
   --output-root outputs/voxel_vae/e00 \
-  --device cuda --resume
+  --device cuda:0 --resume
 ```
 
 E00-B is rejected unless E00-A reaches at least 99% exact overall and non-Air
@@ -59,9 +63,9 @@ accuracy. It uses the fixed 160-state train subset, a separate 160-state
 validation diagnostic subset, and 32/8/8/8/8 effective batches:
 
 ```bash
-.venv/bin/python -m voxel_vae.e00 run-b \
+CUDA_VISIBLE_DEVICES=0 .venv/bin/python -m voxel_vae.e00 run-b \
   --output-root outputs/voxel_vae/e00 \
-  --device cuda
+  --device cuda:0
 ```
 
 Regenerate the report without training:
