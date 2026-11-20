@@ -4,7 +4,6 @@ from __future__ import annotations
 import argparse
 import json
 import mimetypes
-import tempfile
 from collections import defaultdict
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -53,56 +52,6 @@ def select_validation_gallery(index, eligible, static_count=8, chains_per_dynami
 def export_gallery(args):
     import torch
 
-    from .checkpoint import load_checkpoint
-    from .config import load_config
-    from .e00 import _load_artifacts, _model, _subset_indices
-    from .evaluate import evaluate_indices, write_json
-    from .train import resolve_device, set_seed
-
-    output_root = Path(args.output_root).expanduser().resolve()
-    vocabulary, index, subsets = _load_artifacts(output_root)
-    eligible = _subset_indices(subsets, "e00_b_validation")
-    selected = select_validation_gallery(
-        index, eligible, args.static_count, args.chains_per_dynamic)
-    config = load_config(output_root / "config.yaml")
-    set_seed(int(config["training"]["seed"]))
-    device = resolve_device(args.device)
-    model = _model(config, vocabulary).to(device)
-    checkpoint = (Path(args.checkpoint).expanduser().resolve()
-                  if args.checkpoint else output_root / "checkpoint_best.pt")
-    load_checkpoint(checkpoint, model, None, vocabulary, index,
-                    restore_rng=False, map_location=device)
-    examples = (Path(args.examples).expanduser().resolve()
-                if args.examples else output_root / "viewer_validation_examples.npz")
-    precision = args.precision or config["training"].get("precision", "fp32")
-    metrics = evaluate_indices(
-        model, index, vocabulary, selected, device, precision=precision,
-        batch_size=args.batch_size, save_examples=examples)
-    metrics_path = examples.with_name(examples.stem + "_metrics.json")
-    write_json(metrics_path, {
-        "purpose": "read-only reconstruction viewer gallery",
-        "checkpoint": str(checkpoint),
-        "subset": "e00_b_validation",
-        "selection": {
-            "static": int(args.static_count),
-            "complete_chains_per_dynamic_category": int(args.chains_per_dynamic),
-            "samples": len(selected),
-        },
-        "metrics": metrics,
-    })
-    print(json.dumps({
-        "status": "EXPORTED", "examples": str(examples),
-        "metrics": str(metrics_path), "samples": len(selected),
-        "device": str(device), "precision": precision,
-    }, indent=2))
-    if device.type == "cuda":
-        torch.cuda.empty_cache()
-
-
-def export_comparison(args):
-    """Export identical validation samples with Plain and Masked predictions."""
-    import torch
-
     from .change_masks import ChangeMaskCache
     from .checkpoint import load_checkpoint
     from .config import load_config
@@ -119,73 +68,46 @@ def export_comparison(args):
     config = load_config(output_root / "config.yaml")
     masked_config = load_config(output_root / "phase_masked/config.yaml")
     loss_config = validate_masked_loss_config(masked_config["loss"])
-    masks = ChangeMaskCache(index, vocabulary, eligible)
+    set_seed(int(config["training"]["seed"]))
     device = resolve_device(args.device)
-    precision = args.precision or config["training"].get("precision", "fp32")
-
-    def reconstruct(checkpoint, archive, expected_phase=None, expected_loss=None):
-        set_seed(int(config["training"]["seed"]))
-        model = _model(config, vocabulary).to(device)
-        payload = load_checkpoint(
-            checkpoint, model, None, vocabulary, index, restore_rng=False,
-            map_location=device, expected_phase=expected_phase,
-            expected_loss=expected_loss)
-        metrics = evaluate_indices(
-            model, index, vocabulary, selected, device, precision=precision,
-            batch_size=args.batch_size, save_examples=archive,
-            change_masks=masks, masked_loss_config=loss_config)
-        del model
-        if device.type == "cuda":
-            torch.cuda.empty_cache()
-        return payload, metrics
-
-    destination = (Path(args.examples).expanduser().resolve() if args.examples
-                   else output_root / "viewer_comparison_examples.npz")
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.TemporaryDirectory() as folder:
-        plain_path = Path(folder) / "plain.npz"
-        masked_path = Path(folder) / "masked.npz"
-        plain_payload, plain_metrics = reconstruct(
-            output_root / "checkpoint_best.pt", plain_path)
-        masked_payload, masked_metrics = reconstruct(
-            output_root / "phase_masked/checkpoint_best.pt", masked_path,
-            "E00-Masked", loss_config)
-        with np.load(plain_path, allow_pickle=False) as source:
-            plain = {key: np.asarray(source[key]) for key in source.files}
-        with np.load(masked_path, allow_pickle=False) as source:
-            masked = {key: np.asarray(source[key]) for key in source.files}
-        for key in plain.keys() - {"predicted_tokens"}:
-            if key not in masked or not np.array_equal(plain[key], masked[key]):
-                raise ValueError(f"Plain/Masked gallery mismatch: {key}")
-        payload = {key: value for key, value in plain.items()
-                   if key != "predicted_tokens"}
-        payload.update(
-            predicted_tokens=masked["predicted_tokens"],
-            predicted_plain_tokens=plain["predicted_tokens"],
-            predicted_masked_tokens=masked["predicted_tokens"],
-        )
-        np.savez_compressed(destination, **payload)
-    metrics_path = destination.with_name(destination.stem + "_metrics.json")
+    model = _model(config, vocabulary).to(device)
+    checkpoint = (Path(args.checkpoint).expanduser().resolve()
+                  if args.checkpoint else
+                  output_root / "phase_masked/checkpoint_best.pt")
+    payload = load_checkpoint(
+        checkpoint, model, None, vocabulary, index, restore_rng=False,
+        expected_phase="E00-Masked", expected_loss=loss_config)
+    checkpoint_step = int(payload["global_step"])
+    del payload
+    examples = (Path(args.examples).expanduser().resolve()
+                if args.examples else
+                output_root / "phase_masked/viewer_validation_examples.npz")
+    precision = args.precision or masked_config.get("precision", "fp32")
+    masks = ChangeMaskCache(index, vocabulary, selected)
+    metrics = evaluate_indices(
+        model, index, vocabulary, selected, device, precision=precision,
+        batch_size=args.batch_size, save_examples=examples,
+        change_masks=masks, masked_loss_config=loss_config)
+    metrics_path = examples.with_name(examples.stem + "_metrics.json")
     write_json(metrics_path, {
-        "purpose": "paired Plain/Masked validation reconstruction viewer",
+        "purpose": "E00-Masked validation reconstruction gallery",
+        "checkpoint": str(checkpoint),
+        "global_step": checkpoint_step,
         "subset": "e00_b_validation",
-        "samples": len(selected),
-        "plain": {
-            "checkpoint": str(output_root / "checkpoint_best.pt"),
-            "global_step": int(plain_payload["global_step"]),
-            "metrics": plain_metrics,
+        "selection": {
+            "static": int(args.static_count),
+            "complete_chains_per_dynamic_category": int(args.chains_per_dynamic),
+            "samples": len(selected),
         },
-        "masked": {
-            "checkpoint": str(output_root / "phase_masked/checkpoint_best.pt"),
-            "global_step": int(masked_payload["global_step"]),
-            "metrics": masked_metrics,
-        },
+        "metrics": metrics,
     })
     print(json.dumps({
-        "status": "EXPORTED_COMPARISON", "examples": str(destination),
+        "status": "EXPORTED", "examples": str(examples),
         "metrics": str(metrics_path), "samples": len(selected),
         "device": str(device), "precision": precision,
     }, indent=2))
+    if device.type == "cuda":
+        torch.cuda.empty_cache()
 
 
 def _text(array, index, default=""):
@@ -322,15 +244,10 @@ def _send(handler, body, content_type, status=200):
 
 def serve(args):
     output_root = Path(args.output_root).expanduser().resolve()
-    examples = Path(args.examples).expanduser().resolve() if args.examples else None
-    if examples is None:
-        candidates = (output_root / "viewer_comparison_examples.npz",
-                      output_root / "viewer_validation_examples.npz",
-                      output_root / "recon_examples.npz",
-                      output_root / "phase_a/recon_examples.npz")
-        examples = next((path for path in candidates if path.is_file()), None)
-    if examples is None or not examples.is_file():
-        raise FileNotFoundError("No reconstruction archive found; run export first")
+    examples = (Path(args.examples).expanduser().resolve() if args.examples else
+                output_root / "phase_masked/viewer_validation_examples.npz")
+    if not examples.is_file():
+        raise FileNotFoundError(f"Reconstruction archive missing: {examples}. Run export first.")
     archive = ReconstructionArchive(examples, output_root / "training_vocabulary.json")
     manifest_bytes = json.dumps(archive.manifest(), ensure_ascii=False).encode("utf-8")
 
@@ -386,17 +303,8 @@ def parser(argv=None):
     export.add_argument("--static-count", type=int, default=8)
     export.add_argument("--chains-per-dynamic", type=int, default=2)
     export.add_argument("--device", default="cuda:0")
-    export.add_argument("--precision", choices=("fp32", "bf16"), default="fp32")
+    export.add_argument("--precision", choices=("fp32", "bf16"))
     export.add_argument("--batch-size", type=int, default=2)
-    comparison = commands.add_parser(
-        "export-comparison", help="export paired Plain/Masked validation reconstructions")
-    comparison.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT)
-    comparison.add_argument("--examples", type=Path)
-    comparison.add_argument("--static-count", type=int, default=8)
-    comparison.add_argument("--chains-per-dynamic", type=int, default=2)
-    comparison.add_argument("--device", default="cuda:0")
-    comparison.add_argument("--precision", choices=("fp32", "bf16"), default="fp32")
-    comparison.add_argument("--batch-size", type=int, default=2)
     viewer = commands.add_parser("serve", help="serve an existing reconstruction archive")
     viewer.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT)
     viewer.add_argument("--examples", type=Path)
@@ -410,8 +318,6 @@ def main(argv=None):
     args = parser(argv)
     if args.command == "export":
         export_gallery(args)
-    elif args.command == "export-comparison":
-        export_comparison(args)
     else:
         serve(args)
     return 0

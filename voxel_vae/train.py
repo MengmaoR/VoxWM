@@ -13,11 +13,14 @@ import torch
 
 from .checkpoint import load_checkpoint, save_checkpoint
 from .dataset import VoxelSnapshotDataset
+from .early_stopping import (EarlyStoppingState, state_from_metrics,
+                             validate_early_stopping_config)
 from .evaluate import evaluate_indices, write_json
 from .losses import (DYNAMIC_CATEGORIES, accuracy_counts,
                      masked_batch_normalization, masked_vae_loss,
                      vae_loss, validate_masked_loss_config)
 from .sampler import BalancedBatchSampler
+from .training_curves import write_training_curves
 
 
 def set_seed(seed):
@@ -51,8 +54,9 @@ def _autocast(device, precision):
 def _append_jsonl(path, value):
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("a") as stream:
-        stream.write(json.dumps(value, ensure_ascii=False, allow_nan=False) + "\n")
+    with path.open("a", encoding="utf-8") as stream:
+        prefix = "\n" if value.get("event") == "resume" else ""
+        stream.write(prefix + json.dumps(value, ensure_ascii=False, allow_nan=False) + "\n")
 
 
 def _tokens(dataset, global_indices, device):
@@ -120,6 +124,7 @@ def embedding_drift(path, model):
 
 def fit(model, index, vocabulary, train_indices, evaluation_indices, output_dir,
         config, phase, balanced=True, resume=None, validation_indices=None):
+    """Historical Plain trainer."""
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     seed = int(config["seed"])
@@ -290,9 +295,10 @@ def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
     if precision not in ("fp32", "bf16"):
         raise ValueError("precision must be fp32 or bf16")
     loss_config = validate_masked_loss_config(config["loss"])
+    early_config = validate_early_stopping_config(config.get("early_stopping", {}))
     if abs(float(config.get("beta", loss_config["beta_kl"]))
            - loss_config["beta_kl"]) > 1e-15:
-        raise ValueError("Plain beta and masked beta_kl must remain identical")
+        raise ValueError("Training beta and masked beta_kl must remain identical")
     model.to(device)
     initial_embedding_path = output_dir / "embedding_initial.npz"
     if not resume:
@@ -303,13 +309,13 @@ def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
         model.parameters(), lr=float(config["learning_rate"]),
         weight_decay=float(config.get("weight_decay", 1e-4)))
     global_step = 0
-    best = math.inf
+    payload = None
     if resume:
+        # Keep CPU RNG state on CPU, including when the model/optimizer are on CUDA.
         payload = load_checkpoint(
-            resume, model, optimizer, vocabulary, index, map_location=device,
+            resume, model, optimizer, vocabulary, index,
             expected_phase="E00-Masked", expected_loss=loss_config)
         global_step = int(payload["global_step"])
-        best = float(payload.get("best_metric", math.inf))
 
     dataset = VoxelSnapshotDataset(index, vocabulary)
     sampler = BalancedBatchSampler(index, train_indices, seed=seed)
@@ -321,6 +327,36 @@ def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
     validate_every = int(config.get("validate_every", 500))
     evaluation_batch = int(config.get("evaluation_batch_size", micro_batch))
     metrics_path = output_dir / "metrics.jsonl"
+    early_path = output_dir / "early_stopping.json"
+    early_state = EarlyStoppingState()
+    if payload is not None:
+        saved_state = payload.get("early_stopping")
+        if saved_state and saved_state["config"] == early_config:
+            early_state = EarlyStoppingState.from_dict(saved_state)
+        else:
+            # Old checkpoints did not store patience. Apply it to the next live check.
+            early_state = state_from_metrics(
+                metrics_path, {**early_config, "enabled": False}, global_step)
+            saved_best = payload.get("best_metric")
+            if (saved_best is not None and math.isfinite(saved_best)
+                    and (early_state.best_metric is None or saved_best < early_state.best_metric)):
+                early_state.best_metric = saved_best
+                early_state.best_step = None
+                early_state.patience_reference = saved_best
+        _append_jsonl(metrics_path, {
+            "phase": "E00-Masked", "global_step": global_step, "event": "resume"})
+        del payload
+    metadata_path = output_dir / "run_metadata.json"
+    metadata = dict(run_metadata or {})
+    metadata.update({
+        "status": "RUNNING", "phase": "E00-Masked", "seed": seed,
+        "device": str(device), "precision": precision, "loss": loss_config,
+        "early_stopping": early_config,
+        "global_step": global_step, "max_steps": max_steps,
+    })
+    write_json(metadata_path, metadata)
+    write_json(early_path, early_state.to_dict(early_config))
+    write_training_curves(metrics_path, output_dir)
 
     if global_step == 0:
         initial = evaluate_indices(
@@ -349,20 +385,14 @@ def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
             "micro_batches": 64 // micro_batch,
             "normalization": "full-effective-batch denominators; no micro-batch divisor",
         },
+        "early_stopping": early_config,
     }
     write_json(loss_statistics_path, loss_statistics)
-    metadata_path = output_dir / "run_metadata.json"
-    metadata = dict(run_metadata or {})
-    metadata.update({
-        "status": "RUNNING", "phase": "E00-Masked", "seed": seed,
-        "device": str(device), "precision": precision, "loss": loss_config,
-        "global_step": global_step,
-    })
-    write_json(metadata_path, metadata)
 
     started = time.monotonic()
     gradient_check = None
-    while global_step < max_steps:
+    last_validation = None
+    while global_step < max_steps and not early_state.stopped:
         effective = sampler.batch(global_step)
         categories = [index.records[item].category for item in effective]
         normalization = masked_batch_normalization(
@@ -416,7 +446,9 @@ def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
         optimizer.step()
         global_step += 1
 
-        if global_step == 1 or global_step % log_every == 0 or global_step == max_steps:
+        validate_now = global_step % validate_every == 0 or global_step == max_steps
+        log_now = global_step == 1 or global_step % log_every == 0 or validate_now
+        if log_now:
             row = {
                 "phase": "E00-Masked", "global_step": global_step,
                 **{key: aggregate[key] for key in scalar_keys},
@@ -433,7 +465,7 @@ def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
             }
             _append_jsonl(metrics_path, row)
 
-        if global_step % validate_every == 0 or global_step == max_steps:
+        if validate_now:
             evaluation = evaluate_indices(
                 model, index, vocabulary, evaluation_indices, device,
                 precision=precision, batch_size=evaluation_batch,
@@ -441,31 +473,35 @@ def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
             _append_jsonl(metrics_path, {
                 "phase": "E00-Masked", "global_step": global_step,
                 "event": "overfit_evaluation", **evaluation})
-            validation = evaluate_indices(
+            last_validation = evaluate_indices(
                 model, index, vocabulary, validation_indices, device,
                 precision=precision, batch_size=evaluation_batch,
                 change_masks=change_masks, masked_loss_config=loss_config)
             _append_jsonl(metrics_path, {
                 "phase": "E00-Masked", "global_step": global_step,
-                "event": "validation", **validation})
-            score = float(validation["loss_components"]["loss_total"])
-            improved = score < best
-            if improved:
-                best = score
-            save_checkpoint(
-                output_dir / "checkpoint_last.pt", model, optimizer,
-                global_step, config, vocabulary, index, best, "E00-Masked")
-            if improved:
+                "event": "validation", **last_validation})
+            score = last_validation["loss_components"]["loss_total"]
+            new_best, _ = early_state.observe(global_step, score, early_config)
+            snapshot = early_state.to_dict(early_config)
+            if new_best:
                 save_checkpoint(
                     output_dir / "checkpoint_best.pt", model, optimizer,
-                    global_step, config, vocabulary, index, best, "E00-Masked")
+                    global_step, config, vocabulary, index, early_state.best_metric,
+                    "E00-Masked", early_stopping=snapshot)
+            save_checkpoint(
+                output_dir / "checkpoint_last.pt", model, optimizer,
+                global_step, config, vocabulary, index, early_state.best_metric,
+                "E00-Masked", early_stopping=snapshot)
+            write_json(early_path, snapshot)
+        if log_now:
+            write_training_curves(metrics_path, output_dir)
 
     final = evaluate_indices(
         model, index, vocabulary, evaluation_indices, device,
         precision=precision, batch_size=evaluation_batch,
         save_examples=output_dir / "recon_examples.npz",
         change_masks=change_masks, masked_loss_config=loss_config)
-    final_validation = evaluate_indices(
+    final_validation = last_validation or evaluate_indices(
         model, index, vocabulary, validation_indices, device,
         precision=precision, batch_size=evaluation_batch,
         change_masks=change_masks, masked_loss_config=loss_config)
@@ -482,18 +518,21 @@ def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
         "parameter_count": parameter_count(model), "loss": loss_config,
         "initial_embedding": str(initial_embedding_path),
         "embedding_drift": embedding_drift(initial_embedding_path, model),
+        "stopped_early": early_state.stopped,
+        "early_stopping": early_state.to_dict(early_config),
         "gradient_check": gradient_check,
         "initial": initial, "final": final,
         "initial_validation": initial_validation,
         "validation": final_validation,
     }
     write_json(output_dir / "final_metrics.json", result)
-    save_checkpoint(output_dir / "checkpoint_last.pt", model, optimizer,
-                    global_step, config, vocabulary, index, best, "E00-Masked")
     metadata.update({
-        "status": "COMPLETE", "global_step": global_step,
+        "status": ("EARLY_STOPPED" if early_state.stopped else "COMPLETE"),
+        "global_step": global_step,
         "training_seconds": result["training_seconds"],
-        "best_validation_loss": best,
+        "best_validation_loss": early_state.best_metric,
+        "best_step": early_state.best_step,
+        "stop_reason": early_state.stop_reason,
     })
     write_json(metadata_path, metadata)
     return result

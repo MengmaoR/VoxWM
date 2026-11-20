@@ -1,13 +1,10 @@
-"""Paired best-checkpoint comparison for E00-Plain and E00-Masked."""
+"""Historical E00-Plain and E00-Masked comparison."""
 from __future__ import annotations
 
-import argparse
 import json
 from pathlib import Path
 
 
-ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_OUTPUT = ROOT / "outputs/voxel_vae/e00"
 DYNAMIC_CATEGORIES = ("D1", "D2", "D3", "D4")
 
 
@@ -130,22 +127,5 @@ def compare(output_root, device_name="cuda:0", batch_size=2):
     return result
 
 
-def main(argv=None):
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT)
-    parser.add_argument("--device", default="cuda:0")
-    parser.add_argument("--batch-size", type=int, default=2)
-    args = parser.parse_args(argv)
-    result = compare(args.output_root, args.device, args.batch_size)
-    print(json.dumps({
-        "status": "COMPARED",
-        "output": str(Path(args.output_root) / "loss_comparison.json"),
-        "plain_step": result["plain"]["global_step"],
-        "masked_step": result["masked"]["global_step"],
-        "table": result["table"],
-    }, indent=2))
-    return 0
-
-
 if __name__ == "__main__":
-    raise SystemExit(main())
+    raise SystemExit("E00-Plain is historical. Use voxel_vae.recon_viewer export for Masked.")

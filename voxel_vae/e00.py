@@ -1,4 +1,4 @@
-"""Prepare and manually run E00-A/B real-data VAE sanity overfits."""
+"""Prepare and manually run the active E00-Masked VAE experiment."""
 from __future__ import annotations
 
 import argparse
@@ -189,50 +189,6 @@ def prepare(args):
     }, indent=2))
 
 
-def run_phase(args, phase):
-    from .train import fit, set_seed
-
-    output = Path(args.output_root).expanduser().resolve()
-    config = load_config(output / "config.yaml")
-    vocabulary, index, subset = _load_artifacts(output)
-    if phase == "a":
-        phase_output = output / "phase_a"
-        train_indices = _subset_indices(subset, "e00_a_train")
-        validation_indices = None
-        phase_config = dict(config["training"], **config["e00_a"])
-        balanced = False
-    else:
-        phase_output = output
-        phase_a_path = output / "phase_a/final_metrics.json"
-        if not phase_a_path.is_file():
-            raise RuntimeError("Run E00-A successfully before E00-B")
-        phase_a = json.loads(phase_a_path.read_text())
-        if (phase_a["final"]["exact_token_accuracy"] < 0.99 or
-                (phase_a["final"]["non_air_exact_token_accuracy"] or 0) < 0.99):
-            raise RuntimeError("E00-A did not reach 99% overall and non-Air accuracy; do not run E00-B")
-        train_indices = _subset_indices(subset, "e00_b_train")
-        validation_indices = _subset_indices(subset, "e00_b_validation")
-        phase_config = dict(config["training"], **config["e00_b"])
-        balanced = True
-    if args.device:
-        phase_config["device"] = args.device
-    # Model parameters, including the token embedding, must be initialized
-    # after the configured seed is applied. fit() resets the same seed again
-    # for deterministic sampling/training after construction.
-    set_seed(int(phase_config["seed"]))
-    model = _model(config, vocabulary)
-    resume = args.resume
-    if resume == "auto":
-        candidate = phase_output / "checkpoint_last.pt"
-        resume = str(candidate) if candidate.is_file() else None
-    result = fit(
-        model, index, vocabulary, train_indices, train_indices, phase_output,
-        phase_config, f"E00-{phase.upper()}", balanced=balanced, resume=resume,
-        validation_indices=validation_indices)
-    render_report(output)
-    print(json.dumps(result, indent=2))
-
-
 def _sha256(path):
     digest = hashlib.sha256()
     with Path(path).open("rb") as stream:
@@ -256,32 +212,36 @@ def run_masked(args):
     from .train import fit_masked, set_seed
 
     output = Path(args.output_root).expanduser().resolve()
-    core_plain = (
-        "final_metrics.json", "metrics.jsonl", "checkpoint_best.pt",
-        "checkpoint_last.pt", "subset_manifest.json", "config.yaml")
-    missing = [name for name in core_plain if not (output / name).is_file()]
+    required = ("subset_manifest.json", "config.yaml", "training_vocabulary.json",
+                "dataset_index.json")
+    missing = [name for name in required if not (output / name).is_file()]
     if missing:
         raise FileNotFoundError(
-            "E00-Plain is incomplete; missing: " + ", ".join(missing))
+            "Prepared Masked training artifacts are missing: " + ", ".join(missing))
     vocabulary, index, subset = _load_artifacts(output)
-    plain_config = load_config(output / "config.yaml")
+    prepared_config = load_config(output / "config.yaml")
     source_config = load_config(DEFAULT_CONFIG)
     if "loss" not in source_config:
         raise ValueError("Source e00.yaml lacks the E00-Masked loss block")
     train_indices = _subset_indices(subset, "e00_b_train")
     validation_indices = _subset_indices(subset, "e00_b_validation")
-    phase_config = dict(plain_config["training"], **plain_config["e00_b"])
+    phase_config = dict(prepared_config["training"], **prepared_config["e00_b"])
     phase_config["loss"] = dict(source_config["loss"])
+    phase_config["early_stopping"] = dict(prepared_config.get(
+        "early_stopping", source_config["early_stopping"]))
     if args.device:
         phase_config["device"] = args.device
     if abs(float(phase_config["beta"]) - float(phase_config["loss"]["beta_kl"])) > 1e-15:
-        raise ValueError("Masked KL beta differs from E00-Plain")
+        raise ValueError("Masked KL beta differs from the prepared E00 beta")
 
     phase_output = output / "phase_masked"
     resume = args.resume
     if resume == "auto":
-        candidate = phase_output / "checkpoint_last.pt"
-        resume = str(candidate) if candidate.is_file() else None
+        resume = phase_output / "checkpoint_last.pt"
+    elif resume:
+        resume = Path(resume).expanduser().resolve()
+    if resume and not resume.is_file():
+        raise FileNotFoundError(f"Masked resume checkpoint not found: {resume}")
     protected = ("metrics.jsonl", "final_metrics.json", "checkpoint_best.pt",
                  "checkpoint_last.pt", "recon_examples.npz")
     if not resume and any((phase_output / name).exists() for name in protected):
@@ -289,44 +249,20 @@ def run_masked(args):
             "phase_masked already contains run artifacts; use --resume or a clean output")
 
     set_seed(int(phase_config["seed"]))
-    model = _model(plain_config, vocabulary)
+    model = _model(prepared_config, vocabulary)
     initial_state_sha256 = _model_state_sha256(model)
-    plain_best = torch.load(
-        output / "checkpoint_best.pt", map_location="cpu", weights_only=False)
-    plain_initial_embedding = output / "embedding_initial.npz"
-    pairing = {
-        "same_architecture": plain_best.get("architecture") == model.architecture_config(),
-        "same_seed_config": int(plain_best["config"]["seed"]) == int(phase_config["seed"]),
-        "same_training_subset": True,
-        "same_validation_subset": True,
-        "same_sampler": True,
-        "same_optimizer_hyperparameters": all(
-            plain_best["config"].get(key) == phase_config.get(key)
-            for key in ("learning_rate", "weight_decay", "effective_batch_size",
-                        "micro_batch_size", "max_steps", "validate_every")),
-        "plain_initial_embedding_present": plain_initial_embedding.is_file(),
-        "full_initial_state_pairing": "UNVERIFIABLE",
-        "reason": ("E00-Plain predates step-0 state capture and has no "
-                   "embedding_initial.npz; Masked reconstructs initialization from "
-                   "the same architecture, seed and server PyTorch, but exact Plain "
-                   "initial weights cannot be proven after the fact."),
-    }
     phase_output.mkdir(parents=True, exist_ok=True)
     save_config(phase_output / "config.yaml", phase_config)
     masks = ChangeMaskCache(
         index, vocabulary, list(dict.fromkeys(train_indices + validation_indices)))
     metadata = {
-        "plain_directory": str(output),
         "masked_directory": str(phase_output),
-        "plain_checkpoint_best": str(output / "checkpoint_best.pt"),
-        "plain_checkpoint_git_commit": plain_best.get("git_commit"),
-        "plain_config_sha256": _sha256(output / "config.yaml"),
+        "prepared_config_sha256": _sha256(output / "config.yaml"),
         "subset_manifest_sha256": _sha256(output / "subset_manifest.json"),
         "canonical_vocabulary_sha256": vocabulary.sha256,
         "masked_initial_state_sha256": initial_state_sha256,
         "torch_version": torch.__version__,
         "cuda_version": torch.version.cuda,
-        "pairing": pairing,
         "train_mask_statistics": masks.statistics(train_indices),
         "validation_mask_statistics": masks.statistics(validation_indices),
     }
@@ -335,11 +271,12 @@ def run_masked(args):
             model, index, vocabulary, train_indices, train_indices,
             validation_indices, masks, phase_output, phase_config,
             resume=resume, run_metadata=metadata)
-    except Exception as exc:
+    except (Exception, KeyboardInterrupt) as exc:
         metadata_path = phase_output / "run_metadata.json"
         failed = (json.loads(metadata_path.read_text())
                   if metadata_path.is_file() else metadata)
-        failed.update(status="FAILED", error=f"{type(exc).__name__}: {exc}")
+        status = "INTERRUPTED" if isinstance(exc, KeyboardInterrupt) else "FAILED"
+        failed.update(status=status, error=f"{type(exc).__name__}: {exc}")
         _write_json(metadata_path, failed)
         raise
     render_report(output)
@@ -348,32 +285,16 @@ def run_masked(args):
 
 def render_report(output):
     output = Path(output)
-    vocabulary, index, subset = _load_artifacts(output)
-    config = load_config(output / "config.yaml")
-    phase_a_path = output / "phase_a/final_metrics.json"
-    phase_b_path = output / "final_metrics.json"
-    masked_path = output / "phase_masked/final_metrics.json"
-    comparison_path = output / "loss_comparison.json"
-    phase_a = json.loads(phase_a_path.read_text()) if phase_a_path.is_file() else None
-    phase_b = json.loads(phase_b_path.read_text()) if phase_b_path.is_file() else None
+    vocabulary, index, _ = _load_artifacts(output)
+    masked_dir = output / "phase_masked"
+    masked_path = masked_dir / "final_metrics.json"
     masked = json.loads(masked_path.read_text()) if masked_path.is_file() else None
-    comparison = (json.loads(comparison_path.read_text())
-                  if comparison_path.is_file() else None)
-    a_pass = bool(phase_a and phase_a["final"]["exact_token_accuracy"] >= 0.99
-                  and (phase_a["final"]["non_air_exact_token_accuracy"] or 0) >= 0.99)
-    status = "GO" if a_pass and phase_b else "INCONCLUSIVE"
     summary = index.summary()
-    try:
-        model = _model(config, vocabulary)
-        parameters = sum(parameter.numel() for parameter in model.parameters())
-    except ModuleNotFoundError as exc:
-        if exc.name != "torch":
-            raise
-        parameters = None
     lines = [
-        f"# {status} — VoxWM E00 Voxel VAE",
+        "# VoxWM E00-Masked Voxel VAE",
         "",
-        "E00 is a tiny real-data implementation/overfit sanity check, not a generalization result.",
+        "Masked is the only active VAE training path. Earlier Plain artifacts are retained "
+        "as read-only history and are not an active comparison target.",
         "",
         "## Dataset",
         "",
@@ -386,75 +307,39 @@ def render_report(output):
         "",
         "## Model",
         "",
-        f"- Parameters: {'pending PyTorch environment' if parameters is None else f'{parameters:,}'}",
         "- Embedding: 32; encoder: 96/192/192; latent: `[16,4,4,4]`.",
         "- Decoder: 192/192/96/32; no skip, attention, Transformer or softmax.",
-        "- Loss: equal-voxel CE + beta(1e-6) × raw KL.",
+        "- Objective: 0.5 Static CE + 0.25 Dynamic-Unchanged CE + "
+        "0.25 Dynamic-Changed CE + 1e-6 raw KL.",
         "",
-        "## E00-A",
+        "## Current Masked run",
         "",
     ]
-    if phase_a:
-        lines += [
-            f"- Steps: {phase_a['global_step']}; seconds: {phase_a['training_seconds']:.2f}",
-            f"- CE: {phase_a['initial']['cross_entropy']:.6f} → "
-            f"{phase_a['final']['cross_entropy']:.6f}",
-            f"- Exact accuracy: {phase_a['final']['exact_token_accuracy']:.6f}",
-            f"- Non-Air exact accuracy: {phase_a['final']['non_air_exact_token_accuracy']}",
-            f"- KL: {phase_a['final']['latent']['kl_raw']:.6f}",
-            f"- Overfit criterion (overall/non-air ≥99%): {'PASS' if a_pass else 'FAIL'}",
-        ]
-    else:
-        lines.append("- NOT RUN. Code and fixed 8-sample manifest are prepared.")
-    lines += ["", "## E00-B", ""]
-    if phase_b:
-        lines += [
-            f"- Steps: {phase_b['global_step']}; seconds: {phase_b['training_seconds']:.2f}",
-            f"- Train-overfit CE: {phase_b['initial']['cross_entropy']:.6f} → "
-            f"{phase_b['final']['cross_entropy']:.6f}",
-            f"- Category reconstruction: `{phase_b['final']['categories']}`",
-            f"- Dynamic diagnostics: `{phase_b['final']['dynamic']}`",
-            f"- Dynamic diagnostics by category: "
-            f"`{phase_b['final'].get('dynamic_by_category')}`",
-            f"- Active latent channels: {phase_b['final']['latent']['active_latent_channels']}/16",
-            f"- Embedding drift from step 0: `{phase_b.get('embedding_drift')}`",
-            f"- Validation diagnostics: `{phase_b.get('validation')}`",
-        ]
-    else:
-        lines.append("- NOT RUN. Fixed 160-train/160-validation manifests are prepared.")
-    lines += ["", "## E00-Masked", ""]
     if masked:
         lines += [
             f"- Steps: {masked['global_step']}; seconds: {masked['training_seconds']:.2f}",
-            "- Objective: 0.5 Static CE + 0.25 Dynamic-Unchanged CE + "
-            "0.25 Dynamic-Changed CE + 1e-6 raw KL.",
+            f"- Parameters: {masked['parameter_count']:,}",
+            f"- Early stopped: `{masked.get('stopped_early', False)}`; "
+            f"state: `{masked.get('early_stopping')}`",
             f"- Final train loss components: `{masked['final']['loss_components']}`",
+            f"- Final validation loss components: "
+            f"`{masked['validation']['loss_components']}`",
             f"- Final validation reconstruction: "
             f"`{masked['validation']['dynamic_reconstruction']}`",
             f"- Final validation static preservation: "
             f"`{masked['validation']['static_preservation']}`",
         ]
     else:
-        lines.append("- NOT RUN. Code uses the existing E00-B train/validation manifest.")
-    if comparison:
-        lines += ["", "## Plain / Masked paired comparison", "",
-                  f"- Best-checkpoint validation table: `{comparison['table']}`",
-                  "- This remains a 160-state implementation sanity comparison, not a generalization claim."]
+        lines.append("- No completed Masked run is present.")
     lines += [
-        "", "## Issues", "",
-        "- Verified in code/tests: canonical remap, committed-row index, center crop, balanced sampler, model/loss/checkpoint APIs.",
-    ]
-    if phase_a and phase_b:
-        lines.append("- Real GPU E00-A and E00-B artifacts are present; E00 remains a sanity overfit, not a generalization result.")
-    elif phase_a:
-        lines.append("- Real GPU E00-A is present; E00-B numerical results remain unverified until its command completes.")
-    else:
-        lines.append("- E00-A/B numerical claims remain unverified until the corresponding real GPU commands complete.")
-    lines += [
-        "- E01 is blocked until E00-A overfits and E00-B/checkpoint-resume diagnostics complete.",
+        "", "## Training diagnostics", "",
+        "- `loss_curves.svg` and `loss_curves.json` are refreshed during training.",
+        "- Early stopping monitors validation total loss; the best checkpoint is retained separately.",
+        "- The web monitor is read-only and does not start, stop or own the training process.",
         "",
     ]
-    (output / "report.md").write_text("\n".join(lines))
+    masked_dir.mkdir(parents=True, exist_ok=True)
+    (masked_dir / "report.md").write_text("\n".join(lines))
 
 
 def parser(argv=None):
@@ -464,12 +349,11 @@ def parser(argv=None):
     prepare_parser.add_argument("--dataset-root", action="append", required=True)
     prepare_parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
     prepare_parser.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT)
-    for name in ("run-a", "run-b", "run-masked"):
-        run_parser = commands.add_parser(name)
-        run_parser.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT)
-        run_parser.add_argument("--device", help="auto/cuda/cpu; default from prepared config")
-        run_parser.add_argument("--resume", nargs="?", const="auto",
-                                help="Resume a compatible checkpoint; omit path for checkpoint_last.pt")
+    run_parser = commands.add_parser("run-masked")
+    run_parser.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT)
+    run_parser.add_argument("--device", help="auto/cuda/cpu; default from prepared config")
+    run_parser.add_argument("--resume", nargs="?", const="auto",
+                            help="Resume a compatible checkpoint; omit path for checkpoint_last.pt")
     report_parser = commands.add_parser("report")
     report_parser.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT)
     return top.parse_args(argv)
@@ -479,15 +363,11 @@ def main(argv=None):
     args = parser(argv)
     if args.command == "prepare":
         prepare(args)
-    elif args.command == "run-a":
-        run_phase(args, "a")
-    elif args.command == "run-b":
-        run_phase(args, "b")
     elif args.command == "run-masked":
         run_masked(args)
     else:
         render_report(args.output_root)
-        print(Path(args.output_root) / "report.md")
+        print(Path(args.output_root) / "phase_masked/report.md")
     return 0
 
 

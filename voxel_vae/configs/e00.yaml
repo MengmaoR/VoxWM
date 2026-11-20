@@ -1,4 +1,4 @@
-experiment: E00 Voxel VAE sanity overfit
+experiment: E00-Masked voxel VAE sanity overfit
 model:
   embedding_dim: 32
   base_channels: 96
@@ -22,6 +22,13 @@ loss:
   lambda_dynamic: 0.5
   alpha_changed: 0.5
   beta_kl: 0.000001
+early_stopping:
+  enabled: true
+  monitor: validation_loss_total
+  mode: min
+  patience_validations: 2
+  min_delta: 0.001
+  min_steps: 500
 e00_a:
   max_steps: 3000
   validate_every: 250

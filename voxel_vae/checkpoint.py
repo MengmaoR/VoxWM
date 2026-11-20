@@ -36,7 +36,7 @@ def _restore_rng(state):
 
 
 def save_checkpoint(path, model, optimizer, global_step, config, vocabulary,
-                    dataset_index, best_metric=None, phase=None):
+                    dataset_index, best_metric=None, phase=None, *, early_stopping=None):
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     payload = {
@@ -57,6 +57,8 @@ def save_checkpoint(path, model, optimizer, global_step, config, vocabulary,
         "git_commit": git_commit(),
         "rng": _rng_state(),
     }
+    if early_stopping is not None:
+        payload["early_stopping"] = early_stopping
     temporary = path.with_name("." + path.name + ".tmp")
     torch.save(payload, temporary)
     temporary.replace(path)

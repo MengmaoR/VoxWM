@@ -1,6 +1,6 @@
-# VoxWM — Voxel VAE E00
+# VoxWM — Voxel VAE E00-Masked
 
-两个正式100K Clip已完成。当前阶段实现最小Combined-Token 3D ResNet VAE与E00 tiny-overfit闭环；[模型、训练与手动运行命令](voxel_vae/README.md)。每样本保留真实48³上下文，VAE只读取中心16³；动态每链五状态对VAE仍是独立reconstruction samples。
+两个正式100K Clip已完成。当前只推进E00-Masked Combined-Token 3D ResNet VAE，Plain产物保留作历史。每个样本保留真实48³上下文，VAE读取中心16³。训练自动保存分项loss曲线，支持验证集早停和独立网页监控。[Masked训练与监控命令](voxel_vae/README.md)
 
 [当前数据协议](VAE_DATA_COLLECTION_PROTOCOL.md) · [历史生成/检查命令](vae_data/README.md) · [E00入口](voxel_vae/README.md)。数据生成代码保持只读兼容；当前模型代码独立位于`voxel_vae/`，不得把训练逻辑混入`vae_data/sharded/`。
 

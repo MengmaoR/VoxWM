@@ -1,13 +1,13 @@
 # VoxWM 执行守则
 
-数据采集阶段已完成；当前活动入口是`voxel_vae/`的E00 Combined-Token 3D ResNet VAE。E00-Plain已作为只读control完成；当前获批的唯一新增实验是E00-Masked联合Static/Dynamic-Unchanged/Dynamic-Changed重建目标。`python -m vae_data` → `vae_data/sharded/`及[数据协议](VAE_DATA_COLLECTION_PROTOCOL.md)继续定义只读正式数据格式，不得因训练需要改写。最新用户E00-Masked指令优先。
+数据采集阶段已完成。当前活动方向是`voxel_vae/`的E00-Masked Combined-Token 3D ResNet VAE。Plain E00-A/B 只作为只读历史保留，停止后续训练和对照研究。`python -m vae_data` → `vae_data/sharded/`及[数据协议](VAE_DATA_COLLECTION_PROTOCOL.md)继续定义只读正式数据格式。
 
-- 当前只实现E00 dataset/index、canonical vocabulary、固定3D ResNet VAE、Plain control与Masked objective、balanced sampler、trainer/checkpoint/evaluation和tiny overfit；禁止E01正式训练、架构/beta/latent sweep、alpha=0.75消融、Dynamics/VoxGen/VoxEvolve/Vox2Pix训练及新数据采集。
+- 当前范围为E00-Masked的dataset/index、canonical vocabulary、固定3D ResNet VAE、balanced sampler、训练与诊断代码。E01正式训练、架构/beta/latent sweep、alpha=0.75消融、Dynamics训练及新数据采集均需要另行授权。
 - 正式训练数据为`vae_100k_clip1`与`vae_100k_clip2`两个独立100K roots。不同root的uint16 ID没有跨root语义；训练必须按真实`(Node Name,raw param2)`构建确定性canonical vocabulary并在线remap，不得改原Zarr或设置UNK/静默丢token。
 - VAE只输入中心`tokens[16:32,16:32,16:32]`的canonical离散ID，经随机32D `nn.Embedding`进入网络。light、biome/category/time/chain/Δt均不输入；D4 anchor不算训练sample；五个动态状态是独立reconstruction sample。
-- E00架构固定为96/192/192 3D ResNet Encoder、`mu/logvar:[B,16,4,4,4]`、nearest-upsample Decoder和K类logits；无skip/attention/Transformer/dropout/BatchNorm。Plain control的loss为等权voxel CE + `1e-6`未归一化raw KL；effective batch固定32 Static + D1-D4各8，AdamW 1e-4、clip1.0、无scheduler。
-- E00-Masked不改模型，只将重建项固定为`0.5 L_static + 0.25 L_dynamic_unchanged + 0.25 L_dynamic_changed`，并保留`1e-6 raw KL`。Changed Mask必须由同一完整五状态链的Canonical中心16³构造，不能输入模型。microbatch=2必须使用完整effective batch的全局样本分母，不再除以32。Masked只写`outputs/voxel_vae/e00/phase_masked/`，Plain根目录产物不得覆盖或续训；本轮仅授权一次最多5000步Masked运行及配对比较。
-- E00-A最多3000步、必须覆盖五类且overall/non-Air exact均达到99%才允许E00-B；E00-B固定80 Static + 四类各4条完整五状态链、最多5000步。两者真实GPU执行仍由用户手动启动；Codex不得自动进入E01。
+- E00架构固定为96/192/192 3D ResNet Encoder、`mu/logvar:[B,16,4,4,4]`、nearest-upsample Decoder和K类logits，无skip/attention/Transformer/dropout/BatchNorm。Effective batch固定32 Static + D1–D4各8，AdamW 1e-4，clip 1.0，无scheduler。
+- E00-Masked目标固定为`0.5 L_static + 0.25 L_dynamic_unchanged + 0.25 L_dynamic_changed + 1e-6 raw KL`。Changed Mask由同一完整五状态链的Canonical中心16³构造，只用于重建loss。microbatch=2使用完整effective batch的全局样本分母。训练和独立验证各使用80 Static及D1–D4各4条完整五状态链，保留5000步上限。
+- 所有真实训练及续跑由用户手动执行。Codex负责代码与快速本地测试，不启动训练或GPU实验。Masked产物写入所选输出根目录的`phase_masked/`。每次训练保存总loss和分项曲线`loss_curves.svg`与`loss_curves.json`。只读`voxel_vae.training_monitor`独立查看日志。默认每500步验证，从第500步起连续两次验证总loss改善未超过0.001时早停，保存最低验证总loss的`checkpoint_best.pt`与可恢复的早停状态。Plain历史产物保持只读。
 - 当前规模100K，100个严格1K片；每片Static500，D1/D2/D3/D4各125，动态每类25条完整五状态链。D4是Water–Lava Solidification，完全替代历史Vegetation，不自动恢复旧200K配方。
 - 正式样本保存真实同一时刻48³(27个相邻16³采样窗口)，目标与动态判定仅中心 `[16:32]^3`。Dynamic保持全局16格网格；Static仅高度可逐整数偏移，与引擎MapBlock明确区分，完整Region高度必须在[-62,193]。邻块变化不能加候选、拼链或重置超时；D1/D2/D4为48 Tick，D3为120 Tick。
 - Dynamic最多10个中心不同候选，随机连续五状态窗口，不足则拒绝。D4必须完整中心Pre–Reaction–Post，物理帧统一去重，成功场景的Anchor独立保存且不计入1K。

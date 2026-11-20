@@ -30,7 +30,28 @@ function addWire(ids,offset,color){const mesh=new THREE.InstancedMesh(new THREE.
 function addErrors(gt,pred){const mode=$('errorMode').value;if(mode==='off')return;if(mode==='comparison'&&current.predictions.Plain&&current.predictions.Masked){const plain=current.predictions.Plain,masked=current.predictions.Masked,improved=[],regressed=[],bothWrong=[],unchangedError=[];for(let i=0;i<gt.length;i++){if(!visible(i))continue;const p=plain[i]===gt[i],m=masked[i]===gt[i];if(current.changed_mask[i]){if(!p&&m)improved.push(i);else if(p&&!m)regressed.push(i);else if(!p&&!m)bothWrong.push(i);}else if(pred[i]!==gt[i])unchangedError.push(i);}addWire(improved,10,0x36df76);addWire(regressed,10,0xd95cff);addWire(bothWrong,10,0xff3f37);addWire(unchangedError,10,0xffa52f);return;}const targets=mode==='both'?[[-10,0xffd84a],[10,0xff3f37]]:[[10,0xff3f37]];for(const[offset,color]of targets){const ids=[];for(let i=0;i<gt.length;i++)if(gt[i]!==pred[i]&&visible(i))ids.push(i);addWire(ids,offset,color);}}
 function legend(values){const ids=[...new Set(values)].filter(id=>colorFor(id)).sort((a,b)=>a-b);$('legend').innerHTML=ids.slice(0,30).map(id=>{const token=manifest.vocabulary[id],color='#'+colorFor(id).getHexString();return`<div class="legend-row"><span class="swatch" style="background:${color}"></span>${token.node_name} · p2=${token.param2}</div>`}).join('')+(ids.length>30?`<div>… ${ids.length-30} more token states</div>`:'');}
 function selectedPrediction(){return current.predictions[$('variant').value]||current.predicted;}
-function render(){if(!current)return;const predicted=selectedPrediction(),correct=predicted.reduce((n,v,i)=>n+(v===current.gt[i]),0),errorsCount=4096-correct;clear(content,true);clear(bounds);clear(errors);addVolume(current.gt,-10);addVolume(predicted,10);addBounds(-10);addBounds(10);addErrors(current.gt,predicted);legend([...current.gt,...predicted]);const r=current.record,changed=current.changed_mask.filter(Boolean).length;$('summary').textContent=`${$('variant').value} exact=${(100*correct/4096).toFixed(5)}% · errors=${errorsCount}/4096 · changed-mask voxels=${changed}\nComparison overlay: green=Masked fixed Plain error; magenta=Masked regression; red=both wrong; orange=selected-model unchanged-region error.`;$('metadata').textContent=JSON.stringify(r,null,2);document.querySelector('.side.pred').textContent=`${$('variant').value} reconstruction`;}
+function render() {
+  if (!current) return;
+  const predicted = selectedPrediction();
+  const correct = predicted.reduce((count, token, i) => count + (token === current.gt[i]), 0);
+  clear(content, true);
+  clear(bounds);
+  clear(errors);
+  addVolume(current.gt, -10);
+  addVolume(predicted, 10);
+  addBounds(-10);
+  addBounds(10);
+  addErrors(current.gt, predicted);
+  legend([...current.gt, ...predicted]);
+  const variant = $('variant').value;
+  const changed = current.changed_mask.filter(Boolean).length;
+  const summary = `${variant} exact=${(100 * correct / 4096).toFixed(5)}% · errors=${4096 - correct}/4096 · changed-mask voxels=${changed}`;
+  $('summary').textContent = $('errorMode').value === 'comparison'
+    ? `${summary}\nGreen: error fixed in Masked. Magenta: regression. Red: shared error. Orange: unchanged-region error.`
+    : summary;
+  $('metadata').textContent = JSON.stringify(current.record, null, 2);
+  document.querySelector('.side.pred').textContent = `${variant} reconstruction`;
+}
 function tokenText(id){const row=manifest.vocabulary[id];return`${id}: ${row.node_name}, param2=${row.param2}`;}
 function inspect(event){if(!current)return;const rect=renderer.domElement.getBoundingClientRect();pointer.set((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(pointer,camera);const hit=raycaster.intersectObjects(content.children,false)[0];if(!hit||hit.instanceId===undefined)return;const id=hit.object.userData.indices[hit.instanceId],[x,y,z]=xyz(id),gt=current.gt[id],lines=Object.entries(current.predictions).map(([name,value])=>`${name}: ${tokenText(value[id])} ${value[id]===gt?'✓':'✗'}`);$('inspector').textContent=`Clicked: ${hit.object.userData.side}\nLocal XYZ: ${x}, ${y}, ${z}\nChanged mask: ${current.changed_mask[id]?'YES':'no'}\nGT: ${tokenText(gt)}\n${lines.join('\n')}`;}
 async function loadSample(index){$('error').textContent='';try{const response=await fetch(`/api/sample?index=${index}`);if(!response.ok)throw Error(await response.text());current=await response.json();render();}catch(error){$('error').textContent=error.message;}}
@@ -39,7 +60,17 @@ function updateState(){const g=group(),state=Math.min(Number($('state').value),g
 function updateExamples(){const groups=manifest.groups[$('category').value];$('example').innerHTML=groups.map((g,i)=>`<option value="${i}">${g.label}</option>`).join('');$('state').value=0;updateState();}
 function step(delta){const max=Number($('state').max);$('state').value=(Number($('state').value)+delta+max+1)%(max+1);updateState();}
 function stop(){if(playing){clearInterval(playing);playing=null;$('play').textContent='Play';}}
-async function init(){manifest=await(await fetch('/api/manifest')).json();const categories=Object.keys(manifest.groups);$('category').innerHTML=categories.map(c=>`<option>${c}</option>`).join('');$('variant').innerHTML=manifest.variants.map(v=>`<option>${v}</option>`).join('');$('variant').value=manifest.variants.includes('Masked')?'Masked':manifest.variants[manifest.variants.length-1];resetCamera();updateExamples();}
+async function init() {
+  manifest = await (await fetch('/api/manifest')).json();
+  const categories = Object.keys(manifest.groups);
+  $('category').innerHTML = categories.map(category => `<option>${category}</option>`).join('');
+  $('variant').innerHTML = manifest.variants.map(variant => `<option>${variant}</option>`).join('');
+  const hasMasked = manifest.variants.includes('Masked');
+  $('variant').value = hasMasked ? 'Masked' : manifest.variants.at(-1);
+  $('pairedOverlay').hidden = !(hasMasked && manifest.variants.includes('Plain'));
+  resetCamera();
+  updateExamples();
+}
 $('category').onchange=()=>{stop();updateExamples();};$('example').onchange=()=>{stop();$('state').value=0;updateState();};$('state').oninput=()=>{stop();updateState();};
 $('back').onclick=()=>{stop();step(-1);};$('next').onclick=()=>{stop();step(1);};$('play').onclick=()=>{if(playing){stop();return;}$('play').textContent='Pause';playing=setInterval(()=>step(1),900);};
 $('axis').onchange=render;$('slice').oninput=()=>{$('sliceLabel').textContent=$('slice').value;render();};$('variant').onchange=render;$('errorMode').onchange=render;$('reset').onclick=resetCamera;renderer.domElement.addEventListener('click',inspect);

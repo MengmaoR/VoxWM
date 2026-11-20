@@ -5,6 +5,7 @@ from pathlib import Path
 import torch
 
 from voxel_vae.checkpoint import load_checkpoint, save_checkpoint
+from voxel_vae.early_stopping import EarlyStoppingState, validate_early_stopping_config
 from voxel_vae.losses import vae_loss
 from voxel_vae.model import VoxelVAE
 from voxel_vae.vocabulary import CanonicalVocabulary
@@ -85,15 +86,21 @@ class ModelTests(unittest.TestCase):
             ("node:b", 0), ("node:c", 0), ("node:d", 0), ("node:e", 0)))
         loss = {"objective": "static_dynamic_masked_v1", "lambda_static": 0.5,
                 "lambda_dynamic": 0.5, "alpha_changed": 0.5, "beta_kl": 1e-6}
+        policy = validate_early_stopping_config({"min_steps": 0})
+        early = EarlyStoppingState()
+        early.observe(1, 2.0, policy)
+        early.observe(3, 2.1, policy)
         optimizer = torch.optim.AdamW(self.model.parameters(), lr=1e-4)
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / "masked.pt"
             save_checkpoint(path, self.model, optimizer, 3, {"loss": loss},
-                            vocabulary, _Index(), 2.0, "E00-Masked")
+                            vocabulary, _Index(), 2.0, "E00-Masked",
+                            early_stopping=early.to_dict(policy))
             restored = VoxelVAE(7)
-            load_checkpoint(path, restored, None, vocabulary, _Index(),
-                            restore_rng=False, expected_phase="E00-Masked",
-                            expected_loss=loss)
+            payload = load_checkpoint(path, restored, None, vocabulary, _Index(),
+                                      restore_rng=False, expected_phase="E00-Masked",
+                                      expected_loss=loss)
+            self.assertEqual(EarlyStoppingState.from_dict(payload["early_stopping"]), early)
             with self.assertRaisesRegex(ValueError, "phase"):
                 load_checkpoint(path, restored, None, vocabulary, _Index(),
                                 restore_rng=False, expected_phase="E00-B")
