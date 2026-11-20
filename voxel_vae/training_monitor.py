@@ -35,7 +35,7 @@ pre { background: #111b25; padding: 12px; overflow: auto; }
   <details><summary>Latest loss components and run details</summary><pre id="detail"></pre></details>
 </main>
 <script>
-const fields = ["Logged status", "Optimizer step", "Train pool", "Training total",
+const fields = ["Logged status", "Optimizer step", "Workers", "Train pool", "Training total",
                 "Validation total", "Best validation", "Checks without improvement", "Log age (s)"];
 const cards = document.getElementById("cards");
 const cells = fields.map(label => {
@@ -66,7 +66,7 @@ async function refresh() {
     const patience = run.bad_validations == null ? "—" :
       `${run.bad_validations} / ${run.patience_validations}`;
     const pool = run.training_pool?.samples?.toLocaleString() ?? "—";
-    const values = [run.status, step, pool, loss(run.latest_train_loss),
+    const values = [run.status, step, run.world_size ?? "—", pool, loss(run.latest_train_loss),
                     loss(run.latest_validation_loss), best, patience, run.log_age_seconds ?? "—"];
     cells.forEach((cell, index) => { cell.textContent = values[index]; });
     document.getElementById("detail").textContent = JSON.stringify(run, null, 2);
@@ -110,6 +110,8 @@ def build_status(output_dir):
         "phase": metadata.get("phase") or curves["phase"],
         "training_pool": metadata.get("training_pool"),
         "validation_states": metadata.get("validation_states"),
+        "world_size": metadata.get("world_size"),
+        "cuda_visible_devices": metadata.get("cuda_visible_devices"),
         "status": metadata.get("status", "HISTORY" if stat else "WAITING"),
         "latest_step": max((step for step in (
             train.get("step"), validation.get("step"), metadata.get("global_step"))

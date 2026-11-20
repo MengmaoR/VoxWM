@@ -11,7 +11,7 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from .checkpoint import load_checkpoint, save_checkpoint
+from .checkpoint import load_checkpoint, restore_training_rng, rng_state, save_checkpoint
 from .config import save_config
 from .dataset import VoxelSnapshotDataset
 from .early_stopping import (EarlyStoppingState, state_from_metrics,
@@ -285,13 +285,18 @@ def fit(model, index, vocabulary, train_indices, evaluation_indices, output_dir,
 
 def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
                validation_indices, change_masks, output_dir, config,
-               resume=None, run_metadata=None, *, phase="E00-Masked"):
+               resume=None, run_metadata=None, *, phase="E00-Masked", group=None):
     """Joint Static/Dynamic masked training with exact batch denominators."""
     output_dir = Path(output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
+    primary = group is None or group.primary
+    rank = 0 if group is None else group.rank
+    world_size = 1 if group is None else group.world_size
+    if primary:
+        output_dir.mkdir(parents=True, exist_ok=True)
     seed = int(config["seed"])
-    set_seed(seed)
-    device = resolve_device(config.get("device", "auto"))
+    set_seed(seed + rank)
+    device = resolve_device(config.get("device", "auto")) if group is None else group.device
+    scoped_rng = phase == "E01-Masked"
     precision = config.get("precision", "fp32")
     if precision not in ("fp32", "bf16"):
         raise ValueError("precision must be fp32 or bf16")
@@ -302,9 +307,9 @@ def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
         raise ValueError("Training beta and masked beta_kl must remain identical")
     model.to(device)
     initial_embedding_path = output_dir / "embedding_initial.npz"
-    if not resume:
+    if not resume and primary:
         save_initial_embedding(initial_embedding_path, model, vocabulary, seed)
-    elif not initial_embedding_path.is_file():
+    if resume and not initial_embedding_path.is_file():
         raise ValueError("Masked resume requires its original embedding_initial.npz")
     optimizer = torch.optim.AdamW(
         model.parameters(), lr=float(config["learning_rate"]),
@@ -318,15 +323,17 @@ def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
             expected_config = {key: value for key, value in config.items() if key != "device"}
         payload = load_checkpoint(
             resume, model, optimizer, vocabulary, index,
-            expected_phase=phase, expected_loss=loss_config, expected_config=expected_config)
+            restore_rng=not scoped_rng, expected_phase=phase, expected_loss=loss_config,
+            expected_config=expected_config)
         global_step = int(payload["global_step"])
 
     dataset = VoxelSnapshotDataset(index, vocabulary)
     sampler = BalancedBatchSampler(index, train_indices, seed=seed)
     max_steps = int(config["max_steps"])
     micro_batch = int(config.get("micro_batch_size", 2))
-    if not 1 <= micro_batch <= 64 or 64 % micro_batch:
-        raise ValueError("micro_batch_size must divide effective batch size 64")
+    if not 1 <= micro_batch <= 64 or 64 % (micro_batch * world_size):
+        raise ValueError("micro_batch_size × world_size must divide effective batch size 64")
+    training_model = model if group is None else group.wrap(model)
     log_every = int(config.get("log_every", 25))
     validate_every = int(config.get("validate_every", 500))
     evaluation_batch = int(config.get("evaluation_batch_size", micro_batch))
@@ -334,6 +341,8 @@ def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
     early_path = output_dir / "early_stopping.json"
     early_state = EarlyStoppingState()
     if payload is not None:
+        if scoped_rng:
+            restore_training_rng(payload, device, rank)
         saved_state = payload.get("early_stopping")
         if saved_state and saved_state["config"] == early_config:
             early_state = EarlyStoppingState.from_dict(saved_state)
@@ -347,61 +356,71 @@ def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
                 early_state.best_metric = saved_best
                 early_state.best_step = None
                 early_state.patience_reference = saved_best
-        _append_jsonl(metrics_path, {
-            "phase": phase, "global_step": global_step, "event": "resume"})
+        if primary:
+            _append_jsonl(metrics_path, {
+                "phase": phase, "global_step": global_step, "event": "resume",
+                "world_size": world_size,
+                "previous_world_size": len(payload.get("rng_by_rank", [None])),
+            })
         del payload
-    save_config(output_dir / "config.yaml", config)
-    metadata_path = output_dir / "run_metadata.json"
-    metadata = dict(run_metadata or {})
-    metadata.update({
-        "status": "RUNNING", "phase": phase, "seed": seed,
-        "device": str(device), "precision": precision, "loss": loss_config,
-        "early_stopping": early_config,
-        "global_step": global_step, "max_steps": max_steps,
-    })
-    write_json(metadata_path, metadata)
-    write_json(early_path, early_state.to_dict(early_config))
-    write_training_curves(metrics_path, output_dir, phase=phase)
+    if primary:
+        save_config(output_dir / "config.yaml", config)
+        metadata_path = output_dir / "run_metadata.json"
+        metadata = dict(run_metadata or {})
+        metadata.update({
+            "status": "RUNNING", "phase": phase, "seed": seed,
+            "device": str(device), "world_size": world_size,
+            "precision": precision, "loss": loss_config, "early_stopping": early_config,
+            "global_step": global_step, "max_steps": max_steps,
+        })
+        write_json(metadata_path, metadata)
+        write_json(early_path, early_state.to_dict(early_config))
+        write_training_curves(metrics_path, output_dir, phase=phase)
 
-    if global_step == 0:
-        initial = evaluate_indices(
-            model, index, vocabulary, evaluation_indices, device,
-            precision=precision, batch_size=evaluation_batch,
-            change_masks=change_masks, masked_loss_config=loss_config)
-        initial_validation = evaluate_indices(
-            model, index, vocabulary, validation_indices, device,
-            precision=precision, batch_size=evaluation_batch,
-            change_masks=change_masks, masked_loss_config=loss_config)
-        write_json(output_dir / "initial_metrics.json", {
-            "overfit": initial, "validation": initial_validation})
-    else:
-        saved_initial = json.loads((output_dir / "initial_metrics.json").read_text())
-        initial = saved_initial["overfit"]
-        initial_validation = saved_initial["validation"]
+        if global_step == 0:
+            initial = evaluate_indices(
+                model, index, vocabulary, evaluation_indices, device,
+                precision=precision, batch_size=evaluation_batch,
+                change_masks=change_masks, masked_loss_config=loss_config)
+            initial_validation = evaluate_indices(
+                model, index, vocabulary, validation_indices, device,
+                precision=precision, batch_size=evaluation_batch,
+                change_masks=change_masks, masked_loss_config=loss_config)
+            write_json(output_dir / "initial_metrics.json", {
+                "overfit": initial, "validation": initial_validation})
+        else:
+            saved_initial = json.loads((output_dir / "initial_metrics.json").read_text())
+            initial = saved_initial["overfit"]
+            initial_validation = saved_initial["validation"]
 
-    loss_statistics_path = output_dir / "loss_statistics.json"
-    loss_statistics = {
-        "objective": loss_config,
-        "train_masks": change_masks.statistics(evaluation_indices),
-        "validation_masks": change_masks.statistics(validation_indices),
-        "gradient_accumulation": {
-            "effective_batch_size": 64,
-            "micro_batch_size": micro_batch,
-            "micro_batches": 64 // micro_batch,
-            "normalization": "full-effective-batch denominators; no micro-batch divisor",
-        },
-        "early_stopping": early_config,
-    }
-    write_json(loss_statistics_path, loss_statistics)
+        loss_statistics_path = output_dir / "loss_statistics.json"
+        loss_statistics = {
+            "objective": loss_config,
+            "train_masks": change_masks.statistics(evaluation_indices),
+            "validation_masks": change_masks.statistics(validation_indices),
+            "gradient_accumulation": {
+                "effective_batch_size": 64,
+                "world_size": world_size,
+                "micro_batch_size": micro_batch,
+                "micro_batches": 64 // micro_batch,
+                "micro_batches_per_rank": 64 // (micro_batch * world_size),
+                "normalization": "global effective batch with DDP gradient scaling",
+            },
+            "early_stopping": early_config,
+        }
+        write_json(loss_statistics_path, loss_statistics)
 
     started = time.monotonic()
     gradient_check = None
     last_validation = None
     while global_step < max_steps and not early_state.stopped:
         effective = sampler.batch(global_step)
+        if group is not None:
+            effective = group.split_batch(effective)
         categories = [index.records[item].category for item in effective]
         normalization = masked_batch_normalization(
-            effective, categories, change_masks)
+            effective, categories, change_masks,
+            sum_counts=None if group is None else group.sum_counts)
         optimizer.zero_grad(set_to_none=True)
         scalar_keys = (
             "loss_static", "loss_dynamic_unchanged", "loss_dynamic_changed",
@@ -414,29 +433,34 @@ def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
         aggregate.update(correct=0, voxels=0, non_air_correct=0, non_air_voxels=0)
         chunks = [effective[start:start + micro_batch]
                   for start in range(0, len(effective), micro_batch)]
-        model.train()
-        for selected in chunks:
+        training_model.train()
+        for chunk_index, selected in enumerate(chunks):
             selected_categories = [index.records[item].category for item in selected]
             target = _tokens(dataset, selected, device)
-            with _autocast(device, precision):
-                output = model(target)
-                losses = masked_vae_loss(
-                    output["logits"].float(), target, output["mu"].float(),
-                    output["logvar"].float(), selected, selected_categories,
-                    change_masks, normalization, loss_config)
-            if not all(torch.isfinite(losses[key]).item() for key in scalar_keys):
-                raise FloatingPointError(f"Non-finite masked loss at step {global_step}")
-            if (not torch.isfinite(output["mu"]).all()
-                    or not torch.isfinite(output["logvar"]).all()):
-                raise FloatingPointError(f"Non-finite posterior at step {global_step}")
-            losses["loss_total"].backward()
+            sync = (nullcontext() if group is None else group.accumulation_context(
+                training_model, synchronize=chunk_index == len(chunks) - 1))
+            with sync:
+                with _autocast(device, precision):
+                    output = training_model(target)
+                    losses = masked_vae_loss(
+                        output["logits"].float(), target, output["mu"].float(),
+                        output["logvar"].float(), selected, selected_categories,
+                        change_masks, normalization, loss_config)
+                if not all(torch.isfinite(losses[key]).item() for key in scalar_keys):
+                    raise FloatingPointError(f"Non-finite masked loss at step {global_step}")
+                if (not torch.isfinite(output["mu"]).all()
+                        or not torch.isfinite(output["logvar"]).all()):
+                    raise FloatingPointError(f"Non-finite posterior at step {global_step}")
+                if group is None:
+                    losses["loss_total"].backward()
+                else:
+                    group.backward(losses["loss_total"])
             for key in scalar_keys:
                 aggregate[key] += float(losses[key].detach().item())
-            for group in ("dynamic_unchanged_by_category",
-                          "dynamic_changed_by_category"):
+            for loss_group in ("dynamic_unchanged_by_category", "dynamic_changed_by_category"):
                 for category in DYNAMIC_CATEGORIES:
-                    aggregate[group][category] += float(
-                        losses[group][category].detach().item())
+                    aggregate[loss_group][category] += float(
+                        losses[loss_group][category].detach().item())
             counts = accuracy_counts(output["logits"], target, vocabulary.air_ids)
             for key, value in counts.items():
                 aggregate[key] += value
@@ -453,7 +477,9 @@ def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
 
         validate_now = global_step % validate_every == 0 or global_step == max_steps
         log_now = global_step == 1 or global_step % log_every == 0 or validate_now
-        if log_now:
+        if log_now and group is not None:
+            group.sum_metrics(aggregate)
+        if log_now and primary:
             row = {
                 "phase": phase, "global_step": global_step,
                 **{key: aggregate[key] for key in scalar_keys},
@@ -470,7 +496,7 @@ def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
             }
             _append_jsonl(metrics_path, row)
 
-        if validate_now:
+        if validate_now and primary:
             evaluation = evaluate_indices(
                 model, index, vocabulary, evaluation_indices, device,
                 precision=precision, batch_size=evaluation_batch,
@@ -487,20 +513,31 @@ def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
                 "event": "validation", **last_validation})
             score = last_validation["loss_components"]["loss_total"]
             new_best, _ = early_state.observe(global_step, score, early_config)
-            snapshot = early_state.to_dict(early_config)
-            if new_best:
+        if validate_now:
+            rng_by_rank = None
+            if group is not None:
+                rng_by_rank = group.gather_rng()
+            elif scoped_rng:
+                rng_by_rank = [rng_state(device)]
+            if primary:
+                snapshot = early_state.to_dict(early_config)
+                if new_best:
+                    save_checkpoint(
+                        output_dir / "checkpoint_best.pt", model, optimizer,
+                        global_step, config, vocabulary, index, early_state.best_metric,
+                        phase, early_stopping=snapshot, rng_by_rank=rng_by_rank)
                 save_checkpoint(
-                    output_dir / "checkpoint_best.pt", model, optimizer,
+                    output_dir / "checkpoint_last.pt", model, optimizer,
                     global_step, config, vocabulary, index, early_state.best_metric,
-                    phase, early_stopping=snapshot)
-            save_checkpoint(
-                output_dir / "checkpoint_last.pt", model, optimizer,
-                global_step, config, vocabulary, index, early_state.best_metric,
-                phase, early_stopping=snapshot)
-            write_json(early_path, snapshot)
-        if log_now:
+                    phase, early_stopping=snapshot, rng_by_rank=rng_by_rank)
+                write_json(early_path, snapshot)
+            if group is not None:
+                early_state.stopped = group.broadcast_stop(early_state.stopped)
+        if log_now and primary:
             write_training_curves(metrics_path, output_dir, phase=phase)
 
+    if not primary:
+        return None
     final = evaluate_indices(
         model, index, vocabulary, evaluation_indices, device,
         precision=precision, batch_size=evaluation_batch,
@@ -519,7 +556,7 @@ def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
     result = {
         "phase": phase, "global_step": global_step,
         "training_seconds": time.monotonic() - started,
-        "device": str(device), "precision": precision,
+        "device": str(device), "world_size": world_size, "precision": precision,
         "parameter_count": parameter_count(model), "loss": loss_config,
         "initial_embedding": str(initial_embedding_path),
         "embedding_drift": embedding_drift(initial_embedding_path, model),

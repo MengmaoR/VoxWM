@@ -39,18 +39,31 @@ git pull --ff-only origin master
   --output-root outputs/voxel_vae/e01
 ```
 
-Start a fresh E01 run with seed 42.
+Start a fresh E01 run with seed 42 on GPUs 2 and 3. The two workers share a
+global batch of 64. Each worker processes 32 states in 16 micro-batches, and
+the final backward synchronizes gradients. Validation, early stopping and
+artifact writes run on rank zero.
 
 ```bash
-CUDA_VISIBLE_DEVICES=0 .venv-vae/bin/python -m voxel_vae.e01 run \
-  --output-root outputs/voxel_vae/e01 --device cuda:0
+CUDA_VISIBLE_DEVICES=2,3 .venv-vae/bin/python -m torch.distributed.run \
+  --standalone --nproc-per-node=2 -m voxel_vae.e01 run \
+  --output-root outputs/voxel_vae/e01
 ```
 
-For an interrupted E01 run, reuse the prepared root and add `--resume`.
-That loads `phase_masked/checkpoint_last.pt` and its optimizer, RNG, and early
-stopping state. Checkpoint compatibility includes the exact data index and
-fixed diagnostic subsets. `CUDA_VISIBLE_DEVICES` selects the physical GPU.
-`cuda:0` is that card's index inside the process.
+For an interrupted E01 run, reuse the prepared root and add `--resume` to
+the same command. That loads `phase_masked/checkpoint_last.pt`, optimizer,
+step and early stopping state. A DDP checkpoint preserves each worker's RNG
+state. A single-GPU E01 checkpoint can also resume on two GPUs, using a
+fresh RNG stream on the additional worker. GPU count changes alter the
+sequence of sampled latents. Checkpoint compatibility includes the exact
+data index and fixed diagnostic subsets.
+
+Use the single-process command to train on GPU 2 alone.
+
+```bash
+CUDA_VISIBLE_DEVICES=2 .venv-vae/bin/python -m voxel_vae.e01 run \
+  --output-root outputs/voxel_vae/e01 --device cuda:0
+```
 
 Training defaults are bf16, AdamW at `1e-4`, at most 20,000 optimizer steps.
 Every 1,000 steps, the model evaluates 640 Static states and 32 complete
@@ -84,7 +97,7 @@ Export validation reconstructions from the best E01 checkpoint and open
 the existing 3D viewer.
 
 ```bash
-CUDA_VISIBLE_DEVICES=0 .venv-vae/bin/python -m voxel_vae.recon_viewer export \
+CUDA_VISIBLE_DEVICES=2 .venv-vae/bin/python -m voxel_vae.recon_viewer export \
   --output-root outputs/voxel_vae/e01 --device cuda:0
 
 .venv-vae/bin/python -m voxel_vae.recon_viewer serve \

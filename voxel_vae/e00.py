@@ -246,13 +246,15 @@ def run_masked(args):
 
 def _fit_prepared_masked(output, prepared_config, phase_config, vocabulary, index,
                          train_indices, diagnostic_indices, validation_indices,
-                         *, resume, phase="E00-Masked", metadata=None, lazy_masks=False):
+                         *, resume, phase="E00-Masked", metadata=None, lazy_masks=False,
+                         group=None):
     import torch
 
     from .change_masks import ChangeMaskCache
     from .train import fit_masked, set_seed
 
     phase_output = output / "phase_masked"
+    primary = group is None or group.primary
     if resume == "auto":
         resume = phase_output / "checkpoint_last.pt"
     elif resume:
@@ -261,35 +263,37 @@ def _fit_prepared_masked(output, prepared_config, phase_config, vocabulary, inde
         raise FileNotFoundError(f"Masked resume checkpoint not found: {resume}")
     protected = ("metrics.jsonl", "final_metrics.json", "checkpoint_best.pt",
                  "checkpoint_last.pt", "recon_examples.npz")
-    if not resume and any((phase_output / name).exists() for name in protected):
+    if primary and not resume and any((phase_output / name).exists() for name in protected):
         raise FileExistsError(
             "phase_masked already contains run artifacts; use --resume or a clean output")
 
     set_seed(int(phase_config["seed"]))
     model = _model(prepared_config, vocabulary)
-    initial_state_sha256 = _model_state_sha256(model)
-    phase_output.mkdir(parents=True, exist_ok=True)
     masks = ChangeMaskCache(
         index, vocabulary, train_indices + validation_indices, lazy=lazy_masks)
-    metadata = {
-        **(metadata or {}),
-        "phase": phase,
-        "masked_directory": str(phase_output),
-        "prepared_config_sha256": _sha256(output / "config.yaml"),
-        "subset_manifest_sha256": _sha256(output / "subset_manifest.json"),
-        "canonical_vocabulary_sha256": vocabulary.sha256,
-        "masked_initial_state_sha256": initial_state_sha256,
-        "torch_version": torch.__version__,
-        "cuda_version": torch.version.cuda,
-        "train_mask_statistics": masks.statistics(diagnostic_indices),
-        "validation_mask_statistics": masks.statistics(validation_indices),
-    }
+    if primary:
+        phase_output.mkdir(parents=True, exist_ok=True)
+        metadata = {
+            **(metadata or {}),
+            "phase": phase,
+            "masked_directory": str(phase_output),
+            "prepared_config_sha256": _sha256(output / "config.yaml"),
+            "subset_manifest_sha256": _sha256(output / "subset_manifest.json"),
+            "canonical_vocabulary_sha256": vocabulary.sha256,
+            "masked_initial_state_sha256": _model_state_sha256(model),
+            "torch_version": torch.__version__,
+            "cuda_version": torch.version.cuda,
+            "train_mask_statistics": masks.statistics(diagnostic_indices),
+            "validation_mask_statistics": masks.statistics(validation_indices),
+        }
     try:
         return fit_masked(
             model, index, vocabulary, train_indices, diagnostic_indices,
             validation_indices, masks, phase_output, phase_config,
-            resume=resume, run_metadata=metadata, phase=phase)
+            resume=resume, run_metadata=metadata, phase=phase, group=group)
     except (Exception, KeyboardInterrupt) as exc:
+        if not primary:
+            raise
         metadata_path = phase_output / "run_metadata.json"
         failed = (json.loads(metadata_path.read_text())
                   if metadata_path.is_file() else metadata)

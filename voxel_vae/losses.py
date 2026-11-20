@@ -36,7 +36,7 @@ def validate_masked_loss_config(config):
             for key, value in config.items() if key in required}
 
 
-def masked_batch_normalization(sample_indices, categories, changed_masks):
+def masked_batch_normalization(sample_indices, categories, changed_masks, *, sum_counts=None):
     """Compute full-effective-batch denominators before micro-batching."""
     sample_indices = list(map(int, sample_indices))
     categories = list(categories)
@@ -56,18 +56,17 @@ def masked_batch_normalization(sample_indices, categories, changed_masks):
         changed[category] += 1
         if bool((~mask).any()):
             unchanged[category] += 1
-    if static <= 0:
+    counts = {"batch_size": len(sample_indices), "static": static,
+              "changed": changed, "unchanged": unchanged}
+    if sum_counts is not None:
+        counts = sum_counts(counts)
+    if counts["static"] <= 0:
         raise ValueError("Masked loss effective batch has no Static samples")
-    if any(changed[category] <= 0 for category in DYNAMIC_CATEGORIES):
+    if any(counts["changed"][category] <= 0 for category in DYNAMIC_CATEGORIES):
         raise ValueError("Masked loss requires D1-D4 in every effective batch")
-    if any(unchanged[category] <= 0 for category in DYNAMIC_CATEGORIES):
+    if any(counts["unchanged"][category] <= 0 for category in DYNAMIC_CATEGORIES):
         raise ValueError("A dynamic category has no valid Unchanged sample")
-    return {
-        "batch_size": len(sample_indices),
-        "static": static,
-        "changed": changed,
-        "unchanged": unchanged,
-    }
+    return counts
 
 
 def masked_vae_loss(logits, target, mu, logvar, sample_indices, categories,

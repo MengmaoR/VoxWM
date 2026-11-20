@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from collections import Counter
 from pathlib import Path
 
@@ -80,6 +81,19 @@ def prepare(args):
 
 
 def run(args):
+    if int(os.environ.get("WORLD_SIZE", "1")) > 1:
+        if args.device:
+            raise ValueError("With torchrun, use CUDA_VISIBLE_DEVICES and omit --device")
+        from .distributed_training import cuda_training_group
+
+        with cuda_training_group() as group:
+            _run(args, group=group)
+    else:
+        _run(args)
+
+
+def _run(args, *, group=None):
+    primary = group is None or group.primary
     output = args.output_root.expanduser().resolve()
     vocabulary, index, manifest = _load_artifacts(output)
     if manifest.get("phase") != PHASE:
@@ -102,31 +116,38 @@ def run(args):
     if args.device:
         phase_config["device"] = args.device
     metadata = {"training_pool": pool, "train_diagnostic_states": len(diagnostics),
-                "validation_states": len(validation)}
-    print(f"E01-Masked has {pool['samples']:,} train states and {len(validation):,} "
-          "fixed validation states.", flush=True)
+                "validation_states": len(validation),
+                "cuda_visible_devices": os.environ.get("CUDA_VISIBLE_DEVICES")}
+    if primary:
+        workers = group.world_size if group is not None else 1
+        print(f"E01-Masked uses {workers} training process(es), {pool['samples']:,} train states "
+              f"and {len(validation):,} fixed validation states.", flush=True)
     result = _fit_prepared_masked(
         output, config, phase_config, vocabulary, index, train_indices,
         diagnostics, validation, resume="auto" if args.resume else None,
-        phase=PHASE, metadata=metadata, lazy_masks=True)
-    render_report(output, expected_phase=PHASE)
-    print(json.dumps(result, indent=2))
+        phase=PHASE, metadata=metadata, lazy_masks=True, group=group)
+    if primary:
+        render_report(output, expected_phase=PHASE)
+        print(json.dumps(result, indent=2))
 
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--local-rank", "--local_rank", type=int, help=argparse.SUPPRESS)
     commands = parser.add_subparsers(dest="command", required=True)
     setup = commands.add_parser("prepare", help="index both 100K clips and fix validation samples")
     setup.add_argument("--dataset-root", action="append", required=True)
     setup.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
     train = commands.add_parser("run", help="train E01-Masked using the full train split")
-    train.add_argument("--device", help="default from the prepared config, cuda:0 by default")
+    train.add_argument("--device", help="single-process device, cuda:0 by default")
     train.add_argument("--resume", action="store_true", help="resume this E01 run's checkpoint_last.pt")
     report = commands.add_parser("report", help="render the current E01 report")
     for command in (setup, train, report):
         command.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT)
 
     args = parser.parse_args(argv)
+    if args.command != "run" and int(os.environ.get("WORLD_SIZE", "1")) > 1:
+        parser.error("Only E01 run uses torchrun. Run prepare and report once.")
     if args.command == "prepare":
         prepare(args)
     elif args.command == "run":

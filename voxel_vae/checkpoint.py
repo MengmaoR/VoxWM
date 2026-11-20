@@ -18,25 +18,45 @@ def git_commit():
         return "unknown"
 
 
-def _rng_state():
+def rng_state(device=None):
+    if device is None:
+        cuda = torch.cuda.get_rng_state_all() if torch.cuda.is_available() else None
+    else:
+        cuda = [torch.cuda.get_rng_state(device)] if device.type == "cuda" else None
     return {
         "python": random.getstate(),
         "numpy": np.random.get_state(),
         "torch": torch.get_rng_state(),
-        "cuda": torch.cuda.get_rng_state_all() if torch.cuda.is_available() else None,
+        "cuda": cuda,
     }
 
 
-def _restore_rng(state):
+def _restore_rng(state, device=None, cuda_index=0):
     random.setstate(state["python"])
     np.random.set_state(state["numpy"])
     torch.set_rng_state(state["torch"])
     if state.get("cuda") is not None and torch.cuda.is_available():
-        torch.cuda.set_rng_state_all(state["cuda"])
+        if device is None:
+            torch.cuda.set_rng_state_all(state["cuda"])
+        elif device.type == "cuda":
+            torch.cuda.set_rng_state(state["cuda"][cuda_index], device)
+
+
+def restore_training_rng(payload, device, rank=0):
+    """Map saved RNG streams to current devices, including older single-GPU runs."""
+    by_rank = payload.get("rng_by_rank")
+    if by_rank is not None:
+        if rank < len(by_rank):
+            _restore_rng(by_rank[rank], device)
+    elif rank == 0:
+        saved_device = payload["config"].get("device", "auto")
+        cuda_index = torch.device(saved_device).index if saved_device != "auto" else None
+        _restore_rng(payload["rng"], device, cuda_index or 0)
 
 
 def save_checkpoint(path, model, optimizer, global_step, config, vocabulary,
-                    dataset_index, best_metric=None, phase=None, *, early_stopping=None):
+                    dataset_index, best_metric=None, phase=None, *, early_stopping=None,
+                    rng_by_rank=None):
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     payload = {
@@ -55,8 +75,10 @@ def save_checkpoint(path, model, optimizer, global_step, config, vocabulary,
         "dataset_roots": list(dataset_index.roots),
         "dataset_manifest_hashes": list(dataset_index.manifest_hashes),
         "git_commit": git_commit(),
-        "rng": _rng_state(),
+        "rng": rng_state() if rng_by_rank is None else rng_by_rank[0],
     }
+    if rng_by_rank is not None:
+        payload["rng_by_rank"] = rng_by_rank
     if early_stopping is not None:
         payload["early_stopping"] = early_stopping
     temporary = path.with_name("." + path.name + ".tmp")
