@@ -299,7 +299,14 @@ def render_report(output):
     lines += [
         "", "## Issues", "",
         "- Verified in code/tests: canonical remap, committed-row index, center crop, balanced sampler, model/loss/checkpoint APIs.",
-        "- E00-A/B numerical claims remain unverified until the corresponding real GPU commands complete.",
+    ]
+    if phase_a and phase_b:
+        lines.append("- Real GPU E00-A and E00-B artifacts are present; E00 remains a sanity overfit, not a generalization result.")
+    elif phase_a:
+        lines.append("- Real GPU E00-A is present; E00-B numerical results remain unverified until its command completes.")
+    else:
+        lines.append("- E00-A/B numerical claims remain unverified until the corresponding real GPU commands complete.")
+    lines += [
         "- E01 is blocked until E00-A overfits and E00-B/checkpoint-resume diagnostics complete.",
         "",
     ]

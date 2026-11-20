@@ -169,6 +169,9 @@ def evaluate_indices(model, index, vocabulary, indices, device, precision="fp32"
             shard=np.asarray([row.shard for row in rows], dtype=np.int16),
             dataset_root=np.asarray([index.roots[row.root_index] for row in rows]),
             world_seed=np.asarray([row.world_seed for row in rows], dtype=np.int64),
+            split=np.asarray([row.split for row in rows]),
+            biome_group=np.asarray([row.biome_group or "" for row in rows]),
+            stratum=np.asarray([row.stratum or "" for row in rows]),
         )
     return result
 

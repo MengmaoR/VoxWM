@@ -75,6 +75,39 @@ Regenerate the report without training:
   --output-root outputs/voxel_vae/e00
 ```
 
+## Reconstruction viewer
+
+After E00-B finishes, export a small deterministic gallery from the fixed
+**validation** subset using the best checkpoint. It contains eight Static
+chunks and two complete five-state clips from each of D1–D4 (48 states total).
+The held-out test split is deliberately not used.
+
+```bash
+CUDA_VISIBLE_DEVICES=0 .venv-vae/bin/python -m voxel_vae.recon_viewer export \
+  --output-root outputs/voxel_vae/e00 \
+  --device cuda:0
+```
+
+Serve the read-only side-by-side 3D viewer on the GPU server:
+
+```bash
+.venv-vae/bin/python -m voxel_vae.recon_viewer serve \
+  --output-root outputs/voxel_vae/e00 \
+  --host 127.0.0.1 --port 8770
+```
+
+Forward the port from the local computer and open
+`http://127.0.0.1:8770`:
+
+```bash
+ssh -N -L 8770:127.0.0.1:8770 aml-g06-gpu
+```
+
+The viewer switches among Static and D1–D4, preserves each dynamic chain's
+five-state order, renders GT input and posterior-mean reconstruction side by
+side, highlights exact Combined-Token errors, and provides axis slicing for
+solid/underground chunks. It only reads derived reconstruction artifacts.
+
 Outputs follow the requested layout. E00-A artifacts are additionally retained
 under `phase_a/`; the root checkpoints/metrics/reconstructions belong to E00-B.
 The checked-in `configs/e01.yaml` is explicitly marked `authorized: false` and

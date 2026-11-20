@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VoxWM VAE Reconstruction</title><link rel="icon" href="data:"><link rel="stylesheet" href="style.css">
+<script type="importmap">{"imports":{"three":"/vendor/three.module.min.js"}}</script></head>
+<body><header><strong>VoxWM · VAE Reconstruction</strong><span>Canonical Combined Tokens · validation gallery</span></header>
+<main><aside>
+<label>Category<select id="category"></select></label>
+<label>Example<select id="example"></select></label>
+<label>Dynamic state <output id="stateLabel">1 / 1</output><input id="state" type="range" min="0" max="0" value="0"></label>
+<div class="buttons"><button id="back">◀</button><button id="play">Play</button><button id="next">▶</button></div>
+<label>Slice axis<select id="axis"><option value="all">Full volume</option><option value="0">X upper bound</option><option value="1">Y upper bound</option><option value="2">Z upper bound</option></select></label>
+<label>Slice upper bound <output id="sliceLabel">15</output><input id="slice" type="range" min="0" max="15" value="15"></label>
+<label><input id="errors" type="checkbox" checked> Highlight incorrect voxels</label>
+<button id="reset">Reset camera</button>
+<pre id="metadata"></pre><div id="legend"></div>
+</aside><section><div id="canvas"><div class="side gt">GT input</div><div class="side pred">VAE reconstruction</div></div>
+<div id="error"></div><div id="summary"></div></section></main>
+<script type="module" src="viewer.js"></script></body></html>
