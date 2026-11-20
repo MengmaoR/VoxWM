@@ -14,7 +14,9 @@ import torch
 from .checkpoint import load_checkpoint, save_checkpoint
 from .dataset import VoxelSnapshotDataset
 from .evaluate import evaluate_indices, write_json
-from .losses import accuracy_counts, vae_loss
+from .losses import (DYNAMIC_CATEGORIES, accuracy_counts,
+                     masked_batch_normalization, masked_vae_loss,
+                     vae_loss, validate_masked_loss_config)
 from .sampler import BalancedBatchSampler
 
 
@@ -272,4 +274,226 @@ def fit(model, index, vocabulary, train_indices, evaluation_indices, output_dir,
     write_json(output_dir / "final_metrics.json", result)
     save_checkpoint(output_dir / "checkpoint_last.pt", model, optimizer,
                     global_step, config, vocabulary, index, best, phase)
+    return result
+
+
+def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
+               validation_indices, change_masks, output_dir, config,
+               resume=None, run_metadata=None):
+    """Joint Static/Dynamic masked E00 training with exact batch denominators."""
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    seed = int(config["seed"])
+    set_seed(seed)
+    device = resolve_device(config.get("device", "auto"))
+    precision = config.get("precision", "fp32")
+    if precision not in ("fp32", "bf16"):
+        raise ValueError("precision must be fp32 or bf16")
+    loss_config = validate_masked_loss_config(config["loss"])
+    if abs(float(config.get("beta", loss_config["beta_kl"]))
+           - loss_config["beta_kl"]) > 1e-15:
+        raise ValueError("Plain beta and masked beta_kl must remain identical")
+    model.to(device)
+    initial_embedding_path = output_dir / "embedding_initial.npz"
+    if not resume:
+        save_initial_embedding(initial_embedding_path, model, vocabulary, seed)
+    elif not initial_embedding_path.is_file():
+        raise ValueError("Masked resume requires its original embedding_initial.npz")
+    optimizer = torch.optim.AdamW(
+        model.parameters(), lr=float(config["learning_rate"]),
+        weight_decay=float(config.get("weight_decay", 1e-4)))
+    global_step = 0
+    best = math.inf
+    if resume:
+        payload = load_checkpoint(
+            resume, model, optimizer, vocabulary, index, map_location=device,
+            expected_phase="E00-Masked", expected_loss=loss_config)
+        global_step = int(payload["global_step"])
+        best = float(payload.get("best_metric", math.inf))
+
+    dataset = VoxelSnapshotDataset(index, vocabulary)
+    sampler = BalancedBatchSampler(index, train_indices, seed=seed)
+    max_steps = int(config["max_steps"])
+    micro_batch = int(config.get("micro_batch_size", 2))
+    if not 1 <= micro_batch <= 64 or 64 % micro_batch:
+        raise ValueError("micro_batch_size must divide effective batch size 64")
+    log_every = int(config.get("log_every", 25))
+    validate_every = int(config.get("validate_every", 500))
+    evaluation_batch = int(config.get("evaluation_batch_size", micro_batch))
+    metrics_path = output_dir / "metrics.jsonl"
+
+    if global_step == 0:
+        initial = evaluate_indices(
+            model, index, vocabulary, evaluation_indices, device,
+            precision=precision, batch_size=evaluation_batch,
+            change_masks=change_masks, masked_loss_config=loss_config)
+        initial_validation = evaluate_indices(
+            model, index, vocabulary, validation_indices, device,
+            precision=precision, batch_size=evaluation_batch,
+            change_masks=change_masks, masked_loss_config=loss_config)
+        write_json(output_dir / "initial_metrics.json", {
+            "overfit": initial, "validation": initial_validation})
+    else:
+        saved_initial = json.loads((output_dir / "initial_metrics.json").read_text())
+        initial = saved_initial["overfit"]
+        initial_validation = saved_initial["validation"]
+
+    loss_statistics_path = output_dir / "loss_statistics.json"
+    loss_statistics = {
+        "objective": loss_config,
+        "train_masks": change_masks.statistics(evaluation_indices),
+        "validation_masks": change_masks.statistics(validation_indices),
+        "gradient_accumulation": {
+            "effective_batch_size": 64,
+            "micro_batch_size": micro_batch,
+            "micro_batches": 64 // micro_batch,
+            "normalization": "full-effective-batch denominators; no micro-batch divisor",
+        },
+    }
+    write_json(loss_statistics_path, loss_statistics)
+    metadata_path = output_dir / "run_metadata.json"
+    metadata = dict(run_metadata or {})
+    metadata.update({
+        "status": "RUNNING", "phase": "E00-Masked", "seed": seed,
+        "device": str(device), "precision": precision, "loss": loss_config,
+        "global_step": global_step,
+    })
+    write_json(metadata_path, metadata)
+
+    started = time.monotonic()
+    gradient_check = None
+    while global_step < max_steps:
+        effective = sampler.batch(global_step)
+        categories = [index.records[item].category for item in effective]
+        normalization = masked_batch_normalization(
+            effective, categories, change_masks)
+        optimizer.zero_grad(set_to_none=True)
+        scalar_keys = (
+            "loss_static", "loss_dynamic_unchanged", "loss_dynamic_changed",
+            "loss_reconstruction", "loss_kl_raw", "loss_beta_kl", "loss_total")
+        aggregate = {key: 0.0 for key in scalar_keys}
+        aggregate["dynamic_unchanged_by_category"] = {
+            category: 0.0 for category in DYNAMIC_CATEGORIES}
+        aggregate["dynamic_changed_by_category"] = {
+            category: 0.0 for category in DYNAMIC_CATEGORIES}
+        aggregate.update(correct=0, voxels=0, non_air_correct=0, non_air_voxels=0)
+        chunks = [effective[start:start + micro_batch]
+                  for start in range(0, len(effective), micro_batch)]
+        model.train()
+        for selected in chunks:
+            selected_categories = [index.records[item].category for item in selected]
+            target = _tokens(dataset, selected, device)
+            with _autocast(device, precision):
+                output = model(target)
+                losses = masked_vae_loss(
+                    output["logits"].float(), target, output["mu"].float(),
+                    output["logvar"].float(), selected, selected_categories,
+                    change_masks, normalization, loss_config)
+            if not all(torch.isfinite(losses[key]).item() for key in scalar_keys):
+                raise FloatingPointError(f"Non-finite masked loss at step {global_step}")
+            if (not torch.isfinite(output["mu"]).all()
+                    or not torch.isfinite(output["logvar"]).all()):
+                raise FloatingPointError(f"Non-finite posterior at step {global_step}")
+            losses["loss_total"].backward()
+            for key in scalar_keys:
+                aggregate[key] += float(losses[key].detach().item())
+            for group in ("dynamic_unchanged_by_category",
+                          "dynamic_changed_by_category"):
+                for category in DYNAMIC_CATEGORIES:
+                    aggregate[group][category] += float(
+                        losses[group][category].detach().item())
+            counts = accuracy_counts(output["logits"], target, vocabulary.air_ids)
+            for key, value in counts.items():
+                aggregate[key] += value
+        if gradient_check is None:
+            gradient_check = _gradient_status(model)
+            if not all(row["present"] and row["finite"] and row["nonzero"]
+                       for row in gradient_check.values()):
+                raise FloatingPointError(f"Key gradient check failed: {gradient_check}")
+        gradient_norm = torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+        if not torch.isfinite(gradient_norm):
+            raise FloatingPointError(f"Non-finite gradient norm at step {global_step}")
+        optimizer.step()
+        global_step += 1
+
+        if global_step == 1 or global_step % log_every == 0 or global_step == max_steps:
+            row = {
+                "phase": "E00-Masked", "global_step": global_step,
+                **{key: aggregate[key] for key in scalar_keys},
+                "dynamic_unchanged_by_category": aggregate[
+                    "dynamic_unchanged_by_category"],
+                "dynamic_changed_by_category": aggregate[
+                    "dynamic_changed_by_category"],
+                "exact_token_accuracy": aggregate["correct"] / aggregate["voxels"],
+                "non_air_exact_token_accuracy": (
+                    None if not aggregate["non_air_voxels"] else
+                    aggregate["non_air_correct"] / aggregate["non_air_voxels"]),
+                "gradient_norm_before_clip": float(gradient_norm.item()),
+                "elapsed_seconds": time.monotonic() - started,
+            }
+            _append_jsonl(metrics_path, row)
+
+        if global_step % validate_every == 0 or global_step == max_steps:
+            evaluation = evaluate_indices(
+                model, index, vocabulary, evaluation_indices, device,
+                precision=precision, batch_size=evaluation_batch,
+                change_masks=change_masks, masked_loss_config=loss_config)
+            _append_jsonl(metrics_path, {
+                "phase": "E00-Masked", "global_step": global_step,
+                "event": "overfit_evaluation", **evaluation})
+            validation = evaluate_indices(
+                model, index, vocabulary, validation_indices, device,
+                precision=precision, batch_size=evaluation_batch,
+                change_masks=change_masks, masked_loss_config=loss_config)
+            _append_jsonl(metrics_path, {
+                "phase": "E00-Masked", "global_step": global_step,
+                "event": "validation", **validation})
+            score = float(validation["loss_components"]["loss_total"])
+            improved = score < best
+            if improved:
+                best = score
+            save_checkpoint(
+                output_dir / "checkpoint_last.pt", model, optimizer,
+                global_step, config, vocabulary, index, best, "E00-Masked")
+            if improved:
+                save_checkpoint(
+                    output_dir / "checkpoint_best.pt", model, optimizer,
+                    global_step, config, vocabulary, index, best, "E00-Masked")
+
+    final = evaluate_indices(
+        model, index, vocabulary, evaluation_indices, device,
+        precision=precision, batch_size=evaluation_batch,
+        save_examples=output_dir / "recon_examples.npz",
+        change_masks=change_masks, masked_loss_config=loss_config)
+    final_validation = evaluate_indices(
+        model, index, vocabulary, validation_indices, device,
+        precision=precision, batch_size=evaluation_batch,
+        change_masks=change_masks, masked_loss_config=loss_config)
+    write_json(output_dir / "latent_statistics.json", final["latent"])
+    loss_statistics.update({
+        "final_train": final["loss_components"],
+        "final_validation": final_validation["loss_components"],
+    })
+    write_json(loss_statistics_path, loss_statistics)
+    result = {
+        "phase": "E00-Masked", "global_step": global_step,
+        "training_seconds": time.monotonic() - started,
+        "device": str(device), "precision": precision,
+        "parameter_count": parameter_count(model), "loss": loss_config,
+        "initial_embedding": str(initial_embedding_path),
+        "embedding_drift": embedding_drift(initial_embedding_path, model),
+        "gradient_check": gradient_check,
+        "initial": initial, "final": final,
+        "initial_validation": initial_validation,
+        "validation": final_validation,
+    }
+    write_json(output_dir / "final_metrics.json", result)
+    save_checkpoint(output_dir / "checkpoint_last.pt", model, optimizer,
+                    global_step, config, vocabulary, index, best, "E00-Masked")
+    metadata.update({
+        "status": "COMPLETE", "global_step": global_step,
+        "training_seconds": result["training_seconds"],
+        "best_validation_loss": best,
+    })
+    write_json(metadata_path, metadata)
     return result

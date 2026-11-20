@@ -132,6 +132,67 @@ row-wise initialization-to-final drift. Evaluation reports dynamic change
 metrics both in aggregate and separately for D1, D2, D3 and D4. These are
 diagnostics only and do not change the E00 objective.
 
+## E00-Masked paired objective
+
+E00-Plain remains unchanged at the output root. E00-Masked writes only to
+`phase_masked/` and starts from a fresh seed-42 initialization; it never loads
+the trained Plain checkpoint. For each dynamic state, a CPU-only mask is built
+from its complete canonical-token five-state chain: endpoints compare with the
+single neighbor, while middle states take the union of differences to the
+previous and next states. Masks use only the center 16³ and never enter the
+model.
+
+```text
+loss = 0.5 * mean Static sample CE
+     + 0.25 * mean-of-D1..D4 per-sample Unchanged CE
+     + 0.25 * mean-of-D1..D4 per-sample Changed CE
+     + 1e-6 * original raw KL
+```
+
+Every per-mask CE is normalized inside its sample before samples and D1–D4 are
+averaged. With micro-batch 2, contributions use denominators from the complete
+64-state effective batch; the 32 backward calls are summed without another
+micro-batch divisor.
+
+Run the single authorized Masked experiment on GPU 0:
+
+```bash
+CUDA_VISIBLE_DEVICES=0 .venv-vae/bin/python -m voxel_vae.e00 run-masked \
+  --output-root outputs/voxel_vae/e00 --device cuda:0
+```
+
+Resume only its own objective-compatible checkpoint:
+
+```bash
+CUDA_VISIBLE_DEVICES=0 .venv-vae/bin/python -m voxel_vae.e00 run-masked \
+  --output-root outputs/voxel_vae/e00 --device cuda:0 --resume
+```
+
+Evaluate both best checkpoints on the identical validation subset and export
+the paired viewer archive:
+
+```bash
+CUDA_VISIBLE_DEVICES=0 .venv-vae/bin/python -m voxel_vae.comparison \
+  --output-root outputs/voxel_vae/e00 --device cuda:0
+
+CUDA_VISIBLE_DEVICES=0 .venv-vae/bin/python -m voxel_vae.recon_viewer export-comparison \
+  --output-root outputs/voxel_vae/e00 --device cuda:0
+```
+
+The usual `serve` command automatically opens
+`viewer_comparison_examples.npz` when it is selected explicitly:
+
+```bash
+.venv-vae/bin/python -m voxel_vae.recon_viewer serve \
+  --output-root outputs/voxel_vae/e00 \
+  --examples outputs/voxel_vae/e00/viewer_comparison_examples.npz \
+  --host 127.0.0.1 --port 8770
+```
+
+The comparison overlay uses the real changed mask: green marks a Plain error
+fixed by Masked, magenta a Masked regression, red an error shared by both, and
+orange an error in the selected model's unchanged region.
+
 Outputs follow the requested layout. E00-A artifacts are additionally retained
 under `phase_a/`; the root checkpoints/metrics/reconstructions belong to E00-B.
 The checked-in `configs/e01.yaml` is explicitly marked `authorized: false` and
@@ -145,5 +206,6 @@ independently:
 
 ```bash
 .venv/bin/python -m unittest voxel_vae.tests.test_data -v
-python3 -m unittest voxel_vae.tests.test_model -v
+.venv/bin/python -m unittest voxel_vae.tests.test_recon_viewer -v
+python3 -m unittest voxel_vae.tests.test_model voxel_vae.tests.test_masked_loss -v
 ```

@@ -16,6 +16,12 @@ training:
   micro_batch_size: 2
   evaluation_batch_size: 2
   log_every: 25
+loss:
+  objective: static_dynamic_masked_v1
+  lambda_static: 0.5
+  lambda_dynamic: 0.5
+  alpha_changed: 0.5
+  beta_kl: 0.000001
 e00_a:
   max_steps: 3000
   validate_every: 250

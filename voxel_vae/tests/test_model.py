@@ -79,12 +79,40 @@ class ModelTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "vocabulary_sha256"):
                 load_checkpoint(path, restored, None, wrong, _Index(), restore_rng=False)
 
+    def test_masked_checkpoint_objective_and_phase_cannot_be_mixed(self):
+        vocabulary = CanonicalVocabulary((
+            ("air", 0), ("mcl_core:stone", 0), ("node:a", 0),
+            ("node:b", 0), ("node:c", 0), ("node:d", 0), ("node:e", 0)))
+        loss = {"objective": "static_dynamic_masked_v1", "lambda_static": 0.5,
+                "lambda_dynamic": 0.5, "alpha_changed": 0.5, "beta_kl": 1e-6}
+        optimizer = torch.optim.AdamW(self.model.parameters(), lr=1e-4)
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "masked.pt"
+            save_checkpoint(path, self.model, optimizer, 3, {"loss": loss},
+                            vocabulary, _Index(), 2.0, "E00-Masked")
+            restored = VoxelVAE(7)
+            load_checkpoint(path, restored, None, vocabulary, _Index(),
+                            restore_rng=False, expected_phase="E00-Masked",
+                            expected_loss=loss)
+            with self.assertRaisesRegex(ValueError, "phase"):
+                load_checkpoint(path, restored, None, vocabulary, _Index(),
+                                restore_rng=False, expected_phase="E00-B")
+            wrong = dict(loss, alpha_changed=0.75)
+            with self.assertRaisesRegex(ValueError, "loss_objective"):
+                load_checkpoint(path, restored, None, vocabulary, _Index(),
+                                restore_rng=False, expected_phase="E00-Masked",
+                                expected_loss=wrong)
+
     def test_same_seed_reproduces_embedding_initialization(self):
         torch.manual_seed(42)
         first = VoxelVAE(7).embedding.weight.detach().clone()
         torch.manual_seed(42)
         second = VoxelVAE(7).embedding.weight.detach().clone()
         self.assertTrue(torch.equal(first, second))
+
+    def test_changed_mask_is_not_a_model_forward_input(self):
+        with self.assertRaises(TypeError):
+            self.model(self.tokens, torch.zeros_like(self.tokens, dtype=torch.bool))
 
 
 if __name__ == "__main__":

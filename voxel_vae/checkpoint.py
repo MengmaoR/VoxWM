@@ -63,7 +63,8 @@ def save_checkpoint(path, model, optimizer, global_step, config, vocabulary,
 
 
 def load_checkpoint(path, model, optimizer, vocabulary, dataset_index,
-                    restore_rng=True, map_location="cpu"):
+                    restore_rng=True, map_location="cpu", expected_phase=None,
+                    expected_loss=None):
     payload = torch.load(path, map_location=map_location, weights_only=False)
     checks = {
         "vocabulary_K": (payload.get("vocabulary_K"), vocabulary.K),
@@ -75,6 +76,10 @@ def load_checkpoint(path, model, optimizer, vocabulary, dataset_index,
             payload.get("dataset_manifest_hashes"), list(dataset_index.manifest_hashes)),
     }
     mismatches = [name for name, (actual, expected) in checks.items() if actual != expected]
+    if expected_phase is not None and payload.get("phase") != expected_phase:
+        mismatches.append("phase")
+    if expected_loss is not None and payload.get("config", {}).get("loss") != expected_loss:
+        mismatches.append("loss_objective")
     if mismatches:
         raise ValueError("Checkpoint compatibility failure: " + ", ".join(mismatches))
     model.load_state_dict(payload["model"], strict=True)

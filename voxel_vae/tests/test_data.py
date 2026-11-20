@@ -10,6 +10,7 @@ import zarr
 
 from voxel_vae.dataset import (DatasetIndex, SampleRef, VoxelSnapshotDataset,
                                build_dataset_index, crop_center)
+from voxel_vae.change_masks import ChangeMaskCache, compute_chain_masks
 from voxel_vae.e00 import _balanced_subset, _tiny_a
 from voxel_vae.sampler import BALANCE, BalancedBatchSampler
 from voxel_vae.vocabulary import build_canonical_vocabulary
@@ -68,9 +69,15 @@ def _write_root(path, pairs, second=False):
         stone = 1 if not second else 0
         tokens[index] = outside
         tokens[index, 16:32, 16:32, 16:32] = stone
+        if not second and 1 <= index <= 5:
+            center = np.full((16, 16, 16), stone, dtype=np.uint16)
+            center.reshape(-1)[:index] = 2
+            tokens[index, 16:32, 16:32, 16:32] = center
+            tokens[index, 0, 0, 0] = index % 3
     anchors = zarr.open_group(str(shard / "anchors.zarr"), mode="w")
-    anchors.create_dataset("tokens", shape=(3, 48, 48, 48),
-                           chunks=(1, 48, 48, 48), dtype="<u2")
+    anchor_tokens = anchors.create_dataset("tokens", shape=(3, 48, 48, 48),
+                                           chunks=(1, 48, 48, 48), dtype="<u2")
+    anchor_tokens[:] = 2
     return path
 
 
@@ -190,6 +197,44 @@ class DataTests(unittest.TestCase):
             chains = Counter(index.records[item].chain_id for item in balanced
                              if index.records[item].category == category)
             self.assertEqual(sorted(chains.values()), [5, 5, 5, 5])
+
+    def test_change_masks_use_end_neighbors_and_middle_union(self):
+        states = np.zeros((5, 16, 16, 16), dtype=np.uint16)
+        states[1:, 1, 1, 1] = 3
+        states[2:, 2, 2, 2] = 4
+        states[3:, 3, 3, 3] = 5
+        states[4, 4, 4, 4] = 6
+        masks = compute_chain_masks(states)
+        self.assertEqual(int(masks[0].sum()), 1)
+        self.assertEqual(int(masks[4].sum()), 1)
+        self.assertTrue(masks[2, 2, 2, 2])
+        self.assertTrue(masks[2, 3, 3, 3])
+        self.assertFalse(masks[2, 1, 1, 1])
+
+    def test_canonical_param2_token_change_is_changed_and_bad_chain_rejected(self):
+        states = np.zeros((5, 16, 16, 16), dtype=np.uint16)
+        for state in range(1, 5):
+            states[state:, state, 0, 0] = state  # distinct canonical token IDs
+        masks = compute_chain_masks(states)
+        self.assertTrue(masks[0, 1, 0, 0])
+        with self.assertRaisesRegex(ValueError, "chain_index"):
+            compute_chain_masks(states, [0, 1, 3, 2, 4])
+        with self.assertRaisesRegex(ValueError, "adjacent"):
+            compute_chain_masks(np.zeros_like(states))
+
+    def test_mask_cache_reads_complete_center_chain_and_ignores_anchor(self):
+        vocabulary = build_canonical_vocabulary([self.root1])
+        index = build_dataset_index(vocabulary)
+        dynamic = [item for item, row in enumerate(index.records)
+                   if row.category == "D4"]
+        cache = ChangeMaskCache(index, vocabulary, [dynamic[2]])
+        self.assertEqual(int(cache.changed(dynamic[0]).sum()), 1)
+        self.assertEqual(int(cache.changed(dynamic[2]).sum()), 2)
+        self.assertEqual(int(cache.changed(dynamic[4]).sum()), 1)
+        stats = cache.statistics(dynamic)
+        self.assertEqual(stats["chains"], 1)
+        self.assertEqual(stats["dynamic_states"], 5)
+        self.assertEqual(stats["d4_chain_subtypes"], {"B": 1})
 
 
 if __name__ == "__main__":

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from collections import defaultdict, deque
 from pathlib import Path
@@ -232,14 +233,132 @@ def run_phase(args, phase):
     print(json.dumps(result, indent=2))
 
 
+def _sha256(path):
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _model_state_sha256(model):
+    digest = hashlib.sha256()
+    for name, tensor in sorted(model.state_dict().items()):
+        digest.update(name.encode("utf-8"))
+        digest.update(tensor.detach().cpu().contiguous().numpy().tobytes())
+    return digest.hexdigest()
+
+
+def run_masked(args):
+    import torch
+
+    from .change_masks import ChangeMaskCache
+    from .train import fit_masked, set_seed
+
+    output = Path(args.output_root).expanduser().resolve()
+    core_plain = (
+        "final_metrics.json", "metrics.jsonl", "checkpoint_best.pt",
+        "checkpoint_last.pt", "subset_manifest.json", "config.yaml")
+    missing = [name for name in core_plain if not (output / name).is_file()]
+    if missing:
+        raise FileNotFoundError(
+            "E00-Plain is incomplete; missing: " + ", ".join(missing))
+    vocabulary, index, subset = _load_artifacts(output)
+    plain_config = load_config(output / "config.yaml")
+    source_config = load_config(DEFAULT_CONFIG)
+    if "loss" not in source_config:
+        raise ValueError("Source e00.yaml lacks the E00-Masked loss block")
+    train_indices = _subset_indices(subset, "e00_b_train")
+    validation_indices = _subset_indices(subset, "e00_b_validation")
+    phase_config = dict(plain_config["training"], **plain_config["e00_b"])
+    phase_config["loss"] = dict(source_config["loss"])
+    if args.device:
+        phase_config["device"] = args.device
+    if abs(float(phase_config["beta"]) - float(phase_config["loss"]["beta_kl"])) > 1e-15:
+        raise ValueError("Masked KL beta differs from E00-Plain")
+
+    phase_output = output / "phase_masked"
+    resume = args.resume
+    if resume == "auto":
+        candidate = phase_output / "checkpoint_last.pt"
+        resume = str(candidate) if candidate.is_file() else None
+    protected = ("metrics.jsonl", "final_metrics.json", "checkpoint_best.pt",
+                 "checkpoint_last.pt", "recon_examples.npz")
+    if not resume and any((phase_output / name).exists() for name in protected):
+        raise FileExistsError(
+            "phase_masked already contains run artifacts; use --resume or a clean output")
+
+    set_seed(int(phase_config["seed"]))
+    model = _model(plain_config, vocabulary)
+    initial_state_sha256 = _model_state_sha256(model)
+    plain_best = torch.load(
+        output / "checkpoint_best.pt", map_location="cpu", weights_only=False)
+    plain_initial_embedding = output / "embedding_initial.npz"
+    pairing = {
+        "same_architecture": plain_best.get("architecture") == model.architecture_config(),
+        "same_seed_config": int(plain_best["config"]["seed"]) == int(phase_config["seed"]),
+        "same_training_subset": True,
+        "same_validation_subset": True,
+        "same_sampler": True,
+        "same_optimizer_hyperparameters": all(
+            plain_best["config"].get(key) == phase_config.get(key)
+            for key in ("learning_rate", "weight_decay", "effective_batch_size",
+                        "micro_batch_size", "max_steps", "validate_every")),
+        "plain_initial_embedding_present": plain_initial_embedding.is_file(),
+        "full_initial_state_pairing": "UNVERIFIABLE",
+        "reason": ("E00-Plain predates step-0 state capture and has no "
+                   "embedding_initial.npz; Masked reconstructs initialization from "
+                   "the same architecture, seed and server PyTorch, but exact Plain "
+                   "initial weights cannot be proven after the fact."),
+    }
+    phase_output.mkdir(parents=True, exist_ok=True)
+    save_config(phase_output / "config.yaml", phase_config)
+    masks = ChangeMaskCache(
+        index, vocabulary, list(dict.fromkeys(train_indices + validation_indices)))
+    metadata = {
+        "plain_directory": str(output),
+        "masked_directory": str(phase_output),
+        "plain_checkpoint_best": str(output / "checkpoint_best.pt"),
+        "plain_checkpoint_git_commit": plain_best.get("git_commit"),
+        "plain_config_sha256": _sha256(output / "config.yaml"),
+        "subset_manifest_sha256": _sha256(output / "subset_manifest.json"),
+        "canonical_vocabulary_sha256": vocabulary.sha256,
+        "masked_initial_state_sha256": initial_state_sha256,
+        "torch_version": torch.__version__,
+        "cuda_version": torch.version.cuda,
+        "pairing": pairing,
+        "train_mask_statistics": masks.statistics(train_indices),
+        "validation_mask_statistics": masks.statistics(validation_indices),
+    }
+    try:
+        result = fit_masked(
+            model, index, vocabulary, train_indices, train_indices,
+            validation_indices, masks, phase_output, phase_config,
+            resume=resume, run_metadata=metadata)
+    except Exception as exc:
+        metadata_path = phase_output / "run_metadata.json"
+        failed = (json.loads(metadata_path.read_text())
+                  if metadata_path.is_file() else metadata)
+        failed.update(status="FAILED", error=f"{type(exc).__name__}: {exc}")
+        _write_json(metadata_path, failed)
+        raise
+    render_report(output)
+    print(json.dumps(result, indent=2))
+
+
 def render_report(output):
     output = Path(output)
     vocabulary, index, subset = _load_artifacts(output)
     config = load_config(output / "config.yaml")
     phase_a_path = output / "phase_a/final_metrics.json"
     phase_b_path = output / "final_metrics.json"
+    masked_path = output / "phase_masked/final_metrics.json"
+    comparison_path = output / "loss_comparison.json"
     phase_a = json.loads(phase_a_path.read_text()) if phase_a_path.is_file() else None
     phase_b = json.loads(phase_b_path.read_text()) if phase_b_path.is_file() else None
+    masked = json.loads(masked_path.read_text()) if masked_path.is_file() else None
+    comparison = (json.loads(comparison_path.read_text())
+                  if comparison_path.is_file() else None)
     a_pass = bool(phase_a and phase_a["final"]["exact_token_accuracy"] >= 0.99
                   and (phase_a["final"]["non_air_exact_token_accuracy"] or 0) >= 0.99)
     status = "GO" if a_pass and phase_b else "INCONCLUSIVE"
@@ -303,6 +422,24 @@ def render_report(output):
         ]
     else:
         lines.append("- NOT RUN. Fixed 160-train/160-validation manifests are prepared.")
+    lines += ["", "## E00-Masked", ""]
+    if masked:
+        lines += [
+            f"- Steps: {masked['global_step']}; seconds: {masked['training_seconds']:.2f}",
+            "- Objective: 0.5 Static CE + 0.25 Dynamic-Unchanged CE + "
+            "0.25 Dynamic-Changed CE + 1e-6 raw KL.",
+            f"- Final train loss components: `{masked['final']['loss_components']}`",
+            f"- Final validation reconstruction: "
+            f"`{masked['validation']['dynamic_reconstruction']}`",
+            f"- Final validation static preservation: "
+            f"`{masked['validation']['static_preservation']}`",
+        ]
+    else:
+        lines.append("- NOT RUN. Code uses the existing E00-B train/validation manifest.")
+    if comparison:
+        lines += ["", "## Plain / Masked paired comparison", "",
+                  f"- Best-checkpoint validation table: `{comparison['table']}`",
+                  "- This remains a 160-state implementation sanity comparison, not a generalization claim."]
     lines += [
         "", "## Issues", "",
         "- Verified in code/tests: canonical remap, committed-row index, center crop, balanced sampler, model/loss/checkpoint APIs.",
@@ -327,7 +464,7 @@ def parser(argv=None):
     prepare_parser.add_argument("--dataset-root", action="append", required=True)
     prepare_parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
     prepare_parser.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT)
-    for name in ("run-a", "run-b"):
+    for name in ("run-a", "run-b", "run-masked"):
         run_parser = commands.add_parser(name)
         run_parser.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT)
         run_parser.add_argument("--device", help="auto/cuda/cpu; default from prepared config")
@@ -346,6 +483,8 @@ def main(argv=None):
         run_phase(args, "a")
     elif args.command == "run-b":
         run_phase(args, "b")
+    elif args.command == "run-masked":
+        run_masked(args)
     else:
         render_report(args.output_root)
         print(Path(args.output_root) / "report.md")

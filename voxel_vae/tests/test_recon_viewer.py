@@ -63,6 +63,38 @@ class ReconstructionViewerTests(unittest.TestCase):
             self.assertEqual(sample["gt"][1 * 256 + 2 * 16 + 3], 1)
             self.assertEqual(sample["predicted"][1 * 256 + 2 * 16 + 3], 2)
 
+    def test_comparison_archive_keeps_plain_masked_and_true_change_mask(self):
+        vocabulary = CanonicalVocabulary((
+            ("air", 0), ("mcl_core:stone", 0), ("mcl_core:water_flowing", 3)))
+        gt = np.zeros((1, 16, 16, 16), dtype=np.uint16)
+        plain = gt.copy()
+        masked = gt.copy()
+        plain[0, 1, 1, 1] = 1
+        changed = np.zeros_like(gt, dtype=bool)
+        changed[0, 1, 1, 1] = True
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            vocabulary.save(root / "training_vocabulary.json")
+            np.savez_compressed(
+                root / "comparison.npz", gt_tokens=gt,
+                predicted_tokens=masked,
+                predicted_plain_tokens=plain,
+                predicted_masked_tokens=masked,
+                changed_mask=changed,
+                category=np.asarray(["Static"]), chain_id=np.asarray([""]),
+                chain_index=np.asarray([-1], dtype=np.int16),
+                snapshot_id=np.asarray([0], dtype=np.int32),
+                world_seed=np.asarray([42], dtype=np.int64),
+            )
+            archive = ReconstructionArchive(
+                root / "comparison.npz", root / "training_vocabulary.json")
+            self.assertEqual(list(archive.predictions), ["Plain", "Masked"])
+            sample = archive.sample(0)
+            offset = 1 * 256 + 1 * 16 + 1
+            self.assertEqual(sample["predictions"]["Plain"][offset], 1)
+            self.assertEqual(sample["predictions"]["Masked"][offset], 0)
+            self.assertTrue(sample["changed_mask"][offset])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,11 +1,12 @@
 # VoxWM 执行守则
 
-数据采集阶段已完成；当前活动入口是`voxel_vae/`的E00 Combined-Token 3D ResNet VAE。`python -m vae_data` → `vae_data/sharded/`及[数据协议](VAE_DATA_COLLECTION_PROTOCOL.md)继续定义只读正式数据格式，不得因训练需要改写。最新用户E00指令优先。
+数据采集阶段已完成；当前活动入口是`voxel_vae/`的E00 Combined-Token 3D ResNet VAE。E00-Plain已作为只读control完成；当前获批的唯一新增实验是E00-Masked联合Static/Dynamic-Unchanged/Dynamic-Changed重建目标。`python -m vae_data` → `vae_data/sharded/`及[数据协议](VAE_DATA_COLLECTION_PROTOCOL.md)继续定义只读正式数据格式，不得因训练需要改写。最新用户E00-Masked指令优先。
 
-- 当前只实现E00 dataset/index、canonical vocabulary、固定3D ResNet VAE、plain CE+KL、balanced sampler、trainer/checkpoint/evaluation和tiny overfit；禁止E01正式训练、架构/beta/latent sweep、Dynamics/VoxGen/VoxEvolve/Vox2Pix训练及新数据采集。
+- 当前只实现E00 dataset/index、canonical vocabulary、固定3D ResNet VAE、Plain control与Masked objective、balanced sampler、trainer/checkpoint/evaluation和tiny overfit；禁止E01正式训练、架构/beta/latent sweep、alpha=0.75消融、Dynamics/VoxGen/VoxEvolve/Vox2Pix训练及新数据采集。
 - 正式训练数据为`vae_100k_clip1`与`vae_100k_clip2`两个独立100K roots。不同root的uint16 ID没有跨root语义；训练必须按真实`(Node Name,raw param2)`构建确定性canonical vocabulary并在线remap，不得改原Zarr或设置UNK/静默丢token。
 - VAE只输入中心`tokens[16:32,16:32,16:32]`的canonical离散ID，经随机32D `nn.Embedding`进入网络。light、biome/category/time/chain/Δt均不输入；D4 anchor不算训练sample；五个动态状态是独立reconstruction sample。
-- E00架构固定为96/192/192 3D ResNet Encoder、`mu/logvar:[B,16,4,4,4]`、nearest-upsample Decoder和K类logits；无skip/attention/Transformer/dropout/BatchNorm。loss仅等权voxel CE + `1e-6`未归一化raw KL；effective batch固定32 Static + D1-D4各8，AdamW 1e-4、clip1.0、无scheduler。
+- E00架构固定为96/192/192 3D ResNet Encoder、`mu/logvar:[B,16,4,4,4]`、nearest-upsample Decoder和K类logits；无skip/attention/Transformer/dropout/BatchNorm。Plain control的loss为等权voxel CE + `1e-6`未归一化raw KL；effective batch固定32 Static + D1-D4各8，AdamW 1e-4、clip1.0、无scheduler。
+- E00-Masked不改模型，只将重建项固定为`0.5 L_static + 0.25 L_dynamic_unchanged + 0.25 L_dynamic_changed`，并保留`1e-6 raw KL`。Changed Mask必须由同一完整五状态链的Canonical中心16³构造，不能输入模型。microbatch=2必须使用完整effective batch的全局样本分母，不再除以32。Masked只写`outputs/voxel_vae/e00/phase_masked/`，Plain根目录产物不得覆盖或续训；本轮仅授权一次最多5000步Masked运行及配对比较。
 - E00-A最多3000步、必须覆盖五类且overall/non-Air exact均达到99%才允许E00-B；E00-B固定80 Static + 四类各4条完整五状态链、最多5000步。两者真实GPU执行仍由用户手动启动；Codex不得自动进入E01。
 - 当前规模100K，100个严格1K片；每片Static500，D1/D2/D3/D4各125，动态每类25条完整五状态链。D4是Water–Lava Solidification，完全替代历史Vegetation，不自动恢复旧200K配方。
 - 正式样本保存真实同一时刻48³(27个相邻16³采样窗口)，目标与动态判定仅中心 `[16:32]^3`。Dynamic保持全局16格网格；Static仅高度可逐整数偏移，与引擎MapBlock明确区分，完整Region高度必须在[-62,193]。邻块变化不能加候选、拼链或重置超时；D1/D2/D4为48 Tick，D3为120 Tick。

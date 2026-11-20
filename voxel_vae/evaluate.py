@@ -11,6 +11,8 @@ import torch
 import torch.nn.functional as F
 
 from .dataset import VoxelSnapshotDataset
+from .losses import (DYNAMIC_CATEGORIES, masked_batch_normalization,
+                     masked_vae_loss, validate_masked_loss_config)
 
 
 def _autocast(device, precision):
@@ -38,7 +40,8 @@ def _dynamic_metrics(values, complete_chains):
 
 
 def evaluate_indices(model, index, vocabulary, indices, device, precision="fp32",
-                     batch_size=2, save_examples=None):
+                     batch_size=2, save_examples=None, change_masks=None,
+                     masked_loss_config=None):
     indices = list(map(int, indices))
     dataset = VoxelSnapshotDataset(index, vocabulary, indices)
     air_ids = set(vocabulary.air_ids)
@@ -48,8 +51,33 @@ def evaluate_indices(model, index, vocabulary, indices, device, precision="fp32"
     logvars = {}
     category_counts = defaultdict(lambda: Counter(
         correct=0, voxels=0, non_air_correct=0, non_air_voxels=0))
+    static_biome_counts = defaultdict(lambda: Counter(
+        correct=0, voxels=0, non_air_correct=0, non_air_voxels=0))
+    static_stratum_counts = defaultdict(lambda: Counter(
+        correct=0, voxels=0, non_air_correct=0, non_air_voxels=0))
+    dynamic_mask_counts = defaultdict(lambda: Counter(
+        changed=0, changed_correct=0, unchanged=0, unchanged_correct=0,
+        voxels=0, correct=0))
     ce_sum = 0.0
     non_finite_prediction = False
+    masked_config = (None if masked_loss_config is None else
+                     validate_masked_loss_config(masked_loss_config))
+    if masked_config is not None and change_masks is None:
+        raise ValueError("Masked evaluation requires ChangeMaskCache")
+    normalization = None
+    masked_totals = None
+    if masked_config is not None:
+        categories = [index.records[item].category for item in indices]
+        normalization = masked_batch_normalization(
+            indices, categories, change_masks)
+        masked_totals = {
+            key: 0.0 for key in (
+                "loss_static", "loss_dynamic_unchanged", "loss_dynamic_changed",
+                "loss_reconstruction", "loss_kl_raw", "loss_beta_kl", "loss_total")}
+        masked_totals["dynamic_unchanged_by_category"] = {
+            category: 0.0 for category in DYNAMIC_CATEGORIES}
+        masked_totals["dynamic_changed_by_category"] = {
+            category: 0.0 for category in DYNAMIC_CATEGORIES}
     model.eval()
     with torch.no_grad():
         for start in range(0, len(dataset), int(batch_size)):
@@ -57,6 +85,7 @@ def evaluate_indices(model, index, vocabulary, indices, device, precision="fp32"
                           for item in range(start, min(len(dataset), start + batch_size))]
             target = torch.from_numpy(np.stack([row[0] for row in batch_rows])).to(device)
             sample_ids = [row[1] for row in batch_rows]
+            sample_categories = [index.records[item].category for item in sample_ids]
             with _autocast(device, precision):
                 mu, logvar = model.encode(target)
                 logits = model.decode(mu)
@@ -65,6 +94,18 @@ def evaluate_indices(model, index, vocabulary, indices, device, precision="fp32"
                     raise FloatingPointError("Non-finite reconstruction logits during evaluation")
                 ce_sum += float(F.cross_entropy(logits.float(), target.long(),
                                                 reduction="sum").item())
+                if masked_config is not None:
+                    components = masked_vae_loss(
+                        logits.float(), target, mu.float(), logvar.float(),
+                        sample_ids, sample_categories, change_masks,
+                        normalization, masked_config)
+                    for key in masked_totals:
+                        if key.startswith("dynamic_") and isinstance(masked_totals[key], dict):
+                            for category in DYNAMIC_CATEGORIES:
+                                masked_totals[key][category] += float(
+                                    components[key][category].item())
+                        else:
+                            masked_totals[key] += float(components[key].item())
             predicted = logits.argmax(dim=1)
             for offset, sample_index in enumerate(sample_ids):
                 gt = target[offset].detach().cpu().numpy().astype(np.uint16)
@@ -83,6 +124,26 @@ def evaluate_indices(model, index, vocabulary, indices, device, precision="fp32"
                 counter["voxels"] += int(gt.size)
                 counter["non_air_correct"] += int((correct & non_air).sum())
                 counter["non_air_voxels"] += int(non_air.sum())
+                if category == "Static":
+                    for group, key in ((static_biome_counts, index.records[sample_index].biome_group
+                                        or "unspecified"),
+                                       (static_stratum_counts, index.records[sample_index].stratum
+                                        or "unspecified")):
+                        values = group[key]
+                        values["correct"] += int(correct.sum())
+                        values["voxels"] += int(gt.size)
+                        values["non_air_correct"] += int((correct & non_air).sum())
+                        values["non_air_voxels"] += int(non_air.sum())
+                elif change_masks is not None:
+                    mask = change_masks.changed(sample_index)
+                    unchanged_mask = ~mask
+                    values = dynamic_mask_counts[category]
+                    values["changed"] += int(mask.sum())
+                    values["changed_correct"] += int((correct & mask).sum())
+                    values["unchanged"] += int(unchanged_mask.sum())
+                    values["unchanged_correct"] += int((correct & unchanged_mask).sum())
+                    values["voxels"] += int(gt.size)
+                    values["correct"] += int(correct.sum())
 
     total = sum(category_counts.values(), Counter())
     category_metrics = {}
@@ -92,6 +153,42 @@ def evaluate_indices(model, index, vocabulary, indices, device, precision="fp32"
             "non_air_exact_token_accuracy": _ratio(
                 values["non_air_correct"], values["non_air_voxels"]),
             "samples": sum(index.records[i].category == category for i in indices),
+        }
+
+    def grouped_accuracy(groups):
+        return {
+            name: {
+                "exact_token_accuracy": _ratio(values["correct"], values["voxels"]),
+                "non_air_exact_token_accuracy": _ratio(
+                    values["non_air_correct"], values["non_air_voxels"]),
+                "voxels": values["voxels"],
+            }
+            for name, values in sorted(groups.items())
+        }
+
+    dynamic_total = sum(dynamic_mask_counts.values(), Counter())
+    dynamic_reconstruction = None
+    if dynamic_mask_counts:
+        dynamic_reconstruction = {
+            "exact_token_accuracy": _ratio(dynamic_total["correct"], dynamic_total["voxels"]),
+            "changed_voxel_exact_accuracy": _ratio(
+                dynamic_total["changed_correct"], dynamic_total["changed"]),
+            "unchanged_voxel_exact_accuracy": _ratio(
+                dynamic_total["unchanged_correct"], dynamic_total["unchanged"]),
+            "changed_voxels": dynamic_total["changed"],
+            "unchanged_voxels": dynamic_total["unchanged"],
+            "by_category": {
+                category: {
+                    "exact_token_accuracy": _ratio(values["correct"], values["voxels"]),
+                    "changed_voxel_exact_accuracy": _ratio(
+                        values["changed_correct"], values["changed"]),
+                    "unchanged_voxel_exact_accuracy": _ratio(
+                        values["unchanged_correct"], values["unchanged"]),
+                    "changed_voxels": values["changed"],
+                    "unchanged_voxels": values["unchanged"],
+                }
+                for category, values in sorted(dynamic_mask_counts.items())
+            },
         }
 
     change = Counter(changed=0, predicted_changed=0, pair_exact=0,
@@ -163,12 +260,24 @@ def evaluate_indices(model, index, vocabulary, indices, device, precision="fp32"
         "non_air_exact_token_accuracy": _ratio(
             total["non_air_correct"], total["non_air_voxels"]),
         "categories": category_metrics,
+        "static_preservation": {
+            "exact_token_accuracy": category_metrics.get("Static", {}).get(
+                "exact_token_accuracy"),
+            "non_air_exact_token_accuracy": category_metrics.get("Static", {}).get(
+                "non_air_exact_token_accuracy"),
+            "by_biome_group": grouped_accuracy(static_biome_counts),
+            "by_stratum": grouped_accuracy(static_stratum_counts),
+        },
+        "dynamic_reconstruction": dynamic_reconstruction,
         "dynamic": _dynamic_metrics(change, complete_chains),
         "dynamic_by_category": {
             category: _dynamic_metrics(change_by_category[category], count)
             for category, count in sorted(chains_by_category.items())
         },
         "latent": latent,
+        "loss_components": masked_totals,
+        "change_masks": (None if change_masks is None else
+                         change_masks.statistics(indices)),
         "non_finite_prediction": non_finite_prediction,
     }
     if save_examples is not None:
@@ -190,6 +299,11 @@ def evaluate_indices(model, index, vocabulary, indices, device, precision="fp32"
             split=np.asarray([row.split for row in rows]),
             biome_group=np.asarray([row.biome_group or "" for row in rows]),
             stratum=np.asarray([row.stratum or "" for row in rows]),
+            changed_mask=np.stack([
+                (change_masks.changed(i) if change_masks is not None
+                 and index.records[i].category in DYNAMIC_CATEGORIES
+                 else np.zeros((16, 16, 16), dtype=bool))
+                for i in indices]),
         )
     return result
 
