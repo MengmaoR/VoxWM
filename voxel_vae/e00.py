@@ -1,9 +1,10 @@
-"""Prepare and manually run the active E00-Masked VAE experiment."""
+"""Historical E00-Masked VAE sanity entry point and shared preparation helpers."""
 from __future__ import annotations
 
 import argparse
 import hashlib
 import json
+import random
 from collections import defaultdict, deque
 from pathlib import Path
 
@@ -61,13 +62,17 @@ def _tiny_a(index):
     return selected
 
 
-def _diverse_static(index, split, count=80):
-    groups = defaultdict(deque)
+def _diverse_static(index, split, count=80, *, rng=None):
+    groups = defaultdict(list)
     for sample_index in index.indices(split=split, categories=["Static"]):
         row = index.records[sample_index]
         groups[(row.biome_group or "", row.stratum or "", row.root_index)].append(sample_index)
     selected = []
     keys = sorted(groups)
+    for key in keys:
+        if rng is not None:
+            rng.shuffle(groups[key])
+        groups[key] = deque(groups[key])
     while len(selected) < count:
         progressed = False
         for key in keys:
@@ -81,22 +86,27 @@ def _diverse_static(index, split, count=80):
     return selected
 
 
-def _complete_chains(index, split, category, count=4):
+def _complete_chains(index, split, category, count=4, *, rng=None):
     groups = defaultdict(list)
     for sample_index in index.indices(split=split, categories=[category]):
         row = index.records[sample_index]
         if row.chain_id is not None:
             groups[(row.root_index, row.shard, row.chain_id)].append(sample_index)
-    valid_by_root = defaultdict(deque)
+    valid_by_root = defaultdict(list)
     for key in sorted(groups):
         members = sorted(groups[key], key=lambda item: index.records[item].chain_index)
         if len(members) == 5 and [index.records[item].chain_index
                                   for item in members] == list(range(5)):
             valid_by_root[key[0]].append(members)
     chosen = []
+    roots = sorted(valid_by_root)
+    for root_index in roots:
+        if rng is not None:
+            rng.shuffle(valid_by_root[root_index])
+        valid_by_root[root_index] = deque(valid_by_root[root_index])
     while len(chosen) < count * 5:
         progressed = False
-        for root_index in sorted(valid_by_root):
+        for root_index in roots:
             if valid_by_root[root_index] and len(chosen) < count * 5:
                 chosen.extend(valid_by_root[root_index].popleft())
                 progressed = True
@@ -107,12 +117,11 @@ def _complete_chains(index, split, category, count=4):
     raise ValueError(f"Need {count} complete {split} {category} chains")
 
 
-def _balanced_subset(index, split):
-    selected = _diverse_static(index, split, 80)
+def _balanced_subset(index, split, *, static_count=80, chains_per_category=4, seed=None):
+    rng = random.Random(seed) if seed is not None else None
+    selected = _diverse_static(index, split, static_count, rng=rng)
     for category in ("D1", "D2", "D3", "D4"):
-        selected.extend(_complete_chains(index, split, category, 4))
-    if len(selected) != 160:
-        raise AssertionError("E00-B subset must contain 160 states")
+        selected.extend(_complete_chains(index, split, category, chains_per_category, rng=rng))
     return selected
 
 
@@ -206,11 +215,6 @@ def _model_state_sha256(model):
 
 
 def run_masked(args):
-    import torch
-
-    from .change_masks import ChangeMaskCache
-    from .train import fit_masked, set_seed
-
     output = Path(args.output_root).expanduser().resolve()
     required = ("subset_manifest.json", "config.yaml", "training_vocabulary.json",
                 "dataset_index.json")
@@ -233,9 +237,22 @@ def run_masked(args):
         phase_config["device"] = args.device
     if abs(float(phase_config["beta"]) - float(phase_config["loss"]["beta_kl"])) > 1e-15:
         raise ValueError("Masked KL beta differs from the prepared E00 beta")
+    result = _fit_prepared_masked(
+        output, prepared_config, phase_config, vocabulary, index,
+        train_indices, train_indices, validation_indices, resume=args.resume)
+    render_report(output)
+    print(json.dumps(result, indent=2))
+
+
+def _fit_prepared_masked(output, prepared_config, phase_config, vocabulary, index,
+                         train_indices, diagnostic_indices, validation_indices,
+                         *, resume, phase="E00-Masked", metadata=None, lazy_masks=False):
+    import torch
+
+    from .change_masks import ChangeMaskCache
+    from .train import fit_masked, set_seed
 
     phase_output = output / "phase_masked"
-    resume = args.resume
     if resume == "auto":
         resume = phase_output / "checkpoint_last.pt"
     elif resume:
@@ -252,10 +269,11 @@ def run_masked(args):
     model = _model(prepared_config, vocabulary)
     initial_state_sha256 = _model_state_sha256(model)
     phase_output.mkdir(parents=True, exist_ok=True)
-    save_config(phase_output / "config.yaml", phase_config)
     masks = ChangeMaskCache(
-        index, vocabulary, list(dict.fromkeys(train_indices + validation_indices)))
+        index, vocabulary, train_indices + validation_indices, lazy=lazy_masks)
     metadata = {
+        **(metadata or {}),
+        "phase": phase,
         "masked_directory": str(phase_output),
         "prepared_config_sha256": _sha256(output / "config.yaml"),
         "subset_manifest_sha256": _sha256(output / "subset_manifest.json"),
@@ -263,14 +281,14 @@ def run_masked(args):
         "masked_initial_state_sha256": initial_state_sha256,
         "torch_version": torch.__version__,
         "cuda_version": torch.version.cuda,
-        "train_mask_statistics": masks.statistics(train_indices),
+        "train_mask_statistics": masks.statistics(diagnostic_indices),
         "validation_mask_statistics": masks.statistics(validation_indices),
     }
     try:
-        result = fit_masked(
-            model, index, vocabulary, train_indices, train_indices,
+        return fit_masked(
+            model, index, vocabulary, train_indices, diagnostic_indices,
             validation_indices, masks, phase_output, phase_config,
-            resume=resume, run_metadata=metadata)
+            resume=resume, run_metadata=metadata, phase=phase)
     except (Exception, KeyboardInterrupt) as exc:
         metadata_path = phase_output / "run_metadata.json"
         failed = (json.loads(metadata_path.read_text())
@@ -279,19 +297,20 @@ def run_masked(args):
         failed.update(status=status, error=f"{type(exc).__name__}: {exc}")
         _write_json(metadata_path, failed)
         raise
-    render_report(output)
-    print(json.dumps(result, indent=2))
 
 
-def render_report(output):
-    output = Path(output)
-    vocabulary, index, _ = _load_artifacts(output)
+def render_report(output, *, expected_phase=None):
+    output = Path(output).expanduser().resolve()
+    vocabulary, index, manifest = _load_artifacts(output)
+    phase = manifest.get("phase", "E00-Masked")
+    if expected_phase is not None and phase != expected_phase:
+        raise ValueError(f"Expected {expected_phase} artifacts, found {phase}")
     masked_dir = output / "phase_masked"
     masked_path = masked_dir / "final_metrics.json"
     masked = json.loads(masked_path.read_text()) if masked_path.is_file() else None
     summary = index.summary()
     lines = [
-        "# VoxWM E00-Masked Voxel VAE",
+        f"# VoxWM {phase} Voxel VAE",
         "",
         "Masked is the only active VAE training path. Earlier Plain artifacts are retained "
         "as read-only history and are not an active comparison target.",
@@ -304,6 +323,13 @@ def render_report(output):
         f"- Canonical vocabulary K: {vocabulary.K}; SHA256: `{vocabulary.sha256}`",
         f"- Per-root semantic remap: `{[not root.identity_mapping for root in vocabulary.roots]}`",
         "- Input: center `[16:32]^3` Combined Tokens only; no light/metadata/time/category input.",
+    ]
+    if "training_pool" in manifest:
+        lines += [
+            f"- Training pool: {manifest['training_pool']['samples']:,} states from the full train split.",
+            f"- Fixed validation: {len(manifest['subsets'][manifest['validation_subset']]):,} states.",
+        ]
+    lines += [
         "",
         "## Model",
         "",

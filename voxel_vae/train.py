@@ -12,6 +12,7 @@ import numpy as np
 import torch
 
 from .checkpoint import load_checkpoint, save_checkpoint
+from .config import save_config
 from .dataset import VoxelSnapshotDataset
 from .early_stopping import (EarlyStoppingState, state_from_metrics,
                              validate_early_stopping_config)
@@ -284,8 +285,8 @@ def fit(model, index, vocabulary, train_indices, evaluation_indices, output_dir,
 
 def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
                validation_indices, change_masks, output_dir, config,
-               resume=None, run_metadata=None):
-    """Joint Static/Dynamic masked E00 training with exact batch denominators."""
+               resume=None, run_metadata=None, *, phase="E00-Masked"):
+    """Joint Static/Dynamic masked training with exact batch denominators."""
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     seed = int(config["seed"])
@@ -312,9 +313,12 @@ def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
     payload = None
     if resume:
         # Keep CPU RNG state on CPU, including when the model/optimizer are on CUDA.
+        expected_config = None
+        if phase == "E01-Masked":
+            expected_config = {key: value for key, value in config.items() if key != "device"}
         payload = load_checkpoint(
             resume, model, optimizer, vocabulary, index,
-            expected_phase="E00-Masked", expected_loss=loss_config)
+            expected_phase=phase, expected_loss=loss_config, expected_config=expected_config)
         global_step = int(payload["global_step"])
 
     dataset = VoxelSnapshotDataset(index, vocabulary)
@@ -344,19 +348,20 @@ def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
                 early_state.best_step = None
                 early_state.patience_reference = saved_best
         _append_jsonl(metrics_path, {
-            "phase": "E00-Masked", "global_step": global_step, "event": "resume"})
+            "phase": phase, "global_step": global_step, "event": "resume"})
         del payload
+    save_config(output_dir / "config.yaml", config)
     metadata_path = output_dir / "run_metadata.json"
     metadata = dict(run_metadata or {})
     metadata.update({
-        "status": "RUNNING", "phase": "E00-Masked", "seed": seed,
+        "status": "RUNNING", "phase": phase, "seed": seed,
         "device": str(device), "precision": precision, "loss": loss_config,
         "early_stopping": early_config,
         "global_step": global_step, "max_steps": max_steps,
     })
     write_json(metadata_path, metadata)
     write_json(early_path, early_state.to_dict(early_config))
-    write_training_curves(metrics_path, output_dir)
+    write_training_curves(metrics_path, output_dir, phase=phase)
 
     if global_step == 0:
         initial = evaluate_indices(
@@ -450,7 +455,7 @@ def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
         log_now = global_step == 1 or global_step % log_every == 0 or validate_now
         if log_now:
             row = {
-                "phase": "E00-Masked", "global_step": global_step,
+                "phase": phase, "global_step": global_step,
                 **{key: aggregate[key] for key in scalar_keys},
                 "dynamic_unchanged_by_category": aggregate[
                     "dynamic_unchanged_by_category"],
@@ -471,14 +476,14 @@ def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
                 precision=precision, batch_size=evaluation_batch,
                 change_masks=change_masks, masked_loss_config=loss_config)
             _append_jsonl(metrics_path, {
-                "phase": "E00-Masked", "global_step": global_step,
+                "phase": phase, "global_step": global_step,
                 "event": "overfit_evaluation", **evaluation})
             last_validation = evaluate_indices(
                 model, index, vocabulary, validation_indices, device,
                 precision=precision, batch_size=evaluation_batch,
                 change_masks=change_masks, masked_loss_config=loss_config)
             _append_jsonl(metrics_path, {
-                "phase": "E00-Masked", "global_step": global_step,
+                "phase": phase, "global_step": global_step,
                 "event": "validation", **last_validation})
             score = last_validation["loss_components"]["loss_total"]
             new_best, _ = early_state.observe(global_step, score, early_config)
@@ -487,14 +492,14 @@ def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
                 save_checkpoint(
                     output_dir / "checkpoint_best.pt", model, optimizer,
                     global_step, config, vocabulary, index, early_state.best_metric,
-                    "E00-Masked", early_stopping=snapshot)
+                    phase, early_stopping=snapshot)
             save_checkpoint(
                 output_dir / "checkpoint_last.pt", model, optimizer,
                 global_step, config, vocabulary, index, early_state.best_metric,
-                "E00-Masked", early_stopping=snapshot)
+                phase, early_stopping=snapshot)
             write_json(early_path, snapshot)
         if log_now:
-            write_training_curves(metrics_path, output_dir)
+            write_training_curves(metrics_path, output_dir, phase=phase)
 
     final = evaluate_indices(
         model, index, vocabulary, evaluation_indices, device,
@@ -512,7 +517,7 @@ def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
     })
     write_json(loss_statistics_path, loss_statistics)
     result = {
-        "phase": "E00-Masked", "global_step": global_step,
+        "phase": phase, "global_step": global_step,
         "training_seconds": time.monotonic() - started,
         "device": str(device), "precision": precision,
         "parameter_count": parameter_count(model), "loss": loss_config,

@@ -93,7 +93,8 @@ class ModelTests(unittest.TestCase):
         optimizer = torch.optim.AdamW(self.model.parameters(), lr=1e-4)
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / "masked.pt"
-            save_checkpoint(path, self.model, optimizer, 3, {"loss": loss},
+            config = {"loss": loss, "prepared_data": {"dataset_index.json": "index-a"}}
+            save_checkpoint(path, self.model, optimizer, 3, config,
                             vocabulary, _Index(), 2.0, "E00-Masked",
                             early_stopping=early.to_dict(policy))
             restored = VoxelVAE(7)
@@ -101,6 +102,10 @@ class ModelTests(unittest.TestCase):
                                       restore_rng=False, expected_phase="E00-Masked",
                                       expected_loss=loss)
             self.assertEqual(EarlyStoppingState.from_dict(payload["early_stopping"]), early)
+            with self.assertRaisesRegex(ValueError, "config.prepared_data"):
+                load_checkpoint(path, restored, None, vocabulary, _Index(),
+                                restore_rng=False, expected_phase="E00-Masked",
+                                expected_config={"prepared_data": {"dataset_index.json": "index-b"}})
             with self.assertRaisesRegex(ValueError, "phase"):
                 load_checkpoint(path, restored, None, vocabulary, _Index(),
                                 restore_rng=False, expected_phase="E00-B")

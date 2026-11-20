@@ -17,7 +17,7 @@ from .vocabulary import CanonicalVocabulary
 ROOT = Path(__file__).resolve().parents[1]
 VIEWER = Path(__file__).resolve().parent / "viewer"
 VENDOR = ROOT / "docs/vendor"
-DEFAULT_OUTPUT = ROOT / "outputs/voxel_vae/e00"
+DEFAULT_OUTPUT = ROOT / "outputs/voxel_vae/e01"
 CATEGORY_ORDER = ("Static", "D1", "D2", "D3", "D4")
 
 
@@ -62,7 +62,9 @@ def export_gallery(args):
 
     output_root = Path(args.output_root).expanduser().resolve()
     vocabulary, index, subsets = _load_artifacts(output_root)
-    eligible = _subset_indices(subsets, "e00_b_validation")
+    phase = subsets.get("phase", "E00-Masked")
+    subset_name = subsets.get("validation_subset", "e00_b_validation")
+    eligible = _subset_indices(subsets, subset_name)
     selected = select_validation_gallery(
         index, eligible, args.static_count, args.chains_per_dynamic)
     config = load_config(output_root / "config.yaml")
@@ -74,9 +76,14 @@ def export_gallery(args):
     checkpoint = (Path(args.checkpoint).expanduser().resolve()
                   if args.checkpoint else
                   output_root / "phase_masked/checkpoint_best.pt")
+    expected_config = None
+    if phase == "E01-Masked":
+        from .e01 import prepared_data_identity
+
+        expected_config = {"prepared_data": prepared_data_identity(output_root)}
     payload = load_checkpoint(
         checkpoint, model, None, vocabulary, index, restore_rng=False,
-        expected_phase="E00-Masked", expected_loss=loss_config)
+        expected_phase=phase, expected_loss=loss_config, expected_config=expected_config)
     checkpoint_step = int(payload["global_step"])
     del payload
     examples = (Path(args.examples).expanduser().resolve()
@@ -90,10 +97,10 @@ def export_gallery(args):
         change_masks=masks, masked_loss_config=loss_config)
     metrics_path = examples.with_name(examples.stem + "_metrics.json")
     write_json(metrics_path, {
-        "purpose": "E00-Masked validation reconstruction gallery",
+        "purpose": f"{phase} validation reconstruction gallery",
         "checkpoint": str(checkpoint),
         "global_step": checkpoint_step,
-        "subset": "e00_b_validation",
+        "subset": subset_name,
         "selection": {
             "static": int(args.static_count),
             "complete_chains_per_dynamic_category": int(args.chains_per_dynamic),

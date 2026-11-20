@@ -30,6 +30,8 @@ class BalancedBatchSampler:
             if len(self.pools[category]) < quota:
                 raise ValueError(
                     f"Need {quota} train {category} samples, found {len(self.pools[category])}")
+        self.pools = {category: np.asarray(pool, dtype=np.int64)
+                      for category, pool in self.pools.items()}
 
     def batch(self, global_step):
         rng = np.random.default_rng(self.seed + 1_000_003 * int(global_step))

@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import math
 from datetime import datetime, timezone
+from html import escape
 from pathlib import Path
 
 
@@ -42,9 +43,10 @@ def read_metric_rows(metrics_path):
     return sorted(rows.values(), key=lambda row: row["global_step"])
 
 
-def read_curve_data(metrics_path):
+def read_curve_data(metrics_path, *, phase=None):
     train, validation = [], []
     for row in read_metric_rows(metrics_path):
+        phase = row.get("phase") or phase
         event = row.get("event")
         if event == "validation":
             components = row.get("loss_components") or {}
@@ -67,7 +69,7 @@ def read_curve_data(metrics_path):
             validation.append(point)
         else:
             train.append(point)
-    return {"train": train, "validation": validation}
+    return {"phase": phase, "train": train, "validation": validation}
 
 
 def _panel(series, title, left, top, width, x_max):
@@ -108,6 +110,7 @@ def _panel(series, title, left, top, width, x_max):
 
 def render_svg(data):
     train, validation = data["train"], data["validation"]
+    phase = escape(data.get("phase") or "Masked VAE")
     x_max = max(1, max((row["step"] for row in train + validation), default=0))
 
     def paired(key):
@@ -126,16 +129,16 @@ def render_svg(data):
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 960" '
         'font-family="system-ui, sans-serif" font-size="12" fill="#91aabd">',
         '<rect width="1200" height="960" fill="#0d141d"/>',
-        '<text x="68" y="42" fill="#f0f5f8" font-size="24">VoxWM E00-Masked loss curves</text>',
+        f'<text x="68" y="42" fill="#f0f5f8" font-size="24">VoxWM {phase} loss curves</text>',
         *panels,
         '</svg>',
     ])
 
 
-def write_training_curves(metrics_path, output_dir):
+def write_training_curves(metrics_path, output_dir, *, phase=None):
     output = Path(output_dir)
     output.mkdir(parents=True, exist_ok=True)
-    data = read_curve_data(metrics_path)
+    data = read_curve_data(metrics_path, phase=phase)
     data["generated_at"] = datetime.now(timezone.utc).isoformat()
     json_path = output / "loss_curves.json"
     json_tmp = json_path.with_name("." + json_path.name + ".tmp")

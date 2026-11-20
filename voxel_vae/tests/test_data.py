@@ -4,6 +4,7 @@ import tempfile
 import unittest
 from collections import Counter
 from pathlib import Path
+from unittest.mock import patch
 
 import numpy as np
 import zarr
@@ -235,6 +236,15 @@ class DataTests(unittest.TestCase):
         self.assertEqual(stats["chains"], 1)
         self.assertEqual(stats["dynamic_states"], 5)
         self.assertEqual(stats["d4_chain_subtypes"], {"B": 1})
+        with patch.object(VoxelSnapshotDataset, "read_numpy", autospec=True,
+                          side_effect=VoxelSnapshotDataset.read_numpy) as read:
+            lazy = ChangeMaskCache(index, vocabulary, dynamic, lazy=True)
+            read.assert_not_called()
+            for item in reversed(dynamic):
+                self.assertTrue(np.array_equal(lazy.changed(item), cache.changed(item)))
+            self.assertEqual(read.call_count, 5)
+            self.assertEqual(lazy.statistics(dynamic), stats)
+            self.assertEqual(read.call_count, 5)
 
 
 if __name__ == "__main__":

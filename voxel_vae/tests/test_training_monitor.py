@@ -106,7 +106,7 @@ class TrainingMonitorTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
             metrics = root / "metrics.jsonl"
-            content = json.dumps(validation(500, 3.0)) + "\n"
+            content = json.dumps(dict(validation(1000, 3.0), phase="E01-Masked")) + "\n"
             metrics.write_text(content)
             with subprocess.Popen([
                     sys.executable, "-B", "-m", "voxel_vae.training_monitor",
@@ -117,9 +117,9 @@ class TrainingMonitorTests(unittest.TestCase):
                     port = int(address.rsplit(":", 1)[-1])
                     connection = http.client.HTTPConnection("127.0.0.1", port, timeout=2)
                     try:
-                        for path, expected in (("/", b"E00-Masked training"),
-                                               ("/api/status", b'"best_step": 500'),
-                                               ("/loss_curves.svg", b"Total loss"),
+                        for path, expected in (("/", b"Masked VAE training"),
+                                               ("/api/status", b'"phase": "E01-Masked"'),
+                                               ("/loss_curves.svg", b"E01-Masked loss curves"),
                                                ("/loss_curves.json", b'"loss_total": 3.0')):
                             connection.request("GET", path)
                             response = connection.getresponse()

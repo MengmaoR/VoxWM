@@ -39,9 +39,10 @@ def _chain_key(row):
 class ChangeMaskCache:
     """Cache masks only for selected dynamic chains; Static has no mask."""
 
-    def __init__(self, index, vocabulary, selected_indices):
+    def __init__(self, index, vocabulary, selected_indices, *, lazy=False):
         self.index = index
         self.vocabulary = vocabulary
+        self._lazy = lazy
         selected_indices = tuple(map(int, selected_indices))
         requested = set()
         for sample_index in selected_indices:
@@ -57,9 +58,10 @@ class ChangeMaskCache:
         if set(groups) != requested:
             raise ValueError("Unable to resolve every requested dynamic chain")
 
-        dataset = VoxelSnapshotDataset(index, vocabulary)
+        self._dataset = VoxelSnapshotDataset(index, vocabulary)
         self._masks = {}
         self._chains = {}
+        self._chain_by_sample = {}
         for key in sorted(groups):
             members = sorted(groups[key], key=lambda item: index.records[item].chain_index)
             rows = [index.records[item] for item in members]
@@ -72,29 +74,44 @@ class ChangeMaskCache:
                 raise ValueError(f"Dynamic chain category mismatch: {key}")
             if len(seeds) != 1 or len(splits) != 1:
                 raise ValueError(f"Dynamic chain crosses seed or split: {key}")
-            states = np.stack([dataset.read_numpy(item)[0] for item in members])
-            masks = compute_chain_masks(states, [row.chain_index for row in rows])
             self._chains[key] = tuple(members)
-            for sample_index, mask in zip(members, masks):
-                self._masks[sample_index] = np.ascontiguousarray(mask)
+            self._chain_by_sample.update((item, key) for item in members)
+            if not lazy:
+                self._load_chain(key)
 
         missing = [item for item in selected_indices
                    if index.records[item].category in DYNAMIC_CATEGORIES
-                   and item not in self._masks]
+                   and item not in self._chain_by_sample]
         if missing:
             raise ValueError(f"Missing changed masks for selected samples: {missing[:5]}")
 
+    def _load_chain(self, key):
+        members = self._chains[key]
+        if members[0] in self._masks:
+            return
+        states = np.stack([self._dataset.read_numpy(item)[0] for item in members])
+        try:
+            masks = compute_chain_masks(states)
+        except ValueError as exc:
+            raise ValueError(f"Invalid changed mask for chain {key}: {exc}") from exc
+        for sample_index, mask in zip(members, masks):
+            self._masks[sample_index] = np.packbits(mask) if self._lazy else mask
+
     def __contains__(self, sample_index):
-        return int(sample_index) in self._masks
+        return int(sample_index) in self._chain_by_sample
 
     def __getitem__(self, sample_index):
         return self.changed(sample_index)
 
     def changed(self, sample_index):
         sample_index = int(sample_index)
-        if sample_index not in self._masks:
+        if sample_index not in self._chain_by_sample:
             raise KeyError(f"No dynamic mask for sample {sample_index}")
-        return self._masks[sample_index]
+        self._load_chain(self._chain_by_sample[sample_index])
+        mask = self._masks[sample_index]
+        if self._lazy:
+            return np.unpackbits(mask).view(np.bool_).reshape(16, 16, 16)
+        return mask
 
     def unchanged(self, sample_index):
         return ~self.changed(sample_index)
@@ -104,15 +121,14 @@ class ChangeMaskCache:
         category_counts = defaultdict(list)
         chain_rows = []
         empty_unchanged = 0
-        for key, members in sorted(self._chains.items()):
-            active = [item for item in members if item in selected]
-            if not active:
-                continue
+        keys = {self._chain_by_sample[item] for item in selected if item in self._chain_by_sample}
+        for key in sorted(keys):
+            members = self._chains[key]
             row = self.index.records[members[0]]
-            counts = [int(self._masks[item].sum()) for item in members]
-            category_counts[row.category].extend(
-                int(self._masks[item].sum()) for item in active)
-            empty_unchanged += sum(bool(self._masks[item].all()) for item in active)
+            counts = [int(self.changed(item).sum()) for item in members]
+            active = [count for item, count in zip(members, counts) if item in selected]
+            category_counts[row.category].extend(active)
+            empty_unchanged += active.count(16 ** 3)
             chain_rows.append({
                 "category": row.category,
                 "chain_id": row.chain_id,

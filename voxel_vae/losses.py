@@ -31,7 +31,7 @@ def validate_masked_loss_config(config):
         raise ValueError("Unsupported masked loss objective")
     for key in required.keys() - {"objective"}:
         if abs(float(config[key]) - required[key]) > 1e-15:
-            raise ValueError(f"E00-Masked fixes {key}={required[key]}")
+            raise ValueError(f"Masked objective fixes {key}={required[key]}")
     return {key: (str(value) if key == "objective" else float(value))
             for key, value in config.items() if key in required}
 
