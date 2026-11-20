@@ -10,8 +10,9 @@
 <div class="buttons"><button id="back">◀</button><button id="play">Play</button><button id="next">▶</button></div>
 <label>Slice axis<select id="axis"><option value="all">Full volume</option><option value="0">X upper bound</option><option value="1">Y upper bound</option><option value="2">Z upper bound</option></select></label>
 <label>Slice upper bound <output id="sliceLabel">15</output><input id="slice" type="range" min="0" max="15" value="15"></label>
-<label><input id="errors" type="checkbox" checked> Highlight incorrect voxels</label>
+<label>Error overlay<select id="errorMode"><option value="prediction" selected>Prediction only (red)</option><option value="both">GT yellow + prediction red</option><option value="off">Off</option></select></label>
 <button id="reset">Reset camera</button>
+<pre id="inspector">Click a visible voxel to inspect its exact GT and predicted Combined Tokens.</pre>
 <pre id="metadata"></pre><div id="legend"></div>
 </aside><section><div id="canvas"><div class="side gt">GT input</div><div class="side pred">VAE reconstruction</div></div>
 <div id="error"></div><div id="summary"></div></section></main>
