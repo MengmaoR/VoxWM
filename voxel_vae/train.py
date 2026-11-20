@@ -79,6 +79,43 @@ def parameter_count(model):
     return sum(parameter.numel() for parameter in model.parameters())
 
 
+def save_initial_embedding(path, model, vocabulary, seed):
+    """Persist the small step-0 codebook needed for learned-drift analysis."""
+    path = Path(path)
+    temporary = path.with_name("." + path.name + ".tmp.npz")
+    np.savez_compressed(
+        temporary,
+        weight=model.embedding.weight.detach().float().cpu().numpy(),
+        token_id=np.arange(vocabulary.K, dtype=np.int32),
+        vocabulary_sha256=np.asarray(vocabulary.sha256),
+        seed=np.asarray(int(seed), dtype=np.int64),
+    )
+    temporary.replace(path)
+
+
+def embedding_drift(path, model):
+    """Summarize how far each learned token row moved from step 0."""
+    with np.load(path, allow_pickle=False) as archive:
+        initial = np.asarray(archive["weight"], dtype=np.float32)
+    current = model.embedding.weight.detach().float().cpu().numpy()
+    if initial.shape != current.shape:
+        raise ValueError(
+            f"Initial embedding shape {initial.shape} != current {current.shape}")
+    row_l2 = np.linalg.norm(current - initial, axis=1)
+    denominator = np.linalg.norm(initial, axis=1) * np.linalg.norm(current, axis=1)
+    cosine = np.divide(
+        np.sum(initial * current, axis=1), denominator,
+        out=np.zeros_like(denominator), where=denominator > 0)
+    return {
+        "rows": int(row_l2.size),
+        "mean_row_l2": float(row_l2.mean()),
+        "median_row_l2": float(np.median(row_l2)),
+        "max_row_l2": float(row_l2.max()),
+        "mean_initial_to_final_cosine": float(cosine.mean()),
+        "rows_l2_above_1e-6": int((row_l2 > 1e-6).sum()),
+    }
+
+
 def fit(model, index, vocabulary, train_indices, evaluation_indices, output_dir,
         config, phase, balanced=True, resume=None, validation_indices=None):
     output_dir = Path(output_dir)
@@ -90,6 +127,9 @@ def fit(model, index, vocabulary, train_indices, evaluation_indices, output_dir,
     if precision not in ("fp32", "bf16"):
         raise ValueError("precision must be fp32 or bf16")
     model.to(device)
+    initial_embedding_path = output_dir / "embedding_initial.npz"
+    if not resume:
+        save_initial_embedding(initial_embedding_path, model, vocabulary, seed)
     optimizer = torch.optim.AdamW(model.parameters(), lr=float(config["learning_rate"]),
                                   weight_decay=float(config.get("weight_decay", 1e-4)))
     global_step = 0
@@ -219,6 +259,10 @@ def fit(model, index, vocabulary, train_indices, evaluation_indices, output_dir,
         "precision": precision,
         "parameter_count": parameter_count(model),
         "beta": beta,
+        "initial_embedding": (str(initial_embedding_path)
+                              if initial_embedding_path.is_file() else None),
+        "embedding_drift": (embedding_drift(initial_embedding_path, model)
+                            if initial_embedding_path.is_file() else None),
         "gradient_check": gradient_check,
         "initial": initial,
         "final": final,

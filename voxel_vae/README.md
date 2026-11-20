@@ -5,6 +5,25 @@ remapping, committed-snapshot indexing, a 32D embedding, the fixed 3D ResNet
 VAE, equal-voxel CE + `1e-6` raw KL, balanced sampling, strict checkpoints and
 tiny real-data overfits. It does not train dynamics and does not authorize E01.
 
+## Exact E00 objective
+
+For target token grid `x` and posterior tensors `mu, logvar` of shape
+`[B,16,4,4,4]`, the implemented loss is:
+
+```text
+recon_ce = mean CrossEntropy(logits, x) over B * 16 * 16 * 16 voxels
+kl_raw   = mean_B sum_{16 * 4 * 4 * 4} -0.5 * (1 + logvar - mu^2 - exp(logvar))
+loss     = recon_ce + 1e-6 * kl_raw
+```
+
+There is no class weighting, non-Air weighting, changed-voxel mask, temporal
+loss, chain-order input, perceptual term or category-specific auxiliary loss.
+The 32/8/8/8/8 sampler balances **states per category**, not the voxels inside
+each state. In the completed E00-B subset, GT-changing voxels account for only
+about 0.23% of adjacent dynamic training pairs (about 0.29% in validation), so
+plain CE is dominated by unchanged structure. This is an intentional E00
+sanity protocol limitation, not evidence that the stored dynamic GT is bad.
+
 ## Data contract
 
 - One or more `vae-region48-fixed24-v2` roots are accepted.
@@ -107,6 +126,11 @@ The viewer switches among Static and D1–D4, preserves each dynamic chain's
 five-state order, renders GT input and posterior-mean reconstruction side by
 side, highlights exact Combined-Token errors, and provides axis slicing for
 solid/underground chunks. It only reads derived reconstruction artifacts.
+
+New runs also save `embedding_initial.npz` before optimizer step 1 and report
+row-wise initialization-to-final drift. Evaluation reports dynamic change
+metrics both in aggregate and separately for D1, D2, D3 and D4. These are
+diagnostics only and do not change the E00 objective.
 
 Outputs follow the requested layout. E00-A artifacts are additionally retained
 under `phase_a/`; the root checkpoints/metrics/reconstructions belong to E00-B.

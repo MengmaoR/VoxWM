@@ -23,6 +23,20 @@ def _ratio(numerator, denominator):
     return None if not denominator else float(numerator / denominator)
 
 
+def _dynamic_metrics(values, complete_chains):
+    return {
+        "complete_chains": int(complete_chains),
+        "adjacent_pairs": values["pairs"],
+        "predicted_change_recall": _ratio(
+            values["predicted_changed"], values["changed"]),
+        "changed_pair_exact_reconstruction": _ratio(
+            values["pair_exact"], values["changed"]),
+        "unchanged_stability": _ratio(
+            values["unchanged_stable"], values["unchanged"]),
+        "gt_changed_voxels": values["changed"],
+    }
+
+
 def evaluate_indices(model, index, vocabulary, indices, device, precision="fp32",
                      batch_size=2, save_examples=None):
     indices = list(map(int, indices))
@@ -82,6 +96,10 @@ def evaluate_indices(model, index, vocabulary, indices, device, precision="fp32"
 
     change = Counter(changed=0, predicted_changed=0, pair_exact=0,
                      unchanged=0, unchanged_stable=0, pairs=0)
+    change_by_category = defaultdict(lambda: Counter(
+        changed=0, predicted_changed=0, pair_exact=0,
+        unchanged=0, unchanged_stable=0, pairs=0))
+    chains_by_category = Counter()
     latent_distances = []
     groups = defaultdict(list)
     for sample_index in indices:
@@ -94,19 +112,25 @@ def evaluate_indices(model, index, vocabulary, indices, device, precision="fp32"
         if len(members) != 5 or [index.records[i].chain_index for i in members] != list(range(5)):
             continue
         complete_chains += 1
+        category = index.records[members[0]].category
+        chains_by_category[category] += 1
         for before_index, after_index in zip(members, members[1:]):
             before, after = ground_truth[before_index], ground_truth[after_index]
             pred_before, pred_after = predictions[before_index], predictions[after_index]
             changed = before != after
             unchanged = ~changed
-            change["changed"] += int(changed.sum())
-            change["predicted_changed"] += int((changed & (pred_before != pred_after)).sum())
-            change["pair_exact"] += int((changed & (pred_before == before)
-                                         & (pred_after == after)).sum())
-            change["unchanged"] += int(unchanged.sum())
-            change["unchanged_stable"] += int((unchanged &
-                                                (pred_before == pred_after)).sum())
-            change["pairs"] += 1
+            increments = {
+                "changed": int(changed.sum()),
+                "predicted_changed": int((changed & (pred_before != pred_after)).sum()),
+                "pair_exact": int((changed & (pred_before == before)
+                                    & (pred_after == after)).sum()),
+                "unchanged": int(unchanged.sum()),
+                "unchanged_stable": int((unchanged &
+                                          (pred_before == pred_after)).sum()),
+                "pairs": 1,
+            }
+            change.update(increments)
+            change_by_category[category].update(increments)
             latent_distances.append(float(np.linalg.norm(
                 mus[before_index] - mus[after_index])))
 
@@ -139,16 +163,10 @@ def evaluate_indices(model, index, vocabulary, indices, device, precision="fp32"
         "non_air_exact_token_accuracy": _ratio(
             total["non_air_correct"], total["non_air_voxels"]),
         "categories": category_metrics,
-        "dynamic": {
-            "complete_chains": complete_chains,
-            "adjacent_pairs": change["pairs"],
-            "predicted_change_recall": _ratio(
-                change["predicted_changed"], change["changed"]),
-            "changed_pair_exact_reconstruction": _ratio(
-                change["pair_exact"], change["changed"]),
-            "unchanged_stability": _ratio(
-                change["unchanged_stable"], change["unchanged"]),
-            "gt_changed_voxels": change["changed"],
+        "dynamic": _dynamic_metrics(change, complete_chains),
+        "dynamic_by_category": {
+            category: _dynamic_metrics(change_by_category[category], count)
+            for category, count in sorted(chains_by_category.items())
         },
         "latent": latent,
         "non_finite_prediction": non_finite_prediction,

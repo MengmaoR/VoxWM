@@ -79,6 +79,13 @@ class ModelTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "vocabulary_sha256"):
                 load_checkpoint(path, restored, None, wrong, _Index(), restore_rng=False)
 
+    def test_same_seed_reproduces_embedding_initialization(self):
+        torch.manual_seed(42)
+        first = VoxelVAE(7).embedding.weight.detach().clone()
+        torch.manual_seed(42)
+        second = VoxelVAE(7).embedding.weight.detach().clone()
+        self.assertTrue(torch.equal(first, second))
+
 
 if __name__ == "__main__":
     unittest.main()

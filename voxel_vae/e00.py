@@ -189,12 +189,11 @@ def prepare(args):
 
 
 def run_phase(args, phase):
-    from .train import fit
+    from .train import fit, set_seed
 
     output = Path(args.output_root).expanduser().resolve()
     config = load_config(output / "config.yaml")
     vocabulary, index, subset = _load_artifacts(output)
-    model = _model(config, vocabulary)
     if phase == "a":
         phase_output = output / "phase_a"
         train_indices = _subset_indices(subset, "e00_a_train")
@@ -216,6 +215,11 @@ def run_phase(args, phase):
         balanced = True
     if args.device:
         phase_config["device"] = args.device
+    # Model parameters, including the token embedding, must be initialized
+    # after the configured seed is applied. fit() resets the same seed again
+    # for deterministic sampling/training after construction.
+    set_seed(int(phase_config["seed"]))
+    model = _model(config, vocabulary)
     resume = args.resume
     if resume == "auto":
         candidate = phase_output / "checkpoint_last.pt"
@@ -291,7 +295,10 @@ def render_report(output):
             f"{phase_b['final']['cross_entropy']:.6f}",
             f"- Category reconstruction: `{phase_b['final']['categories']}`",
             f"- Dynamic diagnostics: `{phase_b['final']['dynamic']}`",
+            f"- Dynamic diagnostics by category: "
+            f"`{phase_b['final'].get('dynamic_by_category')}`",
             f"- Active latent channels: {phase_b['final']['latent']['active_latent_channels']}/16",
+            f"- Embedding drift from step 0: `{phase_b.get('embedding_drift')}`",
             f"- Validation diagnostics: `{phase_b.get('validation')}`",
         ]
     else:
