@@ -90,12 +90,14 @@ mid-epoch resume continues at the saved offset.
 The optimizer, global step and lowest validation loss carry over. Patience
 restarts when switching to epoch sampling. Validation stays on the 1,000-step
 cadence with extra checks at epoch boundaries, and early stopping takes effect
-only at a completed epoch. Reuse the same command after interruption.
-`--epochs` is the total target within the schedule started at step 20,000.
-If the 25,000-step curve warrants continuing, change `--epochs 2` to
-`--epochs 12` to target step 50,000. With a saved epoch plan, `--resume`
-alone restores its target and offset. For a fresh run, supply `--epochs`
-without `--resume` to use complete epochs from step zero.
+only at a completed epoch.
+
+With `--resume --epochs N`, complete N more epochs from the last completed
+epoch. An in-progress epoch counts once it finishes. From step 25,000, use
+`--resume --epochs 10` to target step 50,000. If a run is interrupted and
+the checkpoint has saved its epoch plan, use `--resume` alone to continue
+toward that target at the saved offset. For a fresh run, use `--epochs N`
+from step zero.
 
 Use the single-process command to train on GPU 2 alone.
 

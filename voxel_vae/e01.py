@@ -188,7 +188,7 @@ def main(argv=None):
     train.add_argument("--device", help="single-process device, cuda:0 by default")
     train.add_argument("--resume", action="store_true", help="resume this E01 run's checkpoint_last.pt")
     train.add_argument("--epochs", type=int,
-                       help="target number of complete, without-replacement epochs (saved on resume)")
+                       help="epochs to complete, counted from the last completed epoch on resume")
     report = commands.add_parser("report", help="render the current E01 report")
     for command in (setup, migration, train, report):
         command.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT)

@@ -133,6 +133,26 @@ def _rank_worker(rank, root):
 
 
 class DDPTests(unittest.TestCase):
+    def test_resume_epochs_count_from_completed_checkpoint(self):
+        with tempfile.TemporaryDirectory() as folder:
+            output = Path(folder)
+            first = _fit_fixture(output, epochs=4, uneven_pool=True)
+            self.assertEqual(first["global_step"], 2)
+            self.assertTrue(first["stopped_early"])
+
+            # The best checkpoint is halfway through the first epoch.
+            resumed = _fit_fixture(
+                output, resume=output / "checkpoint_best.pt", uneven_pool=True)
+            self.assertEqual(resumed["global_step"], 2)
+            self.assertEqual(resumed["epoch_plan"], first["epoch_plan"])
+
+            extended = _fit_fixture(
+                output, resume=output / "checkpoint_last.pt", epochs=1, uneven_pool=True)
+            self.assertEqual(extended["global_step"], 4)
+            self.assertEqual(extended["epoch_plan"],
+                             {"start_step": 0, "epochs": 2, "steps_per_epoch": 2})
+            self.assertEqual(extended["early_stopping"]["best_step"], 1)
+
     @unittest.skipUnless(dist.is_available() and dist.is_gloo_available(), "PyTorch Gloo required")
     def test_two_ranks_match_single_process_and_stop_together(self):
         with tempfile.TemporaryDirectory() as folder:

@@ -346,7 +346,11 @@ def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
         if saved_plan is not None and saved_plan["steps_per_epoch"] != epoch_steps:
             raise ValueError("Training pool changed the saved steps per epoch")
         epoch_start = global_step if saved_plan is None else saved_plan["start_step"]
-        epoch_limit = saved_plan["epochs"] if epochs is None else epochs
+        if epochs is None:
+            epoch_limit = saved_plan["epochs"]
+        else:
+            completed_epochs = (global_step - epoch_start) // epoch_steps
+            epoch_limit = completed_epochs + epochs
         max_steps = epoch_start + epoch_limit * epoch_steps
         if epoch_limit < 1 or not epoch_start <= global_step <= max_steps:
             raise ValueError("The epoch target must include the checkpoint's saved step")
@@ -381,7 +385,7 @@ def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
                 early_state.best_step = None
                 early_state.patience_reference = saved_best
         if epoch_plan is not None and (saved_plan is None
-                or (early_state.stopped and epoch_plan["epochs"] > saved_plan["epochs"])):
+                or (early_state.stopped and epochs is not None)):
             early_state.reset_patience()
         if primary:
             _append_jsonl(metrics_path, {
