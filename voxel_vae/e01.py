@@ -94,6 +94,8 @@ def run(args):
 
 def _run(args, *, group=None):
     primary = group is None or group.primary
+    if args.epochs is not None and args.epochs < 1:
+        raise ValueError("--epochs must be a positive number of full training passes")
     output = args.output_root.expanduser().resolve()
     vocabulary, index, manifest = _load_artifacts(output)
     if manifest.get("phase") != PHASE:
@@ -125,7 +127,7 @@ def _run(args, *, group=None):
     result = _fit_prepared_masked(
         output, config, phase_config, vocabulary, index, train_indices,
         diagnostics, validation, resume="auto" if args.resume else None,
-        phase=PHASE, metadata=metadata, lazy_masks=True, group=group)
+        phase=PHASE, metadata=metadata, lazy_masks=True, group=group, epochs=args.epochs)
     if primary:
         render_report(output, expected_phase=PHASE)
         print(json.dumps(result, indent=2))
@@ -141,6 +143,8 @@ def main(argv=None):
     train = commands.add_parser("run", help="train E01-Masked using the full train split")
     train.add_argument("--device", help="single-process device, cuda:0 by default")
     train.add_argument("--resume", action="store_true", help="resume this E01 run's checkpoint_last.pt")
+    train.add_argument("--epochs", type=int,
+                       help="target number of complete, without-replacement epochs (saved on resume)")
     report = commands.add_parser("report", help="render the current E01 report")
     for command in (setup, train, report):
         command.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT)

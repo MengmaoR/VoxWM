@@ -2,9 +2,11 @@
 
 E01-Masked uses the full `train` split from both completed 100K clips. The
 balanced sampler draws 32 Static and 8 each of D1–D4 per 64-state batch.
-The pool size comes from the committed index, typically about 160K states.
-Sampling is step-based across the full pool. The existing world-seed split
-keeps validation and test worlds separate.
+The two clips contain 200,000 states across all splits. The committed E01
+index has 159,726 train, 19,620 validation and 20,654 test states. The split
+is assigned by world seed and all optimizer batches use the train split.
+Step-based training samples independently each step. The `--epochs` mode
+shuffles the training pools and visits every state exactly once per epoch.
 
 The model takes the canonical Combined Token IDs of the center 16³ only.
 E01 reuses the 3D ResNet VAE and the Masked objective from E00.
@@ -58,6 +60,33 @@ fresh RNG stream on the additional worker. GPU count changes alter the
 sequence of sampled latents. Checkpoint compatibility includes the exact
 data index and fixed diagnostic subsets.
 
+### Continue with complete epochs
+
+Start the epoch schedule at the current E01 `checkpoint_last.pt`. For the
+completed 20,000-step run, this command targets up to two additional passes.
+
+```bash
+CUDA_VISIBLE_DEVICES=2,3 .venv-vae/bin/python -m torch.distributed.run \
+  --standalone --nproc-per-node=2 -m voxel_vae.e01 run \
+  --output-root outputs/voxel_vae/e01 --resume --epochs 2
+```
+
+Each epoch covers all 159,726 training states across 2,496 optimizer steps.
+Category counts differ slightly after the split, so the sampler spreads
+remainders across batches and keeps each batch close to the original category
+proportions. Batches contain 63 or 64 states and use the actual global Masked
+loss denominators. Shuffling is deterministic by seed and epoch, so a
+checkpointed mid-epoch resume continues at the saved offset.
+
+The optimizer, global step and lowest validation loss carry over. Patience
+restarts when switching to epoch sampling. Validation stays on the 1,000-step
+cadence with extra checks at epoch boundaries, and early stopping takes effect
+only at a completed epoch. Reuse the same command after interruption.
+`--epochs` is the total target within this epoch schedule. Increase it to
+extend the schedule further. With a saved epoch plan, `--resume` alone
+restores its target and offset. For a fresh run, supply `--epochs` without
+`--resume` to use complete epochs from step zero.
+
 Use the single-process command to train on GPU 2 alone.
 
 ```bash
@@ -65,7 +94,8 @@ CUDA_VISIBLE_DEVICES=2 .venv-vae/bin/python -m voxel_vae.e01 run \
   --output-root outputs/voxel_vae/e01 --device cuda:0
 ```
 
-Training defaults are bf16, AdamW at `1e-4`, at most 20,000 optimizer steps.
+Training defaults are bf16 and AdamW at `1e-4`. Step-based runs have a
+20,000 optimizer-step cap.
 Every 1,000 steps, the model evaluates 640 Static states and 32 complete
 five-state chains apiece for D1–D4 from the held-out validation split.
 The fixed 160-state train diagnostic subset is used for reconstruction

@@ -35,7 +35,7 @@ pre { background: #111b25; padding: 12px; overflow: auto; }
   <details><summary>Latest loss components and run details</summary><pre id="detail"></pre></details>
 </main>
 <script>
-const fields = ["Logged status", "Optimizer step", "Workers", "Train pool", "Training total",
+const fields = ["Logged status", "Optimizer step", "Completed epochs", "Workers", "Train pool", "Training total",
                 "Validation total", "Best validation", "Checks without improvement", "Log age (s)"];
 const cards = document.getElementById("cards");
 const cells = fields.map(label => {
@@ -61,12 +61,13 @@ async function refresh() {
       document.getElementById("heading").textContent = document.title;
     }
     const step = run.latest_step == null ? "—" : `${run.latest_step} / ${run.max_steps ?? "—"}`;
+    const epochs = run.epoch_plan ? `${run.completed_epochs} / ${run.epoch_plan.epochs}` : "—";
     const best = run.best_step == null ? loss(run.best_validation_loss) :
       `${loss(run.best_validation_loss)} @ ${run.best_step}`;
     const patience = run.bad_validations == null ? "—" :
       `${run.bad_validations} / ${run.patience_validations}`;
     const pool = run.training_pool?.samples?.toLocaleString() ?? "—";
-    const values = [run.status, step, run.world_size ?? "—", pool, loss(run.latest_train_loss),
+    const values = [run.status, step, epochs, run.world_size ?? "—", pool, loss(run.latest_train_loss),
                     loss(run.latest_validation_loss), best, patience, run.log_age_seconds ?? "—"];
     cells.forEach((cell, index) => { cell.textContent = values[index]; });
     document.getElementById("detail").textContent = JSON.stringify(run, null, 2);
@@ -106,6 +107,12 @@ def build_status(output_dir):
     validation = curves["validation"][-1] if curves["validation"] else {}
     age = None if stat is None else max(0.0, time.time() - stat.st_mtime)
     best = min(curves["validation"], key=lambda row: row["loss_total"], default={})
+    latest_step = max((step for step in (
+        train.get("step"), validation.get("step"), metadata.get("global_step"))
+        if step is not None), default=None)
+    epoch_plan = metadata.get("epoch_plan")
+    completed_epochs = (None if epoch_plan is None or latest_step is None else
+                        (latest_step - epoch_plan["start_step"]) // epoch_plan["steps_per_epoch"])
     return {
         "phase": metadata.get("phase") or curves["phase"],
         "training_pool": metadata.get("training_pool"),
@@ -113,10 +120,10 @@ def build_status(output_dir):
         "world_size": metadata.get("world_size"),
         "cuda_visible_devices": metadata.get("cuda_visible_devices"),
         "status": metadata.get("status", "HISTORY" if stat else "WAITING"),
-        "latest_step": max((step for step in (
-            train.get("step"), validation.get("step"), metadata.get("global_step"))
-            if step is not None), default=None),
+        "latest_step": latest_step,
         "max_steps": metadata.get("max_steps"),
+        "epoch_plan": epoch_plan,
+        "completed_epochs": completed_epochs,
         "latest_train_loss": train.get("loss_total"),
         "latest_train_components": train,
         "latest_validation_loss": validation.get("loss_total"),

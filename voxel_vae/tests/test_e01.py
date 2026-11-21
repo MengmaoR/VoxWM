@@ -5,13 +5,14 @@ import unittest
 from argparse import Namespace
 from collections import Counter, defaultdict
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from voxel_vae.config import load_config, save_config
 from voxel_vae.dataset import DatasetIndex, SampleRef
 from voxel_vae.e00 import _write_json
 from voxel_vae.e01 import DEFAULT_CONFIG, PHASE, build_subset_manifest, run
-from voxel_vae.sampler import BALANCE, BalancedBatchSampler
+from voxel_vae.sampler import BALANCE, BalancedBatchSampler, BalancedEpochSampler
 from voxel_vae.vocabulary import CanonicalVocabulary
 
 
@@ -51,7 +52,7 @@ class E01Tests(unittest.TestCase):
             save_config(output / "config.yaml", config)
             with patch("voxel_vae.e01._fit_prepared_masked", return_value={}) as fit:
                 with contextlib.redirect_stdout(io.StringIO()):
-                    run(Namespace(output_root=output, device="cuda:0", resume=False))
+                    run(Namespace(output_root=output, device="cuda:0", resume=True, epochs=2))
                 args, kwargs = fit.call_args
         _, _, phase_config, _, plan_index, train, diagnostics, validation = args
         self.assertEqual(train, plan_index.indices(split="train"))
@@ -59,6 +60,7 @@ class E01Tests(unittest.TestCase):
         self.assertGreater(len(train), len(diagnostics))
         self.assertEqual(kwargs["phase"], PHASE)
         self.assertTrue(kwargs["lazy_masks"])
+        self.assertEqual((kwargs["resume"], kwargs["epochs"]), ("auto", 2))
         self.assertTrue(phase_config["prepared_data"]["dataset_index.json"])
         self.assertEqual(kwargs["metadata"]["training_pool"]["by_root"], {"/clip_0": 150, "/clip_1": 150})
         sampler = BalancedBatchSampler(plan_index, train)
@@ -74,6 +76,33 @@ class E01Tests(unittest.TestCase):
         self.assertEqual(len(validation), 16 + 4 * 4 * 5)
         self.assertEqual(len(grouped), 4 * 4)
         self.assertTrue(all(frames == list(range(5)) for frames in grouped.values()))
+
+    def test_each_epoch_covers_unequal_training_pools_exactly_once(self):
+        sizes = {"Static": 79_751, "D1": 20_105, "D2": 19_980, "D3": 19_865, "D4": 20_025}
+        records = []
+        for category, size in sizes.items():
+            records.extend([SimpleNamespace(category=category, split="train")] * size)
+        pool_size = len(records)
+        records.append(SimpleNamespace(category="Static", split="validation"))
+        records.append(SimpleNamespace(category="D1", split="test"))
+        index = SimpleNamespace(records=records)
+        sampler = BalancedEpochSampler(index, range(len(records)), seed=42)
+        self.assertEqual(sampler.steps_per_epoch, 2496)
+        self.assertNotEqual(sampler.batch(0), sampler.batch(2496))
+        for epoch in range(2):
+            seen = set()
+            for step in range(epoch * 2496, (epoch + 1) * 2496):
+                batch = sampler.batch(step)
+                self.assertIn(len(batch), (63, 64))
+                self.assertEqual(len(set(batch)), len(batch))
+                self.assertTrue(seen.isdisjoint(batch))
+                for category, count in sampler.counts(batch).items():
+                    base = sizes[category] // 2496
+                    self.assertIn(count, (base, base + 1))
+                seen.update(batch)
+            self.assertEqual(seen, set(range(pool_size)))
+        resumed = BalancedEpochSampler(index, range(len(records)), seed=42)
+        self.assertEqual(resumed.batch(3123), sampler.batch(3123))
 
 
 if __name__ == "__main__":

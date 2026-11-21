@@ -247,7 +247,7 @@ def run_masked(args):
 def _fit_prepared_masked(output, prepared_config, phase_config, vocabulary, index,
                          train_indices, diagnostic_indices, validation_indices,
                          *, resume, phase="E00-Masked", metadata=None, lazy_masks=False,
-                         group=None):
+                         group=None, epochs=None):
     import torch
 
     from .change_masks import ChangeMaskCache
@@ -290,7 +290,7 @@ def _fit_prepared_masked(output, prepared_config, phase_config, vocabulary, inde
         return fit_masked(
             model, index, vocabulary, train_indices, diagnostic_indices,
             validation_indices, masks, phase_output, phase_config,
-            resume=resume, run_metadata=metadata, phase=phase, group=group)
+            resume=resume, run_metadata=metadata, phase=phase, group=group, epochs=epochs)
     except (Exception, KeyboardInterrupt) as exc:
         if not primary:
             raise

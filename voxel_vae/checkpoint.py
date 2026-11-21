@@ -56,7 +56,7 @@ def restore_training_rng(payload, device, rank=0):
 
 def save_checkpoint(path, model, optimizer, global_step, config, vocabulary,
                     dataset_index, best_metric=None, phase=None, *, early_stopping=None,
-                    rng_by_rank=None):
+                    rng_by_rank=None, epoch_plan=None):
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     payload = {
@@ -81,6 +81,8 @@ def save_checkpoint(path, model, optimizer, global_step, config, vocabulary,
         payload["rng_by_rank"] = rng_by_rank
     if early_stopping is not None:
         payload["early_stopping"] = early_stopping
+    if epoch_plan is not None:
+        payload["epoch_plan"] = epoch_plan
     temporary = path.with_name("." + path.name + ".tmp")
     torch.save(payload, temporary)
     temporary.replace(path)

@@ -59,7 +59,7 @@ class _FixtureMasks(dict):
         return {}
 
 
-def _fit_fixture(output, group=None, resume=None):
+def _fit_fixture(output, group=None, resume=None, *, epochs=None, uneven_pool=False):
     # This fixture has no disk dataset, so it also runs in the local Torch-only environment.
     stub_zarr = importlib.util.find_spec("zarr") is None
     if stub_zarr:
@@ -75,16 +75,19 @@ def _fit_fixture(output, group=None, resume=None):
     device = torch.device("cpu")
     vocab = CanonicalVocabulary((("air", 0), ("mcl_core:dirt", 0), ("mcl_core:stone", 0)))
     categories = ["Static"] * 32 + [key for key in DYNAMIC_CATEGORIES for _ in range(8)]
+    if uneven_pool:
+        categories.append("D4")
     index = SimpleNamespace(records=[SimpleNamespace(category=key, split="train") for key in categories],
                             roots=["synthetic"], manifest_hashes=["synthetic"])
     masks = _FixtureMasks()
     for item, category in enumerate(categories[32:], start=32):
         # Only one D1 row has any unchanged voxels, so one rank's local denominator is zero.
-        mask = np.full((16, 16, 16), category == "D1" and item != 32, dtype=bool)
+        mask = np.full((16, 16, 16), not uneven_pool and category == "D1" and item != 32,
+                       dtype=bool)
         mask[0, 0, 0] = True
         masks[item] = mask
     config = {"seed": 42, "device": str(device), "learning_rate": 1e-4,
-              "max_steps": 4, "validate_every": 1, "loss": CONFIG,
+              "max_steps": 2 if uneven_pool else 4, "validate_every": 1, "loss": CONFIG,
               "early_stopping": {"min_steps": 0, "patience_validations": 1}}
 
     def fixed_validation(model, *_args, **_kwargs):
@@ -96,8 +99,14 @@ def _fit_fixture(output, group=None, resume=None):
     with (patch.object(train, "VoxelSnapshotDataset", _FixtureDataset),
           patch.object(train, "evaluate_indices", fixed_validation)):
         return train.fit_masked(
-            _FixtureModel(), index, vocab, list(range(64)), [0], [1], masks, output,
-            config, phase="E01-Masked", group=group, resume=resume)
+            _FixtureModel(), index, vocab, list(range(len(categories))), [0], [1], masks, output,
+            config, phase="E01-Masked", group=group, resume=resume, epochs=epochs)
+
+
+def _legacy_to_epochs(output, group=None):
+    _fit_fixture(output, group, uneven_pool=True)
+    checkpoint = output / "checkpoint_last.pt"
+    _fit_fixture(output, group, resume=checkpoint, epochs=2, uneven_pool=True)
 
 
 def _rank_worker(rank, root):
@@ -118,6 +127,7 @@ def _rank_worker(rank, root):
         resumed = _fit_fixture(root / "ddp", group, resume=root / "ddp/checkpoint_best.pt")
         if group.primary:
             assert resumed["global_step"] == 2 and resumed["stopped_early"]
+        _legacy_to_epochs(root / "ddp_epochs", group)
     finally:
         dist.destroy_process_group()
 
@@ -128,6 +138,7 @@ class DDPTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
             _fit_fixture(root / "single")
+            _legacy_to_epochs(root / "single_epochs")
             mp.spawn(_rank_worker, args=(folder,), nprocs=2, join=True)
             single = torch.load(root / "single/checkpoint_last.pt", weights_only=False)
             ddp = torch.load(root / "ddp/checkpoint_last.pt", weights_only=False)
@@ -149,6 +160,20 @@ class DDPTests(unittest.TestCase):
             for reference, distributed in zip(*train_rows):
                 self.assertAlmostEqual(reference["loss_total"], distributed["loss_total"], places=6)
                 self.assertEqual(reference["exact_token_accuracy"], distributed["exact_token_accuracy"])
+
+            single = torch.load(root / "single_epochs/checkpoint_last.pt", weights_only=False)
+            ddp = torch.load(root / "ddp_epochs/checkpoint_last.pt", weights_only=False)
+            for payload in (single, ddp):
+                self.assertEqual(payload["global_step"], 4)
+                self.assertEqual(payload["epoch_plan"], {"start_step": 2, "epochs": 2, "steps_per_epoch": 2})
+                self.assertEqual(payload["early_stopping"]["stop_step"], 4)
+                self.assertEqual(payload["early_stopping"]["best_step"], 1)
+            for key, expected in single["model"].items():
+                torch.testing.assert_close(ddp["model"][key], expected)
+            rows = read_metric_rows(root / "ddp_epochs/metrics.jsonl")
+            phase_rows = [row for row in rows if row.get("event") is None and row["global_step"] > 2]
+            self.assertEqual(sorted(row["batch_size"] for row in phase_rows), [32, 33])
+            self.assertEqual([row["completed_epochs"] for row in phase_rows], [0, 1])
 
     def test_legacy_rng_is_restored_only_for_rank_zero(self):
         device = torch.device("cpu")

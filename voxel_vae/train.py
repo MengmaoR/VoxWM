@@ -20,7 +20,7 @@ from .evaluate import evaluate_indices, write_json
 from .losses import (DYNAMIC_CATEGORIES, accuracy_counts,
                      masked_batch_normalization, masked_vae_loss,
                      vae_loss, validate_masked_loss_config)
-from .sampler import BalancedBatchSampler
+from .sampler import BalancedBatchSampler, BalancedEpochSampler
 from .training_curves import write_training_curves
 
 
@@ -285,7 +285,7 @@ def fit(model, index, vocabulary, train_indices, evaluation_indices, output_dir,
 
 def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
                validation_indices, change_masks, output_dir, config,
-               resume=None, run_metadata=None, *, phase="E00-Masked", group=None):
+               resume=None, run_metadata=None, *, phase="E00-Masked", group=None, epochs=None):
     """Joint Static/Dynamic masked training with exact batch denominators."""
     output_dir = Path(output_dir)
     primary = group is None or group.primary
@@ -328,8 +328,26 @@ def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
         global_step = int(payload["global_step"])
 
     dataset = VoxelSnapshotDataset(index, vocabulary)
-    sampler = BalancedBatchSampler(index, train_indices, seed=seed)
     max_steps = int(config["max_steps"])
+    saved_plan = payload.get("epoch_plan") if payload is not None else None
+    epoch_plan = None
+    epoch_start = 0
+    if epochs is not None or saved_plan is not None:
+        sampler = BalancedEpochSampler(index, train_indices, seed=seed)
+        epoch_steps = sampler.steps_per_epoch
+        if sampler.samples // epoch_steps < world_size:
+            raise ValueError("The epoch sampler needs at least one state per worker in every batch")
+        if saved_plan is not None and saved_plan["steps_per_epoch"] != epoch_steps:
+            raise ValueError("Training pool changed the saved steps per epoch")
+        epoch_start = global_step if saved_plan is None else saved_plan["start_step"]
+        epoch_limit = saved_plan["epochs"] if epochs is None else epochs
+        max_steps = epoch_start + epoch_limit * epoch_steps
+        if epoch_limit < 1 or not epoch_start <= global_step <= max_steps:
+            raise ValueError("The epoch target must include the checkpoint's saved step")
+        epoch_plan = {"start_step": epoch_start, "steps_per_epoch": epoch_steps,
+                      "epochs": epoch_limit}
+    else:
+        sampler = BalancedBatchSampler(index, train_indices, seed=seed)
     micro_batch = int(config.get("micro_batch_size", 2))
     if not 1 <= micro_batch <= 64 or 64 % (micro_batch * world_size):
         raise ValueError("micro_batch_size × world_size must divide effective batch size 64")
@@ -356,26 +374,33 @@ def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
                 early_state.best_metric = saved_best
                 early_state.best_step = None
                 early_state.patience_reference = saved_best
+        if epoch_plan is not None and (saved_plan is None
+                or (early_state.stopped and epoch_plan["epochs"] > saved_plan["epochs"])):
+            early_state.reset_patience()
         if primary:
             _append_jsonl(metrics_path, {
                 "phase": phase, "global_step": global_step, "event": "resume",
                 "world_size": world_size,
                 "previous_world_size": len(payload.get("rng_by_rank", [None])),
+                "epoch_plan": epoch_plan,
             })
         del payload
     if primary:
-        save_config(output_dir / "config.yaml", config)
+        save_config(output_dir / "config.yaml", dict(config, max_steps=max_steps, epoch_plan=epoch_plan))
         metadata_path = output_dir / "run_metadata.json"
         metadata = dict(run_metadata or {})
         metadata.update({
             "status": "RUNNING", "phase": phase, "seed": seed,
             "device": str(device), "world_size": world_size,
             "precision": precision, "loss": loss_config, "early_stopping": early_config,
-            "global_step": global_step, "max_steps": max_steps,
+            "global_step": global_step, "max_steps": max_steps, "epoch_plan": epoch_plan,
         })
         write_json(metadata_path, metadata)
         write_json(early_path, early_state.to_dict(early_config))
         write_training_curves(metrics_path, output_dir, phase=phase)
+        if epoch_plan is not None:
+            print(f"Epoch schedule: {epoch_steps:,} steps per epoch, "
+                  f"resuming at step {global_step:,}, target step {max_steps:,}.", flush=True)
 
         if global_step == 0:
             initial = evaluate_indices(
@@ -414,7 +439,7 @@ def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
     gradient_check = None
     last_validation = None
     while global_step < max_steps and not early_state.stopped:
-        effective = sampler.batch(global_step)
+        effective = sampler.batch(global_step - epoch_start)
         if group is not None:
             effective = group.split_batch(effective)
         categories = [index.records[item].category for item in effective]
@@ -475,13 +500,15 @@ def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
         optimizer.step()
         global_step += 1
 
-        validate_now = global_step % validate_every == 0 or global_step == max_steps
+        epoch_end = epoch_plan is not None and (global_step - epoch_start) % epoch_steps == 0
+        validate_now = global_step % validate_every == 0 or global_step == max_steps or epoch_end
         log_now = global_step == 1 or global_step % log_every == 0 or validate_now
         if log_now and group is not None:
             group.sum_metrics(aggregate)
         if log_now and primary:
             row = {
                 "phase": phase, "global_step": global_step,
+                "batch_size": normalization["batch_size"],
                 **{key: aggregate[key] for key in scalar_keys},
                 "dynamic_unchanged_by_category": aggregate[
                     "dynamic_unchanged_by_category"],
@@ -494,6 +521,8 @@ def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
                 "gradient_norm_before_clip": float(gradient_norm.item()),
                 "elapsed_seconds": time.monotonic() - started,
             }
+            if epoch_plan is not None:
+                row["completed_epochs"] = (global_step - epoch_start) // epoch_steps
             _append_jsonl(metrics_path, row)
 
         if validate_now and primary:
@@ -512,7 +541,8 @@ def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
                 "phase": phase, "global_step": global_step,
                 "event": "validation", **last_validation})
             score = last_validation["loss_components"]["loss_total"]
-            new_best, _ = early_state.observe(global_step, score, early_config)
+            new_best, _ = early_state.observe(
+                global_step, score, early_config, can_stop=epoch_plan is None or epoch_end)
         if validate_now:
             rng_by_rank = None
             if group is not None:
@@ -525,12 +555,18 @@ def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
                     save_checkpoint(
                         output_dir / "checkpoint_best.pt", model, optimizer,
                         global_step, config, vocabulary, index, early_state.best_metric,
-                        phase, early_stopping=snapshot, rng_by_rank=rng_by_rank)
+                        phase, early_stopping=snapshot, rng_by_rank=rng_by_rank,
+                        epoch_plan=epoch_plan)
                 save_checkpoint(
                     output_dir / "checkpoint_last.pt", model, optimizer,
                     global_step, config, vocabulary, index, early_state.best_metric,
-                    phase, early_stopping=snapshot, rng_by_rank=rng_by_rank)
+                    phase, early_stopping=snapshot, rng_by_rank=rng_by_rank,
+                    epoch_plan=epoch_plan)
                 write_json(early_path, snapshot)
+                if epoch_end:
+                    completed = (global_step - epoch_start) // epoch_steps
+                    print(f"Epoch {completed}/{epoch_limit} complete at step {global_step:,}. "
+                          f"Validation loss: {score:.6f}", flush=True)
             if group is not None:
                 early_state.stopped = group.broadcast_stop(early_state.stopped)
         if log_now and primary:
@@ -562,6 +598,7 @@ def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
         "embedding_drift": embedding_drift(initial_embedding_path, model),
         "stopped_early": early_state.stopped,
         "early_stopping": early_state.to_dict(early_config),
+        "epoch_plan": epoch_plan,
         "gradient_check": gradient_check,
         "initial": initial, "final": final,
         "initial_validation": initial_validation,

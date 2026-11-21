@@ -38,7 +38,7 @@ class EarlyStoppingState:
     stop_reason: str | None = None
     last_metric: float | None = None
 
-    def observe(self, step, metric, config):
+    def observe(self, step, metric, config, *, can_stop=True):
         step, metric = int(step), float(metric)
         if not math.isfinite(metric):
             raise FloatingPointError("Non-finite validation loss for early stopping")
@@ -54,7 +54,7 @@ class EarlyStoppingState:
             self.bad_validations += 1
         self.validations += 1
         self.last_metric = metric
-        if (config["enabled"] and step >= int(config["min_steps"])
+        if (can_stop and config["enabled"] and step >= int(config["min_steps"])
                 and self.bad_validations >= int(config["patience_validations"])):
             self.stopped = True
             self.stop_step = step
@@ -62,6 +62,13 @@ class EarlyStoppingState:
                 f"validation_loss_total did not improve by {config['min_delta']} "
                 f"for {self.bad_validations} validation checks")
         return new_best, self.stopped
+
+    def reset_patience(self):
+        self.patience_reference = self.best_metric
+        self.bad_validations = 0
+        self.stopped = False
+        self.stop_step = None
+        self.stop_reason = None
 
     def to_dict(self, config):
         return {**asdict(self), "config": dict(config)}

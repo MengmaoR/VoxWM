@@ -47,6 +47,14 @@ class TrainingMonitorTests(unittest.TestCase):
         self.assertEqual(state.best_step, 500)
         self.assertEqual(state.stop_step, 1500)
 
+    def test_early_stopping_waits_for_epoch_boundary(self):
+        state = EarlyStoppingState(best_metric=0.8, best_step=20_000)
+        state.reset_patience()
+        self.assertEqual(state.observe(21_000, 0.81, CONFIG, can_stop=False), (False, False))
+        self.assertEqual(state.observe(22_000, 0.82, CONFIG, can_stop=False), (False, False))
+        self.assertEqual(state.observe(22_496, 0.81, CONFIG), (False, True))
+        self.assertEqual(state.best_step, 20_000)
+
     def test_min_delta_resets_patience_only_for_real_improvement(self):
         state = EarlyStoppingState()
         state.observe(500, 3.0, CONFIG)
