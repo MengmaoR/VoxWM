@@ -8,6 +8,7 @@
 - E01 复用 96/192/192 3D ResNet Encoder、`mu/logvar:[B,16,4,4,4]`、nearest-upsample Decoder 和 K 类 logits，无 skip/attention/Transformer/dropout/BatchNorm。按步模式的 batch 为 32 Static + D1–D4 各 8。`--epochs` 模式每个完整 epoch 遍历 train split 恰好一次，按各类实际数量分配各 batch，batch 最大为 64。AdamW 1e-4，clip 1.0，无 scheduler。
 - Masked 目标为 `0.5 L_static + 0.25 L_dynamic_unchanged + 0.25 L_dynamic_changed + 1e-6 raw KL`。Changed Mask 来自同一完整五状态链的 canonical 中心 16³，只用于 loss。microbatch=2 使用完整 effective batch 的全局样本分母。
 - E01 用两个 100K Clip 的完整 `train` split，默认 bf16、20,000 步上限。每 1,000 步在固定的 1,280 条独立验证状态上选最优 checkpoint。160 条训练诊断状态只用于评估。Test split 留出。E01 从 seed 42 初始化，续跑使用 E01 自己的 checkpoint、准备索引和验证子集。
+- E01 的 160K/20K/20K 索引调整只按完整 World Seed 从旧 test 向 train 和 validation 补入状态，固定诊断子集和原始数据保持原样。按全局 batch=64 续训时每个 epoch 为 2,500 步。
 - E01 双卡用 GPU 2、3 手动启动单节点 DDP。两进程分同一个全局 batch，每卡 microbatch 最大为 2。全局分项分母跨进程求和，只在最后一组 microbatch 同步梯度。主进程负责验证、早停、曲线和 checkpoint，checkpoint 保存各进程的 RNG 状态。epoch 模式的早停只在完整 epoch 边界生效，checkpoint 保存 epoch 计划，按步恢复其采样位置。
 - 所有真实训练及续跑由用户手动执行。Codex 负责代码与快速本地检查。E01 产物写入 `outputs/voxel_vae/e01/phase_masked/`。训练保存 `loss_curves.svg`、`loss_curves.json` 和可恢复早停状态。`voxel_vae.training_monitor` 独立只读。连续两次验证总 loss 改善未超过 0.001 时早停，`checkpoint_best.pt` 对应最低验证总 loss。
 - 当前规模100K，100个严格1K片；每片Static500，D1/D2/D3/D4各125，动态每类25条完整五状态链。D4是Water–Lava Solidification，完全替代历史Vegetation，不自动恢复旧200K配方。

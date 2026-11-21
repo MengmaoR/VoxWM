@@ -11,7 +11,8 @@ from unittest.mock import patch
 from voxel_vae.config import load_config, save_config
 from voxel_vae.dataset import DatasetIndex, SampleRef
 from voxel_vae.e00 import _write_json
-from voxel_vae.e01 import DEFAULT_CONFIG, PHASE, build_subset_manifest, run
+from voxel_vae.e01 import DEFAULT_CONFIG, PHASE, build_subset_manifest, rebalance, run
+from voxel_vae.e01_split import SPLIT_FILE
 from voxel_vae.sampler import BALANCE, BalancedBatchSampler, BalancedEpochSampler
 from voxel_vae.vocabulary import CanonicalVocabulary
 
@@ -54,6 +55,25 @@ class E01Tests(unittest.TestCase):
                 with contextlib.redirect_stdout(io.StringIO()):
                     run(Namespace(output_root=output, device="cuda:0", resume=True, epochs=2))
                 args, kwargs = fit.call_args
+            counts = {"train": 305, "validation": 149, "test": 34}
+            with patch.dict("voxel_vae.e01_split.SPLIT_COUNTS", counts), \
+                    patch("voxel_vae.e01._fit_prepared_masked", return_value={}) as fit, \
+                    contextlib.redirect_stdout(io.StringIO()):
+                rebalance(Namespace(output_root=output))
+                split_file = output / SPLIT_FILE
+                saved_split = split_file.read_bytes()
+                rebalance(Namespace(output_root=output))
+                self.assertEqual(split_file.read_bytes(), saved_split)
+                run(Namespace(output_root=output, device="cuda:0", resume=True, epochs=2))
+                migrated_args, migrated_kwargs = fit.call_args
+            self.assertEqual(migrated_args[6:], args[6:])
+            self.assertEqual(migrated_args[4].summary()["splits"], counts)
+            self.assertEqual(migrated_kwargs["previous_prepared_data"], args[2]["prepared_data"])
+            self.assertIn(SPLIT_FILE, migrated_args[2]["prepared_data"])
+            for old, new in zip(index.records, migrated_args[4].records):
+                self.assertEqual(old.key, new.key)
+                if old.split != "test":
+                    self.assertEqual(old, new)
         _, _, phase_config, _, plan_index, train, diagnostics, validation = args
         self.assertEqual(train, plan_index.indices(split="train"))
         self.assertEqual(len(diagnostics), 160)

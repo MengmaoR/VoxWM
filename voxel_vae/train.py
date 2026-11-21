@@ -285,7 +285,8 @@ def fit(model, index, vocabulary, train_indices, evaluation_indices, output_dir,
 
 def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
                validation_indices, change_masks, output_dir, config,
-               resume=None, run_metadata=None, *, phase="E00-Masked", group=None, epochs=None):
+               resume=None, run_metadata=None, *, phase="E00-Masked", group=None, epochs=None,
+               previous_prepared_data=None):
     """Joint Static/Dynamic masked training with exact batch denominators."""
     output_dir = Path(output_dir)
     primary = group is None or group.primary
@@ -316,6 +317,7 @@ def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
         weight_decay=float(config.get("weight_decay", 1e-4)))
     global_step = 0
     payload = None
+    split_changed = False
     if resume:
         # Keep CPU RNG state on CPU, including when the model/optimizer are on CUDA.
         expected_config = None
@@ -324,12 +326,16 @@ def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
         payload = load_checkpoint(
             resume, model, optimizer, vocabulary, index,
             restore_rng=not scoped_rng, expected_phase=phase, expected_loss=loss_config,
-            expected_config=expected_config)
+            expected_config=expected_config, previous_prepared_data=previous_prepared_data)
         global_step = int(payload["global_step"])
+        split_changed = (previous_prepared_data is not None
+                         and payload["config"]["prepared_data"] == previous_prepared_data)
+        if split_changed and epochs is None:
+            raise ValueError("Use --epochs to start a new epoch schedule after rebalancing E01")
 
     dataset = VoxelSnapshotDataset(index, vocabulary)
     max_steps = int(config["max_steps"])
-    saved_plan = payload.get("epoch_plan") if payload is not None else None
+    saved_plan = payload.get("epoch_plan") if payload is not None and not split_changed else None
     epoch_plan = None
     epoch_start = 0
     if epochs is not None or saved_plan is not None:
@@ -383,6 +389,7 @@ def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
                 "world_size": world_size,
                 "previous_world_size": len(payload.get("rng_by_rank", [None])),
                 "epoch_plan": epoch_plan,
+                "split_rebalanced": split_changed,
             })
         del payload
     if primary:

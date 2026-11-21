@@ -106,6 +106,13 @@ class ModelTests(unittest.TestCase):
                 load_checkpoint(path, restored, None, vocabulary, _Index(),
                                 restore_rng=False, expected_phase="E00-Masked",
                                 expected_config={"prepared_data": {"dataset_index.json": "index-b"}})
+            prepared_data = config["prepared_data"] | {"split_160k.json": "split-a"}
+            migrated = load_checkpoint(
+                path, restored, None, vocabulary, _Index(), restore_rng=False,
+                expected_phase="E00-Masked", expected_loss=loss,
+                expected_config={"prepared_data": prepared_data},
+                previous_prepared_data=config["prepared_data"])
+            self.assertEqual(migrated["global_step"], 3)
             with self.assertRaisesRegex(ValueError, "phase"):
                 load_checkpoint(path, restored, None, vocabulary, _Index(),
                                 restore_rng=False, expected_phase="E00-B")

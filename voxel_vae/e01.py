@@ -11,6 +11,7 @@ from .config import load_config, save_config
 from .dataset import build_dataset_index
 from .e00 import (ROOT, _balanced_subset, _fit_prepared_masked, _load_artifacts,
                   _record, _sha256, _subset_indices, _write_json, render_report)
+from .e01_split import SPLIT_FILE, apply_test_seeds, select_test_seeds
 from .vocabulary import build_canonical_vocabulary
 
 
@@ -55,6 +56,26 @@ def prepared_data_identity(output):
     return {name: _sha256(output / name) for name in ("dataset_index.json", "subset_manifest.json")}
 
 
+def load_prepared_e01(output, artifacts=None):
+    vocabulary, index, manifest = _load_artifacts(output) if artifacts is None else artifacts
+    if manifest.get("phase") != PHASE:
+        raise ValueError("Run voxel_vae.e01 prepare for this E01 output root first")
+    if training_pool_summary(index, index.indices(split="train")) != manifest["training_pool"]:
+        raise ValueError("E01 original training pool changed since prepare")
+    source = prepared_data_identity(output)
+    path = output / SPLIT_FILE
+    if not path.exists():
+        return (vocabulary, index, manifest), source, None
+
+    plan = json.loads(path.read_text())
+    if plan.get("version") != 1 or plan.get("source") != source:
+        raise ValueError(f"{path.name} does not match the original prepared E01 files")
+    index = apply_test_seeds(index, plan["world_seeds"])
+    identity = source | {SPLIT_FILE: _sha256(path)}
+    manifest = dict(manifest, training_pool=training_pool_summary(index, index.indices(split="train")))
+    return (vocabulary, index, manifest), identity, source
+
+
 def prepare(args):
     output = args.output_root.expanduser().resolve()
     if output.exists() and (not output.is_dir() or any(output.iterdir())):
@@ -68,15 +89,36 @@ def prepare(args):
     if set(summary["roots"].values()) != {100_000}:
         raise ValueError(f"E01 expects 100,000 committed states per clip. Found {summary['roots']}")
     manifest = build_subset_manifest(index, vocabulary, config)
+    selected = select_test_seeds(index)
+    effective = apply_test_seeds(index, selected)
     output.mkdir(parents=True, exist_ok=True)
     vocabulary.save(output / "training_vocabulary.json")
     index.save(output / "dataset_index.json")
     save_config(output / "config.yaml", config)
     _write_json(output / "subset_manifest.json", manifest)
+    _write_json(output / SPLIT_FILE, {
+        "version": 1, "source": prepared_data_identity(output), "world_seeds": selected,
+    })
     print(json.dumps({
         "status": "PREPARED", "phase": PHASE, "output": str(output),
-        "dataset": summary, "training_pool": manifest["training_pool"],
+        "dataset": effective.summary(),
+        "training_pool": training_pool_summary(effective, effective.indices(split="train")),
         "diagnostic_subsets": {name: len(rows) for name, rows in manifest["subsets"].items()},
+    }, indent=2))
+
+
+def rebalance(args):
+    output = args.output_root.expanduser().resolve()
+    (_, index, _), identity, source = load_prepared_e01(output)
+    if source is None:
+        selected = select_test_seeds(index)
+        index = apply_test_seeds(index, selected)
+        _write_json(output / SPLIT_FILE, {
+            "version": 1, "source": identity, "world_seeds": selected,
+        })
+    print(json.dumps({
+        "status": "REBALANCED", "split_file": str(output / SPLIT_FILE),
+        "dataset": index.summary(),
     }, indent=2))
 
 
@@ -97,9 +139,8 @@ def _run(args, *, group=None):
     if args.epochs is not None and args.epochs < 1:
         raise ValueError("--epochs must be a positive number of full training passes")
     output = args.output_root.expanduser().resolve()
-    vocabulary, index, manifest = _load_artifacts(output)
-    if manifest.get("phase") != PHASE:
-        raise ValueError("Run voxel_vae.e01 prepare for this E01 output root first")
+    artifacts, identity, previous_prepared_data = load_prepared_e01(output)
+    vocabulary, index, manifest = artifacts
     config = load_config(output / "config.yaml")
     train_indices = index.indices(split="train")
     diagnostics = _subset_indices(manifest, TRAIN_DIAGNOSTICS)
@@ -109,16 +150,16 @@ def _run(args, *, group=None):
                 0 <= item < len(index.records) and index.records[item].split == split
                 for item in selected):
             raise ValueError(f"Invalid prepared E01 {split} diagnostic subset")
-    pool = training_pool_summary(index, train_indices)
-    if pool != manifest["training_pool"]:
-        raise ValueError("E01 training pool changed since prepare")
+    pool = manifest["training_pool"]
     phase_config = dict(config["training"], loss=config["loss"],
                         early_stopping=config["early_stopping"],
-                        prepared_data=prepared_data_identity(output))
+                        prepared_data=identity)
     if args.device:
         phase_config["device"] = args.device
     metadata = {"training_pool": pool, "train_diagnostic_states": len(diagnostics),
                 "validation_states": len(validation),
+                "split_counts": dict(Counter(row.split for row in index.records)),
+                "prepared_data": identity,
                 "cuda_visible_devices": os.environ.get("CUDA_VISIBLE_DEVICES")}
     if primary:
         workers = group.world_size if group is not None else 1
@@ -127,9 +168,10 @@ def _run(args, *, group=None):
     result = _fit_prepared_masked(
         output, config, phase_config, vocabulary, index, train_indices,
         diagnostics, validation, resume="auto" if args.resume else None,
-        phase=PHASE, metadata=metadata, lazy_masks=True, group=group, epochs=args.epochs)
+        phase=PHASE, metadata=metadata, lazy_masks=True, group=group, epochs=args.epochs,
+        previous_prepared_data=previous_prepared_data)
     if primary:
-        render_report(output, expected_phase=PHASE)
+        render_report(output, expected_phase=PHASE, artifacts=artifacts)
         print(json.dumps(result, indent=2))
 
 
@@ -140,25 +182,31 @@ def main(argv=None):
     setup = commands.add_parser("prepare", help="index both 100K clips and fix validation samples")
     setup.add_argument("--dataset-root", action="append", required=True)
     setup.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
+    migration = commands.add_parser(
+        "rebalance", help="activate the 160,000 / 20,000 / 20,000 split using original test seeds")
     train = commands.add_parser("run", help="train E01-Masked using the full train split")
     train.add_argument("--device", help="single-process device, cuda:0 by default")
     train.add_argument("--resume", action="store_true", help="resume this E01 run's checkpoint_last.pt")
     train.add_argument("--epochs", type=int,
                        help="target number of complete, without-replacement epochs (saved on resume)")
     report = commands.add_parser("report", help="render the current E01 report")
-    for command in (setup, train, report):
+    for command in (setup, migration, train, report):
         command.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT)
 
     args = parser.parse_args(argv)
     if args.command != "run" and int(os.environ.get("WORLD_SIZE", "1")) > 1:
-        parser.error("Only E01 run uses torchrun. Run prepare and report once.")
+        parser.error("Only E01 run uses torchrun.")
     if args.command == "prepare":
         prepare(args)
+    elif args.command == "rebalance":
+        rebalance(args)
     elif args.command == "run":
         run(args)
     else:
-        render_report(args.output_root, expected_phase=PHASE)
-        print(args.output_root / "phase_masked/report.md")
+        output = args.output_root.expanduser().resolve()
+        artifacts, _, _ = load_prepared_e01(output)
+        render_report(output, expected_phase=PHASE, artifacts=artifacts)
+        print(output / "phase_masked/report.md")
     return 0
 
 

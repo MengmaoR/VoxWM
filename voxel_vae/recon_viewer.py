@@ -63,6 +63,15 @@ def export_gallery(args):
     output_root = Path(args.output_root).expanduser().resolve()
     vocabulary, index, subsets = _load_artifacts(output_root)
     phase = subsets.get("phase", "E00-Masked")
+    expected_config = None
+    previous_prepared_data = None
+    if phase == "E01-Masked":
+        from .e01 import load_prepared_e01
+
+        artifacts, identity, previous_prepared_data = load_prepared_e01(
+            output_root, (vocabulary, index, subsets))
+        vocabulary, index, subsets = artifacts
+        expected_config = {"prepared_data": identity}
     subset_name = subsets.get("validation_subset", "e00_b_validation")
     eligible = _subset_indices(subsets, subset_name)
     selected = select_validation_gallery(
@@ -76,14 +85,10 @@ def export_gallery(args):
     checkpoint = (Path(args.checkpoint).expanduser().resolve()
                   if args.checkpoint else
                   output_root / "phase_masked/checkpoint_best.pt")
-    expected_config = None
-    if phase == "E01-Masked":
-        from .e01 import prepared_data_identity
-
-        expected_config = {"prepared_data": prepared_data_identity(output_root)}
     payload = load_checkpoint(
         checkpoint, model, None, vocabulary, index, restore_rng=False,
-        expected_phase=phase, expected_loss=loss_config, expected_config=expected_config)
+        expected_phase=phase, expected_loss=loss_config, expected_config=expected_config,
+        previous_prepared_data=previous_prepared_data)
     checkpoint_step = int(payload["global_step"])
     del payload
     examples = (Path(args.examples).expanduser().resolve()

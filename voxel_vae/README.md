@@ -1,12 +1,15 @@
 # VoxWM E01-Masked Voxel VAE
 
-E01-Masked uses the full `train` split from both completed 100K clips. The
-balanced sampler draws 32 Static and 8 each of D1–D4 per 64-state batch.
-The two clips contain 200,000 states across all splits. The committed E01
-index has 159,726 train, 19,620 validation and 20,654 test states. The split
-is assigned by world seed and all optimizer batches use the train split.
-Step-based training samples independently each step. The `--epochs` mode
-shuffles the training pools and visits every state exactly once per epoch.
+E01-Masked uses the full 160,000-state train split from both completed
+100K clips. The new split adds 274 states to train and 380 states to
+validation from the original test pool, transferring complete world seeds
+across both clips. Validation and test each contain 20,000 states. All
+original train and validation rows stay in their splits. The existing
+1,280 validation states and 160 training diagnostics stay fixed.
+
+The `--epochs` mode shuffles the training pools and visits every state
+once per epoch. The step-based mode draws 32 Static and 8 each of D1–D4
+independently per 64-state batch.
 
 The model takes the canonical Combined Token IDs of the center 16³ only.
 E01 reuses the 3D ResNet VAE and the Masked objective from E00.
@@ -29,7 +32,8 @@ Run from the VoxWM repository root. Use the Python environment with both
 PyTorch/CUDA and `voxel_vae/requirements.txt`. The commands use `.venv-vae`.
 
 Prepare once in a new E01 output directory. This reads the dataset metadata
-and creates a canonical vocabulary, index, and fixed diagnostic subsets.
+and creates a canonical vocabulary, index, split overlay and fixed diagnostic
+subsets.
 The preparation output prints the exact pool size and composition.
 
 ```bash
@@ -52,18 +56,25 @@ CUDA_VISIBLE_DEVICES=2,3 .venv-vae/bin/python -m torch.distributed.run \
   --output-root outputs/voxel_vae/e01
 ```
 
-For an interrupted E01 run, reuse the prepared root and add `--resume` to
-the same command. That loads `phase_masked/checkpoint_last.pt`, optimizer,
-step and early stopping state. A DDP checkpoint preserves each worker's RNG
-state. A single-GPU E01 checkpoint can also resume on two GPUs, using a
-fresh RNG stream on the additional worker. GPU count changes alter the
-sequence of sampled latents. Checkpoint compatibility includes the exact
-data index and fixed diagnostic subsets.
+For an interrupted E01 run on the same split, reuse the prepared root and
+add `--resume` to the same command. That loads `phase_masked/checkpoint_last.pt`,
+optimizer, step, early stopping state and each worker's RNG state.
+A single-GPU checkpoint can resume on two GPUs using a fresh RNG stream
+on the additional worker. A GPU count change alters the latent sampling sequence.
 
-### Continue with complete epochs
+### Rebalance the existing E01 run and continue with complete epochs
 
-Start the epoch schedule at the current E01 `checkpoint_last.pt`. For the
-completed 20,000-step run, this command targets up to two additional passes.
+Activate the split in the existing E01 directory. This writes
+`split_160k.json` alongside the original index and fixed diagnostic
+subsets. The clips and checkpoints remain on their existing paths.
+
+```bash
+git pull --ff-only origin master && \
+  .venv-vae/bin/python -m voxel_vae.e01 rebalance --output-root outputs/voxel_vae/e01
+```
+
+Start the epoch schedule at `checkpoint_last.pt`. From the completed
+20,000-step checkpoint, this targets step 25,000 with two full passes.
 
 ```bash
 CUDA_VISIBLE_DEVICES=2,3 .venv-vae/bin/python -m torch.distributed.run \
@@ -71,21 +82,20 @@ CUDA_VISIBLE_DEVICES=2,3 .venv-vae/bin/python -m torch.distributed.run \
   --output-root outputs/voxel_vae/e01 --resume --epochs 2
 ```
 
-Each epoch covers all 159,726 training states across 2,496 optimizer steps.
-Category counts differ slightly after the split, so the sampler spreads
-remainders across batches and keeps each batch close to the original category
-proportions. Batches contain 63 or 64 states and use the actual global Masked
-loss denominators. Shuffling is deterministic by seed and epoch, so a
-checkpointed mid-epoch resume continues at the saved offset.
+Each epoch covers all 160,000 training states across 2,500 optimizer steps
+at global batch size 64. The sampler spreads category remainders across
+batches and uses the actual global Masked loss denominators. A checkpointed
+mid-epoch resume continues at the saved offset.
 
 The optimizer, global step and lowest validation loss carry over. Patience
 restarts when switching to epoch sampling. Validation stays on the 1,000-step
 cadence with extra checks at epoch boundaries, and early stopping takes effect
 only at a completed epoch. Reuse the same command after interruption.
-`--epochs` is the total target within this epoch schedule. Increase it to
-extend the schedule further. With a saved epoch plan, `--resume` alone
-restores its target and offset. For a fresh run, supply `--epochs` without
-`--resume` to use complete epochs from step zero.
+`--epochs` is the total target within the schedule started at step 20,000.
+If the 25,000-step curve warrants continuing, change `--epochs 2` to
+`--epochs 12` to target step 50,000. With a saved epoch plan, `--resume`
+alone restores its target and offset. For a fresh run, supply `--epochs`
+without `--resume` to use complete epochs from step zero.
 
 Use the single-process command to train on GPU 2 alone.
 

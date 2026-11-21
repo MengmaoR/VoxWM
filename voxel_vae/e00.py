@@ -247,7 +247,7 @@ def run_masked(args):
 def _fit_prepared_masked(output, prepared_config, phase_config, vocabulary, index,
                          train_indices, diagnostic_indices, validation_indices,
                          *, resume, phase="E00-Masked", metadata=None, lazy_masks=False,
-                         group=None, epochs=None):
+                         group=None, epochs=None, previous_prepared_data=None):
     import torch
 
     from .change_masks import ChangeMaskCache
@@ -290,7 +290,8 @@ def _fit_prepared_masked(output, prepared_config, phase_config, vocabulary, inde
         return fit_masked(
             model, index, vocabulary, train_indices, diagnostic_indices,
             validation_indices, masks, phase_output, phase_config,
-            resume=resume, run_metadata=metadata, phase=phase, group=group, epochs=epochs)
+            resume=resume, run_metadata=metadata, phase=phase, group=group, epochs=epochs,
+            previous_prepared_data=previous_prepared_data)
     except (Exception, KeyboardInterrupt) as exc:
         if not primary:
             raise
@@ -303,9 +304,9 @@ def _fit_prepared_masked(output, prepared_config, phase_config, vocabulary, inde
         raise
 
 
-def render_report(output, *, expected_phase=None):
+def render_report(output, *, expected_phase=None, artifacts=None):
     output = Path(output).expanduser().resolve()
-    vocabulary, index, manifest = _load_artifacts(output)
+    vocabulary, index, manifest = _load_artifacts(output) if artifacts is None else artifacts
     phase = manifest.get("phase", "E00-Masked")
     if expected_phase is not None and phase != expected_phase:
         raise ValueError(f"Expected {expected_phase} artifacts, found {phase}")
@@ -330,7 +331,7 @@ def render_report(output, *, expected_phase=None):
     ]
     if "training_pool" in manifest:
         lines += [
-            f"- Training pool: {manifest['training_pool']['samples']:,} states from the full train split.",
+            f"- Prepared training pool: {manifest['training_pool']['samples']:,} states.",
             f"- Fixed validation: {len(manifest['subsets'][manifest['validation_subset']]):,} states.",
         ]
     lines += [
