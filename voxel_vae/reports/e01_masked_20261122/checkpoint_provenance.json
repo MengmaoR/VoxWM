@@ -1,0 +1,84 @@
+{
+  "server_run_directory": "outputs/voxel_vae/e01/phase_masked",
+  "model_and_data": {
+    "phase": "E01-Masked",
+    "architecture": {
+      "name": "voxel-resnet3d-vae-e00-v1",
+      "vocabulary_size": 1580,
+      "embedding_dim": 32,
+      "encoder_channels": [
+        96,
+        192,
+        192
+      ],
+      "latent_shape": [
+        16,
+        4,
+        4,
+        4
+      ],
+      "decoder_channels": [
+        192,
+        192,
+        96,
+        32
+      ],
+      "logvar_clamp": [
+        -10,
+        10
+      ],
+      "skip_connections": false
+    },
+    "latent_shape": [
+      16,
+      4,
+      4,
+      4
+    ],
+    "vocabulary_K": 1580,
+    "vocabulary_sha256": "25af338d8200eaceedf62bd33dc76d769dcec27f526e6df34280c43c9b3f979a",
+    "dataset_roots": [
+      "/user-data/txj/VoxWM/outputs/vae_100k_clip1",
+      "/user-data/txj/VoxWM/outputs/vae_100k_clip2"
+    ],
+    "dataset_manifest_hashes": [
+      "bc38033eeac782f13715d4ae6252fc2ea2f47da16161f0b255b479b7a9591838",
+      "bc38033eeac782f13715d4ae6252fc2ea2f47da16161f0b255b479b7a9591838"
+    ],
+    "prepared_data": {
+      "dataset_index.json": "9b0cdb13e41fee88acb18a3f60091f582842806806fb64657acad31142acbe3b",
+      "subset_manifest.json": "180e54ceb636635af0ae24e21ed2f249b09e94e9eaa532574f72c299b2d0d5cf",
+      "split_160k.json": "eb6c3f14ed77932d99ce505bc442051605dfa0016be8f45f5b2e3b3898aacdb6"
+    }
+  },
+  "checkpoints": {
+    "checkpoint_best.pt": {
+      "global_step": 27000,
+      "source_commit": "f52feff424fb61e8d9aa80b176c3e1314d118760",
+      "saved_at_asia_shanghai": "2026-11-22T03:01:36+08:00",
+      "size_bytes": 283215727,
+      "world_size": 4,
+      "best_validation_total_loss_at_save": 0.2533732642891664,
+      "early_stopping_enabled": true,
+      "epoch_plan": {
+        "start_step": 20000,
+        "steps_per_epoch": 2500,
+        "epochs": 12
+      }
+    },
+    "checkpoint_last.pt": {
+      "global_step": 30000,
+      "source_commit": "5ef967676540b8598651377dadd4a7606d2cb069",
+      "saved_at_asia_shanghai": "2026-11-22T13:36:12+08:00",
+      "size_bytes": 283215727,
+      "world_size": 4,
+      "best_validation_total_loss_at_save": 0.2533732642891664,
+      "early_stopping_enabled": false,
+      "epoch_plan": {
+        "start_step": 20000,
+        "steps_per_epoch": 2500,
+        "epochs": 4
+      }
+    }
+  }
+}

@@ -2,6 +2,8 @@
 
 两个正式100K Clip已完成。E01-Masked 用两个 Clip 的完整训练集训练 Combined-Token 3D ResNet VAE。E00 小样本结果保留为历史。VAE 从每个 48³ 样本读取中心 16³，训练保存分项 loss 曲线并支持独立验证早停。[E01 数据准备、训练与监控命令](voxel_vae/README.md)
 
+E01-Masked 在 30,000 步结束续训。[服务器结果、曲线与配置](voxel_vae/reports/e01_masked_20261122/README.md)
+
 [当前数据协议](VAE_DATA_COLLECTION_PROTOCOL.md) · [历史生成/检查命令](vae_data/README.md)。模型代码独立位于 `voxel_vae/`，复用已有数据格式。
 
 新增[动态观察批传输](vae_data/reports/advance_batch_20261117/README.md)：默认24拍/可选48拍，物理仍逐拍24Hz、每拍捕获；首帧+稀疏delta在内存中经socket返回，原Collector决定停止并丢弃批尾。启用前由用户运行`bash scripts/build_fixed24.sh`增量编译；本次不调整并行数，续跑示例固定`--workers 64`。没有运行Native或实测吞吐。

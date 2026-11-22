@@ -1,0 +1,38 @@
+experiment: E01-Masked Voxel VAE full training split
+model:
+  embedding_dim: 32
+  base_channels: 96
+  hidden_channels: 192
+  latent_channels: 16
+  logvar_clamp:
+  - -10.0
+  - 10.0
+training:
+  seed: 42
+  device: cuda:0
+  precision: bf16
+  learning_rate: 0.0001
+  weight_decay: 0.0001
+  beta: 1.0e-06
+  effective_batch_size: 64
+  micro_batch_size: 2
+  evaluation_batch_size: 2
+  max_steps: 20000
+  validate_every: 1000
+  log_every: 25
+loss:
+  objective: static_dynamic_masked_v1
+  lambda_static: 0.5
+  lambda_dynamic: 0.5
+  alpha_changed: 0.5
+  beta_kl: 1.0e-06
+early_stopping:
+  enabled: true
+  monitor: validation_loss_total
+  mode: min
+  patience_validations: 2
+  min_delta: 0.001
+  min_steps: 1000
+validation:
+  static_states: 640
+  chains_per_dynamic_category: 32

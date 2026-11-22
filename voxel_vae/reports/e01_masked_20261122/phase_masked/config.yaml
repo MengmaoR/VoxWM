@@ -1,0 +1,33 @@
+seed: 42
+device: cuda:0
+precision: bf16
+learning_rate: 0.0001
+weight_decay: 0.0001
+beta: 1.0e-06
+effective_batch_size: 64
+micro_batch_size: 2
+evaluation_batch_size: 2
+max_steps: 30000
+validate_every: 1000
+log_every: 25
+loss:
+  objective: static_dynamic_masked_v1
+  lambda_static: 0.5
+  lambda_dynamic: 0.5
+  alpha_changed: 0.5
+  beta_kl: 1.0e-06
+early_stopping:
+  enabled: false
+  monitor: validation_loss_total
+  mode: min
+  patience_validations: 2
+  min_delta: 0.001
+  min_steps: 1000
+prepared_data:
+  dataset_index.json: 9b0cdb13e41fee88acb18a3f60091f582842806806fb64657acad31142acbe3b
+  subset_manifest.json: 180e54ceb636635af0ae24e21ed2f249b09e94e9eaa532574f72c299b2d0d5cf
+  split_160k.json: eb6c3f14ed77932d99ce505bc442051605dfa0016be8f45f5b2e3b3898aacdb6
+epoch_plan:
+  start_step: 20000
+  steps_per_epoch: 2500
+  epochs: 4

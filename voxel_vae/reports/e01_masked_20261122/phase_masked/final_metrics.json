@@ -1,0 +1,6059 @@
+{
+  "phase": "E01-Masked",
+  "global_step": 30000,
+  "training_seconds": 1211.788727775216,
+  "device": "cuda:0",
+  "world_size": 4,
+  "precision": "bf16",
+  "parameter_count": 23576236,
+  "loss": {
+    "objective": "static_dynamic_masked_v1",
+    "lambda_static": 0.5,
+    "lambda_dynamic": 0.5,
+    "alpha_changed": 0.5,
+    "beta_kl": 1e-06
+  },
+  "initial_embedding": "/user-data/txj/VoxWM/outputs/voxel_vae/e01/phase_masked/embedding_initial.npz",
+  "embedding_drift": {
+    "rows": 1580,
+    "mean_row_l2": 0.42427778244018555,
+    "median_row_l2": 0.3147086203098297,
+    "max_row_l2": 2.1677401065826416,
+    "mean_initial_to_final_cosine": 0.9948785901069641,
+    "rows_l2_above_1e-6": 1306
+  },
+  "stopped_early": false,
+  "early_stopping": {
+    "best_metric": 0.2533732642891664,
+    "best_step": 27000,
+    "patience_reference": 0.2533732642891664,
+    "bad_validations": 3,
+    "validations": 32,
+    "stopped": false,
+    "stop_step": null,
+    "stop_reason": null,
+    "last_metric": 0.25981841418888507,
+    "config": {
+      "enabled": false,
+      "monitor": "validation_loss_total",
+      "mode": "min",
+      "patience_validations": 2,
+      "min_delta": 0.001,
+      "min_steps": 1000
+    }
+  },
+  "epoch_plan": {
+    "start_step": 20000,
+    "steps_per_epoch": 2500,
+    "epochs": 4
+  },
+  "gradient_check": {
+    "embedding": {
+      "present": true,
+      "finite": true,
+      "nonzero": true
+    },
+    "encoder": {
+      "present": true,
+      "finite": true,
+      "nonzero": true
+    },
+    "decoder": {
+      "present": true,
+      "finite": true,
+      "nonzero": true
+    }
+  },
+  "initial": {
+    "samples": 160,
+    "cross_entropy": 7.313832032680511,
+    "exact_token_accuracy": 0.00092315673828125,
+    "non_air_exact_token_accuracy": 0.0017312639093615423,
+    "categories": {
+      "D1": {
+        "exact_token_accuracy": 0.0004150390625,
+        "non_air_exact_token_accuracy": 0.001279879540749106,
+        "samples": 20
+      },
+      "D2": {
+        "exact_token_accuracy": 0.0013671875,
+        "non_air_exact_token_accuracy": 0.0022963524901072315,
+        "samples": 20
+      },
+      "D3": {
+        "exact_token_accuracy": 0.000244140625,
+        "non_air_exact_token_accuracy": 0.0005161734342739161,
+        "samples": 20
+      },
+      "D4": {
+        "exact_token_accuracy": 0.00054931640625,
+        "non_air_exact_token_accuracy": 0.0015908930212826134,
+        "samples": 20
+      },
+      "Static": {
+        "exact_token_accuracy": 0.001202392578125,
+        "non_air_exact_token_accuracy": 0.0018424235605186915,
+        "samples": 80
+      }
+    },
+    "static_preservation": {
+      "exact_token_accuracy": 0.001202392578125,
+      "non_air_exact_token_accuracy": 0.0018424235605186915,
+      "by_biome_group": {
+        "BambooJungle": {
+          "exact_token_accuracy": 0.00115966796875,
+          "non_air_exact_token_accuracy": 0.001606086221470837,
+          "voxels": 32768
+        },
+        "BirchForest": {
+          "exact_token_accuracy": 0.000946044921875,
+          "non_air_exact_token_accuracy": 0.0013350540696898225,
+          "voxels": 32768
+        },
+        "ColdTaiga": {
+          "exact_token_accuracy": 0.001068115234375,
+          "non_air_exact_token_accuracy": 0.0018005967692149398,
+          "voxels": 32768
+        },
+        "Desert": {
+          "exact_token_accuracy": 0.001251220703125,
+          "non_air_exact_token_accuracy": 0.00200253980658396,
+          "voxels": 32768
+        },
+        "ExtremeHills": {
+          "exact_token_accuracy": 0.00115966796875,
+          "non_air_exact_token_accuracy": 0.002081621473568885,
+          "voxels": 32768
+        },
+        "FlowerForest": {
+          "exact_token_accuracy": 0.0013427734375,
+          "non_air_exact_token_accuracy": 0.0021849240242327937,
+          "voxels": 32768
+        },
+        "Forest": {
+          "exact_token_accuracy": 0.001007080078125,
+          "non_air_exact_token_accuracy": 0.0015925872303460258,
+          "voxels": 32768
+        },
+        "IcePlains": {
+          "exact_token_accuracy": 0.001678466796875,
+          "non_air_exact_token_accuracy": 0.0023578839063705735,
+          "voxels": 32768
+        },
+        "IcePlainsSpikes": {
+          "exact_token_accuracy": 0.001220703125,
+          "non_air_exact_token_accuracy": 0.0019482733427499878,
+          "voxels": 32768
+        },
+        "Jungle": {
+          "exact_token_accuracy": 0.001190185546875,
+          "non_air_exact_token_accuracy": 0.0016054668203523794,
+          "voxels": 32768
+        }
+      },
+      "by_stratum": {
+        "deep_cave": {
+          "exact_token_accuracy": 0.00233154296875,
+          "non_air_exact_token_accuracy": 0.002379973334330181,
+          "voxels": 81920
+        },
+        "elevated_complex": {
+          "exact_token_accuracy": 0.0001708984375,
+          "non_air_exact_token_accuracy": 0.002444528018051899,
+          "voxels": 81920
+        },
+        "shallow_underground": {
+          "exact_token_accuracy": 0.0017822265625,
+          "non_air_exact_token_accuracy": 0.0018259357920934478,
+          "voxels": 81920
+        },
+        "surface": {
+          "exact_token_accuracy": 0.00052490234375,
+          "non_air_exact_token_accuracy": 0.0009000334896182183,
+          "voxels": 81920
+        }
+      }
+    },
+    "dynamic_reconstruction": {
+      "exact_token_accuracy": 0.0006439208984375,
+      "changed_voxel_exact_accuracy": 0.0,
+      "unchanged_voxel_exact_accuracy": 0.0006459552790771718,
+      "changed_voxels": 1032,
+      "unchanged_voxels": 326648,
+      "by_category": {
+        "D1": {
+          "exact_token_accuracy": 0.0004150390625,
+          "changed_voxel_exact_accuracy": 0.0,
+          "unchanged_voxel_exact_accuracy": 0.0004160344574421223,
+          "changed_voxels": 196,
+          "unchanged_voxels": 81724
+        },
+        "D2": {
+          "exact_token_accuracy": 0.0013671875,
+          "changed_voxel_exact_accuracy": 0.0,
+          "unchanged_voxel_exact_accuracy": 0.0013706173897081318,
+          "changed_voxels": 205,
+          "unchanged_voxels": 81715
+        },
+        "D3": {
+          "exact_token_accuracy": 0.000244140625,
+          "changed_voxel_exact_accuracy": 0.0,
+          "unchanged_voxel_exact_accuracy": 0.00024456156225925973,
+          "changed_voxels": 141,
+          "unchanged_voxels": 81779
+        },
+        "D4": {
+          "exact_token_accuracy": 0.00054931640625,
+          "changed_voxel_exact_accuracy": 0.0,
+          "unchanged_voxel_exact_accuracy": 0.0005526218838265996,
+          "changed_voxels": 490,
+          "unchanged_voxels": 81430
+        }
+      }
+    },
+    "dynamic": {
+      "complete_chains": 16,
+      "adjacent_pairs": 64,
+      "predicted_change_recall": 0.20211161387631976,
+      "changed_pair_exact_reconstruction": 0.0,
+      "unchanged_stability": 0.8509451929585706,
+      "gt_changed_voxels": 663
+    },
+    "dynamic_by_category": {
+      "D1": {
+        "complete_chains": 4,
+        "adjacent_pairs": 16,
+        "predicted_change_recall": 0.09183673469387756,
+        "changed_pair_exact_reconstruction": 0.0,
+        "unchanged_stability": 0.8726428069317522,
+        "gt_changed_voxels": 98
+      },
+      "D2": {
+        "complete_chains": 4,
+        "adjacent_pairs": 16,
+        "predicted_change_recall": 0.2,
+        "changed_pair_exact_reconstruction": 0.0,
+        "unchanged_stability": 0.8507670424129334,
+        "gt_changed_voxels": 155
+      },
+      "D3": {
+        "complete_chains": 4,
+        "adjacent_pairs": 16,
+        "predicted_change_recall": 0.13414634146341464,
+        "changed_pair_exact_reconstruction": 0.0,
+        "unchanged_stability": 0.8790142695633575,
+        "gt_changed_voxels": 82
+      },
+      "D4": {
+        "complete_chains": 4,
+        "adjacent_pairs": 16,
+        "predicted_change_recall": 0.2530487804878049,
+        "changed_pair_exact_reconstruction": 0.0,
+        "unchanged_stability": 0.8011747024904919,
+        "gt_changed_voxels": 328
+      }
+    },
+    "latent": {
+      "mean_mu": 0.011674469336867332,
+      "std_mu": 0.10396145284175873,
+      "mean_posterior_std": 1.0143647193908691,
+      "kl_raw": 8.703857421875,
+      "latent_variance_per_channel": [
+        0.0077407946810126305,
+        0.0069217258132994175,
+        0.006387630943208933,
+        0.008203133940696716,
+        0.0054208021610975266,
+        0.009140260517597198,
+        0.00565447099506855,
+        0.00674858083948493,
+        0.0052262539975345135,
+        0.006393905729055405,
+        0.004346749279648066,
+        0.0036341894883662462,
+        0.006176409311592579,
+        0.005652989260852337,
+        0.008251914754509926,
+        0.005694179330021143
+      ],
+      "active_channel_variance_threshold": 0.0001,
+      "active_latent_channels": 16,
+      "adjacent_dynamic_latent_l2": {
+        "count": 64,
+        "mean": 0.36499392287805676,
+        "std": 0.15892368683331753,
+        "min": 0.14893919229507446,
+        "max": 0.8206233978271484
+      }
+    },
+    "loss_components": {
+      "loss_static": 7.297252580523491,
+      "loss_dynamic_unchanged": 7.33009372651577,
+      "loss_dynamic_changed": 7.42676842212677,
+      "loss_reconstruction": 7.337841808795929,
+      "loss_kl_raw": 8.703858710825443,
+      "loss_beta_kl": 8.703858668468456e-06,
+      "loss_total": 7.337850511074066,
+      "dynamic_unchanged_by_category": {
+        "D1": 7.326493918895721,
+        "D2": 7.288264811038971,
+        "D3": 7.351614058017731,
+        "D4": 7.354002118110657
+      },
+      "dynamic_changed_by_category": {
+        "D1": 7.401033818721771,
+        "D2": 7.484585225582123,
+        "D3": 7.382346093654633,
+        "D4": 7.4391085505485535
+      }
+    },
+    "change_masks": {
+      "chains": 16,
+      "dynamic_states": 80,
+      "overall": {
+        "states": 80,
+        "changed_voxels": 1032,
+        "mean_changed_voxels": 12.9,
+        "min_changed_voxels": 2,
+        "max_changed_voxels": 39,
+        "mean_changed_ratio": 0.0031494140625,
+        "min_changed_ratio": 0.00048828125,
+        "max_changed_ratio": 0.009521484375
+      },
+      "by_category": {
+        "D1": {
+          "states": 20,
+          "changed_voxels": 196,
+          "mean_changed_voxels": 9.8,
+          "min_changed_voxels": 5,
+          "max_changed_voxels": 19,
+          "mean_changed_ratio": 0.002392578125,
+          "min_changed_ratio": 0.001220703125,
+          "max_changed_ratio": 0.004638671875
+        },
+        "D2": {
+          "states": 20,
+          "changed_voxels": 205,
+          "mean_changed_voxels": 10.25,
+          "min_changed_voxels": 5,
+          "max_changed_voxels": 15,
+          "mean_changed_ratio": 0.00250244140625,
+          "min_changed_ratio": 0.001220703125,
+          "max_changed_ratio": 0.003662109375
+        },
+        "D3": {
+          "states": 20,
+          "changed_voxels": 141,
+          "mean_changed_voxels": 7.05,
+          "min_changed_voxels": 2,
+          "max_changed_voxels": 13,
+          "mean_changed_ratio": 0.00172119140625,
+          "min_changed_ratio": 0.00048828125,
+          "max_changed_ratio": 0.003173828125
+        },
+        "D4": {
+          "states": 20,
+          "changed_voxels": 490,
+          "mean_changed_voxels": 24.5,
+          "min_changed_voxels": 5,
+          "max_changed_voxels": 39,
+          "mean_changed_ratio": 0.0059814453125,
+          "min_changed_ratio": 0.001220703125,
+          "max_changed_ratio": 0.009521484375
+        }
+      },
+      "chain_changed_mask_counts": [
+        {
+          "category": "D1",
+          "chain_id": "34135e154a3d4e8ea2fdfdfe5217dfb1/D1",
+          "root_index": 0,
+          "shard": 23,
+          "world_seed": 2055041591,
+          "changed_voxels_per_state": [
+            10,
+            19,
+            14,
+            10,
+            5
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "590a0e4497e24fa69fbb04cf9b5ba397/D4",
+          "root_index": 0,
+          "shard": 30,
+          "world_seed": 1723843572,
+          "changed_voxels_per_state": [
+            26,
+            34,
+            35,
+            39,
+            38
+          ],
+          "selected_states": 5,
+          "d4_subtype": "A"
+        },
+        {
+          "category": "D3",
+          "chain_id": "6bdd7d84ab904639b32943b5cd4ac69a/D3",
+          "root_index": 0,
+          "shard": 35,
+          "world_seed": 280040936,
+          "changed_voxels_per_state": [
+            5,
+            6,
+            5,
+            6,
+            5
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "9991f919940646f6a32aeb855fae0620/D1",
+          "root_index": 0,
+          "shard": 39,
+          "world_seed": 68547993,
+          "changed_voxels_per_state": [
+            5,
+            10,
+            10,
+            10,
+            5
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "8f0e7a8910f342f1a1eceaa21a864ece/D3",
+          "root_index": 0,
+          "shard": 50,
+          "world_seed": 14533383,
+          "changed_voxels_per_state": [
+            9,
+            13,
+            13,
+            13,
+            10
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "d930d9f30fd84376b17dd0c802e9493d/D4",
+          "root_index": 0,
+          "shard": 50,
+          "world_seed": 67931056,
+          "changed_voxels_per_state": [
+            20,
+            36,
+            28,
+            17,
+            5
+          ],
+          "selected_states": 5,
+          "d4_subtype": "C"
+        },
+        {
+          "category": "D2",
+          "chain_id": "27976166d240496891a1b8d4e96eaf50/D2",
+          "root_index": 0,
+          "shard": 67,
+          "world_seed": 2117134932,
+          "changed_voxels_per_state": [
+            8,
+            8,
+            8,
+            8,
+            7
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "9487511eaf4e4ef8b198af6cf11b7c62/D2",
+          "root_index": 0,
+          "shard": 70,
+          "world_seed": 2144664056,
+          "changed_voxels_per_state": [
+            5,
+            11,
+            6,
+            7,
+            7
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "551a5f94c0f64b6f9f8e91784a2d351e/D1",
+          "root_index": 1,
+          "shard": 7,
+          "world_seed": 1948864796,
+          "changed_voxels_per_state": [
+            7,
+            13,
+            13,
+            16,
+            9
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "55b1f1c8dcf94bd79e6508b66dba0ec3/D3",
+          "root_index": 1,
+          "shard": 11,
+          "world_seed": 1108866431,
+          "changed_voxels_per_state": [
+            6,
+            11,
+            8,
+            9,
+            6
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "fc8fc30eab4b49a199cacf1f5542d225/D3",
+          "root_index": 1,
+          "shard": 21,
+          "world_seed": 1149593822,
+          "changed_voxels_per_state": [
+            2,
+            4,
+            5,
+            3,
+            2
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "f0cca8cd168e434cb7b1a13cacebe973/D2",
+          "root_index": 1,
+          "shard": 37,
+          "world_seed": 985084411,
+          "changed_voxels_per_state": [
+            10,
+            10,
+            15,
+            15,
+            15
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "196e55703ee445aeafabd77fcf806a37/D4",
+          "root_index": 1,
+          "shard": 41,
+          "world_seed": 2085285710,
+          "changed_voxels_per_state": [
+            16,
+            16,
+            19,
+            30,
+            22
+          ],
+          "selected_states": 5,
+          "d4_subtype": "A"
+        },
+        {
+          "category": "D1",
+          "chain_id": "45a865083db74e0f84836561fe61469e/D1",
+          "root_index": 1,
+          "shard": 48,
+          "world_seed": 2056422017,
+          "changed_voxels_per_state": [
+            5,
+            10,
+            10,
+            10,
+            5
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "d888164ba5dc4c1ea23ddec2818fc144/D2",
+          "root_index": 1,
+          "shard": 66,
+          "world_seed": 143509926,
+          "changed_voxels_per_state": [
+            10,
+            10,
+            15,
+            15,
+            15
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "3f6096014fcc42a6873ae5c6b2208e81/D4",
+          "root_index": 1,
+          "shard": 72,
+          "world_seed": 444589849,
+          "changed_voxels_per_state": [
+            19,
+            23,
+            23,
+            22,
+            22
+          ],
+          "selected_states": 5,
+          "d4_subtype": "A"
+        }
+      ],
+      "empty_unchanged_states": 0,
+      "d4_chain_subtypes": {
+        "A": 3,
+        "C": 1
+      }
+    },
+    "non_finite_prediction": false
+  },
+  "final": {
+    "samples": 160,
+    "cross_entropy": 0.10684990910813212,
+    "exact_token_accuracy": 0.9665283203125,
+    "non_air_exact_token_accuracy": 0.9412237347900229,
+    "categories": {
+      "D1": {
+        "exact_token_accuracy": 0.973681640625,
+        "non_air_exact_token_accuracy": 0.9228684359119141,
+        "samples": 20
+      },
+      "D2": {
+        "exact_token_accuracy": 0.97144775390625,
+        "non_air_exact_token_accuracy": 0.9573124474606852,
+        "samples": 20
+      },
+      "D3": {
+        "exact_token_accuracy": 0.95518798828125,
+        "non_air_exact_token_accuracy": 0.8965588437715072,
+        "samples": 20
+      },
+      "D4": {
+        "exact_token_accuracy": 0.95589599609375,
+        "non_air_exact_token_accuracy": 0.8742133917839213,
+        "samples": 20
+      },
+      "Static": {
+        "exact_token_accuracy": 0.9690032958984375,
+        "non_air_exact_token_accuracy": 0.9548020215090058,
+        "samples": 80
+      }
+    },
+    "static_preservation": {
+      "exact_token_accuracy": 0.9690032958984375,
+      "non_air_exact_token_accuracy": 0.9548020215090058,
+      "by_biome_group": {
+        "BambooJungle": {
+          "exact_token_accuracy": 0.96282958984375,
+          "non_air_exact_token_accuracy": 0.9509721048182587,
+          "voxels": 32768
+        },
+        "BirchForest": {
+          "exact_token_accuracy": 0.961181640625,
+          "non_air_exact_token_accuracy": 0.9442837434916114,
+          "voxels": 32768
+        },
+        "ColdTaiga": {
+          "exact_token_accuracy": 0.974578857421875,
+          "non_air_exact_token_accuracy": 0.9650684226772301,
+          "voxels": 32768
+        },
+        "Desert": {
+          "exact_token_accuracy": 0.978668212890625,
+          "non_air_exact_token_accuracy": 0.9672755690143596,
+          "voxels": 32768
+        },
+        "ExtremeHills": {
+          "exact_token_accuracy": 0.978424072265625,
+          "non_air_exact_token_accuracy": 0.9628047110380717,
+          "voxels": 32768
+        },
+        "FlowerForest": {
+          "exact_token_accuracy": 0.97076416015625,
+          "non_air_exact_token_accuracy": 0.9547124838613567,
+          "voxels": 32768
+        },
+        "Forest": {
+          "exact_token_accuracy": 0.9644775390625,
+          "non_air_exact_token_accuracy": 0.9458520341682352,
+          "voxels": 32768
+        },
+        "IcePlains": {
+          "exact_token_accuracy": 0.98260498046875,
+          "non_air_exact_token_accuracy": 0.9760781960044586,
+          "voxels": 32768
+        },
+        "IcePlainsSpikes": {
+          "exact_token_accuracy": 0.97955322265625,
+          "non_air_exact_token_accuracy": 0.9691685743509815,
+          "voxels": 32768
+        },
+        "Jungle": {
+          "exact_token_accuracy": 0.93695068359375,
+          "non_air_exact_token_accuracy": 0.9186563477688128,
+          "voxels": 32768
+        }
+      },
+      "by_stratum": {
+        "deep_cave": {
+          "exact_token_accuracy": 0.9642822265625,
+          "non_air_exact_token_accuracy": 0.9638268974368559,
+          "voxels": 81920
+        },
+        "elevated_complex": {
+          "exact_token_accuracy": 0.9853515625,
+          "non_air_exact_token_accuracy": 0.8104550582925912,
+          "voxels": 81920
+        },
+        "shallow_underground": {
+          "exact_token_accuracy": 0.968994140625,
+          "non_air_exact_token_accuracy": 0.9683712902862717,
+          "voxels": 81920
+        },
+        "surface": {
+          "exact_token_accuracy": 0.95738525390625,
+          "non_air_exact_token_accuracy": 0.9329998325519089,
+          "voxels": 81920
+        }
+      }
+    },
+    "dynamic_reconstruction": {
+      "exact_token_accuracy": 0.9640533447265625,
+      "changed_voxel_exact_accuracy": 0.9631782945736435,
+      "unchanged_voxel_exact_accuracy": 0.9640561093286963,
+      "changed_voxels": 1032,
+      "unchanged_voxels": 326648,
+      "by_category": {
+        "D1": {
+          "exact_token_accuracy": 0.973681640625,
+          "changed_voxel_exact_accuracy": 0.9795918367346939,
+          "unchanged_voxel_exact_accuracy": 0.973667466105428,
+          "changed_voxels": 196,
+          "unchanged_voxels": 81724
+        },
+        "D2": {
+          "exact_token_accuracy": 0.97144775390625,
+          "changed_voxel_exact_accuracy": 1.0,
+          "unchanged_voxel_exact_accuracy": 0.9713761243345775,
+          "changed_voxels": 205,
+          "unchanged_voxels": 81715
+        },
+        "D3": {
+          "exact_token_accuracy": 0.95518798828125,
+          "changed_voxel_exact_accuracy": 0.8085106382978723,
+          "unchanged_voxel_exact_accuracy": 0.9554408833563629,
+          "changed_voxels": 141,
+          "unchanged_voxels": 81779
+        },
+        "D4": {
+          "exact_token_accuracy": 0.95589599609375,
+          "changed_voxel_exact_accuracy": 0.9857142857142858,
+          "unchanged_voxel_exact_accuracy": 0.9557165663760285,
+          "changed_voxels": 490,
+          "unchanged_voxels": 81430
+        }
+      }
+    },
+    "dynamic": {
+      "complete_chains": 16,
+      "adjacent_pairs": 64,
+      "predicted_change_recall": 0.9939668174962293,
+      "changed_pair_exact_reconstruction": 0.9321266968325792,
+      "unchanged_stability": 0.9877620171255272,
+      "gt_changed_voxels": 663
+    },
+    "dynamic_by_category": {
+      "D1": {
+        "complete_chains": 4,
+        "adjacent_pairs": 16,
+        "predicted_change_recall": 1.0,
+        "changed_pair_exact_reconstruction": 0.9591836734693877,
+        "unchanged_stability": 0.9929246003850973,
+        "gt_changed_voxels": 98
+      },
+      "D2": {
+        "complete_chains": 4,
+        "adjacent_pairs": 16,
+        "predicted_change_recall": 1.0,
+        "changed_pair_exact_reconstruction": 1.0,
+        "unchanged_stability": 0.9882228782062067,
+        "gt_changed_voxels": 155
+      },
+      "D3": {
+        "complete_chains": 4,
+        "adjacent_pairs": 16,
+        "predicted_change_recall": 0.9512195121951219,
+        "changed_pair_exact_reconstruction": 0.6463414634146342,
+        "unchanged_stability": 0.9815595685519601,
+        "gt_changed_voxels": 82
+      },
+      "D4": {
+        "complete_chains": 4,
+        "adjacent_pairs": 16,
+        "predicted_change_recall": 1.0,
+        "changed_pair_exact_reconstruction": 0.9634146341463414,
+        "unchanged_stability": 0.9883449883449883,
+        "gt_changed_voxels": 328
+      }
+    },
+    "latent": {
+      "mean_mu": 0.027226388454437256,
+      "std_mu": 1.4252479076385498,
+      "mean_posterior_std": 0.11200596392154694,
+      "kl_raw": 3174.744384765625,
+      "latent_variance_per_channel": [
+        1.5314972400665283,
+        1.6214563846588135,
+        2.151012897491455,
+        1.542522668838501,
+        2.173215389251709,
+        2.5997633934020996,
+        1.6809793710708618,
+        1.8293501138687134,
+        1.563100814819336,
+        1.6800963878631592,
+        2.600151777267456,
+        1.689444899559021,
+        2.0999855995178223,
+        1.7964303493499756,
+        2.877471446990967,
+        2.497628927230835
+      ],
+      "active_channel_variance_threshold": 0.0001,
+      "active_latent_channels": 16,
+      "adjacent_dynamic_latent_l2": {
+        "count": 64,
+        "mean": 20.40136031061411,
+        "std": 8.796799719587009,
+        "min": 7.567002773284912,
+        "max": 42.64247512817383
+      }
+    },
+    "loss_components": {
+      "loss_static": 0.09707377084123436,
+      "loss_dynamic_unchanged": 0.11658998130587861,
+      "loss_dynamic_changed": 0.1607489944177024,
+      "loss_reconstruction": 0.11787162924883887,
+      "loss_kl_raw": 3174.7444953918457,
+      "loss_beta_kl": 0.003174744502757676,
+      "loss_total": 0.12104637391166762,
+      "dynamic_unchanged_by_category": {
+        "D1": 0.09019866306334734,
+        "D2": 0.08588427910581231,
+        "D3": 0.15627519227564335,
+        "D4": 0.13400179077871144
+      },
+      "dynamic_changed_by_category": {
+        "D1": 0.030393470166137693,
+        "D2": 0.00562069502222684,
+        "D3": 0.5768271926790476,
+        "D4": 0.03015461980339751
+      }
+    },
+    "change_masks": {
+      "chains": 16,
+      "dynamic_states": 80,
+      "overall": {
+        "states": 80,
+        "changed_voxels": 1032,
+        "mean_changed_voxels": 12.9,
+        "min_changed_voxels": 2,
+        "max_changed_voxels": 39,
+        "mean_changed_ratio": 0.0031494140625,
+        "min_changed_ratio": 0.00048828125,
+        "max_changed_ratio": 0.009521484375
+      },
+      "by_category": {
+        "D1": {
+          "states": 20,
+          "changed_voxels": 196,
+          "mean_changed_voxels": 9.8,
+          "min_changed_voxels": 5,
+          "max_changed_voxels": 19,
+          "mean_changed_ratio": 0.002392578125,
+          "min_changed_ratio": 0.001220703125,
+          "max_changed_ratio": 0.004638671875
+        },
+        "D2": {
+          "states": 20,
+          "changed_voxels": 205,
+          "mean_changed_voxels": 10.25,
+          "min_changed_voxels": 5,
+          "max_changed_voxels": 15,
+          "mean_changed_ratio": 0.00250244140625,
+          "min_changed_ratio": 0.001220703125,
+          "max_changed_ratio": 0.003662109375
+        },
+        "D3": {
+          "states": 20,
+          "changed_voxels": 141,
+          "mean_changed_voxels": 7.05,
+          "min_changed_voxels": 2,
+          "max_changed_voxels": 13,
+          "mean_changed_ratio": 0.00172119140625,
+          "min_changed_ratio": 0.00048828125,
+          "max_changed_ratio": 0.003173828125
+        },
+        "D4": {
+          "states": 20,
+          "changed_voxels": 490,
+          "mean_changed_voxels": 24.5,
+          "min_changed_voxels": 5,
+          "max_changed_voxels": 39,
+          "mean_changed_ratio": 0.0059814453125,
+          "min_changed_ratio": 0.001220703125,
+          "max_changed_ratio": 0.009521484375
+        }
+      },
+      "chain_changed_mask_counts": [
+        {
+          "category": "D1",
+          "chain_id": "34135e154a3d4e8ea2fdfdfe5217dfb1/D1",
+          "root_index": 0,
+          "shard": 23,
+          "world_seed": 2055041591,
+          "changed_voxels_per_state": [
+            10,
+            19,
+            14,
+            10,
+            5
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "590a0e4497e24fa69fbb04cf9b5ba397/D4",
+          "root_index": 0,
+          "shard": 30,
+          "world_seed": 1723843572,
+          "changed_voxels_per_state": [
+            26,
+            34,
+            35,
+            39,
+            38
+          ],
+          "selected_states": 5,
+          "d4_subtype": "A"
+        },
+        {
+          "category": "D3",
+          "chain_id": "6bdd7d84ab904639b32943b5cd4ac69a/D3",
+          "root_index": 0,
+          "shard": 35,
+          "world_seed": 280040936,
+          "changed_voxels_per_state": [
+            5,
+            6,
+            5,
+            6,
+            5
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "9991f919940646f6a32aeb855fae0620/D1",
+          "root_index": 0,
+          "shard": 39,
+          "world_seed": 68547993,
+          "changed_voxels_per_state": [
+            5,
+            10,
+            10,
+            10,
+            5
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "8f0e7a8910f342f1a1eceaa21a864ece/D3",
+          "root_index": 0,
+          "shard": 50,
+          "world_seed": 14533383,
+          "changed_voxels_per_state": [
+            9,
+            13,
+            13,
+            13,
+            10
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "d930d9f30fd84376b17dd0c802e9493d/D4",
+          "root_index": 0,
+          "shard": 50,
+          "world_seed": 67931056,
+          "changed_voxels_per_state": [
+            20,
+            36,
+            28,
+            17,
+            5
+          ],
+          "selected_states": 5,
+          "d4_subtype": "C"
+        },
+        {
+          "category": "D2",
+          "chain_id": "27976166d240496891a1b8d4e96eaf50/D2",
+          "root_index": 0,
+          "shard": 67,
+          "world_seed": 2117134932,
+          "changed_voxels_per_state": [
+            8,
+            8,
+            8,
+            8,
+            7
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "9487511eaf4e4ef8b198af6cf11b7c62/D2",
+          "root_index": 0,
+          "shard": 70,
+          "world_seed": 2144664056,
+          "changed_voxels_per_state": [
+            5,
+            11,
+            6,
+            7,
+            7
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "551a5f94c0f64b6f9f8e91784a2d351e/D1",
+          "root_index": 1,
+          "shard": 7,
+          "world_seed": 1948864796,
+          "changed_voxels_per_state": [
+            7,
+            13,
+            13,
+            16,
+            9
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "55b1f1c8dcf94bd79e6508b66dba0ec3/D3",
+          "root_index": 1,
+          "shard": 11,
+          "world_seed": 1108866431,
+          "changed_voxels_per_state": [
+            6,
+            11,
+            8,
+            9,
+            6
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "fc8fc30eab4b49a199cacf1f5542d225/D3",
+          "root_index": 1,
+          "shard": 21,
+          "world_seed": 1149593822,
+          "changed_voxels_per_state": [
+            2,
+            4,
+            5,
+            3,
+            2
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "f0cca8cd168e434cb7b1a13cacebe973/D2",
+          "root_index": 1,
+          "shard": 37,
+          "world_seed": 985084411,
+          "changed_voxels_per_state": [
+            10,
+            10,
+            15,
+            15,
+            15
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "196e55703ee445aeafabd77fcf806a37/D4",
+          "root_index": 1,
+          "shard": 41,
+          "world_seed": 2085285710,
+          "changed_voxels_per_state": [
+            16,
+            16,
+            19,
+            30,
+            22
+          ],
+          "selected_states": 5,
+          "d4_subtype": "A"
+        },
+        {
+          "category": "D1",
+          "chain_id": "45a865083db74e0f84836561fe61469e/D1",
+          "root_index": 1,
+          "shard": 48,
+          "world_seed": 2056422017,
+          "changed_voxels_per_state": [
+            5,
+            10,
+            10,
+            10,
+            5
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "d888164ba5dc4c1ea23ddec2818fc144/D2",
+          "root_index": 1,
+          "shard": 66,
+          "world_seed": 143509926,
+          "changed_voxels_per_state": [
+            10,
+            10,
+            15,
+            15,
+            15
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "3f6096014fcc42a6873ae5c6b2208e81/D4",
+          "root_index": 1,
+          "shard": 72,
+          "world_seed": 444589849,
+          "changed_voxels_per_state": [
+            19,
+            23,
+            23,
+            22,
+            22
+          ],
+          "selected_states": 5,
+          "d4_subtype": "A"
+        }
+      ],
+      "empty_unchanged_states": 0,
+      "d4_chain_subtypes": {
+        "A": 3,
+        "C": 1
+      }
+    },
+    "non_finite_prediction": false
+  },
+  "initial_validation": {
+    "samples": 1280,
+    "cross_entropy": 7.315831524133682,
+    "exact_token_accuracy": 0.0010366439819335938,
+    "non_air_exact_token_accuracy": 0.001724173601396654,
+    "categories": {
+      "D1": {
+        "exact_token_accuracy": 0.0008026123046875,
+        "non_air_exact_token_accuracy": 0.0015567732982243888,
+        "samples": 160
+      },
+      "D2": {
+        "exact_token_accuracy": 0.00110626220703125,
+        "non_air_exact_token_accuracy": 0.0016621425820296022,
+        "samples": 160
+      },
+      "D3": {
+        "exact_token_accuracy": 0.00018768310546875,
+        "non_air_exact_token_accuracy": 0.0005448746345353061,
+        "samples": 160
+      },
+      "D4": {
+        "exact_token_accuracy": 0.00122222900390625,
+        "non_air_exact_token_accuracy": 0.001697929628130094,
+        "samples": 160
+      },
+      "Static": {
+        "exact_token_accuracy": 0.00124359130859375,
+        "non_air_exact_token_accuracy": 0.0019408887750436295,
+        "samples": 640
+      }
+    },
+    "static_preservation": {
+      "exact_token_accuracy": 0.00124359130859375,
+      "non_air_exact_token_accuracy": 0.0019408887750436295,
+      "by_biome_group": {
+        "BambooJungle": {
+          "exact_token_accuracy": 0.001251220703125,
+          "non_air_exact_token_accuracy": 0.0018922464331735179,
+          "voxels": 131072
+        },
+        "BirchForest": {
+          "exact_token_accuracy": 0.001434326171875,
+          "non_air_exact_token_accuracy": 0.002372898470237795,
+          "voxels": 131072
+        },
+        "ColdTaiga": {
+          "exact_token_accuracy": 0.0013275146484375,
+          "non_air_exact_token_accuracy": 0.002286565100635452,
+          "voxels": 131072
+        },
+        "Desert": {
+          "exact_token_accuracy": 0.0009613037109375,
+          "non_air_exact_token_accuracy": 0.0015752000504064016,
+          "voxels": 131072
+        },
+        "ExtremeHills": {
+          "exact_token_accuracy": 0.00131988525390625,
+          "non_air_exact_token_accuracy": 0.002209660842754368,
+          "voxels": 131072
+        },
+        "FlowerForest": {
+          "exact_token_accuracy": 0.000946044921875,
+          "non_air_exact_token_accuracy": 0.0016142470318683607,
+          "voxels": 98304
+        },
+        "Forest": {
+          "exact_token_accuracy": 0.0014139811197916667,
+          "non_air_exact_token_accuracy": 0.002057917801729243,
+          "voxels": 98304
+        },
+        "IcePlains": {
+          "exact_token_accuracy": 0.001617431640625,
+          "non_air_exact_token_accuracy": 0.00246432192154722,
+          "voxels": 98304
+        },
+        "IcePlainsSpikes": {
+          "exact_token_accuracy": 0.0012410481770833333,
+          "non_air_exact_token_accuracy": 0.0020855057351407717,
+          "voxels": 98304
+        },
+        "Jungle": {
+          "exact_token_accuracy": 0.00128173828125,
+          "non_air_exact_token_accuracy": 0.0018549325010673223,
+          "voxels": 98304
+        },
+        "JungleEdge": {
+          "exact_token_accuracy": 0.0009562174479166666,
+          "non_air_exact_token_accuracy": 0.001610857867498372,
+          "voxels": 98304
+        },
+        "MangroveSwamp": {
+          "exact_token_accuracy": 0.0012308756510416667,
+          "non_air_exact_token_accuracy": 0.0018733900554211225,
+          "voxels": 98304
+        },
+        "MegaSpruceTaiga": {
+          "exact_token_accuracy": 0.0018208821614583333,
+          "non_air_exact_token_accuracy": 0.0026414590351254695,
+          "voxels": 98304
+        },
+        "MegaTaiga": {
+          "exact_token_accuracy": 0.0009969075520833333,
+          "non_air_exact_token_accuracy": 0.0014962288924852667,
+          "voxels": 98304
+        },
+        "Mesa": {
+          "exact_token_accuracy": 0.0008951822916666666,
+          "non_air_exact_token_accuracy": 0.0013532641664981567,
+          "voxels": 98304
+        },
+        "MesaBryce": {
+          "exact_token_accuracy": 0.0010782877604166667,
+          "non_air_exact_token_accuracy": 0.0016580575218417192,
+          "voxels": 98304
+        },
+        "MesaPlateauF": {
+          "exact_token_accuracy": 0.000946044921875,
+          "non_air_exact_token_accuracy": 0.0014234548627054826,
+          "voxels": 98304
+        },
+        "MushroomIsland": {
+          "exact_token_accuracy": 0.001190185546875,
+          "non_air_exact_token_accuracy": 0.0019123611065317023,
+          "voxels": 98304
+        },
+        "Plains": {
+          "exact_token_accuracy": 0.0010782877604166667,
+          "non_air_exact_token_accuracy": 0.0016223082691807344,
+          "voxels": 98304
+        },
+        "RoofedForest": {
+          "exact_token_accuracy": 0.0013224283854166667,
+          "non_air_exact_token_accuracy": 0.0018488792065585048,
+          "voxels": 98304
+        },
+        "Savanna": {
+          "exact_token_accuracy": 0.0014546712239583333,
+          "non_air_exact_token_accuracy": 0.002215131049011711,
+          "voxels": 98304
+        },
+        "StoneBeach": {
+          "exact_token_accuracy": 0.0015869140625,
+          "non_air_exact_token_accuracy": 0.0024446731857951623,
+          "voxels": 98304
+        },
+        "SunflowerPlains": {
+          "exact_token_accuracy": 0.001220703125,
+          "non_air_exact_token_accuracy": 0.002036867298095529,
+          "voxels": 98304
+        },
+        "Swampland": {
+          "exact_token_accuracy": 0.0012308756510416667,
+          "non_air_exact_token_accuracy": 0.0017831353709216304,
+          "voxels": 98304
+        },
+        "Taiga": {
+          "exact_token_accuracy": 0.0012613932291666667,
+          "non_air_exact_token_accuracy": 0.0020500272785887877,
+          "voxels": 98304
+        }
+      },
+      "by_stratum": {
+        "deep_cave": {
+          "exact_token_accuracy": 0.00226287841796875,
+          "non_air_exact_token_accuracy": 0.0023372992294635243,
+          "voxels": 655360
+        },
+        "elevated_complex": {
+          "exact_token_accuracy": 9.765625e-05,
+          "non_air_exact_token_accuracy": 0.0009293680297397769,
+          "voxels": 655360
+        },
+        "shallow_underground": {
+          "exact_token_accuracy": 0.00187835693359375,
+          "non_air_exact_token_accuracy": 0.001946472788911272,
+          "voxels": 655360
+        },
+        "surface": {
+          "exact_token_accuracy": 0.0007354736328125,
+          "non_air_exact_token_accuracy": 0.0013665830583559435,
+          "voxels": 655360
+        }
+      }
+    },
+    "dynamic_reconstruction": {
+      "exact_token_accuracy": 0.0008296966552734375,
+      "changed_voxel_exact_accuracy": 0.0,
+      "unchanged_voxel_exact_accuracy": 0.0008327886703983257,
+      "changed_voxels": 9733,
+      "unchanged_voxels": 2611707,
+      "by_category": {
+        "D1": {
+          "exact_token_accuracy": 0.0008026123046875,
+          "changed_voxel_exact_accuracy": 0.0,
+          "unchanged_voxel_exact_accuracy": 0.0008060895004543832,
+          "changed_voxels": 2827,
+          "unchanged_voxels": 652533
+        },
+        "D2": {
+          "exact_token_accuracy": 0.00110626220703125,
+          "changed_voxel_exact_accuracy": 0.0,
+          "unchanged_voxel_exact_accuracy": 0.001109556881242214,
+          "changed_voxels": 1946,
+          "unchanged_voxels": 653414
+        },
+        "D3": {
+          "exact_token_accuracy": 0.00018768310546875,
+          "changed_voxel_exact_accuracy": 0.0,
+          "unchanged_voxel_exact_accuracy": 0.00018793144016599083,
+          "changed_voxels": 866,
+          "unchanged_voxels": 654494
+        },
+        "D4": {
+          "exact_token_accuracy": 0.00122222900390625,
+          "changed_voxel_exact_accuracy": 0.0,
+          "unchanged_voxel_exact_accuracy": 0.0012299122017731619,
+          "changed_voxels": 4094,
+          "unchanged_voxels": 651266
+        }
+      }
+    },
+    "dynamic": {
+      "complete_chains": 128,
+      "adjacent_pairs": 512,
+      "predicted_change_recall": 0.19993117687543013,
+      "changed_pair_exact_reconstruction": 0.0,
+      "unchanged_stability": 0.8605358287031282,
+      "gt_changed_voxels": 5812
+    },
+    "dynamic_by_category": {
+      "D1": {
+        "complete_chains": 32,
+        "adjacent_pairs": 128,
+        "predicted_change_recall": 0.18033898305084745,
+        "changed_pair_exact_reconstruction": 0.0,
+        "unchanged_stability": 0.8517519648516774,
+        "gt_changed_voxels": 1475
+      },
+      "D2": {
+        "complete_chains": 32,
+        "adjacent_pairs": 128,
+        "predicted_change_recall": 0.1806136680613668,
+        "changed_pair_exact_reconstruction": 0.0,
+        "unchanged_stability": 0.8552157963791039,
+        "gt_changed_voxels": 1434
+      },
+      "D3": {
+        "complete_chains": 32,
+        "adjacent_pairs": 128,
+        "predicted_change_recall": 0.12815126050420167,
+        "changed_pair_exact_reconstruction": 0.0,
+        "unchanged_stability": 0.899204294670607,
+        "gt_changed_voxels": 476
+      },
+      "D4": {
+        "complete_chains": 32,
+        "adjacent_pairs": 128,
+        "predicted_change_recall": 0.2373300370828183,
+        "changed_pair_exact_reconstruction": 0.0,
+        "unchanged_stability": 0.8358528420403134,
+        "gt_changed_voxels": 2427
+      }
+    },
+    "latent": {
+      "mean_mu": 0.01035168208181858,
+      "std_mu": 0.10421181470155716,
+      "mean_posterior_std": 1.0141525268554688,
+      "kl_raw": 8.677766799926758,
+      "latent_variance_per_channel": [
+        0.008081271313130856,
+        0.006659613456577063,
+        0.006558779627084732,
+        0.008210720494389534,
+        0.005665071774274111,
+        0.009415678679943085,
+        0.005831797607243061,
+        0.006499896291643381,
+        0.005230257287621498,
+        0.0065733036026358604,
+        0.0041127391159534454,
+        0.003961656242609024,
+        0.006161137018352747,
+        0.0058035580441355705,
+        0.008494259789586067,
+        0.006003356538712978
+      ],
+      "active_channel_variance_threshold": 0.0001,
+      "active_latent_channels": 16,
+      "adjacent_dynamic_latent_l2": {
+        "count": 512,
+        "mean": 0.33633166724757757,
+        "std": 0.1610721922173822,
+        "min": 0.06443445384502411,
+        "max": 1.051619052886963
+      }
+    },
+    "loss_components": {
+      "loss_static": 7.295002792030573,
+      "loss_dynamic_unchanged": 7.336361046880484,
+      "loss_dynamic_changed": 7.416958946734667,
+      "loss_reconstruction": 7.335831400938332,
+      "loss_kl_raw": 8.677767388522625,
+      "loss_beta_kl": 8.677767366904732e-06,
+      "loss_total": 7.335840086452663,
+      "dynamic_unchanged_by_category": {
+        "D1": 7.331236094236374,
+        "D2": 7.311254940927029,
+        "D3": 7.35023507475853,
+        "D4": 7.352718077600002
+      },
+      "dynamic_changed_by_category": {
+        "D1": 7.397422589361668,
+        "D2": 7.460005149245262,
+        "D3": 7.400250531733036,
+        "D4": 7.4101575165987015
+      }
+    },
+    "change_masks": {
+      "chains": 128,
+      "dynamic_states": 640,
+      "overall": {
+        "states": 640,
+        "changed_voxels": 9733,
+        "mean_changed_voxels": 15.2078125,
+        "min_changed_voxels": 1,
+        "max_changed_voxels": 91,
+        "mean_changed_ratio": 0.0037128448486328123,
+        "min_changed_ratio": 0.000244140625,
+        "max_changed_ratio": 0.022216796875
+      },
+      "by_category": {
+        "D1": {
+          "states": 160,
+          "changed_voxels": 2827,
+          "mean_changed_voxels": 17.66875,
+          "min_changed_voxels": 2,
+          "max_changed_voxels": 66,
+          "mean_changed_ratio": 0.00431365966796875,
+          "min_changed_ratio": 0.00048828125,
+          "max_changed_ratio": 0.01611328125
+        },
+        "D2": {
+          "states": 160,
+          "changed_voxels": 1946,
+          "mean_changed_voxels": 12.1625,
+          "min_changed_voxels": 2,
+          "max_changed_voxels": 47,
+          "mean_changed_ratio": 0.0029693603515625,
+          "min_changed_ratio": 0.00048828125,
+          "max_changed_ratio": 0.011474609375
+        },
+        "D3": {
+          "states": 160,
+          "changed_voxels": 866,
+          "mean_changed_voxels": 5.4125,
+          "min_changed_voxels": 1,
+          "max_changed_voxels": 20,
+          "mean_changed_ratio": 0.0013214111328125,
+          "min_changed_ratio": 0.000244140625,
+          "max_changed_ratio": 0.0048828125
+        },
+        "D4": {
+          "states": 160,
+          "changed_voxels": 4094,
+          "mean_changed_voxels": 25.5875,
+          "min_changed_voxels": 1,
+          "max_changed_voxels": 91,
+          "mean_changed_ratio": 0.0062469482421875,
+          "min_changed_ratio": 0.000244140625,
+          "max_changed_ratio": 0.022216796875
+        }
+      },
+      "chain_changed_mask_counts": [
+        {
+          "category": "D1",
+          "chain_id": "7681a806f9e445f8bfd2404bac8b6a11/D1",
+          "root_index": 0,
+          "shard": 2,
+          "world_seed": 1871288230,
+          "changed_voxels_per_state": [
+            19,
+            45,
+            56,
+            60,
+            31
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "1d1777accd484600af84213ecb4d3239/D4",
+          "root_index": 0,
+          "shard": 3,
+          "world_seed": 464191088,
+          "changed_voxels_per_state": [
+            14,
+            29,
+            33,
+            36,
+            18
+          ],
+          "selected_states": 5,
+          "d4_subtype": "C"
+        },
+        {
+          "category": "D4",
+          "chain_id": "a81182c667cf4ce1a8d16a089c0cf54b/D4",
+          "root_index": 0,
+          "shard": 7,
+          "world_seed": 45936102,
+          "changed_voxels_per_state": [
+            29,
+            38,
+            42,
+            50,
+            36
+          ],
+          "selected_states": 5,
+          "d4_subtype": "A"
+        },
+        {
+          "category": "D1",
+          "chain_id": "b8ceec6e91654b0c9c8657524282c2c1/D1",
+          "root_index": 0,
+          "shard": 9,
+          "world_seed": 13412770,
+          "changed_voxels_per_state": [
+            9,
+            15,
+            11,
+            12,
+            7
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "325cf537063e4d38b858f79b72527a2b/D3",
+          "root_index": 0,
+          "shard": 11,
+          "world_seed": 1181056620,
+          "changed_voxels_per_state": [
+            2,
+            2,
+            3,
+            4,
+            3
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "587f831ea5b54126aacfb6ecc891617f/D3",
+          "root_index": 0,
+          "shard": 12,
+          "world_seed": 1571576202,
+          "changed_voxels_per_state": [
+            7,
+            9,
+            10,
+            9,
+            4
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "bd71450fc5844adc87aa619c52af6746/D2",
+          "root_index": 0,
+          "shard": 12,
+          "world_seed": 1303965783,
+          "changed_voxels_per_state": [
+            5,
+            10,
+            11,
+            15,
+            14
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "f4d41573470d450fa52195af90f60422/D3",
+          "root_index": 0,
+          "shard": 12,
+          "world_seed": 1396037892,
+          "changed_voxels_per_state": [
+            6,
+            11,
+            15,
+            19,
+            11
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "84022f0c090049fda25f6670ceb4e8ae/D1",
+          "root_index": 0,
+          "shard": 15,
+          "world_seed": 784836203,
+          "changed_voxels_per_state": [
+            35,
+            58,
+            54,
+            38,
+            12
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "11433329bee840f6ad4e77f6ec2690f7/D1",
+          "root_index": 0,
+          "shard": 16,
+          "world_seed": 1886077264,
+          "changed_voxels_per_state": [
+            4,
+            9,
+            10,
+            9,
+            4
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "b8071cd426504646841e66a385c714be/D1",
+          "root_index": 0,
+          "shard": 17,
+          "world_seed": 2021073667,
+          "changed_voxels_per_state": [
+            6,
+            14,
+            19,
+            23,
+            12
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "c78dc771751246378ac3ab5ec5d7234f/D3",
+          "root_index": 0,
+          "shard": 17,
+          "world_seed": 821743903,
+          "changed_voxels_per_state": [
+            2,
+            7,
+            6,
+            3,
+            1
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "f24dd57178e04ee69888528edd4e400d/D1",
+          "root_index": 0,
+          "shard": 17,
+          "world_seed": 199147011,
+          "changed_voxels_per_state": [
+            9,
+            19,
+            34,
+            50,
+            33
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "1286d6545ed9431b88f50c34c790ef1d/D4",
+          "root_index": 0,
+          "shard": 25,
+          "world_seed": 1646213262,
+          "changed_voxels_per_state": [
+            12,
+            27,
+            31,
+            33,
+            17
+          ],
+          "selected_states": 5,
+          "d4_subtype": "C"
+        },
+        {
+          "category": "D1",
+          "chain_id": "4e1ed0cb3a754b43bfc325d11aac8e6d/D1",
+          "root_index": 0,
+          "shard": 29,
+          "world_seed": 927299521,
+          "changed_voxels_per_state": [
+            5,
+            10,
+            10,
+            10,
+            5
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "4d86d6a22a0b45308a5bc67c4d2a5b50/D2",
+          "root_index": 0,
+          "shard": 30,
+          "world_seed": 1653320808,
+          "changed_voxels_per_state": [
+            9,
+            9,
+            9,
+            12,
+            10
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "40180dcc4799457d95c487449c9aadb2/D4",
+          "root_index": 0,
+          "shard": 31,
+          "world_seed": 1437754918,
+          "changed_voxels_per_state": [
+            68,
+            77,
+            65,
+            66,
+            52
+          ],
+          "selected_states": 5,
+          "d4_subtype": "A"
+        },
+        {
+          "category": "D3",
+          "chain_id": "995eb4772e30441ebb1fd6a17d49cc8c/D3",
+          "root_index": 0,
+          "shard": 31,
+          "world_seed": 1467497324,
+          "changed_voxels_per_state": [
+            3,
+            3,
+            3,
+            9,
+            8
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "a33f2f3724874141a00f0993f3665de9/D2",
+          "root_index": 0,
+          "shard": 34,
+          "world_seed": 452073487,
+          "changed_voxels_per_state": [
+            4,
+            12,
+            8,
+            8,
+            8
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "b6160aff6cfb4733a8477aca4a443ea4/D1",
+          "root_index": 0,
+          "shard": 36,
+          "world_seed": 1052413543,
+          "changed_voxels_per_state": [
+            7,
+            16,
+            18,
+            20,
+            11
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "6ffce4290d0e4d1c9b7a999c0b608e67/D3",
+          "root_index": 0,
+          "shard": 40,
+          "world_seed": 719177936,
+          "changed_voxels_per_state": [
+            2,
+            3,
+            5,
+            6,
+            2
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "f945f1c099ae4111a23a482ee23584c0/D1",
+          "root_index": 0,
+          "shard": 42,
+          "world_seed": 1146753146,
+          "changed_voxels_per_state": [
+            24,
+            52,
+            60,
+            66,
+            37
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "623e007e799a448488214f57273ff3ec/D4",
+          "root_index": 0,
+          "shard": 43,
+          "world_seed": 240025926,
+          "changed_voxels_per_state": [
+            13,
+            25,
+            21,
+            13,
+            4
+          ],
+          "selected_states": 5,
+          "d4_subtype": "C"
+        },
+        {
+          "category": "D4",
+          "chain_id": "da6653d435bd4e86ad688830825b461f/D4",
+          "root_index": 0,
+          "shard": 43,
+          "world_seed": 240025926,
+          "changed_voxels_per_state": [
+            17,
+            29,
+            23,
+            20,
+            9
+          ],
+          "selected_states": 5,
+          "d4_subtype": "C"
+        },
+        {
+          "category": "D3",
+          "chain_id": "177f1c94b9e24cd5bc177f0e545d0217/D3",
+          "root_index": 0,
+          "shard": 44,
+          "world_seed": 1179787432,
+          "changed_voxels_per_state": [
+            5,
+            17,
+            19,
+            20,
+            14
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "33380a7a2026492fbc4256c0ad2c31f3/D3",
+          "root_index": 0,
+          "shard": 47,
+          "world_seed": 2013646217,
+          "changed_voxels_per_state": [
+            4,
+            6,
+            6,
+            4,
+            2
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "e88a69d01feb470480a5d49f9c00e9ce/D2",
+          "root_index": 0,
+          "shard": 47,
+          "world_seed": 1120007995,
+          "changed_voxels_per_state": [
+            6,
+            6,
+            6,
+            6,
+            6
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "8303a1ab58234c33a9879a5f0263dd75/D3",
+          "root_index": 0,
+          "shard": 49,
+          "world_seed": 1263916429,
+          "changed_voxels_per_state": [
+            2,
+            5,
+            8,
+            9,
+            7
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "73a6971caa2347b3ad4e2b7f80a1ef9c/D1",
+          "root_index": 0,
+          "shard": 50,
+          "world_seed": 683974049,
+          "changed_voxels_per_state": [
+            23,
+            48,
+            54,
+            52,
+            25
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "1c5e2a7514fa44e2b24d33aab1522300/D3",
+          "root_index": 0,
+          "shard": 53,
+          "world_seed": 685657255,
+          "changed_voxels_per_state": [
+            7,
+            12,
+            10,
+            6,
+            4
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "fce1226138f2478d9d3173c73ca4bd96/D4",
+          "root_index": 0,
+          "shard": 54,
+          "world_seed": 1105380847,
+          "changed_voxels_per_state": [
+            19,
+            23,
+            23,
+            22,
+            22
+          ],
+          "selected_states": 5,
+          "d4_subtype": "A"
+        },
+        {
+          "category": "D2",
+          "chain_id": "71900b8884fa444c9e3c091f78e180c5/D2",
+          "root_index": 0,
+          "shard": 56,
+          "world_seed": 2066592020,
+          "changed_voxels_per_state": [
+            5,
+            10,
+            5,
+            10,
+            10
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "da527600a0344fb390ba93fedcc23497/D2",
+          "root_index": 0,
+          "shard": 56,
+          "world_seed": 1380209328,
+          "changed_voxels_per_state": [
+            5,
+            10,
+            5,
+            9,
+            9
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "99023a119a5a4497890e9696c34c0e94/D3",
+          "root_index": 0,
+          "shard": 57,
+          "world_seed": 492525408,
+          "changed_voxels_per_state": [
+            2,
+            4,
+            3,
+            4,
+            2
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "f17484a939f24152b2bd940eecafcf02/D3",
+          "root_index": 0,
+          "shard": 58,
+          "world_seed": 177590551,
+          "changed_voxels_per_state": [
+            2,
+            3,
+            4,
+            4,
+            1
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "64138cfb50c54974a9024cf6ff3bd965/D1",
+          "root_index": 0,
+          "shard": 59,
+          "world_seed": 170142759,
+          "changed_voxels_per_state": [
+            5,
+            10,
+            10,
+            13,
+            9
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "1543b2b9a35e4146b611b4ff06ab6ed9/D2",
+          "root_index": 0,
+          "shard": 60,
+          "world_seed": 1529514839,
+          "changed_voxels_per_state": [
+            15,
+            15,
+            20,
+            20,
+            20
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "20de3380431a4b92bb1f33539a99d471/D4",
+          "root_index": 0,
+          "shard": 60,
+          "world_seed": 306407670,
+          "changed_voxels_per_state": [
+            19,
+            23,
+            23,
+            22,
+            22
+          ],
+          "selected_states": 5,
+          "d4_subtype": "A"
+        },
+        {
+          "category": "D4",
+          "chain_id": "09cca8ff44a04f1d9a06c391bc13fc9b/D4",
+          "root_index": 0,
+          "shard": 61,
+          "world_seed": 47613908,
+          "changed_voxels_per_state": [
+            8,
+            19,
+            24,
+            24,
+            11
+          ],
+          "selected_states": 5,
+          "d4_subtype": "C"
+        },
+        {
+          "category": "D2",
+          "chain_id": "b02af4eb585b4e5c81f677a62d8abb51/D2",
+          "root_index": 0,
+          "shard": 65,
+          "world_seed": 1308021460,
+          "changed_voxels_per_state": [
+            15,
+            15,
+            20,
+            21,
+            21
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "1ce83fc4349949408f6c2e3353cf59d8/D2",
+          "root_index": 0,
+          "shard": 70,
+          "world_seed": 348840584,
+          "changed_voxels_per_state": [
+            10,
+            13,
+            12,
+            12,
+            12
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "0984de4509564979bda8bcbf849d2b5d/D2",
+          "root_index": 0,
+          "shard": 71,
+          "world_seed": 1249764262,
+          "changed_voxels_per_state": [
+            9,
+            9,
+            9,
+            9,
+            9
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "520ad99de6894b7ca4acce62bcce81f7/D2",
+          "root_index": 0,
+          "shard": 72,
+          "world_seed": 803453399,
+          "changed_voxels_per_state": [
+            2,
+            6,
+            8,
+            14,
+            10
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "8a730c5eb60449a0a24c70fc97a54f89/D1",
+          "root_index": 0,
+          "shard": 75,
+          "world_seed": 171508099,
+          "changed_voxels_per_state": [
+            26,
+            54,
+            51,
+            50,
+            27
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "b3fe8c2ea09f400fa94b4cb8b48e4792/D4",
+          "root_index": 0,
+          "shard": 75,
+          "world_seed": 423491124,
+          "changed_voxels_per_state": [
+            33,
+            38,
+            46,
+            52,
+            23
+          ],
+          "selected_states": 5,
+          "d4_subtype": "A"
+        },
+        {
+          "category": "D4",
+          "chain_id": "478f2186f38345e38c9f1733c7e9b15a/D4",
+          "root_index": 0,
+          "shard": 77,
+          "world_seed": 1244182669,
+          "changed_voxels_per_state": [
+            14,
+            27,
+            20,
+            8,
+            1
+          ],
+          "selected_states": 5,
+          "d4_subtype": "C"
+        },
+        {
+          "category": "D3",
+          "chain_id": "2e7b7c89fdf343c1bb86c5a53c960ae4/D3",
+          "root_index": 0,
+          "shard": 79,
+          "world_seed": 402834720,
+          "changed_voxels_per_state": [
+            3,
+            11,
+            9,
+            7,
+            7
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "79185234f5684e82922d67c7acf095bf/D4",
+          "root_index": 0,
+          "shard": 79,
+          "world_seed": 2140146626,
+          "changed_voxels_per_state": [
+            32,
+            67,
+            70,
+            65,
+            32
+          ],
+          "selected_states": 5,
+          "d4_subtype": "C"
+        },
+        {
+          "category": "D2",
+          "chain_id": "56a999c9b3ff4f549cb4315fccd5d97c/D2",
+          "root_index": 0,
+          "shard": 80,
+          "world_seed": 1426225142,
+          "changed_voxels_per_state": [
+            8,
+            8,
+            8,
+            8,
+            8
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "4f7c7695d0474061ba404e30c9f2e28f/D2",
+          "root_index": 0,
+          "shard": 82,
+          "world_seed": 1085594157,
+          "changed_voxels_per_state": [
+            4,
+            10,
+            6,
+            13,
+            13
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "7adb10444c9e41fa8bdc5e099dc3d945/D4",
+          "root_index": 0,
+          "shard": 82,
+          "world_seed": 1199457163,
+          "changed_voxels_per_state": [
+            4,
+            7,
+            9,
+            5,
+            3
+          ],
+          "selected_states": 5,
+          "d4_subtype": "A"
+        },
+        {
+          "category": "D4",
+          "chain_id": "7dd7e4583aeb4df29815f3e0a1df1975/D4",
+          "root_index": 0,
+          "shard": 84,
+          "world_seed": 1186288449,
+          "changed_voxels_per_state": [
+            27,
+            53,
+            52,
+            39,
+            13
+          ],
+          "selected_states": 5,
+          "d4_subtype": "C"
+        },
+        {
+          "category": "D4",
+          "chain_id": "fea8149f65ea4946b19a6c1d06427dbf/D4",
+          "root_index": 0,
+          "shard": 85,
+          "world_seed": 166818716,
+          "changed_voxels_per_state": [
+            7,
+            11,
+            20,
+            21,
+            9
+          ],
+          "selected_states": 5,
+          "d4_subtype": "B"
+        },
+        {
+          "category": "D3",
+          "chain_id": "6d3f593aad694e50934401d3e2bd46ee/D3",
+          "root_index": 0,
+          "shard": 86,
+          "world_seed": 127817215,
+          "changed_voxels_per_state": [
+            2,
+            4,
+            6,
+            6,
+            3
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "020bcba5156d4ddaad2d10e44288f684/D1",
+          "root_index": 0,
+          "shard": 88,
+          "world_seed": 1272208,
+          "changed_voxels_per_state": [
+            9,
+            16,
+            18,
+            20,
+            11
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "4e881d60f1dd4c5bb9ed333b8ef6c721/D1",
+          "root_index": 0,
+          "shard": 89,
+          "world_seed": 648940766,
+          "changed_voxels_per_state": [
+            15,
+            30,
+            30,
+            30,
+            15
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "57be8c8fe6ef45b884e836eba955b664/D2",
+          "root_index": 0,
+          "shard": 91,
+          "world_seed": 2098201832,
+          "changed_voxels_per_state": [
+            6,
+            6,
+            6,
+            7,
+            6
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "5d3a421456b94bf9aea179af4c9d33ae/D4",
+          "root_index": 0,
+          "shard": 91,
+          "world_seed": 666967079,
+          "changed_voxels_per_state": [
+            43,
+            59,
+            79,
+            60,
+            13
+          ],
+          "selected_states": 5,
+          "d4_subtype": "B"
+        },
+        {
+          "category": "D3",
+          "chain_id": "d18798c4ab6d49e881eb918895e71c3e/D3",
+          "root_index": 0,
+          "shard": 91,
+          "world_seed": 614790004,
+          "changed_voxels_per_state": [
+            2,
+            3,
+            3,
+            3,
+            2
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "d6d39cdc2998488aa0fae8d916d74e9f/D3",
+          "root_index": 0,
+          "shard": 91,
+          "world_seed": 565888825,
+          "changed_voxels_per_state": [
+            3,
+            5,
+            6,
+            5,
+            1
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "f25b26a7c1204f9e8f3f0d0a331bd712/D2",
+          "root_index": 0,
+          "shard": 91,
+          "world_seed": 565888825,
+          "changed_voxels_per_state": [
+            12,
+            17,
+            16,
+            14,
+            10
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "9ac055cc2cef4f5f856be790a0e7c2f8/D1",
+          "root_index": 0,
+          "shard": 92,
+          "world_seed": 1667239067,
+          "changed_voxels_per_state": [
+            6,
+            11,
+            12,
+            18,
+            12
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "d2a909b6c0b24097bb12f8a347fe0366/D1",
+          "root_index": 0,
+          "shard": 94,
+          "world_seed": 2107114479,
+          "changed_voxels_per_state": [
+            6,
+            12,
+            12,
+            12,
+            6
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "77ef21f429dc46b2aef7bcdd94fb7d9b/D2",
+          "root_index": 0,
+          "shard": 97,
+          "world_seed": 409450266,
+          "changed_voxels_per_state": [
+            5,
+            10,
+            5,
+            11,
+            11
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "5b77220afd654b27b3011ba30237ebbf/D3",
+          "root_index": 1,
+          "shard": 1,
+          "world_seed": 768427090,
+          "changed_voxels_per_state": [
+            2,
+            4,
+            5,
+            5,
+            2
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "909b600edb664d3591049582954770d1/D3",
+          "root_index": 1,
+          "shard": 1,
+          "world_seed": 12521303,
+          "changed_voxels_per_state": [
+            1,
+            2,
+            2,
+            2,
+            1
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "6eb008c11d464f1f8cfe002ebfabe8a8/D1",
+          "root_index": 1,
+          "shard": 2,
+          "world_seed": 1515272081,
+          "changed_voxels_per_state": [
+            5,
+            14,
+            17,
+            19,
+            12
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "547d76372f6c48b3b52028bb130523bb/D3",
+          "root_index": 1,
+          "shard": 3,
+          "world_seed": 1518528743,
+          "changed_voxels_per_state": [
+            3,
+            8,
+            7,
+            8,
+            7
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "ed32b225afc0465180af88e6fd07177e/D1",
+          "root_index": 1,
+          "shard": 3,
+          "world_seed": 945585556,
+          "changed_voxels_per_state": [
+            11,
+            20,
+            17,
+            17,
+            8
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "f064f031fc2a44e99879c7bea581d5d9/D2",
+          "root_index": 1,
+          "shard": 5,
+          "world_seed": 517619980,
+          "changed_voxels_per_state": [
+            10,
+            10,
+            10,
+            17,
+            12
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "2bf16e0151db4ceaaacf895d69748281/D4",
+          "root_index": 1,
+          "shard": 10,
+          "world_seed": 1278323526,
+          "changed_voxels_per_state": [
+            13,
+            36,
+            50,
+            45,
+            19
+          ],
+          "selected_states": 5,
+          "d4_subtype": "C"
+        },
+        {
+          "category": "D3",
+          "chain_id": "0bc6103b973d411eb0a50f8598d29a92/D3",
+          "root_index": 1,
+          "shard": 12,
+          "world_seed": 1022357730,
+          "changed_voxels_per_state": [
+            2,
+            5,
+            8,
+            7,
+            2
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "a87d40be574c410aa591f5d927525fd2/D2",
+          "root_index": 1,
+          "shard": 12,
+          "world_seed": 260336839,
+          "changed_voxels_per_state": [
+            9,
+            9,
+            9,
+            9,
+            9
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "3b4f7e38e73d4374af48bfa26d367f86/D3",
+          "root_index": 1,
+          "shard": 13,
+          "world_seed": 1038079087,
+          "changed_voxels_per_state": [
+            2,
+            5,
+            6,
+            7,
+            4
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "7ef0e9a902b24693b5c5c324de9a1a8a/D1",
+          "root_index": 1,
+          "shard": 15,
+          "world_seed": 2044304848,
+          "changed_voxels_per_state": [
+            7,
+            20,
+            23,
+            24,
+            12
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "83b08f69f59a44ce8737bd479c82a981/D2",
+          "root_index": 1,
+          "shard": 15,
+          "world_seed": 546561418,
+          "changed_voxels_per_state": [
+            11,
+            11,
+            11,
+            11,
+            11
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "3bff76adb7854bf098ab5ada13c6c548/D1",
+          "root_index": 1,
+          "shard": 16,
+          "world_seed": 1072658548,
+          "changed_voxels_per_state": [
+            5,
+            10,
+            15,
+            17,
+            12
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "0cf84acbbc0f4c44b314d8420141d6e9/D4",
+          "root_index": 1,
+          "shard": 18,
+          "world_seed": 529677929,
+          "changed_voxels_per_state": [
+            7,
+            14,
+            12,
+            7,
+            2
+          ],
+          "selected_states": 5,
+          "d4_subtype": "C"
+        },
+        {
+          "category": "D2",
+          "chain_id": "8fa630f9b0e74c96bde138affcacc899/D2",
+          "root_index": 1,
+          "shard": 18,
+          "world_seed": 1690530941,
+          "changed_voxels_per_state": [
+            5,
+            10,
+            10,
+            15,
+            15
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "c6794bd792664605a03e076db9d6cc8e/D1",
+          "root_index": 1,
+          "shard": 18,
+          "world_seed": 1224560772,
+          "changed_voxels_per_state": [
+            16,
+            30,
+            33,
+            31,
+            14
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "b2e933c02cbd47e59ebaaca0ab5f5629/D4",
+          "root_index": 1,
+          "shard": 20,
+          "world_seed": 143654565,
+          "changed_voxels_per_state": [
+            11,
+            19,
+            15,
+            12,
+            5
+          ],
+          "selected_states": 5,
+          "d4_subtype": "C"
+        },
+        {
+          "category": "D3",
+          "chain_id": "c923238a68354e6fa71065d0d57cd3a8/D3",
+          "root_index": 1,
+          "shard": 23,
+          "world_seed": 533172707,
+          "changed_voxels_per_state": [
+            5,
+            7,
+            4,
+            6,
+            5
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "05a60123d1484b0c84ffea3ef7c523a3/D1",
+          "root_index": 1,
+          "shard": 24,
+          "world_seed": 19945342,
+          "changed_voxels_per_state": [
+            6,
+            12,
+            12,
+            11,
+            5
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "8926f4572b0e4e46a6df9717e2d58b5b/D3",
+          "root_index": 1,
+          "shard": 24,
+          "world_seed": 1543408690,
+          "changed_voxels_per_state": [
+            2,
+            3,
+            7,
+            11,
+            8
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "5d399c5e0aaa4e6ba49b1d6130faa6f8/D2",
+          "root_index": 1,
+          "shard": 27,
+          "world_seed": 1310278494,
+          "changed_voxels_per_state": [
+            5,
+            10,
+            5,
+            9,
+            9
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "88cbc63065f241c393e1ac6f2391ab62/D3",
+          "root_index": 1,
+          "shard": 28,
+          "world_seed": 381075280,
+          "changed_voxels_per_state": [
+            3,
+            9,
+            10,
+            6,
+            1
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "6b0b1f3c8c954989a865dc940c8347a4/D4",
+          "root_index": 1,
+          "shard": 30,
+          "world_seed": 1400897718,
+          "changed_voxels_per_state": [
+            29,
+            56,
+            58,
+            58,
+            38
+          ],
+          "selected_states": 5,
+          "d4_subtype": "B"
+        },
+        {
+          "category": "D1",
+          "chain_id": "7c71446b7413482883cf7757a02f3551/D1",
+          "root_index": 1,
+          "shard": 30,
+          "world_seed": 1397574142,
+          "changed_voxels_per_state": [
+            5,
+            12,
+            18,
+            24,
+            15
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "51970ffaae314fc6aa526c65ce41a6eb/D4",
+          "root_index": 1,
+          "shard": 32,
+          "world_seed": 967044577,
+          "changed_voxels_per_state": [
+            11,
+            11,
+            12,
+            18,
+            14
+          ],
+          "selected_states": 5,
+          "d4_subtype": "A"
+        },
+        {
+          "category": "D1",
+          "chain_id": "56aabc255e2a4c7fbbda9eb2541ae3c3/D1",
+          "root_index": 1,
+          "shard": 32,
+          "world_seed": 954703111,
+          "changed_voxels_per_state": [
+            4,
+            15,
+            28,
+            32,
+            17
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "9f9082fd13fa4224b29c0fe1c9a8c8cd/D4",
+          "root_index": 1,
+          "shard": 32,
+          "world_seed": 391467571,
+          "changed_voxels_per_state": [
+            32,
+            59,
+            56,
+            56,
+            29
+          ],
+          "selected_states": 5,
+          "d4_subtype": "C"
+        },
+        {
+          "category": "D4",
+          "chain_id": "a4434de9c82246729f372fd73a3313f7/D4",
+          "root_index": 1,
+          "shard": 32,
+          "world_seed": 607376298,
+          "changed_voxels_per_state": [
+            21,
+            31,
+            21,
+            20,
+            19
+          ],
+          "selected_states": 5,
+          "d4_subtype": "B"
+        },
+        {
+          "category": "D2",
+          "chain_id": "c6a6af6f393c4c2c927c9b5c99a6858f/D2",
+          "root_index": 1,
+          "shard": 34,
+          "world_seed": 240418977,
+          "changed_voxels_per_state": [
+            33,
+            35,
+            43,
+            47,
+            47
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "2cd8d2ef17504e269d902f12202210dc/D3",
+          "root_index": 1,
+          "shard": 36,
+          "world_seed": 1581670238,
+          "changed_voxels_per_state": [
+            2,
+            8,
+            9,
+            9,
+            6
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "0b35ab879a3042e98c56c50fdf4d07cb/D3",
+          "root_index": 1,
+          "shard": 38,
+          "world_seed": 1503287389,
+          "changed_voxels_per_state": [
+            2,
+            6,
+            6,
+            3,
+            1
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "1e7dc4f7cf6d4216bf2e9947b4783b59/D4",
+          "root_index": 1,
+          "shard": 38,
+          "world_seed": 1861156496,
+          "changed_voxels_per_state": [
+            26,
+            30,
+            23,
+            31,
+            31
+          ],
+          "selected_states": 5,
+          "d4_subtype": "A"
+        },
+        {
+          "category": "D4",
+          "chain_id": "d0c4a5343b3a47fcb7aff08e01afb26b/D4",
+          "root_index": 1,
+          "shard": 46,
+          "world_seed": 1715385411,
+          "changed_voxels_per_state": [
+            6,
+            11,
+            13,
+            10,
+            5
+          ],
+          "selected_states": 5,
+          "d4_subtype": "B"
+        },
+        {
+          "category": "D4",
+          "chain_id": "295d62f49b0e447d80f7df1b7572ea30/D4",
+          "root_index": 1,
+          "shard": 48,
+          "world_seed": 1594787583,
+          "changed_voxels_per_state": [
+            10,
+            20,
+            19,
+            15,
+            6
+          ],
+          "selected_states": 5,
+          "d4_subtype": "C"
+        },
+        {
+          "category": "D2",
+          "chain_id": "f21fe81d041a48d294a495ac8a1f6ae9/D2",
+          "root_index": 1,
+          "shard": 49,
+          "world_seed": 918577797,
+          "changed_voxels_per_state": [
+            24,
+            30,
+            31,
+            32,
+            31
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "61f45145e9754677b6af0bb408c63a9f/D1",
+          "root_index": 1,
+          "shard": 50,
+          "world_seed": 1234233247,
+          "changed_voxels_per_state": [
+            10,
+            20,
+            19,
+            15,
+            6
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "9836a9f187914bb5a451a3ad690f7571/D3",
+          "root_index": 1,
+          "shard": 50,
+          "world_seed": 1530148293,
+          "changed_voxels_per_state": [
+            2,
+            3,
+            2,
+            2,
+            1
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "7752624d340e4656af2ba6f79ae5507b/D4",
+          "root_index": 1,
+          "shard": 51,
+          "world_seed": 1213325021,
+          "changed_voxels_per_state": [
+            21,
+            28,
+            14,
+            16,
+            16
+          ],
+          "selected_states": 5,
+          "d4_subtype": "A"
+        },
+        {
+          "category": "D2",
+          "chain_id": "adbf7066eea74b30845caba3f9dd9067/D2",
+          "root_index": 1,
+          "shard": 52,
+          "world_seed": 1759241932,
+          "changed_voxels_per_state": [
+            9,
+            9,
+            9,
+            9,
+            9
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "96bc8969c290423fae1a96d537300b53/D1",
+          "root_index": 1,
+          "shard": 55,
+          "world_seed": 1106047543,
+          "changed_voxels_per_state": [
+            5,
+            8,
+            5,
+            4,
+            2
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "214b80fe01184cfaa6fa983ad28c1cad/D2",
+          "root_index": 1,
+          "shard": 57,
+          "world_seed": 1240907477,
+          "changed_voxels_per_state": [
+            9,
+            12,
+            12,
+            13,
+            13
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "a17d8e601f864df6b7439810889dab2c/D2",
+          "root_index": 1,
+          "shard": 57,
+          "world_seed": 1047924953,
+          "changed_voxels_per_state": [
+            13,
+            13,
+            9,
+            9,
+            9
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "d676b756240f4688aff2edd662dd4fe9/D4",
+          "root_index": 1,
+          "shard": 57,
+          "world_seed": 428000763,
+          "changed_voxels_per_state": [
+            5,
+            16,
+            23,
+            26,
+            14
+          ],
+          "selected_states": 5,
+          "d4_subtype": "C"
+        },
+        {
+          "category": "D2",
+          "chain_id": "bf95faa3c91b45c285a0fcb9b0bf7e91/D2",
+          "root_index": 1,
+          "shard": 58,
+          "world_seed": 454058323,
+          "changed_voxels_per_state": [
+            10,
+            15,
+            16,
+            20,
+            20
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "ddcacc9f28fe4f16a8dc6d265995169e/D3",
+          "root_index": 1,
+          "shard": 63,
+          "world_seed": 147726264,
+          "changed_voxels_per_state": [
+            5,
+            8,
+            4,
+            2,
+            1
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "65a37b9f93014ed09af646ecf88bc976/D2",
+          "root_index": 1,
+          "shard": 67,
+          "world_seed": 1718051469,
+          "changed_voxels_per_state": [
+            9,
+            9,
+            9,
+            9,
+            9
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "0d8931ce38c442468a193d1a4f2219b1/D4",
+          "root_index": 1,
+          "shard": 68,
+          "world_seed": 887350173,
+          "changed_voxels_per_state": [
+            19,
+            23,
+            28,
+            42,
+            42
+          ],
+          "selected_states": 5,
+          "d4_subtype": "A"
+        },
+        {
+          "category": "D1",
+          "chain_id": "6d24eb68bd4547fe97703bcd04a2529a/D1",
+          "root_index": 1,
+          "shard": 71,
+          "world_seed": 1707629030,
+          "changed_voxels_per_state": [
+            5,
+            10,
+            10,
+            10,
+            5
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "edd1800ab1a0475bb85a1913f42fa9f2/D3",
+          "root_index": 1,
+          "shard": 72,
+          "world_seed": 1921411832,
+          "changed_voxels_per_state": [
+            5,
+            7,
+            6,
+            9,
+            6
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "4ab575503d3947e7a0823c60528e79fc/D2",
+          "root_index": 1,
+          "shard": 77,
+          "world_seed": 925646435,
+          "changed_voxels_per_state": [
+            13,
+            13,
+            13,
+            26,
+            19
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "167803855d994fd49ef5d67e9022085f/D3",
+          "root_index": 1,
+          "shard": 79,
+          "world_seed": 1383985354,
+          "changed_voxels_per_state": [
+            3,
+            4,
+            2,
+            3,
+            2
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "5e58040c05ed47bd99c92bebe466b043/D1",
+          "root_index": 1,
+          "shard": 80,
+          "world_seed": 1204993452,
+          "changed_voxels_per_state": [
+            5,
+            10,
+            10,
+            10,
+            5
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "9c6c01842fe1401f9c87bf884d80842d/D3",
+          "root_index": 1,
+          "shard": 80,
+          "world_seed": 1411572983,
+          "changed_voxels_per_state": [
+            4,
+            5,
+            4,
+            8,
+            7
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "28ed53f2459242a3bd66111444fbd074/D2",
+          "root_index": 1,
+          "shard": 81,
+          "world_seed": 1009477568,
+          "changed_voxels_per_state": [
+            15,
+            15,
+            20,
+            20,
+            20
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "b1311ba554e2466c9718bf54330fd62d/D1",
+          "root_index": 1,
+          "shard": 82,
+          "world_seed": 1918397676,
+          "changed_voxels_per_state": [
+            5,
+            10,
+            10,
+            10,
+            5
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "7f2920a101634bc68f8e16e47689164b/D1",
+          "root_index": 1,
+          "shard": 83,
+          "world_seed": 1743171944,
+          "changed_voxels_per_state": [
+            9,
+            17,
+            21,
+            22,
+            11
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "08a26665bcc44b6ca0376492e3a8a26a/D2",
+          "root_index": 1,
+          "shard": 86,
+          "world_seed": 287383443,
+          "changed_voxels_per_state": [
+            4,
+            8,
+            6,
+            8,
+            8
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "d557ad046d2240dd8c90ca9dea31630e/D1",
+          "root_index": 1,
+          "shard": 88,
+          "world_seed": 92898629,
+          "changed_voxels_per_state": [
+            5,
+            10,
+            10,
+            11,
+            6
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "f12d07a9798c4549a55803b86f1a75bf/D4",
+          "root_index": 1,
+          "shard": 89,
+          "world_seed": 921491169,
+          "changed_voxels_per_state": [
+            5,
+            8,
+            10,
+            6,
+            3
+          ],
+          "selected_states": 5,
+          "d4_subtype": "A"
+        },
+        {
+          "category": "D4",
+          "chain_id": "f330bf1bc88a414d8a3265002513c16c/D4",
+          "root_index": 1,
+          "shard": 89,
+          "world_seed": 1227190098,
+          "changed_voxels_per_state": [
+            4,
+            6,
+            6,
+            9,
+            9
+          ],
+          "selected_states": 5,
+          "d4_subtype": "A"
+        },
+        {
+          "category": "D3",
+          "chain_id": "f6708afdb3294904ad469f2ec296d6a9/D3",
+          "root_index": 1,
+          "shard": 90,
+          "world_seed": 1058449222,
+          "changed_voxels_per_state": [
+            6,
+            9,
+            10,
+            14,
+            11
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "7b6e4cc475b24236b0ee4a8522096cdf/D2",
+          "root_index": 1,
+          "shard": 91,
+          "world_seed": 1669302859,
+          "changed_voxels_per_state": [
+            4,
+            6,
+            11,
+            14,
+            9
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "664b8223066d4317a87dd1dbdbab1f21/D1",
+          "root_index": 1,
+          "shard": 96,
+          "world_seed": 1221467340,
+          "changed_voxels_per_state": [
+            5,
+            10,
+            10,
+            10,
+            5
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "293521f8bbad45169263df272c7356db/D4",
+          "root_index": 1,
+          "shard": 98,
+          "world_seed": 1502353488,
+          "changed_voxels_per_state": [
+            11,
+            21,
+            91,
+            84,
+            3
+          ],
+          "selected_states": 5,
+          "d4_subtype": "B"
+        }
+      ],
+      "empty_unchanged_states": 0,
+      "d4_chain_subtypes": {
+        "A": 12,
+        "B": 6,
+        "C": 14
+      }
+    },
+    "non_finite_prediction": false
+  },
+  "validation": {
+    "samples": 1280,
+    "cross_entropy": 0.1518080645387272,
+    "exact_token_accuracy": 0.9536268234252929,
+    "non_air_exact_token_accuracy": 0.9280863328129302,
+    "categories": {
+      "D1": {
+        "exact_token_accuracy": 0.9524505615234375,
+        "non_air_exact_token_accuracy": 0.9149883167870572,
+        "samples": 160
+      },
+      "D2": {
+        "exact_token_accuracy": 0.9406280517578125,
+        "non_air_exact_token_accuracy": 0.9165145901729546,
+        "samples": 160
+      },
+      "D3": {
+        "exact_token_accuracy": 0.957159423828125,
+        "non_air_exact_token_accuracy": 0.8975502790821299,
+        "samples": 160
+      },
+      "D4": {
+        "exact_token_accuracy": 0.907830810546875,
+        "non_air_exact_token_accuracy": 0.8759875442765357,
+        "samples": 160
+      },
+      "Static": {
+        "exact_token_accuracy": 0.9677364349365234,
+        "non_air_exact_token_accuracy": 0.9525855774548083,
+        "samples": 640
+      }
+    },
+    "static_preservation": {
+      "exact_token_accuracy": 0.9677364349365234,
+      "non_air_exact_token_accuracy": 0.9525855774548083,
+      "by_biome_group": {
+        "BambooJungle": {
+          "exact_token_accuracy": 0.9563064575195312,
+          "non_air_exact_token_accuracy": 0.9396919004887336,
+          "voxels": 131072
+        },
+        "BirchForest": {
+          "exact_token_accuracy": 0.9670486450195312,
+          "non_air_exact_token_accuracy": 0.948452567274196,
+          "voxels": 131072
+        },
+        "ColdTaiga": {
+          "exact_token_accuracy": 0.9744415283203125,
+          "non_air_exact_token_accuracy": 0.9583765387785488,
+          "voxels": 131072
+        },
+        "Desert": {
+          "exact_token_accuracy": 0.9725494384765625,
+          "non_air_exact_token_accuracy": 0.9565748850103963,
+          "voxels": 131072
+        },
+        "ExtremeHills": {
+          "exact_token_accuracy": 0.976654052734375,
+          "non_air_exact_token_accuracy": 0.9614722507708119,
+          "voxels": 131072
+        },
+        "FlowerForest": {
+          "exact_token_accuracy": 0.97216796875,
+          "non_air_exact_token_accuracy": 0.9542282857737971,
+          "voxels": 98304
+        },
+        "Forest": {
+          "exact_token_accuracy": 0.97265625,
+          "non_air_exact_token_accuracy": 0.9619803387421533,
+          "voxels": 98304
+        },
+        "IcePlains": {
+          "exact_token_accuracy": 0.977752685546875,
+          "non_air_exact_token_accuracy": 0.9674023239491538,
+          "voxels": 98304
+        },
+        "IcePlainsSpikes": {
+          "exact_token_accuracy": 0.977325439453125,
+          "non_air_exact_token_accuracy": 0.9650763260910443,
+          "voxels": 98304
+        },
+        "Jungle": {
+          "exact_token_accuracy": 0.949127197265625,
+          "non_air_exact_token_accuracy": 0.9323244070840756,
+          "voxels": 98304
+        },
+        "JungleEdge": {
+          "exact_token_accuracy": 0.9670511881510416,
+          "non_air_exact_token_accuracy": 0.9475785721630051,
+          "voxels": 98304
+        },
+        "MangroveSwamp": {
+          "exact_token_accuracy": 0.91668701171875,
+          "non_air_exact_token_accuracy": 0.8877371009288892,
+          "voxels": 98304
+        },
+        "MegaSpruceTaiga": {
+          "exact_token_accuracy": 0.9717814127604166,
+          "non_air_exact_token_accuracy": 0.9645183789158146,
+          "voxels": 98304
+        },
+        "MegaTaiga": {
+          "exact_token_accuracy": 0.9693501790364584,
+          "non_air_exact_token_accuracy": 0.9561055299398455,
+          "voxels": 98304
+        },
+        "Mesa": {
+          "exact_token_accuracy": 0.9729512532552084,
+          "non_air_exact_token_accuracy": 0.9608331129742258,
+          "voxels": 98304
+        },
+        "MesaBryce": {
+          "exact_token_accuracy": 0.9790751139322916,
+          "non_air_exact_token_accuracy": 0.9682737070339902,
+          "voxels": 98304
+        },
+        "MesaPlateauF": {
+          "exact_token_accuracy": 0.9680684407552084,
+          "non_air_exact_token_accuracy": 0.9535616983500168,
+          "voxels": 98304
+        },
+        "MushroomIsland": {
+          "exact_token_accuracy": 0.9559427897135416,
+          "non_air_exact_token_accuracy": 0.9328200731972699,
+          "voxels": 98304
+        },
+        "Plains": {
+          "exact_token_accuracy": 0.9680074055989584,
+          "non_air_exact_token_accuracy": 0.9548661595677926,
+          "voxels": 98304
+        },
+        "RoofedForest": {
+          "exact_token_accuracy": 0.9640401204427084,
+          "non_air_exact_token_accuracy": 0.9530040704007339,
+          "voxels": 98304
+        },
+        "Savanna": {
+          "exact_token_accuracy": 0.9722188313802084,
+          "non_air_exact_token_accuracy": 0.9587644835491667,
+          "voxels": 98304
+        },
+        "StoneBeach": {
+          "exact_token_accuracy": 0.9741312662760416,
+          "non_air_exact_token_accuracy": 0.960097143592383,
+          "voxels": 98304
+        },
+        "SunflowerPlains": {
+          "exact_token_accuracy": 0.9726359049479166,
+          "non_air_exact_token_accuracy": 0.9572936823165971,
+          "voxels": 98304
+        },
+        "Swampland": {
+          "exact_token_accuracy": 0.9705607096354166,
+          "non_air_exact_token_accuracy": 0.9590026231247605,
+          "voxels": 98304
+        },
+        "Taiga": {
+          "exact_token_accuracy": 0.97210693359375,
+          "non_air_exact_token_accuracy": 0.9564865177641476,
+          "voxels": 98304
+        }
+      },
+      "by_stratum": {
+        "deep_cave": {
+          "exact_token_accuracy": 0.9640533447265625,
+          "non_air_exact_token_accuracy": 0.9632809187808219,
+          "voxels": 655360
+        },
+        "elevated_complex": {
+          "exact_token_accuracy": 0.982611083984375,
+          "non_air_exact_token_accuracy": 0.8248994765192322,
+          "voxels": 655360
+        },
+        "shallow_underground": {
+          "exact_token_accuracy": 0.965655517578125,
+          "non_air_exact_token_accuracy": 0.9651057989393226,
+          "voxels": 655360
+        },
+        "surface": {
+          "exact_token_accuracy": 0.9586257934570312,
+          "non_air_exact_token_accuracy": 0.9298885950102637,
+          "voxels": 655360
+        }
+      }
+    },
+    "dynamic_reconstruction": {
+      "exact_token_accuracy": 0.9395172119140625,
+      "changed_voxel_exact_accuracy": 0.8609883900133566,
+      "unchanged_voxel_exact_accuracy": 0.9398098638170361,
+      "changed_voxels": 9733,
+      "unchanged_voxels": 2611707,
+      "by_category": {
+        "D1": {
+          "exact_token_accuracy": 0.9524505615234375,
+          "changed_voxel_exact_accuracy": 0.855323664662186,
+          "unchanged_voxel_exact_accuracy": 0.9528713490352212,
+          "changed_voxels": 2827,
+          "unchanged_voxels": 652533
+        },
+        "D2": {
+          "exact_token_accuracy": 0.9406280517578125,
+          "changed_voxel_exact_accuracy": 0.9234326824254881,
+          "unchanged_voxel_exact_accuracy": 0.94067926307058,
+          "changed_voxels": 1946,
+          "unchanged_voxels": 653414
+        },
+        "D3": {
+          "exact_token_accuracy": 0.957159423828125,
+          "changed_voxel_exact_accuracy": 0.5750577367205543,
+          "unchanged_voxel_exact_accuracy": 0.9576650053323637,
+          "changed_voxels": 866,
+          "unchanged_voxels": 654494
+        },
+        "D4": {
+          "exact_token_accuracy": 0.907830810546875,
+          "changed_voxel_exact_accuracy": 0.8957010258915487,
+          "unchanged_voxel_exact_accuracy": 0.9079070610165432,
+          "changed_voxels": 4094,
+          "unchanged_voxels": 651266
+        }
+      }
+    },
+    "dynamic": {
+      "complete_chains": 128,
+      "adjacent_pairs": 512,
+      "predicted_change_recall": 0.944769442532691,
+      "changed_pair_exact_reconstruction": 0.7818306951135582,
+      "unchanged_stability": 0.9820741725400939,
+      "gt_changed_voxels": 5812
+    },
+    "dynamic_by_category": {
+      "D1": {
+        "complete_chains": 32,
+        "adjacent_pairs": 128,
+        "predicted_change_recall": 0.911864406779661,
+        "changed_pair_exact_reconstruction": 0.7308474576271187,
+        "unchanged_stability": 0.9861365344779108,
+        "gt_changed_voxels": 1475
+      },
+      "D2": {
+        "complete_chains": 32,
+        "adjacent_pairs": 128,
+        "predicted_change_recall": 0.9832635983263598,
+        "changed_pair_exact_reconstruction": 0.8821478382147838,
+        "unchanged_stability": 0.9771465839412149,
+        "gt_changed_voxels": 1434
+      },
+      "D3": {
+        "complete_chains": 32,
+        "adjacent_pairs": 128,
+        "predicted_change_recall": 0.8823529411764706,
+        "changed_pair_exact_reconstruction": 0.38865546218487396,
+        "unchanged_stability": 0.9869686070574939,
+        "gt_changed_voxels": 476
+      },
+      "D4": {
+        "complete_chains": 32,
+        "adjacent_pairs": 128,
+        "predicted_change_recall": 0.9542645241038319,
+        "changed_pair_exact_reconstruction": 0.830655129789864,
+        "unchanged_stability": 0.9780286321453414,
+        "gt_changed_voxels": 2427
+      }
+    },
+    "latent": {
+      "mean_mu": -0.030831899493932724,
+      "std_mu": 1.5013664960861206,
+      "mean_posterior_std": 0.09578888863325119,
+      "kl_raw": 3446.23681640625,
+      "latent_variance_per_channel": [
+        1.8400113582611084,
+        1.8008731603622437,
+        2.59942626953125,
+        1.851654052734375,
+        2.300062656402588,
+        2.751616954803467,
+        1.9065033197402954,
+        2.0239474773406982,
+        1.7053382396697998,
+        1.969887375831604,
+        2.8472962379455566,
+        1.9205087423324585,
+        2.184755802154541,
+        1.9980440139770508,
+        3.14719557762146,
+        2.670980215072632
+      ],
+      "active_channel_variance_threshold": 0.0001,
+      "active_latent_channels": 16,
+      "adjacent_dynamic_latent_l2": {
+        "count": 512,
+        "mean": 19.70215831603855,
+        "std": 7.927080653121723,
+        "min": 4.3165435791015625,
+        "max": 51.338462829589844
+      }
+    },
+    "loss_components": {
+      "loss_static": 0.10210441007052395,
+      "loss_dynamic_unchanged": 0.2004547488559183,
+      "loss_dynamic_changed": 0.6208251360194281,
+      "loss_reconstruction": 0.25637217704650084,
+      "loss_kl_raw": 3446.2367527484894,
+      "loss_beta_kl": 0.0034462367436844943,
+      "loss_total": 0.25981841418888507,
+      "dynamic_unchanged_by_category": {
+        "D1": 0.16977534105535597,
+        "D2": 0.193109896943497,
+        "D3": 0.14399071139632724,
+        "D4": 0.294943046028493
+      },
+      "dynamic_changed_by_category": {
+        "D1": 0.37629434218509594,
+        "D2": 0.22806208698951025,
+        "D3": 1.5732650799927796,
+        "D4": 0.30567903491032666
+      }
+    },
+    "change_masks": {
+      "chains": 128,
+      "dynamic_states": 640,
+      "overall": {
+        "states": 640,
+        "changed_voxels": 9733,
+        "mean_changed_voxels": 15.2078125,
+        "min_changed_voxels": 1,
+        "max_changed_voxels": 91,
+        "mean_changed_ratio": 0.0037128448486328123,
+        "min_changed_ratio": 0.000244140625,
+        "max_changed_ratio": 0.022216796875
+      },
+      "by_category": {
+        "D1": {
+          "states": 160,
+          "changed_voxels": 2827,
+          "mean_changed_voxels": 17.66875,
+          "min_changed_voxels": 2,
+          "max_changed_voxels": 66,
+          "mean_changed_ratio": 0.00431365966796875,
+          "min_changed_ratio": 0.00048828125,
+          "max_changed_ratio": 0.01611328125
+        },
+        "D2": {
+          "states": 160,
+          "changed_voxels": 1946,
+          "mean_changed_voxels": 12.1625,
+          "min_changed_voxels": 2,
+          "max_changed_voxels": 47,
+          "mean_changed_ratio": 0.0029693603515625,
+          "min_changed_ratio": 0.00048828125,
+          "max_changed_ratio": 0.011474609375
+        },
+        "D3": {
+          "states": 160,
+          "changed_voxels": 866,
+          "mean_changed_voxels": 5.4125,
+          "min_changed_voxels": 1,
+          "max_changed_voxels": 20,
+          "mean_changed_ratio": 0.0013214111328125,
+          "min_changed_ratio": 0.000244140625,
+          "max_changed_ratio": 0.0048828125
+        },
+        "D4": {
+          "states": 160,
+          "changed_voxels": 4094,
+          "mean_changed_voxels": 25.5875,
+          "min_changed_voxels": 1,
+          "max_changed_voxels": 91,
+          "mean_changed_ratio": 0.0062469482421875,
+          "min_changed_ratio": 0.000244140625,
+          "max_changed_ratio": 0.022216796875
+        }
+      },
+      "chain_changed_mask_counts": [
+        {
+          "category": "D1",
+          "chain_id": "7681a806f9e445f8bfd2404bac8b6a11/D1",
+          "root_index": 0,
+          "shard": 2,
+          "world_seed": 1871288230,
+          "changed_voxels_per_state": [
+            19,
+            45,
+            56,
+            60,
+            31
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "1d1777accd484600af84213ecb4d3239/D4",
+          "root_index": 0,
+          "shard": 3,
+          "world_seed": 464191088,
+          "changed_voxels_per_state": [
+            14,
+            29,
+            33,
+            36,
+            18
+          ],
+          "selected_states": 5,
+          "d4_subtype": "C"
+        },
+        {
+          "category": "D4",
+          "chain_id": "a81182c667cf4ce1a8d16a089c0cf54b/D4",
+          "root_index": 0,
+          "shard": 7,
+          "world_seed": 45936102,
+          "changed_voxels_per_state": [
+            29,
+            38,
+            42,
+            50,
+            36
+          ],
+          "selected_states": 5,
+          "d4_subtype": "A"
+        },
+        {
+          "category": "D1",
+          "chain_id": "b8ceec6e91654b0c9c8657524282c2c1/D1",
+          "root_index": 0,
+          "shard": 9,
+          "world_seed": 13412770,
+          "changed_voxels_per_state": [
+            9,
+            15,
+            11,
+            12,
+            7
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "325cf537063e4d38b858f79b72527a2b/D3",
+          "root_index": 0,
+          "shard": 11,
+          "world_seed": 1181056620,
+          "changed_voxels_per_state": [
+            2,
+            2,
+            3,
+            4,
+            3
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "587f831ea5b54126aacfb6ecc891617f/D3",
+          "root_index": 0,
+          "shard": 12,
+          "world_seed": 1571576202,
+          "changed_voxels_per_state": [
+            7,
+            9,
+            10,
+            9,
+            4
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "bd71450fc5844adc87aa619c52af6746/D2",
+          "root_index": 0,
+          "shard": 12,
+          "world_seed": 1303965783,
+          "changed_voxels_per_state": [
+            5,
+            10,
+            11,
+            15,
+            14
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "f4d41573470d450fa52195af90f60422/D3",
+          "root_index": 0,
+          "shard": 12,
+          "world_seed": 1396037892,
+          "changed_voxels_per_state": [
+            6,
+            11,
+            15,
+            19,
+            11
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "84022f0c090049fda25f6670ceb4e8ae/D1",
+          "root_index": 0,
+          "shard": 15,
+          "world_seed": 784836203,
+          "changed_voxels_per_state": [
+            35,
+            58,
+            54,
+            38,
+            12
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "11433329bee840f6ad4e77f6ec2690f7/D1",
+          "root_index": 0,
+          "shard": 16,
+          "world_seed": 1886077264,
+          "changed_voxels_per_state": [
+            4,
+            9,
+            10,
+            9,
+            4
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "b8071cd426504646841e66a385c714be/D1",
+          "root_index": 0,
+          "shard": 17,
+          "world_seed": 2021073667,
+          "changed_voxels_per_state": [
+            6,
+            14,
+            19,
+            23,
+            12
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "c78dc771751246378ac3ab5ec5d7234f/D3",
+          "root_index": 0,
+          "shard": 17,
+          "world_seed": 821743903,
+          "changed_voxels_per_state": [
+            2,
+            7,
+            6,
+            3,
+            1
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "f24dd57178e04ee69888528edd4e400d/D1",
+          "root_index": 0,
+          "shard": 17,
+          "world_seed": 199147011,
+          "changed_voxels_per_state": [
+            9,
+            19,
+            34,
+            50,
+            33
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "1286d6545ed9431b88f50c34c790ef1d/D4",
+          "root_index": 0,
+          "shard": 25,
+          "world_seed": 1646213262,
+          "changed_voxels_per_state": [
+            12,
+            27,
+            31,
+            33,
+            17
+          ],
+          "selected_states": 5,
+          "d4_subtype": "C"
+        },
+        {
+          "category": "D1",
+          "chain_id": "4e1ed0cb3a754b43bfc325d11aac8e6d/D1",
+          "root_index": 0,
+          "shard": 29,
+          "world_seed": 927299521,
+          "changed_voxels_per_state": [
+            5,
+            10,
+            10,
+            10,
+            5
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "4d86d6a22a0b45308a5bc67c4d2a5b50/D2",
+          "root_index": 0,
+          "shard": 30,
+          "world_seed": 1653320808,
+          "changed_voxels_per_state": [
+            9,
+            9,
+            9,
+            12,
+            10
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "40180dcc4799457d95c487449c9aadb2/D4",
+          "root_index": 0,
+          "shard": 31,
+          "world_seed": 1437754918,
+          "changed_voxels_per_state": [
+            68,
+            77,
+            65,
+            66,
+            52
+          ],
+          "selected_states": 5,
+          "d4_subtype": "A"
+        },
+        {
+          "category": "D3",
+          "chain_id": "995eb4772e30441ebb1fd6a17d49cc8c/D3",
+          "root_index": 0,
+          "shard": 31,
+          "world_seed": 1467497324,
+          "changed_voxels_per_state": [
+            3,
+            3,
+            3,
+            9,
+            8
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "a33f2f3724874141a00f0993f3665de9/D2",
+          "root_index": 0,
+          "shard": 34,
+          "world_seed": 452073487,
+          "changed_voxels_per_state": [
+            4,
+            12,
+            8,
+            8,
+            8
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "b6160aff6cfb4733a8477aca4a443ea4/D1",
+          "root_index": 0,
+          "shard": 36,
+          "world_seed": 1052413543,
+          "changed_voxels_per_state": [
+            7,
+            16,
+            18,
+            20,
+            11
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "6ffce4290d0e4d1c9b7a999c0b608e67/D3",
+          "root_index": 0,
+          "shard": 40,
+          "world_seed": 719177936,
+          "changed_voxels_per_state": [
+            2,
+            3,
+            5,
+            6,
+            2
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "f945f1c099ae4111a23a482ee23584c0/D1",
+          "root_index": 0,
+          "shard": 42,
+          "world_seed": 1146753146,
+          "changed_voxels_per_state": [
+            24,
+            52,
+            60,
+            66,
+            37
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "623e007e799a448488214f57273ff3ec/D4",
+          "root_index": 0,
+          "shard": 43,
+          "world_seed": 240025926,
+          "changed_voxels_per_state": [
+            13,
+            25,
+            21,
+            13,
+            4
+          ],
+          "selected_states": 5,
+          "d4_subtype": "C"
+        },
+        {
+          "category": "D4",
+          "chain_id": "da6653d435bd4e86ad688830825b461f/D4",
+          "root_index": 0,
+          "shard": 43,
+          "world_seed": 240025926,
+          "changed_voxels_per_state": [
+            17,
+            29,
+            23,
+            20,
+            9
+          ],
+          "selected_states": 5,
+          "d4_subtype": "C"
+        },
+        {
+          "category": "D3",
+          "chain_id": "177f1c94b9e24cd5bc177f0e545d0217/D3",
+          "root_index": 0,
+          "shard": 44,
+          "world_seed": 1179787432,
+          "changed_voxels_per_state": [
+            5,
+            17,
+            19,
+            20,
+            14
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "33380a7a2026492fbc4256c0ad2c31f3/D3",
+          "root_index": 0,
+          "shard": 47,
+          "world_seed": 2013646217,
+          "changed_voxels_per_state": [
+            4,
+            6,
+            6,
+            4,
+            2
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "e88a69d01feb470480a5d49f9c00e9ce/D2",
+          "root_index": 0,
+          "shard": 47,
+          "world_seed": 1120007995,
+          "changed_voxels_per_state": [
+            6,
+            6,
+            6,
+            6,
+            6
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "8303a1ab58234c33a9879a5f0263dd75/D3",
+          "root_index": 0,
+          "shard": 49,
+          "world_seed": 1263916429,
+          "changed_voxels_per_state": [
+            2,
+            5,
+            8,
+            9,
+            7
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "73a6971caa2347b3ad4e2b7f80a1ef9c/D1",
+          "root_index": 0,
+          "shard": 50,
+          "world_seed": 683974049,
+          "changed_voxels_per_state": [
+            23,
+            48,
+            54,
+            52,
+            25
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "1c5e2a7514fa44e2b24d33aab1522300/D3",
+          "root_index": 0,
+          "shard": 53,
+          "world_seed": 685657255,
+          "changed_voxels_per_state": [
+            7,
+            12,
+            10,
+            6,
+            4
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "fce1226138f2478d9d3173c73ca4bd96/D4",
+          "root_index": 0,
+          "shard": 54,
+          "world_seed": 1105380847,
+          "changed_voxels_per_state": [
+            19,
+            23,
+            23,
+            22,
+            22
+          ],
+          "selected_states": 5,
+          "d4_subtype": "A"
+        },
+        {
+          "category": "D2",
+          "chain_id": "71900b8884fa444c9e3c091f78e180c5/D2",
+          "root_index": 0,
+          "shard": 56,
+          "world_seed": 2066592020,
+          "changed_voxels_per_state": [
+            5,
+            10,
+            5,
+            10,
+            10
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "da527600a0344fb390ba93fedcc23497/D2",
+          "root_index": 0,
+          "shard": 56,
+          "world_seed": 1380209328,
+          "changed_voxels_per_state": [
+            5,
+            10,
+            5,
+            9,
+            9
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "99023a119a5a4497890e9696c34c0e94/D3",
+          "root_index": 0,
+          "shard": 57,
+          "world_seed": 492525408,
+          "changed_voxels_per_state": [
+            2,
+            4,
+            3,
+            4,
+            2
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "f17484a939f24152b2bd940eecafcf02/D3",
+          "root_index": 0,
+          "shard": 58,
+          "world_seed": 177590551,
+          "changed_voxels_per_state": [
+            2,
+            3,
+            4,
+            4,
+            1
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "64138cfb50c54974a9024cf6ff3bd965/D1",
+          "root_index": 0,
+          "shard": 59,
+          "world_seed": 170142759,
+          "changed_voxels_per_state": [
+            5,
+            10,
+            10,
+            13,
+            9
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "1543b2b9a35e4146b611b4ff06ab6ed9/D2",
+          "root_index": 0,
+          "shard": 60,
+          "world_seed": 1529514839,
+          "changed_voxels_per_state": [
+            15,
+            15,
+            20,
+            20,
+            20
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "20de3380431a4b92bb1f33539a99d471/D4",
+          "root_index": 0,
+          "shard": 60,
+          "world_seed": 306407670,
+          "changed_voxels_per_state": [
+            19,
+            23,
+            23,
+            22,
+            22
+          ],
+          "selected_states": 5,
+          "d4_subtype": "A"
+        },
+        {
+          "category": "D4",
+          "chain_id": "09cca8ff44a04f1d9a06c391bc13fc9b/D4",
+          "root_index": 0,
+          "shard": 61,
+          "world_seed": 47613908,
+          "changed_voxels_per_state": [
+            8,
+            19,
+            24,
+            24,
+            11
+          ],
+          "selected_states": 5,
+          "d4_subtype": "C"
+        },
+        {
+          "category": "D2",
+          "chain_id": "b02af4eb585b4e5c81f677a62d8abb51/D2",
+          "root_index": 0,
+          "shard": 65,
+          "world_seed": 1308021460,
+          "changed_voxels_per_state": [
+            15,
+            15,
+            20,
+            21,
+            21
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "1ce83fc4349949408f6c2e3353cf59d8/D2",
+          "root_index": 0,
+          "shard": 70,
+          "world_seed": 348840584,
+          "changed_voxels_per_state": [
+            10,
+            13,
+            12,
+            12,
+            12
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "0984de4509564979bda8bcbf849d2b5d/D2",
+          "root_index": 0,
+          "shard": 71,
+          "world_seed": 1249764262,
+          "changed_voxels_per_state": [
+            9,
+            9,
+            9,
+            9,
+            9
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "520ad99de6894b7ca4acce62bcce81f7/D2",
+          "root_index": 0,
+          "shard": 72,
+          "world_seed": 803453399,
+          "changed_voxels_per_state": [
+            2,
+            6,
+            8,
+            14,
+            10
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "8a730c5eb60449a0a24c70fc97a54f89/D1",
+          "root_index": 0,
+          "shard": 75,
+          "world_seed": 171508099,
+          "changed_voxels_per_state": [
+            26,
+            54,
+            51,
+            50,
+            27
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "b3fe8c2ea09f400fa94b4cb8b48e4792/D4",
+          "root_index": 0,
+          "shard": 75,
+          "world_seed": 423491124,
+          "changed_voxels_per_state": [
+            33,
+            38,
+            46,
+            52,
+            23
+          ],
+          "selected_states": 5,
+          "d4_subtype": "A"
+        },
+        {
+          "category": "D4",
+          "chain_id": "478f2186f38345e38c9f1733c7e9b15a/D4",
+          "root_index": 0,
+          "shard": 77,
+          "world_seed": 1244182669,
+          "changed_voxels_per_state": [
+            14,
+            27,
+            20,
+            8,
+            1
+          ],
+          "selected_states": 5,
+          "d4_subtype": "C"
+        },
+        {
+          "category": "D3",
+          "chain_id": "2e7b7c89fdf343c1bb86c5a53c960ae4/D3",
+          "root_index": 0,
+          "shard": 79,
+          "world_seed": 402834720,
+          "changed_voxels_per_state": [
+            3,
+            11,
+            9,
+            7,
+            7
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "79185234f5684e82922d67c7acf095bf/D4",
+          "root_index": 0,
+          "shard": 79,
+          "world_seed": 2140146626,
+          "changed_voxels_per_state": [
+            32,
+            67,
+            70,
+            65,
+            32
+          ],
+          "selected_states": 5,
+          "d4_subtype": "C"
+        },
+        {
+          "category": "D2",
+          "chain_id": "56a999c9b3ff4f549cb4315fccd5d97c/D2",
+          "root_index": 0,
+          "shard": 80,
+          "world_seed": 1426225142,
+          "changed_voxels_per_state": [
+            8,
+            8,
+            8,
+            8,
+            8
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "4f7c7695d0474061ba404e30c9f2e28f/D2",
+          "root_index": 0,
+          "shard": 82,
+          "world_seed": 1085594157,
+          "changed_voxels_per_state": [
+            4,
+            10,
+            6,
+            13,
+            13
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "7adb10444c9e41fa8bdc5e099dc3d945/D4",
+          "root_index": 0,
+          "shard": 82,
+          "world_seed": 1199457163,
+          "changed_voxels_per_state": [
+            4,
+            7,
+            9,
+            5,
+            3
+          ],
+          "selected_states": 5,
+          "d4_subtype": "A"
+        },
+        {
+          "category": "D4",
+          "chain_id": "7dd7e4583aeb4df29815f3e0a1df1975/D4",
+          "root_index": 0,
+          "shard": 84,
+          "world_seed": 1186288449,
+          "changed_voxels_per_state": [
+            27,
+            53,
+            52,
+            39,
+            13
+          ],
+          "selected_states": 5,
+          "d4_subtype": "C"
+        },
+        {
+          "category": "D4",
+          "chain_id": "fea8149f65ea4946b19a6c1d06427dbf/D4",
+          "root_index": 0,
+          "shard": 85,
+          "world_seed": 166818716,
+          "changed_voxels_per_state": [
+            7,
+            11,
+            20,
+            21,
+            9
+          ],
+          "selected_states": 5,
+          "d4_subtype": "B"
+        },
+        {
+          "category": "D3",
+          "chain_id": "6d3f593aad694e50934401d3e2bd46ee/D3",
+          "root_index": 0,
+          "shard": 86,
+          "world_seed": 127817215,
+          "changed_voxels_per_state": [
+            2,
+            4,
+            6,
+            6,
+            3
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "020bcba5156d4ddaad2d10e44288f684/D1",
+          "root_index": 0,
+          "shard": 88,
+          "world_seed": 1272208,
+          "changed_voxels_per_state": [
+            9,
+            16,
+            18,
+            20,
+            11
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "4e881d60f1dd4c5bb9ed333b8ef6c721/D1",
+          "root_index": 0,
+          "shard": 89,
+          "world_seed": 648940766,
+          "changed_voxels_per_state": [
+            15,
+            30,
+            30,
+            30,
+            15
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "57be8c8fe6ef45b884e836eba955b664/D2",
+          "root_index": 0,
+          "shard": 91,
+          "world_seed": 2098201832,
+          "changed_voxels_per_state": [
+            6,
+            6,
+            6,
+            7,
+            6
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "5d3a421456b94bf9aea179af4c9d33ae/D4",
+          "root_index": 0,
+          "shard": 91,
+          "world_seed": 666967079,
+          "changed_voxels_per_state": [
+            43,
+            59,
+            79,
+            60,
+            13
+          ],
+          "selected_states": 5,
+          "d4_subtype": "B"
+        },
+        {
+          "category": "D3",
+          "chain_id": "d18798c4ab6d49e881eb918895e71c3e/D3",
+          "root_index": 0,
+          "shard": 91,
+          "world_seed": 614790004,
+          "changed_voxels_per_state": [
+            2,
+            3,
+            3,
+            3,
+            2
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "d6d39cdc2998488aa0fae8d916d74e9f/D3",
+          "root_index": 0,
+          "shard": 91,
+          "world_seed": 565888825,
+          "changed_voxels_per_state": [
+            3,
+            5,
+            6,
+            5,
+            1
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "f25b26a7c1204f9e8f3f0d0a331bd712/D2",
+          "root_index": 0,
+          "shard": 91,
+          "world_seed": 565888825,
+          "changed_voxels_per_state": [
+            12,
+            17,
+            16,
+            14,
+            10
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "9ac055cc2cef4f5f856be790a0e7c2f8/D1",
+          "root_index": 0,
+          "shard": 92,
+          "world_seed": 1667239067,
+          "changed_voxels_per_state": [
+            6,
+            11,
+            12,
+            18,
+            12
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "d2a909b6c0b24097bb12f8a347fe0366/D1",
+          "root_index": 0,
+          "shard": 94,
+          "world_seed": 2107114479,
+          "changed_voxels_per_state": [
+            6,
+            12,
+            12,
+            12,
+            6
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "77ef21f429dc46b2aef7bcdd94fb7d9b/D2",
+          "root_index": 0,
+          "shard": 97,
+          "world_seed": 409450266,
+          "changed_voxels_per_state": [
+            5,
+            10,
+            5,
+            11,
+            11
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "5b77220afd654b27b3011ba30237ebbf/D3",
+          "root_index": 1,
+          "shard": 1,
+          "world_seed": 768427090,
+          "changed_voxels_per_state": [
+            2,
+            4,
+            5,
+            5,
+            2
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "909b600edb664d3591049582954770d1/D3",
+          "root_index": 1,
+          "shard": 1,
+          "world_seed": 12521303,
+          "changed_voxels_per_state": [
+            1,
+            2,
+            2,
+            2,
+            1
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "6eb008c11d464f1f8cfe002ebfabe8a8/D1",
+          "root_index": 1,
+          "shard": 2,
+          "world_seed": 1515272081,
+          "changed_voxels_per_state": [
+            5,
+            14,
+            17,
+            19,
+            12
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "547d76372f6c48b3b52028bb130523bb/D3",
+          "root_index": 1,
+          "shard": 3,
+          "world_seed": 1518528743,
+          "changed_voxels_per_state": [
+            3,
+            8,
+            7,
+            8,
+            7
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "ed32b225afc0465180af88e6fd07177e/D1",
+          "root_index": 1,
+          "shard": 3,
+          "world_seed": 945585556,
+          "changed_voxels_per_state": [
+            11,
+            20,
+            17,
+            17,
+            8
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "f064f031fc2a44e99879c7bea581d5d9/D2",
+          "root_index": 1,
+          "shard": 5,
+          "world_seed": 517619980,
+          "changed_voxels_per_state": [
+            10,
+            10,
+            10,
+            17,
+            12
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "2bf16e0151db4ceaaacf895d69748281/D4",
+          "root_index": 1,
+          "shard": 10,
+          "world_seed": 1278323526,
+          "changed_voxels_per_state": [
+            13,
+            36,
+            50,
+            45,
+            19
+          ],
+          "selected_states": 5,
+          "d4_subtype": "C"
+        },
+        {
+          "category": "D3",
+          "chain_id": "0bc6103b973d411eb0a50f8598d29a92/D3",
+          "root_index": 1,
+          "shard": 12,
+          "world_seed": 1022357730,
+          "changed_voxels_per_state": [
+            2,
+            5,
+            8,
+            7,
+            2
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "a87d40be574c410aa591f5d927525fd2/D2",
+          "root_index": 1,
+          "shard": 12,
+          "world_seed": 260336839,
+          "changed_voxels_per_state": [
+            9,
+            9,
+            9,
+            9,
+            9
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "3b4f7e38e73d4374af48bfa26d367f86/D3",
+          "root_index": 1,
+          "shard": 13,
+          "world_seed": 1038079087,
+          "changed_voxels_per_state": [
+            2,
+            5,
+            6,
+            7,
+            4
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "7ef0e9a902b24693b5c5c324de9a1a8a/D1",
+          "root_index": 1,
+          "shard": 15,
+          "world_seed": 2044304848,
+          "changed_voxels_per_state": [
+            7,
+            20,
+            23,
+            24,
+            12
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "83b08f69f59a44ce8737bd479c82a981/D2",
+          "root_index": 1,
+          "shard": 15,
+          "world_seed": 546561418,
+          "changed_voxels_per_state": [
+            11,
+            11,
+            11,
+            11,
+            11
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "3bff76adb7854bf098ab5ada13c6c548/D1",
+          "root_index": 1,
+          "shard": 16,
+          "world_seed": 1072658548,
+          "changed_voxels_per_state": [
+            5,
+            10,
+            15,
+            17,
+            12
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "0cf84acbbc0f4c44b314d8420141d6e9/D4",
+          "root_index": 1,
+          "shard": 18,
+          "world_seed": 529677929,
+          "changed_voxels_per_state": [
+            7,
+            14,
+            12,
+            7,
+            2
+          ],
+          "selected_states": 5,
+          "d4_subtype": "C"
+        },
+        {
+          "category": "D2",
+          "chain_id": "8fa630f9b0e74c96bde138affcacc899/D2",
+          "root_index": 1,
+          "shard": 18,
+          "world_seed": 1690530941,
+          "changed_voxels_per_state": [
+            5,
+            10,
+            10,
+            15,
+            15
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "c6794bd792664605a03e076db9d6cc8e/D1",
+          "root_index": 1,
+          "shard": 18,
+          "world_seed": 1224560772,
+          "changed_voxels_per_state": [
+            16,
+            30,
+            33,
+            31,
+            14
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "b2e933c02cbd47e59ebaaca0ab5f5629/D4",
+          "root_index": 1,
+          "shard": 20,
+          "world_seed": 143654565,
+          "changed_voxels_per_state": [
+            11,
+            19,
+            15,
+            12,
+            5
+          ],
+          "selected_states": 5,
+          "d4_subtype": "C"
+        },
+        {
+          "category": "D3",
+          "chain_id": "c923238a68354e6fa71065d0d57cd3a8/D3",
+          "root_index": 1,
+          "shard": 23,
+          "world_seed": 533172707,
+          "changed_voxels_per_state": [
+            5,
+            7,
+            4,
+            6,
+            5
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "05a60123d1484b0c84ffea3ef7c523a3/D1",
+          "root_index": 1,
+          "shard": 24,
+          "world_seed": 19945342,
+          "changed_voxels_per_state": [
+            6,
+            12,
+            12,
+            11,
+            5
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "8926f4572b0e4e46a6df9717e2d58b5b/D3",
+          "root_index": 1,
+          "shard": 24,
+          "world_seed": 1543408690,
+          "changed_voxels_per_state": [
+            2,
+            3,
+            7,
+            11,
+            8
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "5d399c5e0aaa4e6ba49b1d6130faa6f8/D2",
+          "root_index": 1,
+          "shard": 27,
+          "world_seed": 1310278494,
+          "changed_voxels_per_state": [
+            5,
+            10,
+            5,
+            9,
+            9
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "88cbc63065f241c393e1ac6f2391ab62/D3",
+          "root_index": 1,
+          "shard": 28,
+          "world_seed": 381075280,
+          "changed_voxels_per_state": [
+            3,
+            9,
+            10,
+            6,
+            1
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "6b0b1f3c8c954989a865dc940c8347a4/D4",
+          "root_index": 1,
+          "shard": 30,
+          "world_seed": 1400897718,
+          "changed_voxels_per_state": [
+            29,
+            56,
+            58,
+            58,
+            38
+          ],
+          "selected_states": 5,
+          "d4_subtype": "B"
+        },
+        {
+          "category": "D1",
+          "chain_id": "7c71446b7413482883cf7757a02f3551/D1",
+          "root_index": 1,
+          "shard": 30,
+          "world_seed": 1397574142,
+          "changed_voxels_per_state": [
+            5,
+            12,
+            18,
+            24,
+            15
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "51970ffaae314fc6aa526c65ce41a6eb/D4",
+          "root_index": 1,
+          "shard": 32,
+          "world_seed": 967044577,
+          "changed_voxels_per_state": [
+            11,
+            11,
+            12,
+            18,
+            14
+          ],
+          "selected_states": 5,
+          "d4_subtype": "A"
+        },
+        {
+          "category": "D1",
+          "chain_id": "56aabc255e2a4c7fbbda9eb2541ae3c3/D1",
+          "root_index": 1,
+          "shard": 32,
+          "world_seed": 954703111,
+          "changed_voxels_per_state": [
+            4,
+            15,
+            28,
+            32,
+            17
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "9f9082fd13fa4224b29c0fe1c9a8c8cd/D4",
+          "root_index": 1,
+          "shard": 32,
+          "world_seed": 391467571,
+          "changed_voxels_per_state": [
+            32,
+            59,
+            56,
+            56,
+            29
+          ],
+          "selected_states": 5,
+          "d4_subtype": "C"
+        },
+        {
+          "category": "D4",
+          "chain_id": "a4434de9c82246729f372fd73a3313f7/D4",
+          "root_index": 1,
+          "shard": 32,
+          "world_seed": 607376298,
+          "changed_voxels_per_state": [
+            21,
+            31,
+            21,
+            20,
+            19
+          ],
+          "selected_states": 5,
+          "d4_subtype": "B"
+        },
+        {
+          "category": "D2",
+          "chain_id": "c6a6af6f393c4c2c927c9b5c99a6858f/D2",
+          "root_index": 1,
+          "shard": 34,
+          "world_seed": 240418977,
+          "changed_voxels_per_state": [
+            33,
+            35,
+            43,
+            47,
+            47
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "2cd8d2ef17504e269d902f12202210dc/D3",
+          "root_index": 1,
+          "shard": 36,
+          "world_seed": 1581670238,
+          "changed_voxels_per_state": [
+            2,
+            8,
+            9,
+            9,
+            6
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "0b35ab879a3042e98c56c50fdf4d07cb/D3",
+          "root_index": 1,
+          "shard": 38,
+          "world_seed": 1503287389,
+          "changed_voxels_per_state": [
+            2,
+            6,
+            6,
+            3,
+            1
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "1e7dc4f7cf6d4216bf2e9947b4783b59/D4",
+          "root_index": 1,
+          "shard": 38,
+          "world_seed": 1861156496,
+          "changed_voxels_per_state": [
+            26,
+            30,
+            23,
+            31,
+            31
+          ],
+          "selected_states": 5,
+          "d4_subtype": "A"
+        },
+        {
+          "category": "D4",
+          "chain_id": "d0c4a5343b3a47fcb7aff08e01afb26b/D4",
+          "root_index": 1,
+          "shard": 46,
+          "world_seed": 1715385411,
+          "changed_voxels_per_state": [
+            6,
+            11,
+            13,
+            10,
+            5
+          ],
+          "selected_states": 5,
+          "d4_subtype": "B"
+        },
+        {
+          "category": "D4",
+          "chain_id": "295d62f49b0e447d80f7df1b7572ea30/D4",
+          "root_index": 1,
+          "shard": 48,
+          "world_seed": 1594787583,
+          "changed_voxels_per_state": [
+            10,
+            20,
+            19,
+            15,
+            6
+          ],
+          "selected_states": 5,
+          "d4_subtype": "C"
+        },
+        {
+          "category": "D2",
+          "chain_id": "f21fe81d041a48d294a495ac8a1f6ae9/D2",
+          "root_index": 1,
+          "shard": 49,
+          "world_seed": 918577797,
+          "changed_voxels_per_state": [
+            24,
+            30,
+            31,
+            32,
+            31
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "61f45145e9754677b6af0bb408c63a9f/D1",
+          "root_index": 1,
+          "shard": 50,
+          "world_seed": 1234233247,
+          "changed_voxels_per_state": [
+            10,
+            20,
+            19,
+            15,
+            6
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "9836a9f187914bb5a451a3ad690f7571/D3",
+          "root_index": 1,
+          "shard": 50,
+          "world_seed": 1530148293,
+          "changed_voxels_per_state": [
+            2,
+            3,
+            2,
+            2,
+            1
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "7752624d340e4656af2ba6f79ae5507b/D4",
+          "root_index": 1,
+          "shard": 51,
+          "world_seed": 1213325021,
+          "changed_voxels_per_state": [
+            21,
+            28,
+            14,
+            16,
+            16
+          ],
+          "selected_states": 5,
+          "d4_subtype": "A"
+        },
+        {
+          "category": "D2",
+          "chain_id": "adbf7066eea74b30845caba3f9dd9067/D2",
+          "root_index": 1,
+          "shard": 52,
+          "world_seed": 1759241932,
+          "changed_voxels_per_state": [
+            9,
+            9,
+            9,
+            9,
+            9
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "96bc8969c290423fae1a96d537300b53/D1",
+          "root_index": 1,
+          "shard": 55,
+          "world_seed": 1106047543,
+          "changed_voxels_per_state": [
+            5,
+            8,
+            5,
+            4,
+            2
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "214b80fe01184cfaa6fa983ad28c1cad/D2",
+          "root_index": 1,
+          "shard": 57,
+          "world_seed": 1240907477,
+          "changed_voxels_per_state": [
+            9,
+            12,
+            12,
+            13,
+            13
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "a17d8e601f864df6b7439810889dab2c/D2",
+          "root_index": 1,
+          "shard": 57,
+          "world_seed": 1047924953,
+          "changed_voxels_per_state": [
+            13,
+            13,
+            9,
+            9,
+            9
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "d676b756240f4688aff2edd662dd4fe9/D4",
+          "root_index": 1,
+          "shard": 57,
+          "world_seed": 428000763,
+          "changed_voxels_per_state": [
+            5,
+            16,
+            23,
+            26,
+            14
+          ],
+          "selected_states": 5,
+          "d4_subtype": "C"
+        },
+        {
+          "category": "D2",
+          "chain_id": "bf95faa3c91b45c285a0fcb9b0bf7e91/D2",
+          "root_index": 1,
+          "shard": 58,
+          "world_seed": 454058323,
+          "changed_voxels_per_state": [
+            10,
+            15,
+            16,
+            20,
+            20
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "ddcacc9f28fe4f16a8dc6d265995169e/D3",
+          "root_index": 1,
+          "shard": 63,
+          "world_seed": 147726264,
+          "changed_voxels_per_state": [
+            5,
+            8,
+            4,
+            2,
+            1
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "65a37b9f93014ed09af646ecf88bc976/D2",
+          "root_index": 1,
+          "shard": 67,
+          "world_seed": 1718051469,
+          "changed_voxels_per_state": [
+            9,
+            9,
+            9,
+            9,
+            9
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "0d8931ce38c442468a193d1a4f2219b1/D4",
+          "root_index": 1,
+          "shard": 68,
+          "world_seed": 887350173,
+          "changed_voxels_per_state": [
+            19,
+            23,
+            28,
+            42,
+            42
+          ],
+          "selected_states": 5,
+          "d4_subtype": "A"
+        },
+        {
+          "category": "D1",
+          "chain_id": "6d24eb68bd4547fe97703bcd04a2529a/D1",
+          "root_index": 1,
+          "shard": 71,
+          "world_seed": 1707629030,
+          "changed_voxels_per_state": [
+            5,
+            10,
+            10,
+            10,
+            5
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "edd1800ab1a0475bb85a1913f42fa9f2/D3",
+          "root_index": 1,
+          "shard": 72,
+          "world_seed": 1921411832,
+          "changed_voxels_per_state": [
+            5,
+            7,
+            6,
+            9,
+            6
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "4ab575503d3947e7a0823c60528e79fc/D2",
+          "root_index": 1,
+          "shard": 77,
+          "world_seed": 925646435,
+          "changed_voxels_per_state": [
+            13,
+            13,
+            13,
+            26,
+            19
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "167803855d994fd49ef5d67e9022085f/D3",
+          "root_index": 1,
+          "shard": 79,
+          "world_seed": 1383985354,
+          "changed_voxels_per_state": [
+            3,
+            4,
+            2,
+            3,
+            2
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "5e58040c05ed47bd99c92bebe466b043/D1",
+          "root_index": 1,
+          "shard": 80,
+          "world_seed": 1204993452,
+          "changed_voxels_per_state": [
+            5,
+            10,
+            10,
+            10,
+            5
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "9c6c01842fe1401f9c87bf884d80842d/D3",
+          "root_index": 1,
+          "shard": 80,
+          "world_seed": 1411572983,
+          "changed_voxels_per_state": [
+            4,
+            5,
+            4,
+            8,
+            7
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "28ed53f2459242a3bd66111444fbd074/D2",
+          "root_index": 1,
+          "shard": 81,
+          "world_seed": 1009477568,
+          "changed_voxels_per_state": [
+            15,
+            15,
+            20,
+            20,
+            20
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "b1311ba554e2466c9718bf54330fd62d/D1",
+          "root_index": 1,
+          "shard": 82,
+          "world_seed": 1918397676,
+          "changed_voxels_per_state": [
+            5,
+            10,
+            10,
+            10,
+            5
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "7f2920a101634bc68f8e16e47689164b/D1",
+          "root_index": 1,
+          "shard": 83,
+          "world_seed": 1743171944,
+          "changed_voxels_per_state": [
+            9,
+            17,
+            21,
+            22,
+            11
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "08a26665bcc44b6ca0376492e3a8a26a/D2",
+          "root_index": 1,
+          "shard": 86,
+          "world_seed": 287383443,
+          "changed_voxels_per_state": [
+            4,
+            8,
+            6,
+            8,
+            8
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "d557ad046d2240dd8c90ca9dea31630e/D1",
+          "root_index": 1,
+          "shard": 88,
+          "world_seed": 92898629,
+          "changed_voxels_per_state": [
+            5,
+            10,
+            10,
+            11,
+            6
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "f12d07a9798c4549a55803b86f1a75bf/D4",
+          "root_index": 1,
+          "shard": 89,
+          "world_seed": 921491169,
+          "changed_voxels_per_state": [
+            5,
+            8,
+            10,
+            6,
+            3
+          ],
+          "selected_states": 5,
+          "d4_subtype": "A"
+        },
+        {
+          "category": "D4",
+          "chain_id": "f330bf1bc88a414d8a3265002513c16c/D4",
+          "root_index": 1,
+          "shard": 89,
+          "world_seed": 1227190098,
+          "changed_voxels_per_state": [
+            4,
+            6,
+            6,
+            9,
+            9
+          ],
+          "selected_states": 5,
+          "d4_subtype": "A"
+        },
+        {
+          "category": "D3",
+          "chain_id": "f6708afdb3294904ad469f2ec296d6a9/D3",
+          "root_index": 1,
+          "shard": 90,
+          "world_seed": 1058449222,
+          "changed_voxels_per_state": [
+            6,
+            9,
+            10,
+            14,
+            11
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "7b6e4cc475b24236b0ee4a8522096cdf/D2",
+          "root_index": 1,
+          "shard": 91,
+          "world_seed": 1669302859,
+          "changed_voxels_per_state": [
+            4,
+            6,
+            11,
+            14,
+            9
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D1",
+          "chain_id": "664b8223066d4317a87dd1dbdbab1f21/D1",
+          "root_index": 1,
+          "shard": 96,
+          "world_seed": 1221467340,
+          "changed_voxels_per_state": [
+            5,
+            10,
+            10,
+            10,
+            5
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "293521f8bbad45169263df272c7356db/D4",
+          "root_index": 1,
+          "shard": 98,
+          "world_seed": 1502353488,
+          "changed_voxels_per_state": [
+            11,
+            21,
+            91,
+            84,
+            3
+          ],
+          "selected_states": 5,
+          "d4_subtype": "B"
+        }
+      ],
+      "empty_unchanged_states": 0,
+      "d4_chain_subtypes": {
+        "A": 12,
+        "B": 6,
+        "C": 14
+      }
+    },
+    "non_finite_prediction": false
+  }
+}

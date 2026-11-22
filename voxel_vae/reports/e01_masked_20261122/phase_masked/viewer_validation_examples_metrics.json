@@ -1,0 +1,402 @@
+{
+  "purpose": "E01-Masked validation reconstruction gallery",
+  "checkpoint": "/user-data/txj/VoxWM/outputs/voxel_vae/e01/phase_masked/checkpoint_best.pt",
+  "global_step": 27000,
+  "subset": "e01_validation",
+  "selection": {
+    "static": 8,
+    "complete_chains_per_dynamic_category": 2,
+    "samples": 48
+  },
+  "metrics": {
+    "samples": 48,
+    "cross_entropy": 0.2399764427294334,
+    "exact_token_accuracy": 0.9296620686848959,
+    "non_air_exact_token_accuracy": 0.8952024700154376,
+    "categories": {
+      "D1": {
+        "exact_token_accuracy": 0.9099609375,
+        "non_air_exact_token_accuracy": 0.8766185719570847,
+        "samples": 10
+      },
+      "D2": {
+        "exact_token_accuracy": 0.937255859375,
+        "non_air_exact_token_accuracy": 0.9076510913245607,
+        "samples": 10
+      },
+      "D3": {
+        "exact_token_accuracy": 0.956640625,
+        "non_air_exact_token_accuracy": 0.8730279414559969,
+        "samples": 10
+      },
+      "D4": {
+        "exact_token_accuracy": 0.8885986328125,
+        "non_air_exact_token_accuracy": 0.8728495743794273,
+        "samples": 10
+      },
+      "Static": {
+        "exact_token_accuracy": 0.96240234375,
+        "non_air_exact_token_accuracy": 0.9500046812096246,
+        "samples": 8
+      }
+    },
+    "static_preservation": {
+      "exact_token_accuracy": 0.96240234375,
+      "non_air_exact_token_accuracy": 0.9500046812096246,
+      "by_biome_group": {
+        "BambooJungle": {
+          "exact_token_accuracy": 0.96240234375,
+          "non_air_exact_token_accuracy": 0.9500046812096246,
+          "voxels": 32768
+        }
+      },
+      "by_stratum": {
+        "deep_cave": {
+          "exact_token_accuracy": 0.9439697265625,
+          "non_air_exact_token_accuracy": 0.9468005018820577,
+          "voxels": 8192
+        },
+        "elevated_complex": {
+          "exact_token_accuracy": 0.98046875,
+          "non_air_exact_token_accuracy": 0.7508833922261484,
+          "voxels": 8192
+        },
+        "shallow_underground": {
+          "exact_token_accuracy": 0.9779052734375,
+          "non_air_exact_token_accuracy": 0.979156139464376,
+          "voxels": 8192
+        },
+        "surface": {
+          "exact_token_accuracy": 0.947265625,
+          "non_air_exact_token_accuracy": 0.9311608961303462,
+          "voxels": 8192
+        }
+      }
+    },
+    "dynamic_reconstruction": {
+      "exact_token_accuracy": 0.923114013671875,
+      "changed_voxel_exact_accuracy": 0.8848728246318608,
+      "unchanged_voxel_exact_accuracy": 0.923289166303888,
+      "changed_voxels": 747,
+      "unchanged_voxels": 163093,
+      "by_category": {
+        "D1": {
+          "exact_token_accuracy": 0.9099609375,
+          "changed_voxel_exact_accuracy": 0.8754716981132076,
+          "unchanged_voxel_exact_accuracy": 0.9101855264774542,
+          "changed_voxels": 265,
+          "unchanged_voxels": 40695
+        },
+        "D2": {
+          "exact_token_accuracy": 0.937255859375,
+          "changed_voxel_exact_accuracy": 0.9903846153846154,
+          "unchanged_voxel_exact_accuracy": 0.9371206187585667,
+          "changed_voxels": 104,
+          "unchanged_voxels": 40856
+        },
+        "D3": {
+          "exact_token_accuracy": 0.956640625,
+          "changed_voxel_exact_accuracy": 0.4528301886792453,
+          "unchanged_voxel_exact_accuracy": 0.9572933727723861,
+          "changed_voxels": 53,
+          "unchanged_voxels": 40907
+        },
+        "D4": {
+          "exact_token_accuracy": 0.8885986328125,
+          "changed_voxel_exact_accuracy": 0.9292307692307692,
+          "unchanged_voxel_exact_accuracy": 0.8882736557155162,
+          "changed_voxels": 325,
+          "unchanged_voxels": 40635
+        }
+      }
+    },
+    "dynamic": {
+      "complete_chains": 8,
+      "adjacent_pairs": 32,
+      "predicted_change_recall": 0.9479638009049773,
+      "changed_pair_exact_reconstruction": 0.8235294117647058,
+      "unchanged_stability": 0.975801883181505,
+      "gt_changed_voxels": 442
+    },
+    "dynamic_by_category": {
+      "D1": {
+        "complete_chains": 2,
+        "adjacent_pairs": 8,
+        "predicted_change_recall": 0.9097744360902256,
+        "changed_pair_exact_reconstruction": 0.7819548872180451,
+        "unchanged_stability": 0.9707369388693121,
+        "gt_changed_voxels": 133
+      },
+      "D2": {
+        "complete_chains": 2,
+        "adjacent_pairs": 8,
+        "predicted_change_recall": 1.0,
+        "changed_pair_exact_reconstruction": 0.987012987012987,
+        "unchanged_stability": 0.9773943898932428,
+        "gt_changed_voxels": 77
+      },
+      "D3": {
+        "complete_chains": 2,
+        "adjacent_pairs": 8,
+        "predicted_change_recall": 0.8275862068965517,
+        "changed_pair_exact_reconstruction": 0.3448275862068966,
+        "unchanged_stability": 0.9853996762271298,
+        "gt_changed_voxels": 29
+      },
+      "D4": {
+        "complete_chains": 2,
+        "adjacent_pairs": 8,
+        "predicted_change_recall": 0.9704433497536946,
+        "changed_pair_exact_reconstruction": 0.8571428571428571,
+        "unchanged_stability": 0.9696299708275756,
+        "gt_changed_voxels": 203
+      }
+    },
+    "latent": {
+      "mean_mu": -0.039525579661130905,
+      "std_mu": 1.5826135873794556,
+      "mean_posterior_std": 0.09212934970855713,
+      "kl_raw": 3675.377685546875,
+      "latent_variance_per_channel": [
+        2.092487335205078,
+        2.3454508781433105,
+        2.513669967651367,
+        1.9764119386672974,
+        2.8304941654205322,
+        3.216785430908203,
+        2.5240402221679688,
+        2.156663417816162,
+        2.040022611618042,
+        2.3456132411956787,
+        2.9779136180877686,
+        2.1368255615234375,
+        1.7989834547042847,
+        2.166023015975952,
+        3.0813052654266357,
+        3.287304639816284
+      ],
+      "active_channel_variance_threshold": 0.0001,
+      "active_latent_channels": 16,
+      "adjacent_dynamic_latent_l2": {
+        "count": 32,
+        "mean": 20.268280595541,
+        "std": 6.629203150141424,
+        "min": 9.538351058959961,
+        "max": 33.32079315185547
+      }
+    },
+    "loss_components": {
+      "loss_static": 0.11576874926686287,
+      "loss_dynamic_unchanged": 0.2642479604110122,
+      "loss_dynamic_changed": 0.6602448064295459,
+      "loss_reconstruction": 0.28900756360962987,
+      "loss_kl_raw": 3675.37784576416,
+      "loss_beta_kl": 0.0036753778331330977,
+      "loss_total": 0.29268293525092304,
+      "dynamic_unchanged_by_category": {
+        "D1": 0.3347909189760685,
+        "D2": 0.21294013410806656,
+        "D3": 0.13925457000732422,
+        "D4": 0.3700062185525894
+      },
+      "dynamic_changed_by_category": {
+        "D1": 0.6568437740206718,
+        "D2": 0.03513861252577044,
+        "D3": 1.7860431522130966,
+        "D4": 0.16295368695864454
+      }
+    },
+    "change_masks": {
+      "chains": 8,
+      "dynamic_states": 40,
+      "overall": {
+        "states": 40,
+        "changed_voxels": 747,
+        "mean_changed_voxels": 18.675,
+        "min_changed_voxels": 2,
+        "max_changed_voxels": 60,
+        "mean_changed_ratio": 0.004559326171875,
+        "min_changed_ratio": 0.00048828125,
+        "max_changed_ratio": 0.0146484375
+      },
+      "by_category": {
+        "D1": {
+          "states": 10,
+          "changed_voxels": 265,
+          "mean_changed_voxels": 26.5,
+          "min_changed_voxels": 7,
+          "max_changed_voxels": 60,
+          "mean_changed_ratio": 0.0064697265625,
+          "min_changed_ratio": 0.001708984375,
+          "max_changed_ratio": 0.0146484375
+        },
+        "D2": {
+          "states": 10,
+          "changed_voxels": 104,
+          "mean_changed_voxels": 10.4,
+          "min_changed_voxels": 5,
+          "max_changed_voxels": 15,
+          "mean_changed_ratio": 0.0025390625,
+          "min_changed_ratio": 0.001220703125,
+          "max_changed_ratio": 0.003662109375
+        },
+        "D3": {
+          "states": 10,
+          "changed_voxels": 53,
+          "mean_changed_voxels": 5.3,
+          "min_changed_voxels": 2,
+          "max_changed_voxels": 10,
+          "mean_changed_ratio": 0.0012939453125,
+          "min_changed_ratio": 0.00048828125,
+          "max_changed_ratio": 0.00244140625
+        },
+        "D4": {
+          "states": 10,
+          "changed_voxels": 325,
+          "mean_changed_voxels": 32.5,
+          "min_changed_voxels": 14,
+          "max_changed_voxels": 50,
+          "mean_changed_ratio": 0.0079345703125,
+          "min_changed_ratio": 0.00341796875,
+          "max_changed_ratio": 0.01220703125
+        }
+      },
+      "chain_changed_mask_counts": [
+        {
+          "category": "D1",
+          "chain_id": "7681a806f9e445f8bfd2404bac8b6a11/D1",
+          "root_index": 0,
+          "shard": 2,
+          "world_seed": 1871288230,
+          "changed_voxels_per_state": [
+            19,
+            45,
+            56,
+            60,
+            31
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D4",
+          "chain_id": "1d1777accd484600af84213ecb4d3239/D4",
+          "root_index": 0,
+          "shard": 3,
+          "world_seed": 464191088,
+          "changed_voxels_per_state": [
+            14,
+            29,
+            33,
+            36,
+            18
+          ],
+          "selected_states": 5,
+          "d4_subtype": "C"
+        },
+        {
+          "category": "D4",
+          "chain_id": "a81182c667cf4ce1a8d16a089c0cf54b/D4",
+          "root_index": 0,
+          "shard": 7,
+          "world_seed": 45936102,
+          "changed_voxels_per_state": [
+            29,
+            38,
+            42,
+            50,
+            36
+          ],
+          "selected_states": 5,
+          "d4_subtype": "A"
+        },
+        {
+          "category": "D1",
+          "chain_id": "b8ceec6e91654b0c9c8657524282c2c1/D1",
+          "root_index": 0,
+          "shard": 9,
+          "world_seed": 13412770,
+          "changed_voxels_per_state": [
+            9,
+            15,
+            11,
+            12,
+            7
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "325cf537063e4d38b858f79b72527a2b/D3",
+          "root_index": 0,
+          "shard": 11,
+          "world_seed": 1181056620,
+          "changed_voxels_per_state": [
+            2,
+            2,
+            3,
+            4,
+            3
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D3",
+          "chain_id": "587f831ea5b54126aacfb6ecc891617f/D3",
+          "root_index": 0,
+          "shard": 12,
+          "world_seed": 1571576202,
+          "changed_voxels_per_state": [
+            7,
+            9,
+            10,
+            9,
+            4
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "bd71450fc5844adc87aa619c52af6746/D2",
+          "root_index": 0,
+          "shard": 12,
+          "world_seed": 1303965783,
+          "changed_voxels_per_state": [
+            5,
+            10,
+            11,
+            15,
+            14
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        },
+        {
+          "category": "D2",
+          "chain_id": "4d86d6a22a0b45308a5bc67c4d2a5b50/D2",
+          "root_index": 0,
+          "shard": 30,
+          "world_seed": 1653320808,
+          "changed_voxels_per_state": [
+            9,
+            9,
+            9,
+            12,
+            10
+          ],
+          "selected_states": 5,
+          "d4_subtype": null
+        }
+      ],
+      "empty_unchanged_states": 0,
+      "d4_chain_subtypes": {
+        "A": 1,
+        "C": 1
+      }
+    },
+    "non_finite_prediction": false
+  }
+}

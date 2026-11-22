@@ -1,0 +1,19 @@
+{
+  "best_metric": 0.2533732642891664,
+  "best_step": 27000,
+  "patience_reference": 0.2533732642891664,
+  "bad_validations": 3,
+  "validations": 32,
+  "stopped": false,
+  "stop_step": null,
+  "stop_reason": null,
+  "last_metric": 0.25981841418888507,
+  "config": {
+    "enabled": false,
+    "monitor": "validation_loss_total",
+    "mode": "min",
+    "patience_validations": 2,
+    "min_delta": 0.001,
+    "min_steps": 1000
+  }
+}
