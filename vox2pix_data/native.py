@@ -30,6 +30,10 @@ SETUP = dict(SETTINGS, node_highlighting="none",
              performance_tradeoffs=False, mcl_logging_mobs_spawn=False)
 WORLDS_PER_SLOT = 8
 SITES_PER_WORLD = 4
+PILOT_SCENES = 200
+SEED_MULTIPLIER = 2654435761
+SEED_SPACE = 2**31
+SEED_MULTIPLIER_INVERSE = pow(SEED_MULTIPLIER, -1, SEED_SPACE)
 
 
 class RenderSession(GTSession):
@@ -111,20 +115,24 @@ class NativeScene:
                 return row, rgb, info
         raise TimeoutError(f"Native {kind} did not finish within 90 seconds")
 
-    def survey(self, site):
+    def survey(self, site, survey_columns=16):
         x, z = site
-        low = (x - 24, WORLD_BOTTOM, z - 24)
-        high = (low[0] + SURVEY_SIDE - 1, WORLD_TOP, low[2] + SURVEY_SIDE - 1)
+        margin = 24 + (survey_columns - 16) // 2
+        side = SURVEY_SIDE + survey_columns - 16
+        low = (x - margin, WORLD_BOTTOM, z - margin)
+        high = (low[0] + side - 1, WORLD_TOP, low[2] + side - 1)
         row, _, _ = self.command("survey", low_xyz=low, high_xyz=high)
         if row["status"] != "surveyed":
             raise RejectedScene("Native site emergence failed")
         survey = np.fromfile(self.session.world / "vox2pix_survey.bin", dtype="<u2")
-        return survey.reshape(SURVEY_SIDE, SURVEY_SIDE, WORLD_TOP - WORLD_BOTTOM + 1), low
+        return survey.reshape(side, side, WORLD_TOP - WORLD_BOTTOM + 1), low
 
     def geometry_snapshot(self, low, kind, boxes=False):
         row, rgb, info = self.command("snapshot", low_xyz=low, anchor_kind=kind, boxes=boxes)
         if row["status"] != "captured":
             raise RejectedScene(row.get("reason", "Native voxel snapshot failed"))
+        if not row.get("rgb_enabled"):
+            raise RuntimeError("Native RGB rendering is off at a saved capture")
         state = decode_region((self.session.world / "vox2pix_region.bin").read_bytes())
         ids = self.lookup[state["node"]]
         if (ids == 65535).any():
@@ -220,9 +228,9 @@ class NativeScene:
         return meta, self.vocabulary, arrays, rgbs
 
 
-def _search_world(native, slot, config, rng, library_path, rejected):
+def _search_world(native, slot, config, rng, library_path, rejected, sites_per_world, survey_columns):
     visited = set()
-    for _ in range(SITES_PER_WORLD):
+    for site_attempt in range(1, sites_per_world + 1):
         x, z = map(int, rng.integers(-24000, 24001, size=2))
         hit, _, _ = native.command("search", x=x, z=z, biome_groups=BIOMES,
             biome_group=slot["biome"], resolution=64, max_checks=16384)
@@ -231,11 +239,12 @@ def _search_world(native, slot, config, rng, library_path, rejected):
             continue
         site = tuple(hit["site"])
         if site in visited:
+            rejected["duplicate native site for seed"] += 1
             continue
         visited.add(site)
         try:
-            survey, low = native.survey(site)
-            anchors = site_candidates(survey, native.definitions, slot["height"], rng)
+            survey, low = native.survey(site, survey_columns)
+            anchors = site_candidates(survey, native.definitions, slot["height"], rng, rejected)
             for relative, surface, kind in anchors:
                 tx, ty, tz = relative
                 surveyed_region = survey[tx - 24:tx + 24, tz - 24:tz + 24, ty - 24:ty + 24]
@@ -255,7 +264,7 @@ def _search_world(native, slot, config, rng, library_path, rejected):
                 except RejectedScene as exc:
                     rejected[str(exc)] += 1
                     continue
-                meta.update(surface_y=surface, native_biome=check["biome"])
+                meta.update(surface_y=surface, native_biome=check["biome"], site_attempt=site_attempt)
                 return meta, vocabulary, arrays, rgbs
             rejected["no accepted anchor at site"] += 1
         except RejectedScene as exc:
@@ -264,34 +273,51 @@ def _search_world(native, slot, config, rng, library_path, rejected):
 
 
 def scene_world_seed(scene_id, pilot_seed, attempt):
-    # Odd multiplier permutes the 31-bit seed domain, so slots cannot share worlds.
-    return (2654435761 * (scene_id * WORLDS_PER_SLOT + attempt) + pilot_seed) & 0x7fffffff
+    # Round zero retains the original mapping. Each later round owns a fresh
+    # range of the same permutation, with eight candidates for every slot.
+    search_round, index = divmod(attempt, WORLDS_PER_SLOT)
+    ordinal = (search_round * PILOT_SCENES + scene_id) * WORLDS_PER_SLOT + index
+    return (SEED_MULTIPLIER * ordinal + pilot_seed) % SEED_SPACE
 
 
-def capture_scene(slot, config, craftium_dir, library_path):
+def scene_id_for_world_seed(world_seed, pilot_seed):
+    ordinal = ((world_seed - pilot_seed) * SEED_MULTIPLIER_INVERSE) % SEED_SPACE
+    return (ordinal // WORLDS_PER_SLOT) % PILOT_SCENES
+
+
+def capture_scene(slot, config, craftium_dir, library_path, search_round=0, search_rounds=1,
+                  sites_per_world=SITES_PER_WORLD, survey_columns=16):
     """Allocate disjoint deterministic seed candidates and never substitute a quota."""
     craftium_dir = Path(craftium_dir).resolve()
     engine_build, game_build = _builds(craftium_dir)
     rejected = Counter()
-    for attempt in range(WORLDS_PER_SLOT):
+    first = search_round * WORLDS_PER_SLOT
+    limit = first + search_rounds * WORLDS_PER_SLOT
+    for attempt in range(first, limit):
+        current_round = attempt // WORLDS_PER_SLOT
         seed = scene_world_seed(slot["scene_id"], config["seed"], attempt)
         rng = np.random.default_rng(seed)
-        with RenderSession(
-            "procedural", seed, config["renderer"], craftium_dir,
-            scene_script=HERE / "scene.lua",
-            scene_assets=(REUSED_LUA / "biome_search.lua", REUSED_LUA / "scene_geometry.lua"),
-            native_settings=SETUP, image_size=(config["width"], config["height"]),
-            fixed_step=True, voxel_observation=False, render_rgb=True,
-        ) as session:
-            native = NativeScene(session)
-            try:
-                result = _search_world(native, slot, config, rng, library_path, rejected)
-            except (ConnectionError, TimeoutError) as exc:
-                # A late response belongs to the discarded world, not the next request.
-                rejected[str(exc)] += 1
-                continue
-            if result is not None:
-                meta, vocabulary, arrays, rgbs = result
-                meta.update(slot, world_seed=seed, engine_build=engine_build, game_build=game_build)
-                return meta, vocabulary, arrays, rgbs
+        try:
+            with RenderSession(
+                "procedural", seed, config["renderer"], craftium_dir,
+                scene_script=HERE / "scene.lua",
+                scene_assets=(REUSED_LUA / "biome_search.lua", REUSED_LUA / "scene_geometry.lua"),
+                native_settings=dict(SETUP, voxwm_skip_rgb=True), image_size=(config["width"], config["height"]),
+                fixed_step=True, voxel_observation=False, render_rgb=True,
+            ) as session:
+                native = NativeScene(session)
+                result = _search_world(native, slot, config, rng, library_path, rejected,
+                                       sites_per_world, survey_columns)
+        except (ConnectionError, TimeoutError) as exc:
+            # A late response belongs to the discarded world, not the next request.
+            rejected[str(exc)] += 1
+            result = None
+        if result is not None:
+            meta, vocabulary, arrays, rgbs = result
+            meta.update(slot, world_seed=seed, engine_build=engine_build, game_build=game_build,
+                        search_round=current_round, world_attempt=attempt + 1,
+                        survey_columns=survey_columns, search_rejections=dict(rejected))
+            return meta, vocabulary, arrays, rgbs
+        if (attempt + 1) % WORLDS_PER_SLOT == 0 and attempt + 1 < limit:
+            print(f"Search round {current_round} exhausted for scene {slot['scene_id']}: {dict(rejected)}", flush=True)
     raise RejectedScene(f"Scene {slot['scene_id']} ({slot['biome']}/{slot['height']}) exhausted its search: {dict(rejected)}")

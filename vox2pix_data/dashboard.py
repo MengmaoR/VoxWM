@@ -9,7 +9,7 @@ import time
 from vae_data.supervisor import _bar, _duration
 
 from .dashboard_processes import collector_process
-from .native import WORLDS_PER_SLOT, scene_world_seed
+from .native import scene_id_for_world_seed
 from .protocol import HEIGHTS, plan
 from .storage import committed_paths, read_json
 
@@ -121,10 +121,9 @@ def progress_lines(dataset, slots, config, committed, timestamps, job, log, init
         worlds = job["worlds"]
         lines.append(f"Collector PID {job['pid']} | workers {job['live_workers']}/{job['workers']} "
                      f"| active native worlds {len(worlds)}")
-        seed_to_scene = {scene_world_seed(slot["scene_id"], config["seed"], attempt): slot["scene_id"]
-                         for slot in slots for attempt in range(WORLDS_PER_SLOT)}
         for world in worlds:
-            scene_id = seed_to_scene.get(world["world_seed"])
+            seed = world["world_seed"]
+            scene_id = scene_id_for_world_seed(seed, config["seed"]) if seed is not None else None
             label = f"{scene_id:03d}" if scene_id is not None else "--"
             lines.append(f"  world {world['pid']} | scene {label} | {world['kind'] or 'starting'}")
             if scene_id is not None:

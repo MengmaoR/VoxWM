@@ -28,6 +28,11 @@ def parser():
     collect.add_argument("--height", type=int, choices=[360], default=360)
     collect.add_argument("--seed", type=int, default=42)
     collect.add_argument("--workers", type=positive, default=1)
+    collect.add_argument("--search-round", type=int, default=0, help="first seed round (zero is the original search)")
+    collect.add_argument("--search-rounds", type=positive, default=1, help="rounds of eight worlds per unfilled slot")
+    collect.add_argument("--sites-per-world", type=positive, default=4)
+    collect.add_argument("--survey-columns", type=int, choices=[16, 32, 48], default=16,
+                         help="side of the footprint of candidate anchor columns")
     collect.add_argument("--renderer", choices=["software"], default="software")
     collect.add_argument("--craftium-dir", type=Path, default=DEFAULT_CRAFTIUM)
     for name, help_text in (
@@ -46,12 +51,16 @@ def parser():
 
 def collect_pilot(args):
     from .geometry import build_library
-    from .native import capture_scene
+    from .native import SEED_SPACE, WORLDS_PER_SLOT, capture_scene
     from .protocol import RejectedScene, plan
     from .storage import DatasetWriter
 
     config = {key: getattr(args, key) for key in
               ("scenes", "views_per_scene", "width", "height", "seed", "renderer")}
+    if (args.search_round + args.search_rounds) * args.scenes * WORLDS_PER_SLOT > SEED_SPACE:
+        raise ValueError("Search rounds exceed the independent world seed space")
+    search = dict(search_round=args.search_round, search_rounds=args.search_rounds,
+                  sites_per_world=args.sites_per_world, survey_columns=args.survey_columns)
     with DatasetWriter(args.dataset, config) as writer:
         committed = writer.completed
         completed = len(committed)
@@ -59,6 +68,7 @@ def collect_pilot(args):
         if not remaining:
             print("All 200 scenes are committed. Run check to validate them.")
             return 0
+        print(f"Search {len(remaining)} unfilled slots | {json.dumps(search)}", flush=True)
         failures = 0
         with TemporaryDirectory(prefix="vox2pix-projector-") as tmp:
             library = build_library(Path(tmp))
@@ -70,23 +80,27 @@ def collect_pilot(args):
                 pending = {}
                 for _ in range(workers):
                     slot = next(slots)
-                    pending[pool.submit(capture_scene, slot, config, craftium_dir, library)] = slot
+                    pending[pool.submit(capture_scene, slot, config, craftium_dir, library, **search)] = slot
                 while pending:
                     ready, _ = wait(pending, return_when=FIRST_COMPLETED)
                     for future in ready:
                         slot = pending.pop(future)
                         try:
-                            writer.commit(*future.result())
+                            capture = future.result()
+                            writer.commit(*capture)
                         except RejectedScene as exc:
                             failures += 1
                             print(f"Scene {slot['scene_id']} {slot['biome']} {slot['height']}: {exc}",
                                   file=sys.stderr, flush=True)
                         else:
                             completed += 1
-                            print(f"Committed scene {slot['scene_id']} ({completed}/200)", flush=True)
+                            meta = capture[0]
+                            print(f"Committed scene {slot['scene_id']} ({completed}/200) | {slot['height']} "
+                                  f"| seed round {meta['search_round']} | world {meta['world_attempt']} "
+                                  f"| site {meta['site_attempt']}", flush=True)
                         next_slot = next(slots, None)
                         if next_slot is not None:
-                            job = pool.submit(capture_scene, next_slot, config, craftium_dir, library)
+                            job = pool.submit(capture_scene, next_slot, config, craftium_dir, library, **search)
                             pending[job] = next_slot
         print(f"{completed}/200 scenes committed; {failures} slots remain unfilled.", flush=True)
         return int(completed != args.scenes)
@@ -97,6 +111,8 @@ def main(argv=None):
     args = options.parse_args(argv)
     if args.command == "collect" and args.seed < 0:
         options.error("--seed must be nonnegative")
+    if args.command == "collect" and args.search_round < 0:
+        options.error("--search-round must be nonnegative")
     try:
         if args.command == "collect":
             return collect_pilot(args)

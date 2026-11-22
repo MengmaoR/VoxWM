@@ -30,7 +30,14 @@ Run from the VoxWM repository root. Adjust `--workers` for the machine.
 Resume with the same command and output directory. The number of workers can
 change across invocations. Slots with no qualifying terrain report their
 biome and height. Running the same command searches the same bounded seed
-sequence for those slots. After all 200 scenes are committed, run:
+sequence for those slots. After exhausting round 0, use
+`--search-round 1 --search-rounds 2 --sites-per-world 8 --survey-columns 32`
+on the same dataset to search two fresh rounds of eight worlds per missing
+slot. The wider survey supplies more anchor candidates in the target biome.
+Committed scenes and dataset criteria are preserved. Continue with the next
+round number if the selected rounds are exhausted. Search rejections break
+out missing standing cave floors and the center and full-region free-space
+gates. After all 200 scenes are committed, run:
 
 ```bash
 .venv/bin/python -m vox2pix_data check --dataset outputs/vox2pix_pilot_1k_640x360

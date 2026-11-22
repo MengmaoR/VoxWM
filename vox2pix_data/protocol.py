@@ -185,9 +185,10 @@ def _component_floors(free, floors, rng):
             yield found[i]
 
 
-def site_candidates(survey, definitions, height, rng):
+def site_candidates(survey, definitions, height, rng, rejections=None):
     """Find actual native floors; return XYZ offsets relative to the survey origin."""
-    if survey.shape != (SURVEY_SIDE, SURVEY_SIDE, WORLD_TOP - WORLD_BOTTOM + 1):
+    width = survey.shape[0]
+    if survey.shape != (width, width, WORLD_TOP - WORLD_BOTTOM + 1) or width < SURVEY_SIDE:
         raise ValueError("Native terrain survey has the wrong shape")
     air, free, support, terrain = node_flags(survey, definitions)
     layers = np.arange(survey.shape[2])
@@ -197,20 +198,18 @@ def site_candidates(survey, definitions, height, rng):
     for axis in range(3):
         np.cumsum(summed, axis=axis, out=summed)
 
-    def enough_space(x, z, y):
-        support_counts = []
-        for radius in (8, 24):
-            a, b, c = x - radius, z - radius, y - radius
-            i, j, k = x + radius, z + radius, y + radius
-            support_counts.append(summed[i, j, k] - summed[a, j, k] - summed[i, b, k] - summed[i, j, c]
-                                  + summed[a, b, k] + summed[a, j, c] + summed[i, b, c] - summed[a, b, c])
-        return support_counts[0] * 3 >= 16 ** 3 and support_counts[1] * 4 >= 48 ** 3
+    def free_cells(x, z, y, radius):
+        a, b, c = x - radius, z - radius, y - radius
+        i, j, k = x + radius, z + radius, y + radius
+        return (summed[i, j, k] - summed[a, j, k] - summed[i, b, k] - summed[i, j, c]
+                + summed[a, b, k] + summed[a, j, c] + summed[i, b, c] - summed[a, b, c])
 
     def body_clear(x, z, y):
         return all(air[x, z, y + dy] for dy in PLAYER_AIR_OFFSETS)
 
-    columns = list(product(range(24, 40), repeat=2))
+    columns = list(product(range(24, width - 23), repeat=2))
     floors = []
+    standing_floor = center_clear = False
     for p in rng.permutation(len(columns)):
         x, z = columns[p]
         sy = int(surface[x, z])
@@ -223,7 +222,8 @@ def site_candidates(survey, definitions, height, rng):
                     break
                 is_water = bool(free[x, z, top])
                 y = top + 1
-                if 24 <= y <= survey.shape[2] - 24 and body_clear(x, z, y) and enough_space(x, z, y):
+                if (24 <= y <= survey.shape[2] - 24 and body_clear(x, z, y)
+                    and free_cells(x, z, y, 8) * 3 >= 16 ** 3 and free_cells(x, z, y, 24) * 4 >= 48 ** 3):
                     # S remains the native terrain reference; the actual top is encoded by y.
                     yield (x, y, z), sy + WORLD_BOTTOM, "surface_water" if is_water else "surface_floor"
                 if is_water:
@@ -231,9 +231,22 @@ def site_candidates(survey, definitions, height, rng):
             continue
         low, high = (sy - 24, sy - 8) if height == "shallow" else (24, sy - 32)
         for y in range(max(24, low), min(survey.shape[2] - 24, high) + 1):
-            if (support[x, z, y - 1] and body_clear(x, z, y)
-                and terrain[x, z, y + 3:sy + 1].any() and enough_space(x, z, y)):
+            if not (support[x, z, y - 1] and body_clear(x, z, y) and terrain[x, z, y + 3:sy + 1].any()):
+                continue
+            standing_floor = True
+            if free_cells(x, z, y, 8) * 3 < 16 ** 3:
+                continue
+            center_clear = True
+            if free_cells(x, z, y, 24) * 4 >= 48 ** 3:
                 floors.append((x, z, y))
+    if not floors and height != "surface" and rejections is not None:
+        if not standing_floor:
+            reason = "site: no standing cave floor with roof in height band"
+        elif not center_clear:
+            reason = "site: cave floors fail center16 free-space gate"
+        else:
+            reason = "site: cave floors fail full48 free-space gate"
+        rejections[reason] += 1
     if floors:
         underground = free & (layers < surface[:, :, None])
         for x, z, y in _component_floors(underground, floors, rng):

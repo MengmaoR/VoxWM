@@ -178,6 +178,7 @@ local function snapshot(r)
     end
     reply(r, {status="captured", world_time=mt.get_timeofday(),
         weather=mcl_weather.get_weather(), gamma=tonumber(mt.settings:get("display_gamma")),
+        rgb_enabled=not mt.settings:get_bool("voxwm_skip_rgb"),
         engine_us=mt.get_us_time()})
 end
 
@@ -201,6 +202,9 @@ mt.registered_voxwm_poststeps = {function()
     local r = assert(mt.parse_json(contents))
     if r.request_id <= last then return end
     last = r.request_id
+    -- Native scene searches advance physics without drawing RGB. Rendering is
+    -- restored before the usual camera settle ticks and every saved view.
+    if r.kind ~= "snapshot" then mt.settings:set_bool("voxwm_skip_rgb", r.kind ~= "pose") end
     if r.kind == "search" then
         reply(r, search.find(mt, r))
     elseif r.kind == "survey" then
