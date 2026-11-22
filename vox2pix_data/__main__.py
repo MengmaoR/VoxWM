@@ -36,6 +36,11 @@ def parser():
     ):
         command = commands.add_parser(name, help=help_text)
         command.add_argument("--dataset", type=Path, required=True)
+    dashboard = commands.add_parser("dashboard", help="watch read-only scene and worker progress")
+    dashboard.add_argument("--dataset", type=Path, required=True)
+    dashboard.add_argument("--log", type=Path, help="read a specific collector log")
+    dashboard.add_argument("--interval", type=positive, default=5, help="refresh interval in seconds")
+    dashboard.add_argument("--once", action="store_true", help="print one progress snapshot and exit")
     return root
 
 
@@ -95,6 +100,9 @@ def main(argv=None):
     try:
         if args.command == "collect":
             return collect_pilot(args)
+        if args.command == "dashboard":
+            from .dashboard import show_dashboard
+            return show_dashboard(args.dataset, args.log, args.interval, args.once)
         from .qa import check, compression_report
         if args.command == "check":
             print(json.dumps(check(args.dataset), indent=2))

@@ -263,15 +263,18 @@ def _search_world(native, slot, config, rng, library_path, rejected):
     return None
 
 
+def scene_world_seed(scene_id, pilot_seed, attempt):
+    # Odd multiplier permutes the 31-bit seed domain, so slots cannot share worlds.
+    return (2654435761 * (scene_id * WORLDS_PER_SLOT + attempt) + pilot_seed) & 0x7fffffff
+
+
 def capture_scene(slot, config, craftium_dir, library_path):
     """Allocate disjoint deterministic seed candidates and never substitute a quota."""
     craftium_dir = Path(craftium_dir).resolve()
     engine_build, game_build = _builds(craftium_dir)
     rejected = Counter()
     for attempt in range(WORLDS_PER_SLOT):
-        ordinal = slot["scene_id"] * WORLDS_PER_SLOT + attempt
-        # Odd multiplier permutes the 31-bit seed domain, so slots cannot share worlds.
-        seed = (2654435761 * ordinal + config["seed"]) & 0x7fffffff
+        seed = scene_world_seed(slot["scene_id"], config["seed"], attempt)
         rng = np.random.default_rng(seed)
         with RenderSession(
             "procedural", seed, config["renderer"], craftium_dir,

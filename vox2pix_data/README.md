@@ -41,6 +41,17 @@ The last command writes `compression_report.json` and
 `compression_report.md` under the dataset root. The compression gate is
 based on the validated complete 1K pilot. The pilot remains **NOT NATIVE VERIFIED**.
 
+Open a second server terminal to monitor the existing collector and output.
+
+```bash
+.venv/bin/python -m vox2pix_data dashboard --dataset outputs/vox2pix_pilot_1k_640x360
+```
+
+The dashboard shows scene and frame totals, rate, ETA when available, Linux
+worker and world counts, and scene status by biome and height. Add `--once`
+for a single snapshot, or `--log` to read a particular collector log. It uses
+committed scene directories and reads collector state without owning its processes.
+
 The root contains `manifest.json` and `node_vocabulary.json`. Each committed
 `scenes/scene_NNNN/` contains `scene.json`, `voxels.zarr/` and
 `rgb/000.png` through `rgb/004.png`. Read frame `i` from each white array by
