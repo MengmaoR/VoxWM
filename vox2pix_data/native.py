@@ -133,6 +133,12 @@ class NativeScene:
         survey = np.fromfile(self.session.world / "vox2pix_survey.bin", dtype="<u2")
         return survey.reshape(side, side, WORLD_TOP - WORLD_BOTTOM + 1), low, row.get("cave_hints") or []
 
+    def surface_biomes(self, positions):
+        if not positions:
+            return {}
+        row, _, _ = self.command("surface_biomes", positions=positions)
+        return dict(zip(positions, row["names"], strict=True))
+
     def geometry_snapshot(self, low, kind, boxes=False):
         row, rgb, info = self.command("snapshot", low_xyz=low, anchor_kind=kind, boxes=boxes)
         if row["status"] != "captured":
@@ -265,19 +271,31 @@ def _search_world(native, slot, config, rng, library_path, rejected, sites_per_w
             survey, low, nearby = native.survey(site, survey_columns, biome=slot["biome"] if cave_hints else None)
             hints.extend(tuple(row) for row in nearby)
             anchors = site_candidates(survey, native.definitions, slot["height"], rng, rejected)
+            biomes = None
+            if land_priority and slot["height"] != "surface":
+                anchors = list(anchors)
+                columns = list(dict.fromkeys((int(x + low[0]), surface, int(z + low[2]))
+                                             for (x, _, z), surface, _ in anchors))
+                biomes = native.surface_biomes(columns)
             for relative, surface, kind in anchors:
                 tx, ty, tz = relative
+                foot = tuple(int(a + b) for a, b in zip(relative, low, strict=True))
+                if biomes is not None and biome_group(biomes[foot[0], surface, foot[2]], BIOMES) != slot["biome"]:
+                    rejected["native surface biome mismatch"] += 1
+                    continue
                 surveyed_region = survey[tx - 24:tx + 24, tz - 24:tz + 24, ty - 24:ty + 24]
                 try:
                     scene_visibility(surveyed_region, native.definitions)
                 except RejectedScene as exc:
                     rejected[str(exc)] += 1
                     continue
-                foot = tuple(int(a + b) for a, b in zip(relative, low, strict=True))
                 check, _, _ = native.command("anchor", foot_xyz=foot,
                     surface_y=surface, anchor_kind=kind)
-                if not check["valid"] or biome_group(check["biome"], BIOMES) != slot["biome"]:
-                    rejected["native anchor or biome mismatch"] += 1
+                if biome_group(check["biome"], BIOMES) != slot["biome"]:
+                    rejected["native surface biome mismatch"] += 1
+                    continue
+                if not check["valid"]:
+                    rejected["native standing anchor mismatch"] += 1
                     continue
                 try:
                     meta, vocabulary, arrays, rgbs = native.acquire(foot, kind, config, rng, library_path)

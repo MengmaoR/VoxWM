@@ -209,10 +209,14 @@ local function anchor_valid(foot, kind)
     return false
 end
 
+local function surface_biome(pos)
+    local data = mt.get_biome_data(pos)
+    return data and mt.get_biome_name(data.biome) or "unresolved"
+end
+
 local function check_anchor(r)
     local foot = xyz(r.foot_xyz)
-    local data = mt.get_biome_data({x=foot.x, y=r.surface_y, z=foot.z})
-    reply(r, {status="anchor", biome=data and mt.get_biome_name(data.biome) or "unresolved",
+    reply(r, {status="anchor", biome=surface_biome({x=foot.x, y=r.surface_y, z=foot.z}),
         valid=anchor_valid(foot, r.anchor_kind)})
 end
 
@@ -299,6 +303,10 @@ mt.registered_voxwm_poststeps = {function()
         reply(r, find_site(r))
     elseif r.kind == "survey" then
         survey(r)
+    elseif r.kind == "surface_biomes" then
+        local names = {}
+        for i, cell in ipairs(r.positions) do names[i] = surface_biome(xyz(cell)) end
+        reply(r, {status="surface_biomes", names=names})
     elseif r.kind == "anchor" then
         check_anchor(r)
     elseif r.kind == "pose" then
