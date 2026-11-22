@@ -2,6 +2,8 @@
 
 Vox2Pix 新增独立的 1K Compression Pilot，见 [数据协议](VOX2PIX_DATA_COLLECTION_PROTOCOL.md)。用户手动运行 200 个 Native 场景。Codex 进行代码、合成几何、存储和 CLI 检查。真实配额、RGB 对齐和压缩结果待验证。Implementation complete != 1K dataset collected。
 
+- Vox2Pix 使用 `vox2pix-pilot-v2-camera16`。旧版 2.0 格眼高和可见性半径已废弃。48³ 以脚底为锚，默认第一人称名义眼高约 1.6 格，RGB 与白模投影使用同帧 Craftium 实际相机位姿。可见性半径为 1.6 格，按原生体素中心重建查找表。
+
 数据采集和 E00 小样本验证阶段已结束。当前活动方向是`voxel_vae/`的 E01-Masked Combined-Token 3D ResNet VAE。E00 的 Plain 与 Masked 产物保留作历史。`python -m vae_data` → `vae_data/sharded/`及[数据协议](VAE_DATA_COLLECTION_PROTOCOL.md)继续定义只读正式数据格式。
 
 - 当前范围为 E01-Masked 的全训练集入口、固定 3D ResNet VAE、balanced sampler、训练和诊断。用户手动执行 E01。架构/beta/latent sweep、alpha=0.75 消融、Dynamics 训练及新数据采集均需要另行授权。

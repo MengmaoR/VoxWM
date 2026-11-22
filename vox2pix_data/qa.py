@@ -1,18 +1,22 @@
 """Read-only pilot validation and measured compression/coverage reporting."""
 
 from collections import Counter
+from functools import lru_cache
+from itertools import product
 import math
 from pathlib import Path
 
 import numpy as np
 from PIL import Image
+from zarr.errors import GroupNotFoundError
 
 from vae_data.sharded.protocol import biome_group
 
 from .protocol import (
-    BIOMES, CAMERA_INDEX_ENU, CAMERA_OFFSET_XYZ, HEIGHTS, SETTINGS, VERSION,
-    WORLD_BOTTOM, WORLD_TOP, RejectedScene, camera_angles, direction_for_angles, plan,
-    region_id, scene_visibility,
+    BIOMES, HEIGHTS, NOMINAL_CAMERA_HEIGHT, NOMINAL_CAMERA_XYZ, PLAYER_AIR_OFFSETS,
+    SETTINGS, VERSION, VISIBILITY_LOOKUP_VERSION, VISIBILITY_RADIUS, WORLD_BOTTOM,
+    WORLD_TOP, RejectedScene, camera_angles, camera_local_xyz, direction_for_angles,
+    plan, region_id, require_air_camera, scene_visibility, visibility_lookup,
 )
 from .storage import (
     EMPTY_FACE, EMPTY_NODE, FIELDS, RAW_FIELDS, WHITE_FIELDS,
@@ -20,7 +24,6 @@ from .storage import (
 )
 
 PILOT = {"scenes": 200, "views_per_scene": 5, "width": 640, "height": 360}
-TOLERANCE = 0.01
 
 
 def require(condition, reason):
@@ -54,14 +57,43 @@ def named_ids(meta, key, vocabulary):
     return [ident for ident, name in enumerate(vocabulary) if name in present]
 
 
-def validate_view(view, config, expected_camera, active, meta):
+@lru_cache(maxsize=1)
+def validate_visibility_lookup():
+    bounds = (range(math.ceil(coordinate - VISIBILITY_RADIUS),
+                    math.floor(coordinate + VISIBILITY_RADIUS) + 1)
+              for coordinate in NOMINAL_CAMERA_XYZ)
+    expected = {(x, z, y) for x, y, z in product(*bounds)
+                if math.dist((x, y, z), NOMINAL_CAMERA_XYZ) <= VISIBILITY_RADIUS + 1e-12}
+    lookup = visibility_lookup()
+    require(set(lookup) == expected, "Visibility lookup does not match the nominal radius and voxel centers")
+    require(all(y >= 0 for _, _, y in lookup), "Visibility lookup includes supporting floor voxels")
+
+
+def validate_camera_protocol(meta):
+    require(number(meta, "nominal_camera_height") == NOMINAL_CAMERA_HEIGHT, "Incorrect nominal camera height")
+    require(number(meta, "visibility_radius") == VISIBILITY_RADIUS, "Incorrect visibility radius")
+    require(meta.get("visibility_lookup_version") == VISIBILITY_LOOKUP_VERSION, "Incorrect visibility lookup version")
+
+
+def validate_view(view, config, foot, active, meta, nodes, definitions):
     ident = view.get("region_id")
     require(type(ident) is int and 0 <= ident < 40 and active[ident], "View region is not active")
     requested_yaw = number(view, "requested_yaw_deg")
     requested_pitch = number(view, "requested_pitch_deg")
     require(region_id(requested_yaw, requested_pitch) == ident, "Requested angles fall outside view region")
-    camera = vector(view, "cam_pos_xyz")
-    require(np.max(np.abs(camera - expected_camera)) <= TOLERANCE, "Camera is not at Foot +2")
+    validate_camera_protocol(view)
+    require(np.array_equal(vector(view, "foot_anchor_world_xyz", integer=True), foot),
+            "View foot anchor differs from the scene anchor")
+    camera = vector(view, "actual_camera_world_xyz")
+    try:
+        local_xyz = camera_local_xyz(camera, foot)
+        require_air_camera(nodes, definitions, local_xyz)
+    except RejectedScene as exc:
+        raise ValueError(str(exc)) from exc
+    require(math.isclose(number(view, "actual_camera_height_above_foot"), local_xyz[1], rel_tol=0, abs_tol=1e-10),
+            "Recorded camera height differs from the captured position")
+    require(np.array_equal(vector(view, "projection_origin_local_xyz"), local_xyz),
+            "White Model origin differs from the captured RGB camera position")
     direction = vector(view, "cam_dir_xyz")
     norm = np.linalg.norm(direction)
     require(math.isfinite(norm) and norm > 0, "Invalid camera direction")
@@ -97,6 +129,8 @@ def validate_payload(meta, config, vocabulary, slot, arrays):
     require(isinstance(biome, str) and biome_group(biome, BIOMES) == slot["biome"],
             "Native surface biome differs from the planned biome")
     foot = vector(meta, "foot_anchor_xyz", integer=True)
+    validate_camera_protocol(meta)
+    validate_visibility_lookup()
     origin = vector(meta, "region_origin_xyz", integer=True)
     origin_enu = vector(meta, "region_origin_enu", integer=True)
     require(np.array_equal(origin, foot - 24) and np.array_equal(origin_enu, origin[[0, 2, 1]])
@@ -146,17 +180,18 @@ def validate_payload(meta, config, vocabulary, slot, arrays):
     require(isinstance(recorded_active, list) and all(type(value) is bool for value in recorded_active)
             and recorded_active == active, "Invalid or inconsistent visibility mask")
 
-    x, z, eye = CAMERA_INDEX_ENU
+    center_index = nodes.shape[0] // 2
+    support = nodes[center_index, center_index, center_index - 1]
+    body = nodes[center_index, center_index, center_index + np.asarray(PLAYER_AIR_OFFSETS)]
+    require((body == air_id).all(), "Foot anchor lacks player body clearance")
     if anchor_kind == "surface_water":
-        require(nodes[x, z, eye - 1] in water, "Virtual water anchor lacks water below the camera")
+        require(support in water, "Virtual water anchor lacks water immediately below the foot")
     else:
-        require((nodes[x, z, eye - 2:eye + 1] == air_id).all() and nodes[x, z, eye - 3] not in [air_id, *water],
-                "Floor anchor lacks support or body clearance")
-    expected_camera = foot + CAMERA_OFFSET_XYZ
+        require(support not in [air_id, *water], "Floor anchor lacks support")
     views = meta.get("views")
     require(isinstance(views, list) and len(views) == config["views_per_scene"], "Missing scene views")
     require(all(isinstance(view, dict) for view in views), "Invalid view metadata")
-    ids, ticks = zip(*(validate_view(view, config, expected_camera, active, meta) for view in views))
+    ids, ticks = zip(*(validate_view(view, config, foot, active, meta, nodes, definitions) for view in views))
     require(len(set(ids)) == len(ids), "Repeated view region")
     require(all(a < b for a, b in zip(ticks, ticks[1:])), "Native view ticks must increase")
 
@@ -205,6 +240,7 @@ class Coverage:
         self.pairs, self.faces = Counter(), Counter()
         self.layer_valid, self.layer_water, self.layer_glass = Counter(), Counter(), Counter()
         self.geometry = Counter()
+        self.camera_heights = []
         self.scenes = self.frames = self.pixels = 0
 
     def add(self, meta, arrays):
@@ -220,6 +256,7 @@ class Coverage:
         self.active[active] += 1
         self.closed[40 - active] += 1
         self.selected.update(view["region_id"] for view in meta["views"])
+        self.camera_heights.extend(view["actual_camera_height_above_foot"] for view in meta["views"])
         self.geometry.update(meta["geometry_counts"])
         water = named_ids(meta, "water_nodes", self.vocabulary)
         glass = named_ids(meta, "glass_nodes", self.vocabulary)
@@ -240,6 +277,10 @@ class Coverage:
         return {
             "scene_count": self.scenes,
             "frame_count": self.frames,
+            "actual_camera_height": {
+                "min": float(np.min(self.camera_heights)), "mean": float(np.mean(self.camera_heights)),
+                "max": float(np.max(self.camera_heights)), "std": float(np.std(self.camera_heights)),
+            },
             "biome_scene_counts": {biome: self.biomes[biome] for biome in sorted(BIOMES)},
             "height_scene_counts": {height: self.heights[height] for height in HEIGHTS},
             "biome_height_scene_counts": {
@@ -299,7 +340,7 @@ def _scan(root, visit=None):
             coverage.add(meta, arrays)
             if visit is not None:
                 visit(path, arrays, rgbs)
-        except (ValueError, OSError, KeyError, TypeError, zarr.errors.GroupNotFoundError) as exc:
+        except (ValueError, OSError, KeyError, TypeError, GroupNotFoundError) as exc:
             raise ValueError(f"{path.name}: {exc}") from exc
     return coverage.report()
 
@@ -356,6 +397,7 @@ def compression_report(root):
         pilot_total_bytes=total, pilot_total_GB=total / 1e9, pilot_total_GiB=total / 2**30,
         projected_50k_total_bytes=projected, projected_50k_GB=projected / 1e9, projected_50k_GiB=projected / 2**30,
         gate_decimal_GB=100, recommended_resolution="640x360" if projected <= 100_000_000_000 else "320x180",
+        actual_camera_height=coverage.pop("actual_camera_height"),
         coverage=coverage,
     )
     write_json(root / "compression_report.json", result)
@@ -381,6 +423,7 @@ def _markdown(report):
         ratio = values["compression_ratio"]
         lines.append(f"| {name} | {values['raw_bytes']:,} | {values['actual_bytes']:,} | {ratio:.2f}× |")
     rgb = report["rgb"]
+    eye = report["actual_camera_height"]
     lines.extend([
         f"| Metadata | — | {report['metadata']['actual_bytes']:,} | — |", "",
         f"PNG bytes per frame averaged {rgb['mean_bytes_per_frame']:,.0f}, with a median of "
@@ -389,6 +432,8 @@ def _markdown(report):
         f"The 50× projection is **{report['projected_50k_GB']:.3f} GB / "
         f"{report['projected_50k_GiB']:.3f} GiB**.",
         f"The decimal 100 GB gate recommends **{report['recommended_resolution']}**.", "",
+        f"Measured camera height above the foot across all views is {eye['mean']:.6f} voxels on average, "
+        f"with min {eye['min']:.6f}, max {eye['max']:.6f}, and standard deviation {eye['std']:.6f}.", "",
         "## Coverage", "",
         "| Layer | Valid pixels | Valid ratio | Water hits | Glass hits |",
         "| --- | ---: | ---: | ---: | ---: |",

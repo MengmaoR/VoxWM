@@ -1,5 +1,9 @@
 # Vox2Pix 1K compression pilot
 
+The active protocol is `vox2pix-pilot-v2-camera16`. Use a newly initialized pilot
+directory for this version. The compression report includes observed native
+camera heights across all views.
+
 Use the existing native GT environment on Linux, with the repository's
 fixed24 integer-origin capture patch built into Craftium. Install the existing
 `vae_p0/requirements.txt` for NumPy, Zarr v2, Blosc and Pillow if they are

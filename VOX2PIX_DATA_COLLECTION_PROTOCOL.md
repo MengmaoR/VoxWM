@@ -1,6 +1,10 @@
 # Vox2Pix Data Collection Protocol
 
-**NOT NATIVE VERIFIED. Implementation complete != 1K dataset collected.**
+**`vox2pix-pilot-v2-camera16` · NOT NATIVE VERIFIED. Implementation complete != 1K dataset collected.**
+
+The previous 2.0-voxel eye-height assumption and radius are deprecated. This
+revision uses the game's normal first-person camera and a 1.6-voxel visibility
+radius.
 
 Vox2Pix pairs one raw 48³ world region with five camera poses, five three-layer
 geometric projections, and five RGB frames. The pilot measures storage costs
@@ -28,38 +32,61 @@ stores each independent `world_seed`. The formal plan uses world-seed-level
   `[x,z,y]`. Given integer foot anchor `(fx,fy,fz)`, stored index
   `[i,j,k]` refers to the world voxel centered at
   `(fx-24+i, fy-24+k, fz-24+j)` in XYZ. Store this region origin in both
-  conventions. The camera is at `(fx,fy+2,fz)`, at ENU index `[24,24,26]`.
-  Voxel boundaries lie half a voxel from their centers.
+  conventions. Voxel boundaries lie half a voxel from these integer centers.
+  The nominal first-person eye is `(0,1.6,0)` in foot-local XYZ. Craftium's
+  actual first-person eye is used as reported. Vertically, the validator
+  accepts up to 0.05 voxel of deviation from nominal, including a stock eye
+  height of 1.625.
 - Reuse Mapgen v7, native biome lookup and the VAE biome grouping. Resolve the
   surface reference `S` from solid native terrain in the sampled column.
   Surface candidates descend from the highest standable floor, including tree
-  tops. For the first exposed water surface `y_w`, set the virtual foot to
-  `y_w-1` and the camera to `y_w+1` in air.
+  tops. Over exposed water, the virtual foot is the first Air node above the
+  highest water node in the column. The technical observer stays there and
+  uses the same native first-person camera as an observer over land.
 - The shallow band is `[S-24,S-8]`. The deep band is `[-38,S-32]`.
   In both cases the complete 48³ region lies within `[-62,193]` vertically.
   Search real six-connected air/water cavities in native terrain. Check a
-  supporting floor, three air cells from the foot to the eye, and overhead
-  terrain. Try other floors of the current component before another component,
-  then another location, then another seed.
+  supporting floor, clearance for the standing body, and overhead terrain.
+  At an integer foot, requiring Air at vertical offsets 0, 1 and 2 covers the
+  1.8-voxel standing collision column under the half-voxel boundary convention.
+  Camera occupancy is checked separately. Try other floors of the current
+  component before another component, then another location, then another seed.
 - The center 16³ must have at least one-third free space and the full 48³ at
   least one-quarter. Air and water are free, and the eye cell is always air.
-  The scene must have at least 20 open views. A precomputed angular lookup maps
-  occupied voxel offsets of Euclidean length at most 2 to affected regions.
+  The scene must have at least 20 open views. The `voxel-centers-r1.6-v2`
+  lookup maps a voxel to affected view regions if its center lies at most
+  1.6 voxels from the nominal eye. Generate it deterministically from integer
+  node centers and rays from `(0,1.6,0)`, then reuse it for all scenes.
   Air and water leave these regions open. Eight 45° yaw bins and five 36° pitch
   bins form 40 regions. Choose five open bins uniformly without replacement and
   sample one concrete angle pair per bin. Yaw zero is +Z, positive yaw looks
   toward −X, and positive pitch looks downward. Region IDs are
   `8 * pitch_bin + yaw_bin` from the lowest pitch bin upward numerically.
 - Capture RGB and actual eye position, direction, and both FOVs from the same
-  Craftium observation. Hold the pose until the client reaches the requested
-  eye and angle. The white projection uses the actual camera packet and pixel
-  centers. Record requested and actual angles, resolution, gamma, time,
+  Craftium observation. Verify the reported eye occupies Air and the client
+  has reached the requested angles. Use the actual reported eye relative to
+  the foot, direction, FOV and pixel centers for white projection. Record the
+  actual world position and height, foot anchor, projection origin, nominal
+  height, lookup version and radius per view. Also record requested and actual
+  angles, resolution, gamma, time,
   weather, engine/game revisions, and render settings. The fixed capture
   settings request vertical FOV 72°, gamma 3.0, noon and clear weather
   (`mcl_doWeatherCycle=false`, `mcl_weather.change_weather("none")`).
   HUD and camera motion effects, waving, dynamic shadows and auto exposure
   are disabled. Verify the same native node IDs and raw states across all five
   views before committing.
+
+The complete foot-relative lookup offsets are given below in Luanti XYZ.
+`x,z ∈ {-1,0,1}` means all nine pairs. The 20 offsets include the cell
+containing the nominal camera, which is Air in eligible scenes. The support
+center at `y=-1` lies 2.6 voxels from the nominal camera and is excluded.
+
+| Y center | Horizontal pairs (X,Z) | Count |
+| --- | --- | ---: |
+| 0 | (0,0) | 1 |
+| 1 | x,z ∈ {-1,0,1} | 9 |
+| 2 | x,z ∈ {-1,0,1} | 9 |
+| 3 | (0,0) | 1 |
 
 ## White model and storage
 
@@ -83,15 +110,17 @@ metadata are written together. Rerun the same command to fill missing slots.
 ## Validation and storage gate
 
 `check` is a read-only validator for exact pilot quotas, independent seeds,
-camera/region coordinates, raw and white array shapes and dtypes, PNG sizes,
+camera/region coordinates, equality of the observed and projection origins,
+the current visibility lookup, raw and white array shapes and dtypes, PNG sizes,
 and layer sentinels. The geometry fixtures exercise air, opaque and transparent
 hits, adjacent cubes, non-full geometry and underwater rejection. A complete
 pilot reports biome/height and view bins, node and node-state visibility,
 face codes, layer validity and water/glass frequency by layer.
 
 `compression-report` records RGB size distribution, each compressed array
-field, raw-map and metadata bytes, and total GB and GiB. It scales measured
-1K bytes by 50. A result of at most decimal 100 GB recommends 640×360.
+field, raw-map and metadata bytes, actual camera-height minimum, mean, maximum
+and population standard deviation across all views, and total GB and GiB.
+It scales measured 1K bytes by 50. A result of at most decimal 100 GB recommends 640×360.
 Larger estimates recommend 320×180. Both remain manual decisions for the
 formal dataset.
 

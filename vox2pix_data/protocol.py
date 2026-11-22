@@ -8,13 +8,18 @@ import numpy as np
 
 from vae_data.sharded.protocol import BIOMES, WORLD_BOTTOM, WORLD_TOP
 
-VERSION = "vox2pix-1k-v1"
+VERSION = "vox2pix-pilot-v2-camera16"
 HEIGHTS = ("surface", "shallow", "deep")
 CENTER = (slice(16, 32),) * 3
 SIDE = 48
 SURVEY_SIDE = SIDE + 15
-CAMERA_OFFSET_XYZ = (0, 2, 0)
-CAMERA_INDEX_ENU = (24, 24, 26)
+NOMINAL_CAMERA_HEIGHT = 1.6
+NOMINAL_CAMERA_XYZ = (0., NOMINAL_CAMERA_HEIGHT, 0.)
+VISIBILITY_RADIUS = 1.6
+VISIBILITY_LOOKUP_VERSION = "voxel-centers-r1.6-v2"
+# Standing collision box extends 1.8 voxels above the integer foot. These
+# air cells cover that volume with the project's half-voxel boundaries.
+PLAYER_AIR_OFFSETS = (0, 1, 2)
 SETTINGS = dict(
     fov=72, display_gamma=3.0, camera_smoothing=0., view_bobbing_amount=0.,
     cinematic=False, time_speed=0, world_start_time=12000,
@@ -61,20 +66,46 @@ def region_id(yaw_deg, pitch_deg):
     return min(4, int((pitch_deg + 90) / 36)) * 8 + int((yaw_deg % 360) / 45)
 
 
+def camera_local_xyz(actual_world_xyz, foot_world_xyz):
+    """Check the native eye pose and return its XYZ relative to the foot."""
+    camera = np.asarray(actual_world_xyz, dtype=np.float64)
+    foot = np.asarray(foot_world_xyz, dtype=np.float64)
+    if camera.shape != (3,) or foot.shape != (3,) or not np.isfinite(camera).all() or not np.isfinite(foot).all():
+        raise RejectedScene("Camera or foot position is invalid")
+    local = camera - foot
+    if np.max(np.abs(local[[0, 2]])) > .002 or abs(local[1] - NOMINAL_CAMERA_HEIGHT) > .05:
+        raise RejectedScene("Native camera did not settle near the nominal first-person pose")
+    return local
+
+
+def require_air_camera(nodes, definitions, local_xyz):
+    """Find the integer-centered cell containing the real or nominal eye."""
+    x, y, z = (math.floor(coord + .5) + SIDE // 2 for coord in local_xyz)
+    index = (x, z, y)
+    if any(i < 0 or i >= size for i, size in zip(index, nodes.shape, strict=True)):
+        raise RejectedScene("Camera cell is outside the voxel map")
+    if definitions[int(nodes[index])]["name"] != "air":
+        raise RejectedScene("Camera cell is not air")
+
+
 @lru_cache(maxsize=1)
 def visibility_lookup():
-    """Rasterize voxel angular footprints into view bins once per process."""
+    """Rasterize nearby foot-relative ENU node centers once per process."""
     rays = np.array([
         [direction_for_angles(yaw * 45 + (u + .5) * 5, -90 + pitch * 36 + (v + .5) * 4)
          for u, v in product(range(9), repeat=2)]
         for pitch, yaw in product(range(5), range(8))
     ])
     rays[np.abs(rays) < 1e-12] = 1e-12
+    camera_x, camera_y, camera_z = NOMINAL_CAMERA_XYZ
+    extents = [range(math.ceil(coord - VISIBILITY_RADIUS), math.floor(coord + VISIBILITY_RADIUS) + 1)
+               for coord in (camera_x, camera_z, camera_y)]
+    camera_xyz = np.asarray(NOMINAL_CAMERA_XYZ)
     result = {}
-    for dx, dz, dy in product(range(-2, 3), repeat=3):
-        if not 0 < dx * dx + dy * dy + dz * dz <= 4:
+    for dx, dz, dy in product(*extents):
+        center = np.array([dx, dy, dz]) - camera_xyz
+        if center @ center > VISIBILITY_RADIUS ** 2:
             continue
-        center = np.array([dx, dy, dz])
         a, b = (center - .5) / rays, (center + .5) / rays
         enters = np.maximum(np.minimum(a, b).max(axis=-1), 0)
         exits = np.maximum(a, b).min(axis=-1)
@@ -102,15 +133,14 @@ def node_flags(nodes, definitions):
 def scene_visibility(nodes, definitions):
     if nodes.shape != (48, 48, 48):
         raise ValueError("Scene requires one 48³ voxel map")
-    air, free, _, _ = node_flags(nodes, definitions)
-    if not air[CAMERA_INDEX_ENU]:
-        raise RejectedScene("Camera cell is not air")
+    _, free, _, _ = node_flags(nodes, definitions)
+    require_air_camera(nodes, definitions, NOMINAL_CAMERA_XYZ)
     center_ratio, full_ratio = float(free[CENTER].mean()), float(free.mean())
     if center_ratio < 1 / 3 or full_ratio < 1 / 4:
         raise RejectedScene("Scene fails the center or full free-space gate")
     active = np.ones(40, dtype=bool)
     for offset, bins in visibility_lookup().items():
-        index = tuple(p + d for p, d in zip(CAMERA_INDEX_ENU, offset, strict=True))
+        index = tuple(SIDE // 2 + d for d in offset)
         if not free[index]:
             active[bins] = False
     if active.sum() < 20:
@@ -176,6 +206,9 @@ def site_candidates(survey, definitions, height, rng):
                                   + summed[a, b, k] + summed[a, j, c] + summed[i, b, c] - summed[a, b, c])
         return support_counts[0] * 3 >= 16 ** 3 and support_counts[1] * 4 >= 48 ** 3
 
+    def body_clear(x, z, y):
+        return all(air[x, z, y + dy] for dy in PLAYER_AIR_OFFSETS)
+
     columns = list(product(range(24, 40), repeat=2))
     floors = []
     for p in rng.permutation(len(columns)):
@@ -189,9 +222,8 @@ def site_candidates(survey, definitions, height, rng):
                 if top < sy:
                     break
                 is_water = bool(free[x, z, top])
-                y = top - 1 if is_water else top + 1
-                if (24 <= y <= survey.shape[2] - 24 and air[x, z, y + 2]
-                    and (is_water or air[x, z, y:y + 3].all()) and enough_space(x, z, y)):
+                y = top + 1
+                if 24 <= y <= survey.shape[2] - 24 and body_clear(x, z, y) and enough_space(x, z, y):
                     # S remains the native terrain reference; the actual top is encoded by y.
                     yield (x, y, z), sy + WORLD_BOTTOM, "surface_water" if is_water else "surface_floor"
                 if is_water:
@@ -199,7 +231,7 @@ def site_candidates(survey, definitions, height, rng):
             continue
         low, high = (sy - 24, sy - 8) if height == "shallow" else (24, sy - 32)
         for y in range(max(24, low), min(survey.shape[2] - 24, high) + 1):
-            if (support[x, z, y - 1] and air[x, z, y:y + 3].all()
+            if (support[x, z, y - 1] and body_clear(x, z, y)
                 and terrain[x, z, y + 3:sy + 1].any() and enough_space(x, z, y)):
                 floors.append((x, z, y))
     if floors:

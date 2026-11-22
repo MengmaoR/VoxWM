@@ -17,8 +17,9 @@ from voxwm_gt.session import GTSession
 
 from .geometry import Projector
 from .protocol import (
-    BIOMES, CAMERA_OFFSET_XYZ, SETTINGS, SURVEY_SIDE, WORLD_BOTTOM, WORLD_TOP,
-    RejectedScene, camera_angles, direction_for_angles, region_id, sample_views,
+    BIOMES, NOMINAL_CAMERA_HEIGHT, SETTINGS, SURVEY_SIDE, VISIBILITY_LOOKUP_VERSION,
+    VISIBILITY_RADIUS, WORLD_BOTTOM, WORLD_TOP, RejectedScene, camera_angles,
+    camera_local_xyz, direction_for_angles, region_id, require_air_camera, sample_views,
     scene_visibility, site_candidates,
 )
 
@@ -133,7 +134,6 @@ class NativeScene:
 
     def acquire(self, foot, kind, config, rng, library_path):
         origin = tuple(coordinate - 24 for coordinate in foot)
-        camera = np.add(foot, CAMERA_OFFSET_XYZ)
         # Neither the initial player position nor the camera position sets the crop.
         self.command("pose", relocate=True, foot_xyz=foot, anchor_kind=kind, yaw=0., pitch=0.)
         for _ in range(72):
@@ -164,14 +164,15 @@ class NativeScene:
                    for state in (previous, current) for field, expected in zip(state, baseline)):
                 raise RejectedScene("Node Name or raw param2 changed between native views")
             position = np.asarray(info["cam_pos"], dtype=np.float64)
+            projection_origin = camera_local_xyz(position, foot)
+            require_air_camera(current[0], self.stable_defs, projection_origin)
             direction = np.asarray(info["cam_dir"], dtype=np.float64)
             norm = float(np.linalg.norm(direction))
-            if not np.all(np.isfinite(position)) or not np.isfinite(norm) or norm < 1e-10:
+            if not np.isfinite(norm) or norm < 1e-10:
                 raise RejectedScene("The client camera packet is invalid")
             direction /= norm
             yaw, pitch = camera_angles(direction)
-            if (not np.allclose(position, camera, atol=.002, rtol=0)
-                    or direction @ expected_direction < math.cos(math.radians(.04))
+            if (direction @ expected_direction < math.cos(math.radians(.04))
                     or region_id(yaw, pitch) != view["region_id"]):
                 raise RejectedScene("The native render pose did not settle at the requested view")
             fov_x, fov_y = float(info["cam_fov_x"]), float(info["cam_fov_y"])
@@ -186,8 +187,13 @@ class NativeScene:
             if rgb.shape != (height, width, 3) or rgb.dtype != np.uint8:
                 raise RuntimeError("Native RGB packet has the wrong size or dtype")
             rgbs.append(rgb.copy())
-            whites.append(projector.render(position - foot, direction, fov_x, fov_y, width, height))
-            view.update(cam_pos_xyz=position.tolist(), cam_dir_xyz=direction.tolist(),
+            whites.append(projector.render(projection_origin, direction, fov_x, fov_y, width, height))
+            view.update(foot_anchor_world_xyz=list(foot), actual_camera_world_xyz=position.tolist(),
+                        actual_camera_height_above_foot=float(projection_origin[1]),
+                        nominal_camera_height=NOMINAL_CAMERA_HEIGHT,
+                        projection_origin_local_xyz=projection_origin.tolist(),
+                        visibility_radius=VISIBILITY_RADIUS, visibility_lookup_version=VISIBILITY_LOOKUP_VERSION,
+                        cam_dir_xyz=direction.tolist(),
                         yaw_deg=yaw, pitch_deg=pitch, fov_x_rad=fov_x, fov_y_rad=fov_y,
                         resolution=[width, height], gamma=capture["gamma"],
                         world_time=capture["world_time"], weather=capture["weather"],
@@ -199,6 +205,8 @@ class NativeScene:
             data_source="native",
             foot_anchor_xyz=list(foot), region_origin_xyz=list(origin),
             region_origin_enu=[origin[0], origin[2], origin[1]], anchor_kind=kind,
+            nominal_camera_height=NOMINAL_CAMERA_HEIGHT, visibility_radius=VISIBILITY_RADIUS,
+            visibility_lookup_version=VISIBILITY_LOOKUP_VERSION,
             center_free_ratio=center, full_free_ratio=full, active_view_regions=active,
             views=views, render_settings=dict(SETUP, renderer=config["renderer"],
                 fixed24=True, rgb_observations=True, hud=False),
