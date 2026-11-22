@@ -1,5 +1,7 @@
 # VoxWM 当前状态
 
+**Vox2Pix 1K Compression Pilot 实现已准备，NOT NATIVE VERIFIED。** 用户下一步手动采集 200 个场景 × 5 视角，然后检查实际配额、几何对齐与压缩。Implementation complete != 1K dataset collected。[实验协议](VOX2PIX_DATA_COLLECTION_PROTOCOL.md) · [执行命令](vox2pix_data/README.md)
+
 **E01-Masked 27,000 步验证最优 checkpoint 已完成冻结审计，结论为 FREEZE WITH KNOWN D3 LIMITATION。**
 
 - 两个 `vae_100k_clip` 各有 100,000 个已完成状态。E01 的新划分为 160,000 条 train、20,000 条 validation 和 20,000 条 test。原 train 和 validation 保留，从旧 test 按完整 world seed 分别补入 274 条和 380 条。新划分通过 `split_160k.json` 启用，沿用原数据和 canonical 词表映射。
