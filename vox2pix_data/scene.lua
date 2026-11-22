@@ -5,6 +5,7 @@ local world = mt.get_worldpath()
 local search = dofile(mod .. "/biome_search.lua")
 local geometry = dofile(mod .. "/scene_geometry.lua")
 local pending, started, last = nil, false, 0
+local observer_eye_height
 local box_names, box_types = {}, {}
 assert(voxwm_clock and voxwm_region and mt.get_node_boxes, "Build the VoxWM fixed24 engine")
 assert(voxwm_clock().region_capture_version == "voxwm-region-integer-v1", "Build integer-origin region capture")
@@ -145,13 +146,17 @@ local function pose(r, player)
     if r.relocate then
         local foot = xyz(r.foot_xyz)
         local over_water = r.anchor_kind == "surface_water"
-        -- Hold the observer in air for the virtual water anchor. For ordinary
-        -- floors the actual actor stands at foot with eye height two.
-        player:set_properties({eye_height=over_water and 0 or 2, is_visible=false})
+        -- The actor stays in air at a virtual water anchor and at the foot
+        -- anchor for ordinary floors. Both render from the same Foot + 2.
+        observer_eye_height = over_water and 0 or 2
+        player:set_properties({is_visible=false})
         player:set_physics_override({gravity=0, speed=0, jump=0})
-        player:set_eye_offset(vector.zero(), vector.zero(), vector.zero())
         player:set_pos(over_water and vector.offset(foot,0,2,0) or foot)
     end
+    -- VoxeLibre owns the model's eye_height. Luanti's first-person offset is
+    -- in engine units (10 per voxel) and is applied on top of that height.
+    local eye_height = player:get_properties().eye_height
+    player:set_eye_offset(vector.new(0, 10 * (observer_eye_height - eye_height), 0))
     clean_hud(player)
     player:set_look_horizontal(math.rad(r.yaw))
     player:set_look_vertical(math.rad(r.pitch))
