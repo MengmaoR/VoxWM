@@ -14,7 +14,8 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
-if importlib.util.find_spec("zarr") is None:
+stub_zarr = importlib.util.find_spec("zarr") is None
+if stub_zarr:
     sys.modules["zarr"] = ModuleType("zarr")
 
 from voxel_vae import dataset, freeze_audit
@@ -27,6 +28,9 @@ from voxel_vae.freeze_d3 import D3Audit
 from voxel_vae.freeze_statistics import Moments, TrainLatents, add_token_counts, embedding_coverage
 from voxel_vae.latent_normalization import denormalize_latent, normalize_latent
 from voxel_vae.vocabulary import CanonicalVocabulary
+
+if stub_zarr:
+    del sys.modules["zarr"]
 
 
 class FixtureIndex:

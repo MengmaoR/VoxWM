@@ -1,0 +1,45 @@
+{
+  "split_counts": {
+    "train": 160000,
+    "validation": 20000,
+    "test": 20000
+  },
+  "seed_counts": {
+    "train": 43068,
+    "validation": 5389,
+    "test": 5340
+  },
+  "seed_intersections": {
+    "train_vs_validation": 0,
+    "train_vs_test": 0,
+    "validation_vs_test": 0
+  },
+  "complete_dynamic_chains": {
+    "train": {
+      "D3": 3982,
+      "D1": 4027,
+      "D2": 4005,
+      "D4": 4012
+    },
+    "validation": {
+      "D2": 494,
+      "D1": 482,
+      "D4": 484,
+      "D3": 524
+    },
+    "test": {
+      "D1": 491,
+      "D2": 501,
+      "D3": 494,
+      "D4": 504
+    }
+  },
+  "diagnostic_subset_counts": {
+    "e01_train_diagnostics": 160,
+    "e01_validation": 1280
+  },
+  "test_selection": "index.indices(split='test')",
+  "sample_source": "committed samples table; D4 anchors stored separately",
+  "d4_anchor_samples": 0,
+  "test_evaluation_writes_training_state": false
+}

@@ -1,0 +1,45 @@
+{
+  "checkpoint_step": 27000,
+  "vocabulary_K": 1580,
+  "low_drift_threshold": 1e-06,
+  "seen_in_train": 1306,
+  "unseen_in_train_but_seen_in_held_out": 27,
+  "never_in_any_center_split": 247,
+  "rows_l2_above_1e-6": 1306,
+  "non_drifting_rows": 274,
+  "non_drifting_unseen_train_rows": 274,
+  "seen_but_no_drift": [],
+  "spearman_log1p_train_frequency_vs_drift": 0.8805715035349239,
+  "frequency_bins": {
+    "0": {
+      "token_count": 274,
+      "median_drift": 0.0,
+      "mean_drift": 0.0
+    },
+    "1–10": {
+      "token_count": 216,
+      "median_drift": 0.09404227840040233,
+      "mean_drift": 0.10233034749966485
+    },
+    "11–100": {
+      "token_count": 300,
+      "median_drift": 0.2481791406073827,
+      "mean_drift": 0.2723167279477594
+    },
+    "101–1k": {
+      "token_count": 316,
+      "median_drift": 0.41921289724141253,
+      "mean_drift": 0.46249877991631183
+    },
+    "1k–10k": {
+      "token_count": 247,
+      "median_drift": 0.7072072056512099,
+      "mean_drift": 0.7848858799778464
+    },
+    ">10k": {
+      "token_count": 227,
+      "median_drift": 0.7185985547125844,
+      "mean_drift": 0.8053166849578147
+    }
+  }
+}

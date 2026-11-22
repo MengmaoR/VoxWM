@@ -1,0 +1,366 @@
+{
+  "checkpoint_step": 27000,
+  "source_split": "test",
+  "samples": 20000,
+  "cross_entropy": 0.14764415287724592,
+  "exact_token_accuracy": 0.9552635498046875,
+  "non_air_exact_token_accuracy": 0.9306066845887226,
+  "non_finite_prediction": false,
+  "loss_components": {
+    "loss_static": 0.10477754203589561,
+    "dynamic_changed_by_category": {
+      "D1": 0.27547624943096216,
+      "D2": 0.17186286252866484,
+      "D3": 1.671060240216444,
+      "D4": 0.4076534501048335
+    },
+    "loss_dynamic_changed": 0.6315132005702262,
+    "dynamic_unchanged_by_category": {
+      "D1": 0.13915407213893835,
+      "D2": 0.1697272797969774,
+      "D3": 0.17105314082621198,
+      "D4": 0.27763687249663915
+    },
+    "loss_dynamic_unchanged": 0.18939284131469172,
+    "loss_reconstruction": 0.2576152814891773,
+    "loss_kl_raw": 3388.7292566130905,
+    "loss_beta_kl": 0.00338872925661309,
+    "loss_total": 0.2610040107457904
+  },
+  "categories": {
+    "D1": {
+      "exact_token_accuracy": 0.960226856860998,
+      "non_air_exact_token_accuracy": 0.9182115082537534,
+      "samples": 2455
+    },
+    "D2": {
+      "exact_token_accuracy": 0.9476783737213074,
+      "non_air_exact_token_accuracy": 0.9287188832121028,
+      "samples": 2505
+    },
+    "D3": {
+      "exact_token_accuracy": 0.9501785092990891,
+      "non_air_exact_token_accuracy": 0.9030067915265525,
+      "samples": 2470
+    },
+    "D4": {
+      "exact_token_accuracy": 0.91541505843874,
+      "non_air_exact_token_accuracy": 0.8748457979836084,
+      "samples": 2520
+    },
+    "Static": {
+      "exact_token_accuracy": 0.9671833702580845,
+      "non_air_exact_token_accuracy": 0.9521087019206662,
+      "samples": 10050
+    }
+  },
+  "static_preservation": {
+    "exact_token_accuracy": 0.9671833702580845,
+    "non_air_exact_token_accuracy": 0.9521087019206662,
+    "by_biome_group": {
+      "BambooJungle": {
+        "exact_token_accuracy": 0.9494375765048964,
+        "non_air_exact_token_accuracy": 0.9276053699543116,
+        "voxels": 1777664
+      },
+      "BirchForest": {
+        "exact_token_accuracy": 0.9703695238622931,
+        "non_air_exact_token_accuracy": 0.9577553010125438,
+        "voxels": 1732608
+      },
+      "ColdTaiga": {
+        "exact_token_accuracy": 0.9684928468036168,
+        "non_air_exact_token_accuracy": 0.9572188763843261,
+        "voxels": 1613824
+      },
+      "Desert": {
+        "exact_token_accuracy": 0.9752338115985577,
+        "non_air_exact_token_accuracy": 0.960978830174291,
+        "voxels": 1703936
+      },
+      "ExtremeHills": {
+        "exact_token_accuracy": 0.9745016659007353,
+        "non_air_exact_token_accuracy": 0.9600814432951972,
+        "voxels": 1810432
+      },
+      "FlowerForest": {
+        "exact_token_accuracy": 0.9714373964251894,
+        "non_air_exact_token_accuracy": 0.9574584960331217,
+        "voxels": 1622016
+      },
+      "Forest": {
+        "exact_token_accuracy": 0.96906982421875,
+        "non_air_exact_token_accuracy": 0.9560090939671272,
+        "voxels": 1638400
+      },
+      "IcePlains": {
+        "exact_token_accuracy": 0.975450928859447,
+        "non_air_exact_token_accuracy": 0.9629033446095859,
+        "voxels": 1777664
+      },
+      "IcePlainsSpikes": {
+        "exact_token_accuracy": 0.9765661991003788,
+        "non_air_exact_token_accuracy": 0.9640571606726039,
+        "voxels": 1622016
+      },
+      "Jungle": {
+        "exact_token_accuracy": 0.9386524487567204,
+        "non_air_exact_token_accuracy": 0.9143460037339421,
+        "voxels": 1523712
+      },
+      "JungleEdge": {
+        "exact_token_accuracy": 0.9642463556215084,
+        "non_air_exact_token_accuracy": 0.9493085557426978,
+        "voxels": 1466368
+      },
+      "MangroveSwamp": {
+        "exact_token_accuracy": 0.9209322219729112,
+        "non_air_exact_token_accuracy": 0.8961653649767357,
+        "voxels": 1568768
+      },
+      "MegaSpruceTaiga": {
+        "exact_token_accuracy": 0.9667921799879807,
+        "non_air_exact_token_accuracy": 0.9564351303925693,
+        "voxels": 1703936
+      },
+      "MegaTaiga": {
+        "exact_token_accuracy": 0.9695133036247017,
+        "non_air_exact_token_accuracy": 0.9564966792364693,
+        "voxels": 1716224
+      },
+      "Mesa": {
+        "exact_token_accuracy": 0.9753454317230149,
+        "non_air_exact_token_accuracy": 0.962097766254798,
+        "voxels": 1650688
+      },
+      "MesaBryce": {
+        "exact_token_accuracy": 0.9771515105987763,
+        "non_air_exact_token_accuracy": 0.9641119843742734,
+        "voxels": 1757184
+      },
+      "MesaPlateauF": {
+        "exact_token_accuracy": 0.9697630013992538,
+        "non_air_exact_token_accuracy": 0.9524473168648195,
+        "voxels": 1646592
+      },
+      "MushroomIsland": {
+        "exact_token_accuracy": 0.9699533562911185,
+        "non_air_exact_token_accuracy": 0.9541457605858222,
+        "voxels": 1556480
+      },
+      "Plains": {
+        "exact_token_accuracy": 0.9726501003620907,
+        "non_air_exact_token_accuracy": 0.9583232160274587,
+        "voxels": 1626112
+      },
+      "RoofedForest": {
+        "exact_token_accuracy": 0.9610642206101191,
+        "non_air_exact_token_accuracy": 0.9472687332194288,
+        "voxels": 1720320
+      },
+      "Savanna": {
+        "exact_token_accuracy": 0.9710045968007915,
+        "non_air_exact_token_accuracy": 0.954892778974617,
+        "voxels": 1552384
+      },
+      "StoneBeach": {
+        "exact_token_accuracy": 0.9760248779937664,
+        "non_air_exact_token_accuracy": 0.9640284453876621,
+        "voxels": 1560576
+      },
+      "SunflowerPlains": {
+        "exact_token_accuracy": 0.9698425453166011,
+        "non_air_exact_token_accuracy": 0.9557362184377234,
+        "voxels": 1560576
+      },
+      "Swampland": {
+        "exact_token_accuracy": 0.9711321059431525,
+        "non_air_exact_token_accuracy": 0.9569995325033217,
+        "voxels": 1585152
+      },
+      "Taiga": {
+        "exact_token_accuracy": 0.9707701439950981,
+        "non_air_exact_token_accuracy": 0.957008034352024,
+        "voxels": 1671168
+      }
+    },
+    "by_stratum": {
+      "deep_cave": {
+        "exact_token_accuracy": 0.9653989411173379,
+        "non_air_exact_token_accuracy": 0.9654821154800923,
+        "voxels": 8085504
+      },
+      "elevated_complex": {
+        "exact_token_accuracy": 0.9797290475894632,
+        "non_air_exact_token_accuracy": 0.7961484557811358,
+        "voxels": 8241152
+      },
+      "shallow_underground": {
+        "exact_token_accuracy": 0.9680592923750605,
+        "non_air_exact_token_accuracy": 0.9679136790616851,
+        "voxels": 8462336
+      },
+      "surface": {
+        "exact_token_accuracy": 0.9612981539597923,
+        "non_air_exact_token_accuracy": 0.937406835054211,
+        "voxels": 16375808
+      }
+    }
+  },
+  "dynamic_reconstruction": {
+    "exact_token_accuracy": 0.943223932160804,
+    "non_air_exact_token_accuracy": 0.9055024476267555,
+    "changed_voxel_exact_accuracy": 0.8589535216278242,
+    "unchanged_voxel_exact_accuracy": 0.9435214008879134,
+    "changed_voxels": 143357,
+    "unchanged_voxels": 40611843,
+    "by_category": {
+      "D1": {
+        "exact_token_accuracy": 0.960226856860998,
+        "non_air_exact_token_accuracy": 0.9182115082537534,
+        "changed_voxel_exact_accuracy": 0.8784022796501916,
+        "unchanged_voxel_exact_accuracy": 0.9605594503908748,
+        "changed_voxels": 40708,
+        "unchanged_voxels": 10014972
+      },
+      "D2": {
+        "exact_token_accuracy": 0.9476783737213074,
+        "non_air_exact_token_accuracy": 0.9287188832121028,
+        "changed_voxel_exact_accuracy": 0.9445446507515473,
+        "unchanged_voxel_exact_accuracy": 0.9476870332445451,
+        "changed_voxels": 28275,
+        "unchanged_voxels": 10232205
+      },
+      "D3": {
+        "exact_token_accuracy": 0.9501785092990891,
+        "non_air_exact_token_accuracy": 0.9030067915265525,
+        "changed_voxel_exact_accuracy": 0.5356105221829603,
+        "unchanged_voxel_exact_accuracy": 0.9507010075328681,
+        "changed_voxels": 12735,
+        "unchanged_voxels": 10104385
+      },
+      "D4": {
+        "exact_token_accuracy": 0.91541505843874,
+        "non_air_exact_token_accuracy": 0.8748457979836084,
+        "changed_voxel_exact_accuracy": 0.873651421989325,
+        "unchanged_voxel_exact_accuracy": 0.9156659549577638,
+        "changed_voxels": 61639,
+        "unchanged_voxels": 10260281
+      }
+    }
+  },
+  "dynamic": {
+    "complete_chains": 1990,
+    "adjacent_pairs": 7960,
+    "predicted_change_recall": 0.9416779242558345,
+    "changed_pair_exact_reconstruction": 0.7845996180183538,
+    "unchanged_stability": 0.9827020435144626,
+    "gt_changed_voxels": 85868
+  },
+  "dynamic_by_category": {
+    "D1": {
+      "complete_chains": 491,
+      "adjacent_pairs": 1964,
+      "predicted_change_recall": 0.930117501546073,
+      "changed_pair_exact_reconstruction": 0.7773654916512059,
+      "unchanged_stability": 0.9886184659780997,
+      "gt_changed_voxels": 21021,
+      "exact_token_accuracy": 0.960226856860998,
+      "non_air_exact_token_accuracy": 0.9182115082537534,
+      "changed_voxel_exact_accuracy": 0.8784022796501916,
+      "unchanged_voxel_exact_accuracy": 0.9605594503908748,
+      "changed_voxels": 40708,
+      "unchanged_voxels": 10014972,
+      "changed_ce": 0.27547624943096216,
+      "unchanged_ce": 0.13915407213893835
+    },
+    "D2": {
+      "complete_chains": 501,
+      "adjacent_pairs": 2004,
+      "predicted_change_recall": 0.9847952653611124,
+      "changed_pair_exact_reconstruction": 0.9162296107395468,
+      "unchanged_stability": 0.980154748625391,
+      "gt_changed_voxels": 20783,
+      "exact_token_accuracy": 0.9476783737213074,
+      "non_air_exact_token_accuracy": 0.9287188832121028,
+      "changed_voxel_exact_accuracy": 0.9445446507515473,
+      "unchanged_voxel_exact_accuracy": 0.9476870332445451,
+      "changed_voxels": 28275,
+      "unchanged_voxels": 10232205,
+      "changed_ce": 0.17186286252866484,
+      "unchanged_ce": 0.1697272797969774
+    },
+    "D3": {
+      "complete_chains": 494,
+      "adjacent_pairs": 1976,
+      "predicted_change_recall": 0.8525722339675829,
+      "changed_pair_exact_reconstruction": 0.333615221987315,
+      "unchanged_stability": 0.9867861664004444,
+      "gt_changed_voxels": 7095,
+      "exact_token_accuracy": 0.9501785092990891,
+      "non_air_exact_token_accuracy": 0.9030067915265525,
+      "changed_voxel_exact_accuracy": 0.5356105221829603,
+      "unchanged_voxel_exact_accuracy": 0.9507010075328681,
+      "changed_voxels": 12735,
+      "unchanged_voxels": 10104385,
+      "changed_ce": 1.671060240216444,
+      "unchanged_ce": 0.17105314082621198
+    },
+    "D4": {
+      "complete_chains": 504,
+      "adjacent_pairs": 2016,
+      "predicted_change_recall": 0.9411128242581622,
+      "changed_pair_exact_reconstruction": 0.801265925505153,
+      "unchanged_stability": 0.9754469490973068,
+      "gt_changed_voxels": 36969,
+      "exact_token_accuracy": 0.91541505843874,
+      "non_air_exact_token_accuracy": 0.8748457979836084,
+      "changed_voxel_exact_accuracy": 0.873651421989325,
+      "unchanged_voxel_exact_accuracy": 0.9156659549577638,
+      "changed_voxels": 61639,
+      "unchanged_voxels": 10260281,
+      "changed_ce": 0.4076534501048335,
+      "unchanged_ce": 0.27763687249663915
+    }
+  },
+  "latent": {
+    "mean_mu": 0.004698976162075974,
+    "std_mu": 1.5439688833364325,
+    "mean_posterior_std": 0.1133738904607658,
+    "kl_raw": 3388.7292566130905,
+    "latent_variance_per_channel": [
+      1.9503885461815207,
+      2.016023269869709,
+      2.665994307977269,
+      1.886341325132547,
+      2.6142779910732328,
+      2.724052339507079,
+      2.115886397641149,
+      2.012307944288693,
+      1.8933571198777808,
+      2.2629254737570914,
+      3.0019638701156124,
+      1.925409847072824,
+      2.304710791069125,
+      2.013685826712533,
+      3.033962345240502,
+      3.2988689321376157
+    ],
+    "active_channel_variance_threshold": 0.0001,
+    "active_latent_channels": 16,
+    "adjacent_dynamic_latent_l2": {
+      "count": 7960,
+      "mean": 20.215500289426387,
+      "std": 8.598668954491488,
+      "min": 1.2555419206619263,
+      "max": 55.328948974609375,
+      "zero_count": 0,
+      "zero_count_by_category": {
+        "D1": 0,
+        "D2": 0,
+        "D3": 0,
+        "D4": 0
+      }
+    }
+  }
+}

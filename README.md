@@ -4,6 +4,8 @@
 
 E01-Masked 在 30,000 步结束续训。[服务器结果、曲线与配置](voxel_vae/reports/e01_masked_20261122/README.md)
 
+27,000 步验证最优 checkpoint 已完成 20,000 条 held-out test 和全训练集 latent 审计，结论为 **FREEZE WITH KNOWN D3 LIMITATION**。[冻结报告与下游归一化](voxel_vae/reports/e01_freeze_audit_20261122/report.md)
+
 [当前数据协议](VAE_DATA_COLLECTION_PROTOCOL.md) · [历史生成/检查命令](vae_data/README.md)。模型代码独立位于 `voxel_vae/`，复用已有数据格式。
 
 新增[动态观察批传输](vae_data/reports/advance_batch_20261117/README.md)：默认24拍/可选48拍，物理仍逐拍24Hz、每拍捕获；首帧+稀疏delta在内存中经socket返回，原Collector决定停止并丢弃批尾。启用前由用户运行`bash scripts/build_fixed24.sh`增量编译；本次不调整并行数，续跑示例固定`--workers 64`。没有运行Native或实测吞吐。

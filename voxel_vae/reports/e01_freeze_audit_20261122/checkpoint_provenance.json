@@ -1,0 +1,61 @@
+{
+  "phase": "E01-Masked",
+  "checkpoint": "checkpoint_best.pt",
+  "checkpoint_step": 27000,
+  "checkpoint_sha256": "543d728d20f3164f73d4e703ce341fd4ec2ad5ef0ea79c6ec10299168ec765a1",
+  "source_commit": "f52feff424fb61e8d9aa80b176c3e1314d118760",
+  "validation_selection_metric": "validation_loss_total",
+  "selected_validation_total_loss": 0.2533732642891664,
+  "architecture": {
+    "name": "voxel-resnet3d-vae-e00-v1",
+    "vocabulary_size": 1580,
+    "embedding_dim": 32,
+    "encoder_channels": [
+      96,
+      192,
+      192
+    ],
+    "latent_shape": [
+      16,
+      4,
+      4,
+      4
+    ],
+    "decoder_channels": [
+      192,
+      192,
+      96,
+      32
+    ],
+    "logvar_clamp": [
+      -10.0,
+      10.0
+    ],
+    "skip_connections": false
+  },
+  "latent_shape": [
+    16,
+    4,
+    4,
+    4
+  ],
+  "vocabulary_K": 1580,
+  "vocabulary_sha256": "25af338d8200eaceedf62bd33dc76d769dcec27f526e6df34280c43c9b3f979a",
+  "dataset_roots": [
+    "vae_100k_clip1",
+    "vae_100k_clip2"
+  ],
+  "dataset_manifest_hashes": [
+    "bc38033eeac782f13715d4ae6252fc2ea2f47da16161f0b255b479b7a9591838",
+    "bc38033eeac782f13715d4ae6252fc2ea2f47da16161f0b255b479b7a9591838"
+  ],
+  "prepared_data": {
+    "dataset_index.json": "9b0cdb13e41fee88acb18a3f60091f582842806806fb64657acad31142acbe3b",
+    "subset_manifest.json": "180e54ceb636635af0ae24e21ed2f249b09e94e9eaa532574f72c299b2d0d5cf",
+    "split_160k.json": "eb6c3f14ed77932d99ce505bc442051605dfa0016be8f45f5b2e3b3898aacdb6"
+  },
+  "audit_source_commit": "bd25721663de7d7db280b2919981728068f8f262",
+  "precision": "bf16",
+  "torch_version": "2.8.0a0+5228986c39.nv25.06",
+  "cuda_version": "12.9"
+}

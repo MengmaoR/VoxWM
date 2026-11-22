@@ -88,6 +88,13 @@ def render_report(output):
     exact, param2, node = [d3[k] for k in ("exact_correct_count", "param2_only_error_count", "node_error_count")]
     total = d3["total_changed_voxels"]
     outcomes = [("Exact", exact), ("Param2 only", param2), ("Node error", node)]
+    boundary = spatial["marginals"]["distance_to_boundary"]
+    spatial_rows = [
+        ("Boundary", boundary["errors"][0], boundary["changed_support"][0]),
+        ("Interior", sum(boundary["errors"][1:]), sum(boundary["changed_support"][1:])),
+        ("Isolated", spatial["isolated"]["errors"], spatial["isolated"]["changed_support"]),
+        ("Non-isolated", spatial["non_isolated"]["errors"], spatial["non_isolated"]["changed_support"]),
+    ]
     distances = [f"{stat} {_number(adjacent[stat])}" for stat in ("mean", "std", "min", "max")]
     layers = [("Global", latent)] + list(latent["by_category"].items())
     embedding_finding = (
@@ -146,10 +153,14 @@ def render_report(output):
         "### Lowest pair accuracy among sufficiently supported transitions", "",
         *(_transition_table(d3["worst_supported_transitions"]) if d3["worst_supported_transitions"]
           else ["The observed transition counts are available in the CSV."]), "",
-        f"Changed-site errors at the nearest-boundary distance 0 total "
-        f"{spatial['marginals']['distance_to_boundary']['errors'][0]:,} of "
-        f"{spatial['marginals']['distance_to_boundary']['changed_support'][0]:,} observed sites.",
-        "Position and isolation counts are in [d3_spatial_errors.json](d3_spatial_errors.json).", "",
+        "### Spatial distribution", "",
+        *_table(("D3 Changed location", "Errors", "Changed sites", "Error rate"),
+                [(name, errors, support, _pct(errors / support if support else None))
+                 for name, errors, support in spatial_rows]),
+        "",
+        "Boundary sites touch a face of the center crop. Isolated sites have no face-adjacent "
+        "Changed voxel in the same state. Axis and distance histograms are in "
+        "[d3_spatial_errors.json](d3_spatial_errors.json).", "",
         "## 8. Embedding Coverage Audit", "",
         f"{embedding['seen_in_train']:,} tokens occur in train. "
         f"{embedding['unseen_in_train_but_seen_in_held_out']:,} occur only in validation/test. "
