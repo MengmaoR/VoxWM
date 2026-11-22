@@ -30,9 +30,11 @@ def parser():
     collect.add_argument("--workers", type=positive, default=1)
     collect.add_argument("--search-round", type=int, default=0, help="first seed round (zero is the original search)")
     collect.add_argument("--search-rounds", type=positive, default=1, help="rounds of eight worlds per unfilled slot")
+    collect.add_argument("--parallel-rounds", action="store_true", help="search several seed rounds concurrently per missing slot")
     collect.add_argument("--sites-per-world", type=positive, default=4)
     collect.add_argument("--survey-columns", type=int, choices=[16, 32, 48], default=16,
                          help="side of the footprint of candidate anchor columns")
+    collect.add_argument("--land-priority", action="store_true", help="rank native land and biome hints for cave surveys")
     collect.add_argument("--renderer", choices=["software"], default="software")
     collect.add_argument("--craftium-dir", type=Path, default=DEFAULT_CRAFTIUM)
     for name, help_text in (
@@ -60,7 +62,8 @@ def collect_pilot(args):
     if (args.search_round + args.search_rounds) * args.scenes * WORLDS_PER_SLOT > SEED_SPACE:
         raise ValueError("Search rounds exceed the independent world seed space")
     search = dict(search_round=args.search_round, search_rounds=args.search_rounds,
-                  sites_per_world=args.sites_per_world, survey_columns=args.survey_columns)
+                  sites_per_world=args.sites_per_world, survey_columns=args.survey_columns,
+                  land_priority=args.land_priority)
     with DatasetWriter(args.dataset, config) as writer:
         committed = writer.completed
         completed = len(committed)
@@ -68,41 +71,65 @@ def collect_pilot(args):
         if not remaining:
             print("All 200 scenes are committed. Run check to validate them.")
             return 0
-        print(f"Search {len(remaining)} unfilled slots | {json.dumps(search)}", flush=True)
-        failures = 0
+        print(f"Search {len(remaining)} unfilled slots | {json.dumps(search)} "
+              f"| parallel rounds {args.parallel_rounds}", flush=True)
+        failures = {}
         with TemporaryDirectory(prefix="vox2pix-projector-") as tmp:
             library = build_library(Path(tmp))
             craftium_dir = args.craftium_dir.resolve()
-            slots = iter(remaining)
+            if args.parallel_rounds:
+                first, last = args.search_round, args.search_round + args.search_rounds
+                tasks = ((slot, dict(search, search_round=round_id, search_rounds=1))
+                         for round_id in range(first, last) for slot in remaining)
+            else:
+                tasks = ((slot, search) for slot in remaining)
             # Spawned workers cannot retain the dataset writer's file lock.
-            workers = min(args.workers, len(remaining))
+            workers = min(args.workers, len(remaining) * (args.search_rounds if args.parallel_rounds else 1))
             with ProcessPoolExecutor(max_workers=workers, mp_context=get_context("spawn")) as pool:
                 pending = {}
+
+                def submit_next():
+                    for slot, budget in tasks:
+                        scene_id = slot["scene_id"]
+                        if scene_id in committed:
+                            continue
+                        stop = writer.scenes_dir / f"scene_{scene_id:04d}" if args.parallel_rounds else None
+                        future = pool.submit(capture_scene, slot, config, craftium_dir, library,
+                                             committed_scene=stop, **budget)
+                        pending[future] = slot
+                        return
+
                 for _ in range(workers):
-                    slot = next(slots)
-                    pending[pool.submit(capture_scene, slot, config, craftium_dir, library, **search)] = slot
+                    submit_next()
                 while pending:
                     ready, _ = wait(pending, return_when=FIRST_COMPLETED)
                     for future in ready:
                         slot = pending.pop(future)
+                        scene_id = slot["scene_id"]
                         try:
                             capture = future.result()
-                            writer.commit(*capture)
                         except RejectedScene as exc:
-                            failures += 1
-                            print(f"Scene {slot['scene_id']} {slot['biome']} {slot['height']}: {exc}",
+                            failures[scene_id] = str(exc)
+                            label = "Search task for scene" if args.parallel_rounds else "Scene"
+                            print(f"{label} {scene_id} {slot['biome']} {slot['height']}: {exc}",
                                   file=sys.stderr, flush=True)
                         else:
-                            completed += 1
-                            meta = capture[0]
-                            print(f"Committed scene {slot['scene_id']} ({completed}/200) | {slot['height']} "
-                                  f"| seed round {meta['search_round']} | world {meta['world_attempt']} "
-                                  f"| site {meta['site_attempt']}", flush=True)
-                        next_slot = next(slots, None)
-                        if next_slot is not None:
-                            job = pool.submit(capture_scene, next_slot, config, craftium_dir, library, **search)
-                            pending[job] = next_slot
-        print(f"{completed}/200 scenes committed; {failures} slots remain unfilled.", flush=True)
+                            if capture is not None and scene_id not in committed:
+                                writer.commit(*capture)
+                                committed.add(scene_id)
+                                completed += 1
+                                meta = capture[0]
+                                print(f"Committed scene {scene_id} ({completed}/200) | {slot['height']} "
+                                      f"| seed round {meta['search_round']} | world {meta['world_attempt']} "
+                                      f"| site {meta['site_attempt']}", flush=True)
+                        submit_next()
+        if args.parallel_rounds:
+            for slot in remaining:
+                scene_id = slot["scene_id"]
+                if scene_id not in committed:
+                    print(f"Scene {scene_id} {slot['biome']} {slot['height']}: {failures[scene_id]}",
+                          file=sys.stderr, flush=True)
+        print(f"{completed}/200 scenes committed; {args.scenes - completed} slots remain unfilled.", flush=True)
         return int(completed != args.scenes)
 
 

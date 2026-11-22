@@ -37,7 +37,13 @@ slot. The wider survey supplies more anchor candidates in the target biome.
 Committed scenes and dataset criteria are preserved. Continue with the next
 round number if the selected rounds are exhausted. Search rejections break
 out missing standing cave floors and the center and full-region free-space
-gates. After all 200 scenes are committed, run:
+gates. For a small tail, `--parallel-rounds` searches distinct seed rounds for
+the same slot concurrently and commits the first eligible result once. Add
+`--land-priority --survey-columns 48` to rank estimated native surface and
+nearby biome matches before surveying. Every fourth site still uses the
+original search order. Acceptance always uses generated terrain.
+
+After all 200 scenes are committed, run:
 
 ```bash
 .venv/bin/python -m vox2pix_data check --dataset outputs/vox2pix_pilot_1k_640x360

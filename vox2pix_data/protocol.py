@@ -209,7 +209,7 @@ def site_candidates(survey, definitions, height, rng, rejections=None):
 
     columns = list(product(range(24, width - 23), repeat=2))
     floors = []
-    standing_floor = center_clear = False
+    eligible_band = standing_floor = center_clear = False
     for p in rng.permutation(len(columns)):
         x, z = columns[p]
         sy = int(surface[x, z])
@@ -230,7 +230,9 @@ def site_candidates(survey, definitions, height, rng, rejections=None):
                     break  # No submerged fallback below the first water surface.
             continue
         low, high = (sy - 24, sy - 8) if height == "shallow" else (24, sy - 32)
-        for y in range(max(24, low), min(survey.shape[2] - 24, high) + 1):
+        band = range(max(24, low), min(survey.shape[2] - 24, high) + 1)
+        eligible_band |= bool(band)
+        for y in band:
             if not (support[x, z, y - 1] and body_clear(x, z, y) and terrain[x, z, y + 3:sy + 1].any()):
                 continue
             standing_floor = True
@@ -240,7 +242,9 @@ def site_candidates(survey, definitions, height, rng, rejections=None):
             if free_cells(x, z, y, 24) * 4 >= 48 ** 3:
                 floors.append((x, z, y))
     if not floors and height != "surface" and rejections is not None:
-        if not standing_floor:
+        if not eligible_band:
+            reason = "site: no legal height band in the survey"
+        elif not standing_floor:
             reason = "site: no standing cave floor with roof in height band"
         elif not center_clear:
             reason = "site: cave floors fail center16 free-space gate"

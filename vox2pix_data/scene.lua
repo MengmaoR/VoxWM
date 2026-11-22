@@ -141,6 +141,36 @@ local function check_anchor(r)
         valid=anchor_valid(foot, r.anchor_kind)})
 end
 
+local function find_site(r)
+    if not r.origins then return search.find(mt, r) end
+    local best, best_score, last_result = nil, -math.huge, nil
+    local probes = {{8,8},{-8,8},{24,8},{8,-8},{8,24}}
+    for _, origin in ipairs(r.origins) do
+        r.x, r.z = origin[1], origin[2]
+        local hit = search.find(mt, r)
+        last_result = hit
+        if hit.status == "found" then
+            local score = 0
+            for _, offset in ipairs(probes) do
+                local x, z = hit.site[1] + offset[1], hit.site[2] + offset[2]
+                local spawn = mt.get_spawn_level(x, z)
+                if spawn then
+                    local data = mt.get_biome_data({x=x, y=spawn-1, z=z})
+                    local name = data and mt.get_biome_name(data.biome) or ""
+                    for _, alias in ipairs(r.biome_groups[r.biome_group]) do
+                        if name == alias or name:sub(1, #alias+1) == alias .. "_" then
+                            score = score + math.max(1, spawn + 8)
+                            break
+                        end
+                    end
+                end
+            end
+            if score > best_score then best, best_score = hit, score end
+        end
+    end
+    return best or last_result
+end
+
 local function pose(r, player)
     if r.relocate then
         local foot = xyz(r.foot_xyz)
@@ -206,7 +236,7 @@ mt.registered_voxwm_poststeps = {function()
     -- restored before the usual camera settle ticks and every saved view.
     if r.kind ~= "snapshot" then mt.settings:set_bool("voxwm_skip_rgb", r.kind ~= "pose") end
     if r.kind == "search" then
-        reply(r, search.find(mt, r))
+        reply(r, find_site(r))
     elseif r.kind == "survey" then
         survey(r)
     elseif r.kind == "anchor" then

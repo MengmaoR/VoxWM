@@ -228,12 +228,18 @@ class NativeScene:
         return meta, self.vocabulary, arrays, rgbs
 
 
-def _search_world(native, slot, config, rng, library_path, rejected, sites_per_world, survey_columns):
+def _search_world(native, slot, config, rng, library_path, rejected, sites_per_world,
+                  survey_columns, land_priority, committed_scene):
     visited = set()
     for site_attempt in range(1, sites_per_world + 1):
+        if committed_scene is not None and committed_scene.is_dir():
+            return None
         x, z = map(int, rng.integers(-24000, 24001, size=2))
+        sites = {}
+        if land_priority and slot["height"] != "surface" and site_attempt % 4 != 0:
+            sites["origins"] = [[x, z], *rng.integers(-24000, 24001, size=(3, 2)).tolist()]
         hit, _, _ = native.command("search", x=x, z=z, biome_groups=BIOMES,
-            biome_group=slot["biome"], resolution=64, max_checks=16384)
+            biome_group=slot["biome"], resolution=64, max_checks=16384, **sites)
         if hit["status"] != "found":
             rejected[hit["status"]] += 1
             continue
@@ -286,7 +292,8 @@ def scene_id_for_world_seed(world_seed, pilot_seed):
 
 
 def capture_scene(slot, config, craftium_dir, library_path, search_round=0, search_rounds=1,
-                  sites_per_world=SITES_PER_WORLD, survey_columns=16):
+                  sites_per_world=SITES_PER_WORLD, survey_columns=16, land_priority=False,
+                  committed_scene=None):
     """Allocate disjoint deterministic seed candidates and never substitute a quota."""
     craftium_dir = Path(craftium_dir).resolve()
     engine_build, game_build = _builds(craftium_dir)
@@ -294,6 +301,8 @@ def capture_scene(slot, config, craftium_dir, library_path, search_round=0, sear
     first = search_round * WORLDS_PER_SLOT
     limit = first + search_rounds * WORLDS_PER_SLOT
     for attempt in range(first, limit):
+        if committed_scene is not None and committed_scene.is_dir():
+            return None
         current_round = attempt // WORLDS_PER_SLOT
         seed = scene_world_seed(slot["scene_id"], config["seed"], attempt)
         rng = np.random.default_rng(seed)
@@ -307,7 +316,7 @@ def capture_scene(slot, config, craftium_dir, library_path, search_round=0, sear
             ) as session:
                 native = NativeScene(session)
                 result = _search_world(native, slot, config, rng, library_path, rejected,
-                                       sites_per_world, survey_columns)
+                                       sites_per_world, survey_columns, land_priority, committed_scene)
         except (ConnectionError, TimeoutError) as exc:
             # A late response belongs to the discarded world, not the next request.
             rejected[str(exc)] += 1
@@ -316,8 +325,11 @@ def capture_scene(slot, config, craftium_dir, library_path, search_round=0, sear
             meta, vocabulary, arrays, rgbs = result
             meta.update(slot, world_seed=seed, engine_build=engine_build, game_build=game_build,
                         search_round=current_round, world_attempt=attempt + 1,
-                        survey_columns=survey_columns, search_rejections=dict(rejected))
+                        survey_columns=survey_columns, land_priority=land_priority,
+                        search_rejections=dict(rejected))
             return meta, vocabulary, arrays, rgbs
         if (attempt + 1) % WORLDS_PER_SLOT == 0 and attempt + 1 < limit:
             print(f"Search round {current_round} exhausted for scene {slot['scene_id']}: {dict(rejected)}", flush=True)
+    if committed_scene is not None and committed_scene.is_dir():
+        return None
     raise RejectedScene(f"Scene {slot['scene_id']} ({slot['biome']}/{slot['height']}) exhausted its search: {dict(rejected)}")
