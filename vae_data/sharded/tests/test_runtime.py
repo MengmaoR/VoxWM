@@ -124,9 +124,10 @@ class RuntimeTests(unittest.TestCase):
             numbers=iter((120,121));processes=[]
             def start(args,**kwargs):
                 self.assertIn('-displayfd',args);self.assertTrue(kwargs['start_new_session'])
+                self.assertEqual(args[-2:],['-xkbdir','/fixture/share/X11/xkb'])
                 self.assertNotIn(':99',args);os.write(int(args[2]),str(next(numbers)).encode()+b'\n')
                 proc=Mock();proc.poll.return_value=None;processes.append(proc);return proc
-            with patch('voxwm_gt.display.shutil.which',return_value='/usr/bin/Xvfb'),patch('voxwm_gt.display.subprocess.Popen',side_effect=start),patch('voxwm_gt.display.stop_process')as stop:
+            with patch.dict(os.environ,{'X11_XKBDIR':'/fixture/share/X11/xkb'}),patch('voxwm_gt.display.shutil.which',return_value='/usr/bin/Xvfb'),patch('voxwm_gt.display.subprocess.Popen',side_effect=start),patch('voxwm_gt.display.stop_process')as stop:
                 a=SoftwareDisplay(tmp);b=SoftwareDisplay(tmp)
                 self.assertEqual(a.start(),':120');self.assertEqual(b.start(),':121');a.close();b.close()
                 self.assertEqual(stop.call_count,2)
@@ -135,9 +136,10 @@ class RuntimeTests(unittest.TestCase):
         from voxwm_gt.display import SoftwareDisplay
         with tempfile.TemporaryDirectory()as tmp:
             proc=Mock();proc.poll.return_value=1
-            with patch('voxwm_gt.display.shutil.which',return_value='/usr/bin/Xvfb'),patch('voxwm_gt.display.subprocess.Popen',return_value=proc)as start,patch('voxwm_gt.display.stop_process')as stop:
+            with patch.dict(os.environ,{'X11_XKBDIR':''}),patch('voxwm_gt.display.shutil.which',return_value='/usr/bin/Xvfb'),patch('voxwm_gt.display.subprocess.Popen',return_value=proc)as start,patch('voxwm_gt.display.stop_process')as stop:
                 display=SoftwareDisplay(tmp)
                 with self.assertRaises(InfrastructureError):display.start()
+                self.assertNotIn('-xkbdir',start.call_args.args[0])
                 self.assertEqual(start.call_count,1);stop.assert_called_once_with(proc);self.assertIsNone(display.log)
 
     def test_unconnected_engine_still_closes_socket_pipes_and_process(self):

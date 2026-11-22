@@ -8,6 +8,11 @@ missing. The CPU projector also needs a C++17 compiler (`CXX` defaults to
 [the repository setup](../README.md) and the
 [Vox2Pix protocol](../VOX2PIX_DATA_COLLECTION_PROTOCOL.md).
 
+For a user-installed Xvfb, put its executable directory on `PATH` and export
+the graphics environment used by native GT. Set `X11_XKBDIR` to the bundled
+XKB data directory when required. The launcher passes it to each private Xvfb
+using `-xkbdir`. On standard system installs the variable can be left unset.
+
 Run from the VoxWM repository root. Adjust `--workers` for the machine.
 `--craftium-dir` can point to an existing compatible checkout.
 

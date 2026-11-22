@@ -9,11 +9,16 @@ class SoftwareDisplay:
         self.folder=Path(folder);self.timeout=timeout;self.proc=None;self.log=None;self.name=None
     def start(self):
         binary=shutil.which('Xvfb')
-        if not binary:raise InfrastructureError('Linux software rendering requires Xvfb; install it before collection')
+        if not binary:
+            raise InfrastructureError('Xvfb not found on PATH. Add its bin directory to PATH or install Xvfb.')
         read_fd,write_fd=os.pipe()
         self.log=open(self.folder/'xvfb.log','w+')
         try:
-            self.proc=subprocess.Popen([binary,'-displayfd',str(write_fd),'-screen','0','640x480x24','-nolisten','tcp','-noreset'],
+            args=[binary,'-displayfd',str(write_fd),'-screen','0','640x480x24','-nolisten','tcp','-noreset']
+            xkb_dir=os.environ.get('X11_XKBDIR')
+            if xkb_dir:
+                args.extend(['-xkbdir',xkb_dir])
+            self.proc=subprocess.Popen(args,
                 pass_fds=(write_fd,),start_new_session=True,stdout=self.log,stderr=self.log)
             os.close(write_fd);write_fd=None
             deadline=time.monotonic()+self.timeout;number=b''
