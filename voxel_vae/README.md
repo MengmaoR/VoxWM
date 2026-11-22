@@ -95,14 +95,15 @@ only at a completed epoch.
 With `--resume --epochs N`, complete N more epochs from the last completed
 epoch. An in-progress epoch counts once it finishes. From step 25,000, use
 `--resume --epochs 10` to target step 50,000. If a run is interrupted and
-the checkpoint has saved its epoch plan, use `--resume` alone to continue
+the checkpoint has saved the current epoch plan, use `--resume` alone to continue
 toward that target at the saved offset. For a fresh run, use `--epochs N`
 from step zero.
 
 Add `--no-early-stop` for a bounded continuation with validation and best
-checkpoint selection active. From step 27,500, `--resume --epochs 1
---no-early-stop` targets step 30,000. After an interruption, use
-`--resume --no-early-stop` to finish the saved plan with the same policy.
+checkpoint selection active. From step 27,500, use
+`--resume --epochs 1 --no-early-stop` to target step 30,000. If interrupted
+before the last checkpoint reaches 30,000, reuse all three flags. The
+target is counted from the last completed epoch at step 27,500.
 
 Use the single-process command to train on GPU 2 alone.
 
