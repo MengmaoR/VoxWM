@@ -247,7 +247,7 @@ def run_masked(args):
 def _fit_prepared_masked(output, prepared_config, phase_config, vocabulary, index,
                          train_indices, diagnostic_indices, validation_indices,
                          *, resume, phase="E00-Masked", metadata=None, lazy_masks=False,
-                         group=None, epochs=None, previous_prepared_data=None):
+                         group=None, epochs=None, previous_prepared_data=None, no_early_stop=False):
     import torch
 
     from .change_masks import ChangeMaskCache
@@ -291,7 +291,7 @@ def _fit_prepared_masked(output, prepared_config, phase_config, vocabulary, inde
             model, index, vocabulary, train_indices, diagnostic_indices,
             validation_indices, masks, phase_output, phase_config,
             resume=resume, run_metadata=metadata, phase=phase, group=group, epochs=epochs,
-            previous_prepared_data=previous_prepared_data)
+            previous_prepared_data=previous_prepared_data, no_early_stop=no_early_stop)
     except (Exception, KeyboardInterrupt) as exc:
         if not primary:
             raise
@@ -365,7 +365,7 @@ def render_report(output, *, expected_phase=None, artifacts=None):
     lines += [
         "", "## Training diagnostics", "",
         "- `loss_curves.svg` and `loss_curves.json` are refreshed during training.",
-        "- Early stopping monitors validation total loss; the best checkpoint is retained separately.",
+        "- When enabled, early stopping monitors validation total loss. The best checkpoint is saved separately.",
         "- The web monitor is read-only and does not start, stop or own the training process.",
         "",
     ]

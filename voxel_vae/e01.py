@@ -169,7 +169,7 @@ def _run(args, *, group=None):
         output, config, phase_config, vocabulary, index, train_indices,
         diagnostics, validation, resume="auto" if args.resume else None,
         phase=PHASE, metadata=metadata, lazy_masks=True, group=group, epochs=args.epochs,
-        previous_prepared_data=previous_prepared_data)
+        previous_prepared_data=previous_prepared_data, no_early_stop=args.no_early_stop)
     if primary:
         render_report(output, expected_phase=PHASE, artifacts=artifacts)
         print(json.dumps(result, indent=2))
@@ -189,6 +189,8 @@ def main(argv=None):
     train.add_argument("--resume", action="store_true", help="resume this E01 run's checkpoint_last.pt")
     train.add_argument("--epochs", type=int,
                        help="epochs to complete, counted from the last completed epoch on resume")
+    train.add_argument("--no-early-stop", action="store_true",
+                       help="disable early stopping for this invocation while keeping validation")
     report = commands.add_parser("report", help="render the current E01 report")
     for command in (setup, migration, train, report):
         command.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT)

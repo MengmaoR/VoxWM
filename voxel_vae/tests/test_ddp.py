@@ -59,7 +59,8 @@ class _FixtureMasks(dict):
         return {}
 
 
-def _fit_fixture(output, group=None, resume=None, *, epochs=None, uneven_pool=False):
+def _fit_fixture(output, group=None, resume=None, *, epochs=None, uneven_pool=False,
+                 no_early_stop=False):
     # This fixture has no disk dataset, so it also runs in the local Torch-only environment.
     stub_zarr = importlib.util.find_spec("zarr") is None
     if stub_zarr:
@@ -100,7 +101,8 @@ def _fit_fixture(output, group=None, resume=None, *, epochs=None, uneven_pool=Fa
           patch.object(train, "evaluate_indices", fixed_validation)):
         return train.fit_masked(
             _FixtureModel(), index, vocab, list(range(len(categories))), [0], [1], masks, output,
-            config, phase="E01-Masked", group=group, resume=resume, epochs=epochs)
+            config, phase="E01-Masked", group=group, resume=resume, epochs=epochs,
+            no_early_stop=no_early_stop)
 
 
 def _legacy_to_epochs(output, group=None):
@@ -133,6 +135,26 @@ def _rank_worker(rank, root):
 
 
 class DDPTests(unittest.TestCase):
+    def test_resume_can_turn_off_early_stopping_for_one_run(self):
+        with tempfile.TemporaryDirectory() as folder:
+            output = Path(folder)
+            checkpoint = output / "checkpoint_last.pt"
+            stopped = _fit_fixture(output, epochs=2, uneven_pool=True)
+            self.assertEqual(stopped["global_step"], 2)
+            self.assertTrue(stopped["stopped_early"])
+
+            continued = _fit_fixture(output, resume=checkpoint, epochs=2, uneven_pool=True,
+                                     no_early_stop=True)
+            self.assertEqual(continued["global_step"], 6)
+            self.assertFalse(continued["stopped_early"])
+            self.assertFalse(continued["early_stopping"]["config"]["enabled"])
+            self.assertEqual(continued["early_stopping"]["best_step"], 1)
+
+            restored = _fit_fixture(output, resume=checkpoint, epochs=2, uneven_pool=True)
+            self.assertEqual(restored["global_step"], 8)
+            self.assertTrue(restored["stopped_early"])
+            self.assertTrue(restored["early_stopping"]["config"]["enabled"])
+
     def test_resume_epochs_count_from_completed_checkpoint(self):
         with tempfile.TemporaryDirectory() as folder:
             output = Path(folder)

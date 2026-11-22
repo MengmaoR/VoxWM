@@ -11,7 +11,7 @@
 - E01 的 160K/20K/20K 索引调整只按完整 World Seed 从旧 test 向 train 和 validation 补入状态，固定诊断子集和原始数据保持原样。按全局 batch=64 续训时每个 epoch 为 2,500 步。
 - E01 双卡用 GPU 2、3 手动启动单节点 DDP。两进程分同一个全局 batch，每卡 microbatch 最大为 2。全局分项分母跨进程求和，只在最后一组 microbatch 同步梯度。主进程负责验证、早停、曲线和 checkpoint，checkpoint 保存各进程的 RNG 状态。epoch 模式的早停只在完整 epoch 边界生效，checkpoint 保存 epoch 计划，按步恢复其采样位置。
 - E01 续训指定 `--resume --epochs N` 时从已完成轮数起再完成 N 轮。已有 epoch 计划的中断续跑只传 `--resume`，续跑至已保存的目标。
-- 所有真实训练及续跑由用户手动执行。Codex 负责代码与快速本地检查。E01 产物写入 `outputs/voxel_vae/e01/phase_masked/`。训练保存 `loss_curves.svg`、`loss_curves.json` 和可恢复早停状态。`voxel_vae.training_monitor` 独立只读。连续两次验证总 loss 改善未超过 0.001 时早停，`checkpoint_best.pt` 对应最低验证总 loss。
+- 所有真实训练及续跑由用户手动执行。Codex 负责代码与快速本地检查。E01 产物写入 `outputs/voxel_vae/e01/phase_masked/`。训练保存 `loss_curves.svg`、`loss_curves.json` 和可恢复早停状态。`voxel_vae.training_monitor` 独立只读。默认连续两次验证总 loss 改善未超过 0.001 时早停。`--no-early-stop` 在一次启动中关闭自动停止。`checkpoint_best.pt` 对应最低验证总 loss。
 - 当前规模100K，100个严格1K片；每片Static500，D1/D2/D3/D4各125，动态每类25条完整五状态链。D4是Water–Lava Solidification，完全替代历史Vegetation，不自动恢复旧200K配方。
 - 正式样本保存真实同一时刻48³(27个相邻16³采样窗口)，目标与动态判定仅中心 `[16:32]^3`。Dynamic保持全局16格网格；Static仅高度可逐整数偏移，与引擎MapBlock明确区分，完整Region高度必须在[-62,193]。邻块变化不能加候选、拼链或重置超时；D1/D2/D4为48 Tick，D3为120 Tick。
 - Dynamic最多10个中心不同候选，随机连续五状态窗口，不足则拒绝。D4必须完整中心Pre–Reaction–Post，物理帧统一去重，成功场景的Anchor独立保存且不计入1K。

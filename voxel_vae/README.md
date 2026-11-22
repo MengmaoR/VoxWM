@@ -99,6 +99,11 @@ the checkpoint has saved its epoch plan, use `--resume` alone to continue
 toward that target at the saved offset. For a fresh run, use `--epochs N`
 from step zero.
 
+Add `--no-early-stop` for a bounded continuation with validation and best
+checkpoint selection active. From step 27,500, `--resume --epochs 1
+--no-early-stop` targets step 30,000. After an interruption, use
+`--resume --no-early-stop` to finish the saved plan with the same policy.
+
 Use the single-process command to train on GPU 2 alone.
 
 ```bash

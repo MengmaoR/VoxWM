@@ -51,9 +51,11 @@ class E01Tests(unittest.TestCase):
             index.save(output / "dataset_index.json")
             _write_json(output / "subset_manifest.json", manifest)
             save_config(output / "config.yaml", config)
+            run_args = Namespace(output_root=output, device="cuda:0", resume=True, epochs=2,
+                                 no_early_stop=True)
             with patch("voxel_vae.e01._fit_prepared_masked", return_value={}) as fit:
                 with contextlib.redirect_stdout(io.StringIO()):
-                    run(Namespace(output_root=output, device="cuda:0", resume=True, epochs=2))
+                    run(run_args)
                 args, kwargs = fit.call_args
             counts = {"train": 305, "validation": 149, "test": 34}
             with patch.dict("voxel_vae.e01_split.SPLIT_COUNTS", counts), \
@@ -64,7 +66,7 @@ class E01Tests(unittest.TestCase):
                 saved_split = split_file.read_bytes()
                 rebalance(Namespace(output_root=output))
                 self.assertEqual(split_file.read_bytes(), saved_split)
-                run(Namespace(output_root=output, device="cuda:0", resume=True, epochs=2))
+                run(run_args)
                 migrated_args, migrated_kwargs = fit.call_args
             self.assertEqual(migrated_args[6:], args[6:])
             self.assertEqual(migrated_args[4].summary()["splits"], counts)
@@ -81,6 +83,8 @@ class E01Tests(unittest.TestCase):
         self.assertEqual(kwargs["phase"], PHASE)
         self.assertTrue(kwargs["lazy_masks"])
         self.assertEqual((kwargs["resume"], kwargs["epochs"]), ("auto", 2))
+        self.assertTrue(kwargs["no_early_stop"])
+        self.assertEqual(phase_config["early_stopping"], config["early_stopping"])
         self.assertTrue(phase_config["prepared_data"]["dataset_index.json"])
         self.assertEqual(kwargs["metadata"]["training_pool"]["by_root"], {"/clip_0": 150, "/clip_1": 150})
         sampler = BalancedBatchSampler(plan_index, train)

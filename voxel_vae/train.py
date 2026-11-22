@@ -286,7 +286,7 @@ def fit(model, index, vocabulary, train_indices, evaluation_indices, output_dir,
 def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
                validation_indices, change_masks, output_dir, config,
                resume=None, run_metadata=None, *, phase="E00-Masked", group=None, epochs=None,
-               previous_prepared_data=None):
+               previous_prepared_data=None, no_early_stop=False):
     """Joint Static/Dynamic masked training with exact batch denominators."""
     output_dir = Path(output_dir)
     primary = group is None or group.primary
@@ -303,6 +303,8 @@ def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
         raise ValueError("precision must be fp32 or bf16")
     loss_config = validate_masked_loss_config(config["loss"])
     early_config = validate_early_stopping_config(config.get("early_stopping", {}))
+    if no_early_stop:
+        early_config["enabled"] = False
     if abs(float(config.get("beta", loss_config["beta_kl"]))
            - loss_config["beta_kl"]) > 1e-15:
         raise ValueError("Training beta and masked beta_kl must remain identical")
@@ -372,8 +374,12 @@ def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
         if scoped_rng:
             restore_training_rng(payload, device, rank)
         saved_state = payload.get("early_stopping")
-        if saved_state and saved_state["config"] == early_config:
+        saved_policy = saved_state["config"] if saved_state else None
+        if saved_policy and dict(saved_policy, enabled=early_config["enabled"]) == early_config:
             early_state = EarlyStoppingState.from_dict(saved_state)
+            # A run override changes the stopping policy while keeping the best metric.
+            if saved_policy != early_config:
+                early_state.reset_patience()
         else:
             # Old checkpoints did not store patience. Apply it to the next live check.
             early_state = state_from_metrics(
@@ -397,7 +403,8 @@ def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
             })
         del payload
     if primary:
-        save_config(output_dir / "config.yaml", dict(config, max_steps=max_steps, epoch_plan=epoch_plan))
+        save_config(output_dir / "config.yaml", dict(
+            config, max_steps=max_steps, epoch_plan=epoch_plan, early_stopping=early_config))
         metadata_path = output_dir / "run_metadata.json"
         metadata = dict(run_metadata or {})
         metadata.update({
