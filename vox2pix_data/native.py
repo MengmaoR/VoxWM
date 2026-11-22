@@ -66,7 +66,16 @@ class NativeScene:
         self.packet = json.loads((session.world / "vox2pix_engine.json").read_text())
         if self.packet["mapgen"] != "v7":
             raise RuntimeError("Vox2Pix requires native Mapgen v7")
-        self.definitions = {row["id"]: row for row in self.packet["definitions"]}
+        self.definitions = {}
+        for row in self.packet["definitions"]:
+            value = row["id"]
+            # Luanti's JSON encoder writes Lua numbers as doubles, including IDs.
+            if type(value) not in (int, float) or not 0 <= value <= 65535 or value != int(value):
+                raise ValueError(f"Invalid native content ID for {row['name']}: {value!r}")
+            runtime_id = int(value)
+            if runtime_id in self.definitions:
+                raise ValueError(f"Duplicate native content ID {runtime_id}")
+            self.definitions[runtime_id] = dict(row, id=runtime_id)
         self.vocabulary = sorted(row["name"] for row in self.definitions.values())
         if len(self.vocabulary) >= 65535:
             raise RuntimeError("Node Name vocabulary does not fit in uint16 with the empty sentinel")

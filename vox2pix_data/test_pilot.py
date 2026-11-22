@@ -1,8 +1,10 @@
 """Lightweight fixtures. No Craftium process or native data is used."""
 from collections import Counter
+import json
 import math
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
@@ -79,6 +81,23 @@ class ProjectionTests(unittest.TestCase):
 
 
 class SamplingTests(unittest.TestCase):
+    def test_lua_json_node_ids_are_valid_lookup_indices(self):
+        from .native import NativeScene
+
+        with TemporaryDirectory() as tmp:
+            world = Path(tmp)
+            boot = world / "vox2pix_engine.json"
+            definitions = [{"id": 412.0, "name": "stone"}, {"id": 126.0, "name": "air"}]
+            boot.write_text(json.dumps({"mapgen": "v7", "definitions": definitions}))
+            scene = NativeScene(SimpleNamespace(world=world))
+            self.assertEqual(scene.vocabulary, ["air", "stone"])
+            self.assertEqual(scene.lookup[[412, 126, 999]].tolist(), [1, 0, EMPTY])
+
+            definitions[0]["id"] = 412.25
+            boot.write_text(json.dumps({"mapgen": "v7", "definitions": definitions}))
+            with self.assertRaisesRegex(ValueError, "Invalid native content ID"):
+                NativeScene(SimpleNamespace(world=world))
+
     def test_integer_origin_native_capture_layout(self):
         from .native import RAW, decode_region
 
