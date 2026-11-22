@@ -6,8 +6,25 @@ local search = dofile(mod .. "/biome_search.lua")
 local geometry = dofile(mod .. "/scene_geometry.lua")
 local pending, started, last = nil, false, 0
 local box_names, box_types = {}, {}
+local cave_events = {}
+local cave_hints_enabled = mt.settings:get_bool("vox2pix_cave_hints", false)
 assert(voxwm_clock and voxwm_region and mt.get_node_boxes, "Build the VoxWM fixed24 engine")
 assert(voxwm_clock().region_capture_version == "voxwm-region-integer-v1", "Build integer-origin region capture")
+
+if cave_hints_enabled then
+    mt.set_gen_notify({large_cave_begin=true, large_cave_end=true})
+    mt.register_on_generated(function()
+        local events = mt.get_mapgen_object("gennotify") or {}
+        for _, kind in ipairs({"large_cave_begin", "large_cave_end"}) do
+            for _, p in ipairs(events[kind] or {}) do
+                if p.y >= -62 and p.y <= -15 then
+                    if #cave_events == 192 then table.remove(cave_events, 1) end
+                    cave_events[#cave_events + 1] = p
+                end
+            end
+        end
+    end)
+end
 
 local function read(name)
     local f = io.open(world .. "/" .. name, "rb")
@@ -82,6 +99,64 @@ local function publish_nodes()
     write("gt_nodes.json", rows)
 end
 
+local function site_score(site, aliases)
+    local score = 0
+    for _, offset in ipairs({{8,8},{-8,8},{24,8},{8,-8},{8,24}}) do
+        local x, z = site[1] + offset[1], site[2] + offset[2]
+        local spawn = mt.get_spawn_level(x, z)
+        if spawn then
+            local data = mt.get_biome_data({x=x, y=spawn-1, z=z})
+            local name = data and mt.get_biome_name(data.biome) or ""
+            for _, alias in ipairs(aliases) do
+                if name == alias or name:sub(1, #alias+1) == alias .. "_" then
+                    score = score + math.max(1, spawn + 8)
+                    break
+                end
+            end
+        end
+    end
+    return score
+end
+
+local function nearby_cave_hints(r, low, high)
+    local aliases = r.biome_groups and r.biome_groups[r.biome_group]
+    if not cave_hints_enabled or not aliases then return nil end
+    local center_x, center_z = (low.x + high.x) / 2, (low.z + high.z) / 2
+    local current_x, current_z = math.floor(center_x / 16) * 16, math.floor(center_z / 16) * 16
+    local playable = (tonumber(mt.get_mapgen_setting("mapgen_limit")) or 31000)
+        - ((tonumber(mt.get_mapgen_setting("chunksize")) or 5) + 1) * 16 - 64
+    local seen, ranked, hints = {}, {}, {}
+    for _, p in ipairs(cave_events) do
+        local x, z = math.floor(p.x / 16) * 16, math.floor(p.z / 16) * 16
+        local span = math.max(math.abs(p.x - center_x), math.abs(p.z - center_z))
+        local key = x .. ":" .. z
+        if span <= 128 and math.abs(x) <= playable and math.abs(z) <= playable
+            and (x ~= current_x or z ~= current_z) then
+            local outside = p.x < low.x + 24 or p.x > high.x - 23
+                or p.z < low.z + 24 or p.z > high.z - 23
+            local score = (outside and 20 or 0) - math.abs(p.y + 38) - span / 32
+            local row = seen[key]
+            if row then
+                row.score = math.max(row.score, score)
+            else
+                row = {site={x,z}, score=score}
+                seen[key] = row
+                ranked[#ranked + 1] = row
+            end
+        end
+    end
+    for _, row in ipairs(ranked) do
+        row.score = row.score + 2 * site_score(row.site, aliases)
+    end
+    table.sort(ranked, function(a, b)
+        if a.score ~= b.score then return a.score > b.score end
+        if a.site[1] ~= b.site[1] then return a.site[1] < b.site[1] end
+        return a.site[2] < b.site[2]
+    end)
+    for i=1,math.min(3, #ranked) do hints[i] = ranked[i].site end
+    if #hints > 0 then return hints end
+end
+
 local function survey(r)
     local low, high = xyz(r.low_xyz), xyz(r.high_xyz)
     pending = r
@@ -109,7 +184,7 @@ local function survey(r)
                     assert(file:write(string.char(unpack(column))))
                 end end
                 assert(file:close())
-                reply(r, {status="surveyed"})
+                reply(r, {status="surveyed", cave_hints=nearby_cave_hints(r, low, high)})
             end
             pending = nil
         end)
@@ -144,27 +219,12 @@ end
 local function find_site(r)
     if not r.origins then return search.find(mt, r) end
     local best, best_score, last_result = nil, -math.huge, nil
-    local probes = {{8,8},{-8,8},{24,8},{8,-8},{8,24}}
     for _, origin in ipairs(r.origins) do
         r.x, r.z = origin[1], origin[2]
         local hit = search.find(mt, r)
         last_result = hit
         if hit.status == "found" then
-            local score = 0
-            for _, offset in ipairs(probes) do
-                local x, z = hit.site[1] + offset[1], hit.site[2] + offset[2]
-                local spawn = mt.get_spawn_level(x, z)
-                if spawn then
-                    local data = mt.get_biome_data({x=x, y=spawn-1, z=z})
-                    local name = data and mt.get_biome_name(data.biome) or ""
-                    for _, alias in ipairs(r.biome_groups[r.biome_group]) do
-                        if name == alias or name:sub(1, #alias+1) == alias .. "_" then
-                            score = score + math.max(1, spawn + 8)
-                            break
-                        end
-                    end
-                end
-            end
+            local score = site_score(hit.site, r.biome_groups[r.biome_group])
             if score > best_score then best, best_score = hit, score end
         end
     end

@@ -1,5 +1,5 @@
 """Read native Mapgen v7 terrain and pair a stable voxel map with client RGB packets."""
-from collections import Counter
+from collections import Counter, deque
 from functools import lru_cache
 import json
 import math
@@ -111,21 +111,27 @@ class NativeScene:
             rgb, info = self.step()
             row = json.loads(response.read_text()) if response.is_file() else {}
             if row.get("request_id") == self.seq:
-                verify_clock(row, info)
+                try:
+                    verify_clock(row, info)
+                except ValueError as exc:
+                    if not str(exc).startswith("Server/client/Lua clock mismatch:"):
+                        raise
+                    raise ConnectionError(f"Unaligned native tick during {kind}") from exc
                 return row, rgb, info
         raise TimeoutError(f"Native {kind} did not finish within 90 seconds")
 
-    def survey(self, site, survey_columns=16):
+    def survey(self, site, survey_columns=16, biome=None):
         x, z = site
         margin = 24 + (survey_columns - 16) // 2
         side = SURVEY_SIDE + survey_columns - 16
         low = (x - margin, WORLD_BOTTOM, z - margin)
         high = (low[0] + side - 1, WORLD_TOP, low[2] + side - 1)
-        row, _, _ = self.command("survey", low_xyz=low, high_xyz=high)
+        row, _, _ = self.command("survey", low_xyz=low, high_xyz=high, biome_group=biome,
+                                  biome_groups=BIOMES if biome else None)
         if row["status"] != "surveyed":
             raise RejectedScene("Native site emergence failed")
         survey = np.fromfile(self.session.world / "vox2pix_survey.bin", dtype="<u2")
-        return survey.reshape(side, side, WORLD_TOP - WORLD_BOTTOM + 1), low
+        return survey.reshape(side, side, WORLD_TOP - WORLD_BOTTOM + 1), low, row.get("cave_hints") or []
 
     def geometry_snapshot(self, low, kind, boxes=False):
         row, rgb, info = self.command("snapshot", low_xyz=low, anchor_kind=kind, boxes=boxes)
@@ -229,27 +235,35 @@ class NativeScene:
 
 
 def _search_world(native, slot, config, rng, library_path, rejected, sites_per_world,
-                  survey_columns, land_priority, committed_scene):
+                  survey_columns, land_priority, cave_hints, committed_scene):
     visited = set()
+    hints = deque()
     for site_attempt in range(1, sites_per_world + 1):
         if committed_scene is not None and committed_scene.is_dir():
             return None
-        x, z = map(int, rng.integers(-24000, 24001, size=2))
-        sites = {}
-        if land_priority and slot["height"] != "surface" and site_attempt % 4 != 0:
-            sites["origins"] = [[x, z], *rng.integers(-24000, 24001, size=(3, 2)).tolist()]
-        hit, _, _ = native.command("search", x=x, z=z, biome_groups=BIOMES,
-            biome_group=slot["biome"], resolution=64, max_checks=16384, **sites)
-        if hit["status"] != "found":
-            rejected[hit["status"]] += 1
-            continue
-        site = tuple(hit["site"])
+        while hints and hints[0] in visited:
+            hints.popleft()
+        from_cave = bool(hints) and site_attempt % 3 != 0
+        if from_cave:
+            site = hints.popleft()
+        else:
+            x, z = map(int, rng.integers(-24000, 24001, size=2))
+            sites = {}
+            if land_priority and slot["height"] != "surface" and site_attempt % 4 != 0:
+                sites["origins"] = [[x, z], *rng.integers(-24000, 24001, size=(3, 2)).tolist()]
+            hit, _, _ = native.command("search", x=x, z=z, biome_groups=BIOMES,
+                biome_group=slot["biome"], resolution=64, max_checks=16384, **sites)
+            if hit["status"] != "found":
+                rejected[hit["status"]] += 1
+                continue
+            site = tuple(hit["site"])
         if site in visited:
             rejected["duplicate native site for seed"] += 1
             continue
         visited.add(site)
         try:
-            survey, low = native.survey(site, survey_columns)
+            survey, low, nearby = native.survey(site, survey_columns, biome=slot["biome"] if cave_hints else None)
+            hints.extend(tuple(row) for row in nearby)
             anchors = site_candidates(survey, native.definitions, slot["height"], rng, rejected)
             for relative, surface, kind in anchors:
                 tx, ty, tz = relative
@@ -270,7 +284,8 @@ def _search_world(native, slot, config, rng, library_path, rejected, sites_per_w
                 except RejectedScene as exc:
                     rejected[str(exc)] += 1
                     continue
-                meta.update(surface_y=surface, native_biome=check["biome"], site_attempt=site_attempt)
+                meta.update(surface_y=surface, native_biome=check["biome"], site_attempt=site_attempt,
+                            land_search_source="native_cave_hint" if from_cave else "biome_search")
                 return meta, vocabulary, arrays, rgbs
             rejected["no accepted anchor at site"] += 1
         except RejectedScene as exc:
@@ -293,7 +308,7 @@ def scene_id_for_world_seed(world_seed, pilot_seed):
 
 def capture_scene(slot, config, craftium_dir, library_path, search_round=0, search_rounds=1,
                   sites_per_world=SITES_PER_WORLD, survey_columns=16, land_priority=False,
-                  committed_scene=None):
+                  cave_hints=False, committed_scene=None):
     """Allocate disjoint deterministic seed candidates and never substitute a quota."""
     craftium_dir = Path(craftium_dir).resolve()
     engine_build, game_build = _builds(craftium_dir)
@@ -311,12 +326,13 @@ def capture_scene(slot, config, craftium_dir, library_path, search_round=0, sear
                 "procedural", seed, config["renderer"], craftium_dir,
                 scene_script=HERE / "scene.lua",
                 scene_assets=(REUSED_LUA / "biome_search.lua", REUSED_LUA / "scene_geometry.lua"),
-                native_settings=dict(SETUP, voxwm_skip_rgb=True), image_size=(config["width"], config["height"]),
+                native_settings=dict(SETUP, voxwm_skip_rgb=True, vox2pix_cave_hints=cave_hints),
+                image_size=(config["width"], config["height"]),
                 fixed_step=True, voxel_observation=False, render_rgb=True,
             ) as session:
                 native = NativeScene(session)
                 result = _search_world(native, slot, config, rng, library_path, rejected,
-                                       sites_per_world, survey_columns, land_priority, committed_scene)
+                                       sites_per_world, survey_columns, land_priority, cave_hints, committed_scene)
         except (ConnectionError, TimeoutError) as exc:
             # A late response belongs to the discarded world, not the next request.
             rejected[str(exc)] += 1

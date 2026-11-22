@@ -35,6 +35,7 @@ def parser():
     collect.add_argument("--survey-columns", type=int, choices=[16, 32, 48], default=16,
                          help="side of the footprint of candidate anchor columns")
     collect.add_argument("--land-priority", action="store_true", help="rank native land and biome hints for cave surveys")
+    collect.add_argument("--cave-hints", action="store_true", help="survey nearby native large-cave endpoints")
     collect.add_argument("--renderer", choices=["software"], default="software")
     collect.add_argument("--craftium-dir", type=Path, default=DEFAULT_CRAFTIUM)
     for name, help_text in (
@@ -63,7 +64,7 @@ def collect_pilot(args):
         raise ValueError("Search rounds exceed the independent world seed space")
     search = dict(search_round=args.search_round, search_rounds=args.search_rounds,
                   sites_per_world=args.sites_per_world, survey_columns=args.survey_columns,
-                  land_priority=args.land_priority)
+                  land_priority=args.land_priority, cave_hints=args.cave_hints)
     with DatasetWriter(args.dataset, config) as writer:
         committed = writer.completed
         completed = len(committed)

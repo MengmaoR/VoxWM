@@ -41,7 +41,9 @@ gates. For a small tail, `--parallel-rounds` searches distinct seed rounds for
 the same slot concurrently and commits the first eligible result once. Add
 `--land-priority --survey-columns 48` to rank estimated native surface and
 nearby biome matches before surveying. Every fourth site still uses the
-original search order. Acceptance always uses generated terrain.
+original search order. `--cave-hints` can also follow nearby native large-cave
+notifications. Acceptance always uses generated terrain. An unsynchronized
+response discards the interrupted world before trying another seed.
 
 After all 200 scenes are committed, run:
 

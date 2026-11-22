@@ -221,6 +221,21 @@ class CameraTests(unittest.TestCase):
 
 
 class SamplingTests(unittest.TestCase):
+    def test_unaligned_native_response_discards_the_world(self):
+        from .native import NativeScene
+
+        with TemporaryDirectory() as temp:
+            world = Path(temp)
+            scene = NativeScene.__new__(NativeScene)
+            scene.session = SimpleNamespace(world=world)
+            scene.seq = 0
+            response = dict(request_id=1, native_clock=dict(patch_version="voxwm-fixed24-v1",
+                            server_tick=6078, client_request_tick=6079), lua_tick=6078)
+            (world / "vox2pix_response.json").write_text(json.dumps(response))
+            with patch.object(scene, "step", return_value=(None, {"native_client_tick": 6079})):
+                with self.assertRaisesRegex(ConnectionError, "Unaligned native tick during survey"):
+                    scene.command("survey")
+
     def test_lua_json_node_ids_are_valid_lookup_indices(self):
         from .native import NativeScene
 
