@@ -158,6 +158,31 @@ On your computer, forward `8770` and open [the viewer](http://127.0.0.1:8770).
 ssh -N -L 8770:127.0.0.1:8770 aml-g06-gpu
 ```
 
+## Freeze audit of the 27,000-step checkpoint
+
+Use the prepared E01 directory with the 160K/20K/20K split and its
+validation-selected `checkpoint_best.pt`. Run from the repository root
+with the PyTorch and dataset dependencies installed.
+
+```bash
+CUDA_VISIBLE_DEVICES=4 .venv-vae/bin/python -m voxel_vae.freeze_audit all \
+  --e01-root outputs/voxel_vae/e01 \
+  --checkpoint outputs/voxel_vae/e01/phase_masked/checkpoint_best.pt \
+  --device cuda:0 --batch-size 64 --workers 4
+```
+
+The `test` and `d3` commands share a single posterior-mean pass over the
+full held-out test split. `embedding` scans center-token frequencies and
+compares the 27k embedding to its recorded initialization. `latent` computes
+channel statistics on the full train split. `report` reads the completed
+outputs. The `all` command reuses token counts collected during inference
+and any completed audit files for the same checkpoint and split.
+
+Results go to `outputs/voxel_vae/e01/freeze_audit/`. Downstream code can
+import `normalize_latent` and `denormalize_latent` from
+`voxel_vae.latent_normalization` and use the train-set statistics in
+`latent_normalization.json`.
+
 ## History
 
 `outputs/voxel_vae/e00/` retains the Plain and Masked implementation sanity runs.
