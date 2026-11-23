@@ -401,6 +401,9 @@ local function snapshot(r, player)
         if mt.settings:get_bool("voxwm_material_lighting_probe", false) then
             state.native_render_settings.solid_ambient_floor = tonumber(mt.settings:get("solid_ambient_floor"))
         end
+        if mt.settings:get_bool("voxwm_fog_probe", false) then
+            state.native_render_settings.voxwm_exact_draw_range = mt.settings:get_bool("voxwm_exact_draw_range")
+        end
         state.hud_wielditem_hidden = player:hud_get_flags().wielditem == false
         state.wielded_item = player:get_wielded_item():get_name()
         state.underwater_support = support or nil
@@ -418,6 +421,14 @@ end)
 mt.registered_voxwm_poststeps = {function()
     local player = mt.get_connected_players()[1]
     if not player then return end
+    if mt.settings:get_bool("voxwm_exact_draw_range", false) then
+        local sky = player:get_sky(true)
+        local fog = sky.fog or {}
+        if fog.fog_distance ~= -1 or fog.fog_start ~= -1 then
+            sky.fog = {fog_distance=-1, fog_start=-1, fog_color=fog.fog_color}
+            player:set_sky(sky)
+        end
+    end
     if not started and read("gt_start") and read("gt_arm") then
         publish_nodes()
         started = true

@@ -1,0 +1,167 @@
+diff --git a/src/client/camera.cpp b/src/client/camera.cpp
+index dfa2649..1108b64 100644
+--- a/src/client/camera.cpp
++++ b/src/client/camera.cpp
+@@ -573,7 +573,10 @@ void Camera::updateViewingRange()
+ 
+ 	m_cameranode->setNearValue(0.1f * BS);
+ 
+-	m_draw_control.wanted_range = std::fmin(adjustDist(viewing_range, getFovMax()), 4000);
++	// Vox2Pix uses an explicit world draw radius independently of the voxel crop.
++	const f32 draw_range = g_settings->getBool("voxwm_exact_draw_range") ?
++			viewing_range : adjustDist(viewing_range, getFovMax());
++	m_draw_control.wanted_range = std::fmin(draw_range, 4000);
+ 	if (m_draw_control.range_all) {
+ 		m_cameranode->setFarValue(100000.0);
+ 		return;
+diff --git a/src/client/game.cpp b/src/client/game.cpp
+index 603549d..7224562 100644
+--- a/src/client/game.cpp
++++ b/src/client/game.cpp
+@@ -11,6 +11,7 @@
+ #include "light.h"
+ #include "voxwm_lighting_floor.h"
+ #include "client/voxwm_material_ambient.h"
++#include "client/voxwm_fog_probe.h"
+ #include "client/renderingengine.h"
+ #include "camera.h"
+ #include "client.h"
+@@ -1038,6 +1039,7 @@ void Game::run()
+ 	const std::string probe = voxwmFixed24() && g_settings->getBool("voxwm_lighting_probe")
+ 			? g_settings->get("voxwm_client_clock_file") + ".lighting" : "";
+ 	const bool material_probe = !probe.empty() && g_settings->getBool("voxwm_material_lighting_probe");
++	const bool fog_probe = !probe.empty() && g_settings->getBool("voxwm_fog_probe");
+ 
+ 	m_touch_simulate_aux1 = g_settings->getBool("fast_move")
+ 			&& client->checkPrivilege("fast");
+@@ -1139,16 +1141,58 @@ void Game::run()
+ 		processClientEvents(&cam_view_target);
+ 		updateDebugState();
+ 		// Update camera here so it is in-sync with CAO position
++		if (fog_probe) {
++			int enabled;
++			float ratio;
++			if (std::ifstream(g_settings->get("voxwm_client_clock_file") + ".fog_request") >> enabled >> ratio) {
++				if ((enabled == 0 || enabled == 1) && std::isfinite(ratio) && ratio >= 0.0f && ratio < 1.0f) {
++					m_cache_enable_fog = enabled != 0;
++					g_settings->setBool("enable_fog", m_cache_enable_fog);
++					g_settings->setFloat("fog_start", ratio);
++					sky->setFogStart(ratio);
++				}
++			}
++		}
+ 		updateCamera(dtime);
+ 		updateSound(dtime);
+ 		processPlayerInteraction(dtime, m_game_ui->m_flags.show_hud);
+ 		voxwm_material_shader_drawn = false;
++		voxwm_fog_uniform_bound = false;
+ 		updateFrame(&graph, &stats, dtime, cam_view);
+ 		if (!probe.empty() && device->isWindowVisible() && !g_settings->getBool("voxwm_skip_rgb")) {
+ 			std::ofstream stamp(probe, std::ios::trunc);
+ 			stamp << voxwmClientTick.load() << " " << gamma << " " << lighting_floor
+ 					<< " " << int(decode_light(0)) << " " << int(decode_light(LIGHT_SUN))
+ 					<< " " << client->voxwmLightingPending() << " voxwm-light-floor-v1\n";
++			if (fog_probe) {
++				video::SColor color(0);
++				video::E_FOG_TYPE type;
++				f32 start, end, density;
++				bool pixel_fog, range_fog;
++				driver->getFog(color, type, start, end, density, pixel_fog, range_fog);
++				std::ofstream fog(g_settings->get("voxwm_client_clock_file") + ".fog", std::ios::trunc);
++				fog << std::setprecision(9) << std::boolalpha
++						<< "{\"version\":\"voxwm-native-fog-v1\",\"render_tick\":" << voxwmClientTick.load()
++						<< ",\"viewing_range_config\":" << g_settings->getFloat("viewing_range")
++						<< ",\"draw_control_wanted_range\":" << draw_control->wanted_range
++						<< ",\"sky_fog_distance\":" << sky->getFogDistance()
++						<< ",\"sky_fog_start_ratio\":" << sky->getFogStart()
++						<< ",\"runData_fog_range_before_clouds\":" << voxwm_fog_before_clouds / BS
++						<< ",\"runData_fog_range\":" << runData.fog_range / BS
++						<< ",\"actual_fog_start\":" << start / BS
++						<< ",\"actual_fog_end\":" << end / BS
++						<< ",\"actual_fog_color\":[" << color.getRed() << "," << color.getGreen()
++						<< "," << color.getBlue() << "," << color.getAlpha() << "]"
++						<< ",\"fog_enabled\":" << fogEnabled()
++						<< ",\"directional_colored_fog\":" << sky->getDirectionalColoredFog()
++						<< ",\"camera_fov\":[" << camera->getFovX() << "," << camera->getFovY() << "]"
++						<< ",\"camera_far_plane\":" << camera->getCameraNode()->getFarValue() / BS
++						<< ",\"camera_near_plane\":" << camera->getCameraNode()->getNearValue() / BS
++						<< ",\"shader_fog_distance\":" << voxwm_fog_uniform_distance / BS
++						<< ",\"shader_fog_shading_parameter\":" << voxwm_fog_uniform_parameter
++						<< ",\"shader_uniforms_bound\":" << voxwm_fog_uniform_bound
++						<< ",\"fog_type\":\"" << (type == video::EFT_FOG_LINEAR ? "linear" : "other") << "\"}\n";
++			}
+ 			if (material_probe) {
+ 				const auto tick = voxwmClientTick.load();
+ 				std::ofstream material(g_settings->get("voxwm_client_clock_file") + ".material_lighting",
+@@ -4026,6 +4070,7 @@ void Game::updateFrame(ProfilerGraph *graph, RunStats *stats, f32 dtime,
+ 	/*
+ 		Update clouds
+ 	*/
++	voxwm_fog_before_clouds = runData.fog_range;
+ 	updateClouds(dtime);
+ 
+ 	/*
+diff --git a/src/client/renderingengine.cpp b/src/client/renderingengine.cpp
+index e9d1801..b2ffedc 100644
+--- a/src/client/renderingengine.cpp
++++ b/src/client/renderingengine.cpp
+@@ -24,6 +24,7 @@
+ #include "irrlicht_changes/static_text.h"
+ #include "irr_ptr.h"
+ #include "voxwm_clock.h"
++#include "client/voxwm_fog_probe.h"
+ 
+ RenderingEngine *RenderingEngine::s_singleton = nullptr;
+ const video::SColor RenderingEngine::MENU_SKY_COLOR = video::SColor(255, 140, 186, 250);
+@@ -103,6 +104,13 @@ public:
+ 		if (fog_end > 0)
+ 			parameter = 1.0f / (1.0f - fog_start / fog_end);
+ 		m_fog_shading_parameter.set(&parameter, services);
++		// These are the actual final driver values passed to native fog uniforms.
++		if (services->getPixelShaderConstantID("fogDistance") >= 0 &&
++				services->getPixelShaderConstantID("fogShadingParameter") >= 0) {
++			voxwm_fog_uniform_bound = true;
++			voxwm_fog_uniform_distance = fog_end;
++			voxwm_fog_uniform_parameter = parameter;
++		}
+ 	}
+ };
+ 
+diff --git a/src/client/sky.h b/src/client/sky.h
+index 7d3cdba..dc9a086 100644
+--- a/src/client/sky.h
++++ b/src/client/sky.h
+@@ -113,6 +113,7 @@ public:
+ 
+ 	void setFogStart(float fog_start) { m_sky_params.fog_start = fog_start; }
+ 	float getFogStart() const { return m_sky_params.fog_start; }
++	bool getDirectionalColoredFog() const { return m_directional_colored_fog; }
+ 
+ 	void setFogColor(video::SColor v) { m_sky_params.fog_color = v; }
+ 	video::SColor getFogColor() const {
+diff --git a/src/client/voxwm_fog_probe.h b/src/client/voxwm_fog_probe.h
+new file mode 100644
+index 0000000..9e4a96a
+--- /dev/null
++++ b/src/client/voxwm_fog_probe.h
+@@ -0,0 +1,7 @@
++// Opt-in VoxWM diagnostics for native FogShaderUniformSetter values.
++#pragma once
++
++inline bool voxwm_fog_uniform_bound = false;
++inline float voxwm_fog_uniform_distance = 0.0f;
++inline float voxwm_fog_uniform_parameter = 0.0f;
++inline float voxwm_fog_before_clouds = 0.0f;
+diff --git a/src/defaultsettings.cpp b/src/defaultsettings.cpp
+index ad2c878..1dbc438 100644
+--- a/src/defaultsettings.cpp
++++ b/src/defaultsettings.cpp
+@@ -281,6 +281,8 @@ void set_default_settings()
+ 	settings->setDefault("display_gamma", "1.0");
+ 	settings->setDefault("lighting_floor", "0.0");
+ 	settings->setDefault("solid_ambient_floor", "0.0");
++	settings->setDefault("voxwm_exact_draw_range", "false");
++	settings->setDefault("voxwm_fog_probe", "false");
+ 	settings->setDefault("voxwm_material_lighting_probe", "false");
+ 	settings->setDefault("voxwm_lighting_probe", "false");
+ 	settings->setDefault("lighting_boost", "0.2");

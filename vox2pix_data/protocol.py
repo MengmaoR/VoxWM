@@ -12,6 +12,8 @@ VERSION = "vox2pix-pilot-v2-camera16"
 V3_VERSION = "vox2pix-v3-surface-watercount-cave-underwater-lightfloor"
 V3_MATERIAL_VERSION = "vox2pix-v3-surface-watercount-cave-underwater-materialambient"
 V3_MATERIAL_PROFILE = "material-ambient"
+V3_FOG_PROFILE = "material-ambient-fog20"
+V3_FOG_VERSION = "vox2pix-v3-materialambient-linear-fog20-30"
 V3_KINDS = ("surface", "cave", "underwater")
 HEIGHTS = ("surface", "shallow", "deep")
 CENTER = (slice(16, 32),) * 3
@@ -37,10 +39,16 @@ SETTINGS = dict(
 V3_RGB = dict(viewing_range=30, enable_fog=True, directional_colored_fog=True,
               fog_start=.8, display_gamma=3.0, lighting_floor=.35)
 V3_MATERIAL_RGB = dict(V3_RGB, lighting_floor=0., solid_ambient_floor=.35)
+V3_FOG_RGB = dict(V3_MATERIAL_RGB, fog_start=.6666667, voxwm_exact_draw_range=True)
+V3_FOG_GEOMETRY = dict(voxel_observation_half_extent=24, rgb_viewing_range=30,
+                      fog_start_distance=20, fog_end_distance=30,
+                      fog_start_ratio=2 / 3, fog_type="linear")
 
 
 def v3_rgb(config):
     profile = config.get("lighting_profile", "global-lut")
+    if profile == V3_FOG_PROFILE:
+        return V3_FOG_RGB
     if profile == V3_MATERIAL_PROFILE:
         return V3_MATERIAL_RGB
     if profile == "global-lut":
@@ -49,11 +57,13 @@ def v3_rgb(config):
 
 
 def v3_version(config):
+    if v3_rgb(config) is V3_FOG_RGB:
+        return V3_FOG_VERSION
     return V3_MATERIAL_VERSION if v3_rgb(config) is V3_MATERIAL_RGB else V3_VERSION
 
 
 def v3_lighting_images(config):
-    return ("ambient_000", "ambient_035") if v3_rgb(config) is V3_MATERIAL_RGB else ("floor_000", "floor_035")
+    return ("ambient_000", "ambient_035") if "solid_ambient_floor" in v3_rgb(config) else ("floor_000", "floor_035")
 
 
 def v3_plan(config):

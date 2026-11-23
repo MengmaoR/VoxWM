@@ -317,6 +317,11 @@ class NativeScene:
                 if ambient is not None:
                     view.update(solid_ambient_floor=ambient,
                                 material_renderer_lighting=self.check_material_light_frame(lighting, ambient))
+                if rgb_settings.get("voxwm_exact_draw_range"):
+                    from .fog_runtime import read_fog, validate_fog
+
+                    view["renderer_fog"] = validate_fog(
+                        read_fog(self), ratio=rgb_settings["fog_start"], tick=lighting["render_tick"])
             else:
                 require_air_camera(current[0], self.stable_defs, projection_origin)
             direction = np.asarray(info["cam_dir"], dtype=np.float64)
@@ -383,6 +388,10 @@ class NativeScene:
                     water_definitions={d["name"]: d for d in self.definitions.values() if d["water"]})
         if ambient is not None:
             meta.update(solid_ambient_floor=ambient, lighting_profile=config["lighting_profile"])
+        if rgb_settings.get("voxwm_exact_draw_range"):
+            from .protocol import V3_FOG_GEOMETRY
+
+            meta["fog_geometry"] = dict(V3_FOG_GEOMETRY)
         if underwater_descent:
             meta.update(underwater_descent=underwater_descent, visibility_camera_local_xyz=list(eye))
         meta["lighting_comparison"], auxiliary = self.lighting_comparison(

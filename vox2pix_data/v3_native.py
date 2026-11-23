@@ -86,6 +86,8 @@ def capture_v3(slot, config, craftium_dir, library_path, attempts, sites, column
                     vox2pix_cave_hints=slot["kind"] == "cave", voxwm_skip_rgb=True)
     if "solid_ambient_floor" in rgb:
         settings["voxwm_material_lighting_probe"] = True
+    if rgb.get("voxwm_exact_draw_range"):
+        settings["voxwm_fog_probe"] = True
     for attempt in range(first, first + attempts):
         if time.monotonic() >= started + seconds:
             break

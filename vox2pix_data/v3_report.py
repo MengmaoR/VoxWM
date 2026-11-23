@@ -213,6 +213,11 @@ def validate_payload(meta, config, vocabulary, slot, arrays):
         _validate_renderer_lighting(view, expected_rgb["lighting_floor"])
         if ambient is not None:
             _validate_material_lighting(view, ambient)
+        if expected_rgb.get("voxwm_exact_draw_range"):
+            from .fog_runtime import validate_fog
+
+            validate_fog(view.get("renderer_fog", {}), ratio=expected_rgb["fog_start"],
+                         tick=view["render_simulation_tick"])
         if water_surface:
             require(np.allclose(vector(view, "actual_player_world_xyz"), foot, atol=.003, rtol=0),
                     "Surface observer moved from its water-surface anchor")
