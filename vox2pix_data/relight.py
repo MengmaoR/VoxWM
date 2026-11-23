@@ -15,6 +15,7 @@ import zarr
 from .native import HERE, REUSED_LUA, SETUP, NativeScene, RenderSession, _builds
 from .protocol import RejectedScene, V3_RGB, V3_VERSION, v3_plan
 from .storage import RAW_FIELDS, committed_paths, read_json, read_vocabulary, write_json
+from .v3_native import survey
 from .v3_report import brightness
 
 
@@ -63,6 +64,13 @@ def replay(scene_path, output, config, vocabulary, craftium_dir, floor, seconds)
         if native.vocabulary != vocabulary:
             raise ValueError("The engine's registered node vocabulary differs from the source")
         native.search_deadline = time.monotonic() + seconds
+        # Match the pilot's terrain emergence before visiting the saved camera.
+        # There were no candidate captures in the preceding surface site.
+        rng = np.random.default_rng(meta["world_seed"])
+        for _ in range(meta["site_attempt"]):
+            x, z = map(int, rng.integers(-24000, 24001, size=2))
+            hit, _, _ = native.command("search_v3", x=x, z=z, scene_kind=meta["kind"])
+            survey(native, hit["site"], 32, config["survey_y"])
         origin = meta["region_origin_xyz"]
         response, _, _ = native.command("emerge_capture", low_xyz=origin, high_xyz=[n + 47 for n in origin])
         if response["status"] != "capture_emerged":
@@ -144,7 +152,14 @@ def main():
         with ProcessPoolExecutor(max_workers=min(3, len(paths)), mp_context=get_context("spawn")) as pool:
             jobs = [pool.submit(replay, path, stage, config, vocab, args.craftium_dir.resolve(),
                                 args.floor, args.scene_timeout) for path in paths.values()]
-            rows = [job.result() for job in jobs]
+            rows, failures = [], []
+            for scene_id, job in zip(paths, jobs, strict=True):
+                try:
+                    rows.append(job.result())
+                except (RejectedScene, OSError, RuntimeError, ValueError) as exc:
+                    failures.append(f"scene {scene_id:04d}: {exc}")
+            if failures:
+                parser.exit(1, "\n".join(failures) + "\n")
         write_json(stage / "summary.json", dict(floor=args.floor, source=str(args.dataset), scenes=rows))
         report(stage, rows, args.floor)
         stage.rename(args.output)
