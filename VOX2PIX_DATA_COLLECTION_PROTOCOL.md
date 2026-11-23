@@ -21,8 +21,10 @@ three-scene smoke uses natural scenes without imposing biome balance.
 
 ## Scene anchors and visibility
 
-- Surface stands on native terrain with the camera in air. Cave stands on a
-  native supported floor with body clearance and a roof. There are no depth
+- Surface uses the top of native terrain or the first air cell above exposed
+  native water. The camera stays in air. The observer stays fixed at a water
+  anchor with liquid sinking disabled. Cave stands on a native supported
+  floor with body clearance and a roof. There are no depth
   classes. The scene stores both the surface biome and the biome at foot height.
   The reporting label comes from the surface biome.
 - Cave candidates prioritize both ordinary and large Mapgen cave notifications.

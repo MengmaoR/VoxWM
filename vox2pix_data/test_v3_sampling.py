@@ -18,6 +18,16 @@ DEFINITIONS = {
 
 
 class NativeKindGates(unittest.TestCase):
+    def test_surface_search_accepts_dry_land_and_first_air_cell_above_water(self):
+        survey = np.zeros((64, 64, 96), dtype=np.uint16)
+        survey[..., :30] = 1
+        survey[32:, :, 30:36] = 2
+        result = list(site_candidates(survey, DEFINITIONS, "surface", np.random.default_rng(42), Counter(), -112))
+        self.assertEqual({(coords[1], top, kind) for coords, top, kind in result},
+                         {(30, -83, "surface_floor"), (36, -77, "surface_water")})
+        self.assertTrue(all(coords[1] == 30 for coords, _, _ in result if coords[0] < 32))
+        self.assertTrue(all(coords[1] == 36 for coords, _, _ in result if coords[0] >= 32))
+
     def test_floor_is_not_a_visibility_occluder(self):
         nodes = np.zeros((48, 48, 48), dtype=np.uint16)
         nodes[..., :24] = 1

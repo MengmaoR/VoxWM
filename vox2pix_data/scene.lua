@@ -249,10 +249,12 @@ local function anchor_valid(foot, kind)
         end
     end
     local below = vector.offset(foot, 0, -1, 0)
+    local name = mt.get_node(below).name
+    local def = mt.registered_nodes[name]
     if kind == "surface_water" then
-        return mt.get_item_group(mt.get_node(below).name, "water") > 0
+        return mt.get_item_group(name, "water") > 0 and
+            (not v3_scene or (def and (def.liquidtype == "source" or def.liquidtype == "flowing")))
     end
-    local def = mt.registered_nodes[mt.get_node(below).name]
     if not def or def.walkable == false or (def.liquidtype and def.liquidtype ~= "none") then return false end
     if v3_scene and not geometry.terrain(def) then return false end
     for _, box in ipairs(mt.get_node_boxes("collision_box", below)) do
@@ -349,7 +351,7 @@ local function pose(r, player)
         player:set_properties({is_visible=false})
         local natural_sink = v3_scene and r.anchor_kind == "underwater_floor"
         local observer = {gravity=natural_sink and 1 or 0, speed=0, jump=0}
-        if natural_sink then observer.liquid_sink = 1 end
+        if v3_scene then observer.liquid_sink = natural_sink and 1 or 0 end
         player:set_physics_override(observer)
         player:set_pos(foot)
     end

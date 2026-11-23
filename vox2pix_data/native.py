@@ -280,6 +280,8 @@ class NativeScene:
                 if underwater_descent and (np.max(np.abs(real_foot - settled)) > .003
                                            or np.max(np.abs(projection_origin - eye)) > .003):
                     raise RejectedScene("Underwater observer moved after settling")
+                if kind == "surface_water" and np.max(np.abs(real_foot - foot)) > .003:
+                    raise RejectedScene("Surface observer moved from its water-surface anchor")
                 lighting = self.check_light_frame(capture, V3_RGB["lighting_floor"])
                 view.update(renderer_lighting=lighting, lighting_floor=lighting["lighting_floor"],
                             display_gamma=lighting["display_gamma"], actual_player_world_xyz=real_foot.tolist(),

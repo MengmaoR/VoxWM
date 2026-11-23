@@ -135,6 +135,7 @@ def validate_payload(meta, config, vocabulary, slot, arrays):
     views = meta.get("views")
     require(isinstance(views, list) and len(views) == config["views_per_scene"], "Missing scene views")
     actual_foot = None
+    water_surface = kind == "surface" and meta.get("anchor_kind") == "surface_water"
     if kind == "underwater":
         descent = meta.get("underwater_descent")
         require(isinstance(descent, dict), "Missing native underwater descent")
@@ -154,7 +155,8 @@ def validate_payload(meta, config, vocabulary, slot, arrays):
         view_origin = NOMINAL_CAMERA_XYZ
         body = nodes[24, 24, 24 + np.asarray(PLAYER_AIR_OFFSETS)]
         require((body == air).all(), "Player body intersects native solid geometry")
-        require(int(nodes[24, 24, 23]) in terrain, "Foot anchor lacks native terrain support")
+        require(int(nodes[24, 24, 23]) in (water if water_surface else terrain),
+                "Foot anchor lacks the expected native water or terrain below it")
     try:
         center, full, active = scene_visibility(nodes, definitions, kind, camera_origin=view_origin)
         if kind == "cave":
@@ -182,6 +184,9 @@ def validate_payload(meta, config, vocabulary, slot, arrays):
                 "Recorded view medium differs from expected scene kind")
         require(number(view, "lighting_floor") == V3_RGB["lighting_floor"], "Unexpected native brightness floor")
         _validate_renderer_lighting(view, V3_RGB["lighting_floor"])
+        if water_surface:
+            require(np.allclose(vector(view, "actual_player_world_xyz"), foot, atol=.003, rtol=0),
+                    "Surface observer moved from its water-surface anchor")
         if actual_foot is not None:
             require(np.allclose(vector(view, "actual_player_world_xyz"), actual_foot, atol=.003, rtol=0),
                     "Player moved after settling underwater")

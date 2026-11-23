@@ -132,8 +132,11 @@ def site_candidates(survey, definitions, kind, rng, rejected, y_min, hints=()):
     # Three native standing cells: one below the eye, the eye cell, and the foot cell.
     valid = air[index] & air[xs, zs, ys + 1] & air[xs, zs, ys + 2]
     if kind == "surface":
-        # Tree canopies are not standable terrain anchors. Air above a natural top is.
-        valid &= (ys == surface[xs, zs, None] + 1)
+        # Use the exposed terrain or water top of each column. A water anchor
+        # occupies the first air cell above the liquid, with no descent.
+        water_top = np.where(free & ~air, layers, -1).max(axis=2)
+        exposed_top = np.maximum(surface, water_top)
+        valid &= (ys == exposed_top[xs, zs, None] + 1)
     else:
         valid &= terrain[xs, zs, ys - 1]
     candidates = np.argwhere(valid) + 24
@@ -168,4 +171,7 @@ def site_candidates(survey, definitions, kind, rng, rejected, y_min, hints=()):
             except RejectedScene as exc:
                 rejected[str(exc)] += 1
                 continue
-        yield (x, y, z), int(surface[x, z]) + y_min, f"{kind}_floor"
+        if kind == "surface" and water_top[x, z] > surface[x, z]:
+            yield (x, y, z), y_min + y - 1, "surface_water"
+        else:
+            yield (x, y, z), int(surface[x, z]) + y_min, f"{kind}_floor"
