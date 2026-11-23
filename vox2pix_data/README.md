@@ -32,6 +32,21 @@ observer sinks with native physics and the recorder forms its 48³ crop around
 the settled position. The earlier lighting trial at
 `outputs/vox2pix_v3_smoke_15` uses a different manifest.
 
+To compare a different floor on the saved cameras, run this in the same
+software-rendering environment:
+
+```bash
+.venv/bin/python -m vox2pix_data.relight \
+  --dataset outputs/vox2pix_v3_lightfloor_15 \
+  --craftium-dir third_party/craftium_vox2pix_floor \
+  --floor 0.20 --output outputs/vox2pix_v3_floor020_rgb
+```
+
+Open the output's `index.html` for the same-session RGB pairs. The replay checks
+the stored 48³ node IDs and param2 at every view. Summary JSON records any
+saved cells restored in the disposable world and differences between the new
+control and the original RGB, which can include moving clouds.
+
 ## Historical v2 1K compression pilot
 
 The active protocol is `vox2pix-pilot-v2-camera16`. Use a newly initialized pilot
