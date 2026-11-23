@@ -204,10 +204,10 @@ class DatasetWriter:
         if len(rgbs) != self.config["views_per_scene"]:
             raise ValueError("Incorrect number of RGB views")
         if self.v3:
-            from .v3_report import validate_payload, validate_torch_pair
+            from .v3_report import validate_lighting_pair, validate_payload
 
             validate_payload(meta, self.config, vocabulary, self.slots[scene_id], arrays)
-            validate_torch_pair(meta, aux_rgbs or {})
+            validate_lighting_pair(meta, aux_rgbs or {}, rgbs)
         else:
             from .qa import validate_payload
 
@@ -230,7 +230,7 @@ class DatasetWriter:
             for index, rgb in enumerate(rgbs):
                 self.save_rgb(rgb_path / f"{index:03d}.png", rgb)
             if aux_rgbs:
-                qa_path = stage / "qa"
+                qa_path = stage / "lighting_comparison"
                 qa_path.mkdir()
                 for label, rgb in aux_rgbs.items():
                     self.save_rgb(qa_path / f"{label}.png", rgb)

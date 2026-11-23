@@ -10,7 +10,9 @@ import shutil
 import numpy as np
 from PIL import Image
 
-from .protocol import PLAYER_AIR_OFFSETS, RejectedScene, V3_RGB, V3_VERSION, require_air_camera, v3_plan
+from .protocol import (
+    NOMINAL_CAMERA_XYZ, PLAYER_AIR_OFFSETS, RejectedScene, V3_RGB, V3_VERSION, require_air_camera, v3_plan,
+)
 from .qa import (
     named_ids, number, require, validate_camera_protocol, validate_view,
     validate_visibility_lookup, vector,
@@ -21,66 +23,78 @@ from .storage import (
 )
 
 
-TORCH_ITEM = "mcl_torches:torch"
-TORCH_PNGS = ("torch_off", "torch_on")
-TORCH_UNVERIFIED = ("MODULE_UNAVAILABLE", "NO_MEASURABLE_LIGHT")
+LIGHTING_PNGS = ("floor_000", "floor_035")
+CAVE_DARK_FRACTION = .5
 FACE_COLORS = np.array([(223, 103, 104), (130, 48, 58), (111, 195, 121),
                         (49, 110, 71), (111, 162, 233), (63, 78, 167)], dtype="u1")
 BACKGROUND = (17, 23, 39)
 
 
 def brightness(rgb):
+    """Display-encoded RGB8 Rec. 709 luma, measured directly on native PNGs."""
     luma = rgb @ np.array([.2126, .7152, .0722])
-    return {"mean_luma": float(luma.mean()), "near_black_fraction": float((luma < 8).mean())}
+    return {"mean_luma": float(luma.mean()), "median_luma": float(np.median(luma)),
+            "near_black_fraction": float((luma < 8).mean()),
+            "near_white_fraction": float((luma >= 247).mean())}
 
 
-def _validate_torch(state, on):
-    require(isinstance(state, dict), "Missing native torch state")
-    for key in ("module_available", "enabled", "setting_enabled", "hidden"):
-        require(type(state.get(key)) is bool, f"Invalid torch {key}")
-    require(state["hidden"], "Native first-person wielditem was visible")
-    require(state["enabled"] == on and state["setting_enabled"], "Incorrect native torch control state")
-    if on:
-        require(state.get("item") == TORCH_ITEM and number(state, "item_light_source") > 0,
-                "Native torch was not wielded or has no registered light")
-    else:
-        require(state.get("item") != TORCH_ITEM, "OFF comparison still held a torch")
+def _validate_renderer_lighting(view, floor):
+    light = view.get("renderer_lighting")
+    require(isinstance(light, dict) and light.get("version") == "voxwm-light-floor-v1",
+            "Missing native renderer light LUT evidence")
+    require(type(light.get("render_tick")) is int and light["render_tick"] == view["render_simulation_tick"],
+            "Native lighting evidence belongs to a different RGB tick")
+    require(math.isclose(number(light, "lighting_floor"), floor, rel_tol=0, abs_tol=1e-6)
+            and number(light, "display_gamma") == V3_RGB["display_gamma"]
+            and number(light, "lut_zero") == round(floor * 255)
+            and number(light, "lut_max") == 255
+            and number(light, "pending_meshes") == 0,
+            "Native renderer light LUT or mesh state differs from this exposure")
 
 
-def validate_torch_pair(meta, frames):
-    """Validate the actual auxiliary PNG payload before commit and on readback."""
-    if meta["kind"] == "surface":
-        require(not frames, "Unexpected surface Torch A/B frames")
-        return
-    require(set(frames) == set(TORCH_PNGS), "Torch OFF/ON comparison requires both PNG frames")
-    check = meta.get("torch_ab")
-    require(isinstance(check, dict), "Missing native Torch A/B metadata")
-    require(check.get("voxel_identity_unchanged") is True, "Torch A/B changed Node ID or param2")
+def validate_lighting_pair(meta, frames, official_rgb):
+    """Check the native comparison images and report their measured brightness."""
+    require(set(frames) == set(LIGHTING_PNGS), "Lighting comparison requires Floor 0.0 and Floor 0.35")
+    check = meta.get("lighting_comparison")
+    require(isinstance(check, dict), "Missing native Lighting Comparison")
+    for key in ("voxel_identity_unchanged", "light_identity_unchanged", "white_identity_unchanged"):
+        require(check.get(key) is True, f"Native Lighting Comparison failed {key}")
     index = check.get("view_index")
-    require(type(index) is int and 0 <= index < len(meta["views"]), "Invalid Torch A/B view index")
-    _validate_torch(check.get("off"), False)
-    _validate_torch(check.get("on"), True)
-    require(check["off"]["module_available"] == check["on"]["module_available"],
-            "Torch module availability changed across the comparison")
-    actual = {label: brightness(frames[f"torch_{label}"]) for label in ("off", "on")}
-    for label, values in actual.items():
-        recorded = check.get(f"{label}_brightness")
-        require(isinstance(recorded, dict) and all(math.isclose(number(recorded, key), value, abs_tol=1e-8)
-                                                   for key, value in values.items()),
-                f"Torch {label.upper()} brightness differs from its saved PNG")
-    status = check.get("status")
-    require(status in (*TORCH_UNVERIFIED, "VERIFIED"), "Unknown Torch A/B status")
-    if not check["on"]["module_available"]:
-        require(status == "MODULE_UNAVAILABLE", "Missing module was misreported as effective")
-    if status == "VERIFIED":
-        require(check["on"]["module_available"] and actual["on"]["mean_luma"] > actual["off"]["mean_luma"] + .5
-                and any(check["on"].get(key) != check["off"].get(key) for key in ("light", "param1")),
-                "Torch was reported as verified without native brightness improvement")
+    require(type(index) is int and 0 <= index < len(meta["views"]), "Invalid lighting view index")
+    main_view = meta["views"][index]
+    for label, expected_floor in (("control", 0.), ("proposed", V3_RGB["lighting_floor"])):
+        row = check[label]
+        require(number(row, "lighting_floor") == expected_floor,
+                "Lighting Comparison floor differs from the requested setting")
+        require(number(row, "display_gamma") == main_view["gamma"], "Display gamma changed in Lighting Comparison")
+        _validate_renderer_lighting(row, expected_floor)
+        for key in ("actual_camera_world_xyz", "cam_dir_xyz"):
+            require(np.allclose(vector(row, key), vector(main_view, key), rtol=0, atol=1e-6),
+                    f"Lighting Comparison changed {key}")
+        for key in ("fov_x_rad", "fov_y_rad"):
+            require(math.isclose(number(row, key), number(main_view, key), rel_tol=0, abs_tol=1e-6),
+                    f"Lighting Comparison changed {key}")
+    eye_light = [check[key].get("native_eye_param1") for key in ("control", "proposed")]
+    if any(value is not None for value in eye_light):
+        require(all(type(value) is int and 0 <= value <= 255 for value in eye_light)
+                and eye_light[0] == eye_light[1], "Native eye-cell param1 differs across captures")
+    require(np.array_equal(frames["floor_035"], official_rgb[index]),
+            "Floor 0.35 PNG differs from its official dataset view")
+    control, proposed = (brightness(frames[label]) for label in LIGHTING_PNGS)
+    status = "VERIFIED"
+    if meta["kind"] == "cave":
+        if control["near_black_fraction"] < CAVE_DARK_FRACTION:
+            status = "CONTROL_NOT_DARK"
+        elif proposed["mean_luma"] < control["mean_luma"] + 5.:
+            status = "NO_MEASURABLE_BRIGHTENING"
+        elif proposed["near_black_fraction"] >= CAVE_DARK_FRACTION:
+            status = "CAVE_REMAINS_DARK"
+    return dict(check, status=status, control_brightness=control, proposed_brightness=proposed)
 
 
 def validate_payload(meta, config, vocabulary, slot, arrays):
     from .geometry import is_water_liquid, water_contains
-    from .v3_sampling import cave_evidence, scene_visibility
+    from .v3_sampling import cave_evidence, scene_visibility, settled_anchor
 
     array_schema(arrays, config)
     require(all(meta.get(key) == value for key, value in slot.items()), "Scene does not match its scheduled slot")
@@ -94,13 +108,14 @@ def validate_payload(meta, config, vocabulary, slot, arrays):
     origin_enu = vector(meta, "region_origin_enu", integer=True)
     require(np.array_equal(origin, foot - 24) and np.array_equal(origin_enu, origin[[0, 2, 1]]),
             "Invalid foot-centered 48³ coordinates")
-    y_min, y_max = config["survey_y"]
-    require(y_min <= origin[1] <= y_max - 47, "The 48³ crop lies outside the v3 survey range")
+    if kind != "underwater":
+        y_min, y_max = config["survey_y"]
+        require(y_min <= origin[1] <= y_max - 47, "The 48³ crop lies outside the v3 survey range")
     require(math.isclose(number(meta, "world_time"), .5, abs_tol=1e-5) and meta.get("weather") == "none"
             and number(meta, "gamma") == 3., "Invalid native daylight, weather or gamma")
     settings = meta.get("native_render_settings")
     require(isinstance(settings, dict) and all(settings.get(key) == value for key, value in V3_RGB.items()),
-            "Native viewing range, fog or gamma differs from the v3 protocol")
+            "Native viewing range, fog, gamma or brightness floor differs from the v3 protocol")
     validate_camera_protocol(meta)
     validate_visibility_lookup()
 
@@ -117,8 +132,31 @@ def validate_payload(meta, config, vocabulary, slot, arrays):
     definitions = {ident: dict(native_water.get(name, {}), name=name, water=ident in water,
                                walkable=ident in terrain, terrain=ident in terrain)
                    for ident, name in enumerate(vocabulary)}
+    views = meta.get("views")
+    require(isinstance(views, list) and len(views) == config["views_per_scene"], "Missing scene views")
+    actual_foot = None
+    if kind == "underwater":
+        descent = meta.get("underwater_descent")
+        require(isinstance(descent, dict), "Missing native underwater descent")
+        actual_foot = vector(meta, "settled_player_xyz")
+        start = vector(descent, "spawn_player_xyz")
+        require(np.array_equal(actual_foot, vector(descent, "settled_player_xyz"))
+                and np.array_equal(foot, settled_anchor(actual_foot))
+                and type(descent.get("ticks")) is int and descent["ticks"] > 0
+                and start[1] > actual_foot[1], "Underwater anchor must follow actual native descent")
+        support = vector(descent, "support_xyz", integer=True) - origin
+        require(((0 <= support) & (support < 48)).all()
+                and int(nodes[support[0], support[2], support[1]]) in terrain
+                and math.isclose(number(descent, "support_top_y"), actual_foot[1], abs_tol=.03),
+                "Settled player lacks native floor support")
+        view_origin = vector(meta, "visibility_camera_local_xyz")
+    else:
+        view_origin = NOMINAL_CAMERA_XYZ
+        body = nodes[24, 24, 24 + np.asarray(PLAYER_AIR_OFFSETS)]
+        require((body == air).all(), "Player body intersects native solid geometry")
+        require(int(nodes[24, 24, 23]) in terrain, "Foot anchor lacks native terrain support")
     try:
-        center, full, active = scene_visibility(nodes, definitions, kind)
+        center, full, active = scene_visibility(nodes, definitions, kind, camera_origin=view_origin)
         if kind == "cave":
             require(meta.get("cave_evidence") == cave_evidence(nodes, definitions),
                     "Recorded cave enclosure differs from the decoded raw geometry")
@@ -127,12 +165,6 @@ def validate_payload(meta, config, vocabulary, slot, arrays):
     require(math.isclose(number(meta, "center_free_ratio"), center, abs_tol=1e-10)
             and math.isclose(number(meta, "full_free_ratio"), full, abs_tol=1e-10), "Changed free-space metadata")
     require(meta.get("active_view_regions") == active, "Recorded visibility mask differs from decoded geometry")
-    body = nodes[24, 24, 24 + np.asarray(PLAYER_AIR_OFFSETS)]
-    require(np.isin(body, (air, *water) if kind == "underwater" else (air,)).all(),
-            "Player body intersects native solid geometry")
-    support = int(nodes[24, 24, 23])
-    require(support in terrain or (kind == "surface" and meta.get("anchor_kind") == "surface_water" and support in water),
-            "Foot anchor lacks native terrain support")
 
     def require_medium(grid, rules, eye):
         if kind == "underwater":
@@ -141,16 +173,20 @@ def validate_payload(meta, config, vocabulary, slot, arrays):
         else:
             require_air_camera(grid, rules, eye)
 
-    views = meta.get("views")
-    require(isinstance(views, list) and len(views) == config["views_per_scene"], "Missing scene views")
     ids, ticks = zip(*(validate_view(view, config, foot, active, meta, nodes, definitions,
-                                    camera_check=require_medium) for view in views))
+                                    camera_check=require_medium, actual_foot=actual_foot) for view in views))
     require(len(set(ids)) == len(ids) and all(a < b for a, b in zip(ticks, ticks[1:])),
             "View regions must be distinct and native ticks increasing")
     for view in views:
         require(view.get("camera_medium") == ("water" if kind == "underwater" else "air"),
                 "Recorded view medium differs from expected scene kind")
-        _validate_torch(view.get("torch"), True)
+        require(number(view, "lighting_floor") == V3_RGB["lighting_floor"], "Unexpected native brightness floor")
+        _validate_renderer_lighting(view, V3_RGB["lighting_floor"])
+        if actual_foot is not None:
+            require(np.allclose(vector(view, "actual_player_world_xyz"), actual_foot, atol=.003, rtol=0),
+                    "Player moved after settling underwater")
+            require(np.allclose(vector(view, "projection_origin_local_xyz"), view_origin, atol=.003, rtol=0),
+                    "Underwater visibility was evaluated at a different eye position")
 
     surface, state, faces, counts = (arrays[key] for key in
                                     ("surface_node_id", "surface_param2", "surface_face_dir", "water_count"))
@@ -186,7 +222,7 @@ def _scan(root, allow_partial, visit=None):
     require(paths.keys() <= slots.keys() and (allow_partial or not missing),
             f"Expected {len(slots)} committed scenes; found {len(paths)}")
     vocabulary = read_vocabulary(root) if paths else []
-    kinds, torch, seeds, scene_rows, view_rows = Counter(), {}, set(), [], []
+    kinds, comparisons, seeds, scene_rows, view_rows = Counter(), {}, set(), [], []
     provenance = None
     for scene_id, path in paths.items():
         try:
@@ -201,31 +237,31 @@ def _scan(root, allow_partial, visit=None):
             validate_payload(meta, config, vocabulary, slots[scene_id], arrays)
             rgb_paths = [path / "rgb" / f"{index:03d}.png" for index in range(config["views_per_scene"])]
             require(sorted((path / "rgb").iterdir()) == rgb_paths, "Missing or extra dataset RGB frames")
-            rgb_stats = [brightness(_read_png(p, config)) for p in rgb_paths]
-            qa_paths = {p.stem: p for p in (path / "qa").glob("*.png")}
+            rgb = [_read_png(p, config) for p in rgb_paths]
+            rgb_stats = [brightness(frame) for frame in rgb]
+            qa_paths = {p.stem: p for p in (path / "lighting_comparison").glob("*.png")}
             pair = {label: _read_png(p, config) for label, p in qa_paths.items()}
-            validate_torch_pair(meta, pair)
-            if qa_paths:
-                require(np.array_equal(pair["torch_on"], _read_png(rgb_paths[meta["torch_ab"]["view_index"]], config)),
-                        "Torch ON PNG differs from its matching dataset RGB view")
-                torch[scene_id] = meta["torch_ab"]
+            comparisons[scene_id] = validate_lighting_pair(meta, pair, rgb)
             kinds[meta["kind"]] += 1
-            scene_rows.append({key: meta[key] for key in ("scene_id", "kind", "world_seed", "foot_anchor_xyz",
-                                                        "surface_biome", "foot_biome", "active_view_regions",
-                                                        "cave_evidence", "search_seconds", "search_stats")})
+            scene_rows.append({key: meta.get(key) for key in ("scene_id", "kind", "world_seed", "foot_anchor_xyz",
+                                                            "settled_player_xyz", "underwater_descent",
+                                                            "surface_biome", "foot_biome", "active_view_regions",
+                                                            "native_render_settings", "cave_evidence",
+                                                            "search_seconds", "search_stats")})
             rows = _view_stats(meta, arrays, rgb_stats)
             view_rows.extend(rows)
             if visit:
-                visit(path, meta, arrays, vocabulary, rgb_paths, qa_paths, rows)
+                visit(path, meta, arrays, vocabulary, rgb_paths, qa_paths, rows, comparisons[scene_id])
         except (KeyError, OSError, TypeError, ValueError) as exc:
             raise ValueError(f"{path.name}: {exc}") from exc
-    verified = not missing and bool(torch) and all(value["status"] == "VERIFIED" for value in torch.values())
+    verified = not missing and bool(comparisons) and all(value["status"] == "VERIFIED"
+                                                         for value in comparisons.values())
     return dict(status="NATIVE VERIFIED" if verified else "NOT NATIVE VERIFIED", protocol_version=V3_VERSION,
                 capture_status="INCOMPLETE" if missing else "NATIVE CAPTURE VERIFIED",
                 scene_count=len(paths), frame_count=len(view_rows), expected_scene_count=len(slots),
                 kind_counts=dict(kinds), missing_slots=[slots[index] for index in missing],
                 engine_build=provenance[0] if provenance else None, game_build=provenance[1] if provenance else None,
-                torch_ab=torch, scenes=scene_rows, views=view_rows)
+                lighting_comparison=comparisons, scenes=scene_rows, views=view_rows)
 
 
 def _view_stats(meta, arrays, rgb_stats):
@@ -240,10 +276,13 @@ def _view_stats(meta, arrays, rgb_stats):
         if empty.mean() >= .9 and meta["kind"] != "surface":
             warning.append("Local input produces very few Surface hits")
         rows.append(dict(scene_id=meta["scene_id"], kind=meta["kind"], view_index=index, brightness=light,
-                         foot_xyz=meta["foot_anchor_xyz"], camera_xyz=view["actual_camera_world_xyz"],
+                         grid_anchor_xyz=meta["foot_anchor_xyz"],
+                         foot_xyz=view.get("actual_player_world_xyz", meta["foot_anchor_xyz"]),
+                         camera_xyz=view["actual_camera_world_xyz"],
                          yaw_deg=view["yaw_deg"], pitch_deg=view["pitch_deg"], fov_x_rad=view["fov_x_rad"],
                          fov_y_rad=view["fov_y_rad"], gamma=view["gamma"], camera_medium=view["camera_medium"],
-                         torch_item=view["torch"]["item"], valid_hit_fraction=float((~empty).mean()),
+                         lighting_floor=view["lighting_floor"], renderer_lighting=view["renderer_lighting"],
+                         valid_hit_fraction=float((~empty).mean()),
                          background_fraction=float(empty.mean()), water_min=int(water.min()), water_max=int(water.max()),
                          water_nonzero_fraction=float((water > 0).mean()),
                          background_with_water_fraction=float((empty & (water > 0)).mean()), warnings=warning))
@@ -282,24 +321,41 @@ def _view_block(scene_dir, row):
     return f"""
 <article><h3>View {index + 1} · Camera in {row['camera_medium']}</h3>
 <dl><dt>Foot XYZ</dt><dd>{vector_text(row['foot_xyz'])}</dd>
+<dt>Integer grid anchor XYZ</dt><dd>{vector_text(row['grid_anchor_xyz'])}</dd>
 <dt>Actual camera XYZ</dt><dd>{vector_text(row['camera_xyz'])}</dd>
 <dt>Yaw / pitch</dt><dd>{row['yaw_deg']:.2f}° / {row['pitch_deg']:.2f}°</dd>
 <dt>FOV X × Y</dt><dd>{x:.2f}° × {y:.2f}°</dd><dt>Gamma</dt><dd>{row['gamma']:.1f}</dd>
-<dt>Wielded item</dt><dd>{escape(row['torch_item'])}</dd>
-<dt>Mean luma / near-black</dt><dd>{light['mean_luma']:.3f} / {light['near_black_fraction']:.2%}</dd>
+<dt>Lighting floor</dt><dd>{row['lighting_floor']:.2f}</dd>
+<dt>Mean / median luma</dt><dd>{light['mean_luma']:.3f} / {light['median_luma']:.3f}</dd>
+<dt>Near-black</dt><dd>{light['near_black_fraction']:.2%}</dd>
 <dt>Surface hit / BACKGROUND</dt><dd>{row['valid_hit_fraction']:.2%} / {row['background_fraction']:.2%}</dd>
 <dt>Water Count min–max / nonzero</dt><dd>{row['water_min']}–{row['water_max']} / {row['water_nonzero_fraction']:.2%}</dd>
 <dt>BACKGROUND with Water Count &gt; 0</dt><dd>{row['background_with_water_fraction']:.2%}</dd></dl>
 {warnings}<div class="images">{images}</div></article>"""
 
 
-def _torch_block(scene_dir, check):
+def _lighting_block(scene_dir, check, kind):
     warnings = ' class="warning"' if check["status"] != "VERIFIED" else ""
-    off, on = (check[f"{key}_brightness"] for key in ("off", "on"))
-    return f"""<article><h3{warnings}>Torch A/B · {escape(check['status'])}</h3>
-<p>View {check['view_index'] + 1}. Node ID and param2 unchanged across OFF and ON.</p>
-<div class="images torch">{_image(scene_dir / 'torch_off.png', f"OFF · luma {off['mean_luma']:.3f} · near-black {off['near_black_fraction']:.2%}")}
-{_image(scene_dir / 'torch_on.png', f"ON · luma {on['mean_luma']:.3f} · near-black {on['near_black_fraction']:.2%}")}</div></article>"""
+    captions = []
+    for key in ("control", "proposed"):
+        light = check[f"{key}_brightness"]
+        floor = check[key]["lighting_floor"]
+        zero = check[key]["renderer_lighting"]["lut_zero"]
+        captions.append(f"Floor {floor:.2f} · LUT[0] {zero} · mean / median {light['mean_luma']:.3f} / "
+                        f"{light['median_luma']:.3f} · near-black {light['near_black_fraction']:.2%} · "
+                        f"near-white {light['near_white_fraction']:.2%}")
+    rows = "".join(_image(scene_dir / f"{label}.png", caption)
+                   for label, caption in zip(LIGHTING_PNGS, captions, strict=True))
+    normalized = "Luma uses Rec. 709 on encoded RGB8 (0–255). Near-black &lt; 8. Near-white ≥ 247."
+    near_white_gain = check["proposed_brightness"]["near_white_fraction"] - check["control_brightness"]["near_white_fraction"]
+    bright_warning = ('<p class="warning">Near-white coverage increased by more than 10 percentage points.</p>'
+                      if near_white_gain > .1 else "")
+    eye_light = check["control"].get("native_eye_param1")
+    eye_note = f" Native eye-cell param1 was {eye_light} in both captures." if eye_light is not None else ""
+    return f"""<article><h3{warnings}>Lighting Comparison · {escape(check['status'])}</h3>
+<p>{escape(kind.title())} · View {check['view_index'] + 1} · Display gamma {check['proposed']['display_gamma']:.1f}.
+Native Node IDs, param1, param2 and White Model agree across the two captures.{eye_note}</p>
+<p>{normalized}</p>{bright_warning}<div class="images lighting">{rows}</div></article>"""
 
 
 def _cave_block(meta):
@@ -311,6 +367,17 @@ def _cave_block(meta):
             f"open sky rays {roof['sky_open_fraction']:.1%}; enclosed lateral rays {roof['side_enclosed_fraction']:.1%}.</p>")
 
 
+def _underwater_block(meta):
+    descent = meta.get("underwater_descent")
+    if descent is None:
+        return ""
+    initial = descent["spawn_player_xyz"][1]
+    settled = descent["settled_player_xyz"][1]
+    return (f"<p>The player descended from Y {initial:.3f} to {settled:.3f} in {descent['ticks']} native ticks. "
+            f"Terrain support ends at Y {descent['support_top_y']:.3f}. "
+            "The 48³ input is centered after settling.</p>")
+
+
 def report(root):
     """Write local HTML, labeled decodes of native arrays, and a JSON summary."""
     root = Path(root)
@@ -318,7 +385,7 @@ def report(root):
     sections = []
     colors = None
 
-    def export(path, meta, arrays, vocabulary, rgb_paths, qa_paths, rows):
+    def export(path, meta, arrays, vocabulary, rgb_paths, qa_paths, rows, comparison):
         nonlocal colors
         if colors is None:
             colors = _node_colors(vocabulary)
@@ -326,8 +393,10 @@ def report(root):
         scene_dir = output / relative
         scene_dir.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(path / "scene.json", scene_dir / "scene.json")
+        lighting = relative / "lighting_comparison"
+        (output / lighting).mkdir(exist_ok=True)
         for key, frame in qa_paths.items():
-            shutil.copyfile(frame, scene_dir / f"{key}.png")
+            shutil.copyfile(frame, output / lighting / f"{key}.png")
         for index, rgb in enumerate(rgb_paths):
             shutil.copyfile(rgb, scene_dir / f"{index:03d}_rgb.png")
             nodes = arrays["surface_node_id"][index]
@@ -342,14 +411,13 @@ def report(root):
                 Image.fromarray(image).save(scene_dir / f"{index:03d}_{name}.png")
         scene_kind = escape(meta["kind"].title())
         search = meta["search_stats"]
-        torch = _torch_block(relative, meta["torch_ab"]) if qa_paths else ""
         views = "".join(_view_block(relative, row) for row in rows)
         sections.append(f"""<section><h2>{scene_kind} · Scene {meta['scene_id']:04d}</h2>
 <p>Seed {meta['world_seed']} · Surface biome {escape(meta['surface_biome'])} · Foot biome {escape(meta['foot_biome'])}
  · {sum(meta['active_view_regions'])}/40 active regions · <a href="{relative}/scene.json">Scene metadata</a></p>
 <p>Search: {meta['search_seconds']:.1f} s · {search['world_starts']} worlds · {search['surveys']} surveys
  · {search['cave_hints']} cave hints · {search['candidate_floors']} candidate floors.</p>
-{_cave_block(meta)}{torch}{views}</section>""")
+{_cave_block(meta)}{_underwater_block(meta)}{_lighting_block(lighting, comparison, meta['kind'])}{views}</section>""")
 
     summary = _scan(root, allow_partial=True, visit=export)
     output.mkdir(parents=True, exist_ok=True)
@@ -367,13 +435,13 @@ section{{margin:36px 0}}article{{margin:16px 0;padding:16px;background:#1a2434;b
 h1,h2,h3,p{{margin:0 0 8px}}dl{{display:grid;grid-template-columns:max-content 1fr;gap:2px 12px;margin:12px 0}}
 dt,figcaption{{color:#bbcad9}}dd{{margin:0;font-variant-numeric:tabular-nums}}.warning{{color:#ffc0b1;font-weight:600}}
 .images{{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:12px}}
-.torch{{grid-template-columns:repeat(auto-fit,minmax(215px,1fr));max-width:960px}}
+.lighting{{grid-template-columns:repeat(auto-fit,minmax(215px,1fr));max-width:960px}}
 figure{{margin:0}}img{{width:100%;display:block;background:#0a0d15;aspect-ratio:16/9}}figcaption{{margin-top:4px}}
 </style><main><h1>Vox2Pix v3 · Native smoke report</h1>
 <p{status_class}>{summary['status']} · {summary['capture_status']}</p>
 <p>{summary['scene_count']}/{summary['expected_scene_count']} scenes · {summary['frame_count']} native RGB views · <a href="summary.json">Summary JSON</a></p>
 {incomplete}<p>RGB retains native sky and fog. Distance fog limits far-field image mismatch; voxel projections cover the local 48³ input only. Surface imagery uses stored discrete attributes and approximate geometry for unsupported drawtypes.</p>
-<p>Node ID and param2 do not encode the original light field. The torch comparison measures whether the fixed rendering setup increases brightness; learning its effect requires a training experiment.</p>
+<p>The native Light LUT uses display gamma 3.0 and brightness floor 0.35. The Lighting Comparisons use the same native camera, terrain and light state with floor 0.0 and 0.35. Cave verification uses a dark control (at least 50% near-black), a mean luma gain of at least 5, and below 50% near-black after applying the floor.</p>
 <p>Water Count includes a starting water voxel only when a ray traverses and exits actual liquid. Black in the Water Count panel means count zero. The face colors represent Luanti +X, −X, +Y, −Y, +Z and −Z.</p>
 {''.join(sections)}</main></html>"""
     temporary = output / ".index.html.tmp"

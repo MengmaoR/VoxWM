@@ -1,4 +1,38 @@
-# Vox2Pix 1K compression pilot
+# Vox2Pix data collection
+
+## V3 native smoke
+
+Use the existing Linux software-rendering dependencies and a separate Craftium
+checkout configured for a client build. From the repository root, build its
+lighting patch and collect or resume the three independently seeded scenes and
+15 RGB frames.
+
+```bash
+BUILD_THREADS=22 bash scripts/build_vox2pix_lighting.sh third_party/craftium_vox2pix_floor
+
+.venv/bin/python -m vox2pix_data collect \
+  --mode smoke --scene-kinds surface cave underwater --scenes-per-kind 1 \
+  --views-per-scene 5 --width 640 --height 360 --seed 42 --workers 3 \
+  --renderer software --craftium-dir third_party/craftium_vox2pix_floor \
+  --dataset outputs/vox2pix_v3_lightfloor_15 \
+  --scene-timeout 180 --survey-columns 32 --sites-per-world 4
+
+.venv/bin/python -m vox2pix_data validate --dataset outputs/vox2pix_v3_lightfloor_15
+.venv/bin/python -m vox2pix_data report --dataset outputs/vox2pix_v3_lightfloor_15
+```
+
+Open `outputs/vox2pix_v3_lightfloor_15/report/index.html` directly. Copy or archive
+the complete report directory when viewing it on another machine. The report
+shows the capture status, image comparisons, native poses, search statistics
+and same-camera Floor 0.0 and 0.35 images. Change `--scenes-per-kind 1` to `3` with a
+fresh output path for a separately requested 45-frame smoke.
+
+The official RGB uses gamma 3.0 and a client LUT floor of 0.35. The underwater
+observer sinks with native physics and the recorder forms its 48³ crop around
+the settled position. The earlier lighting trial at
+`outputs/vox2pix_v3_smoke_15` uses a different manifest.
+
+## Historical v2 1K compression pilot
 
 The active protocol is `vox2pix-pilot-v2-camera16`. Use a newly initialized pilot
 directory for this version. The compression report includes observed native

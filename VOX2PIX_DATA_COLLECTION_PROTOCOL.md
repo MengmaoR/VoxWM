@@ -1,138 +1,118 @@
-# Vox2Pix Data Collection Protocol
+# Vox2Pix v3 data collection protocol
 
-**`vox2pix-pilot-v2-camera16` · NOT NATIVE VERIFIED. Implementation complete != 1K dataset collected.**
+Protocol identifier: `vox2pix-v3-surface-watercount-cave-underwater-lightfloor`.
 
-The previous 2.0-voxel eye-height assumption and radius are deprecated. This
-revision uses the game's normal first-person camera and a 1.6-voxel visibility
-radius.
+Each scene stores one native Mapgen v7 48³ voxel grid and five RGB views from
+the same foot anchor. The five camera orientations are independently sampled
+without replacement from the active view regions. Future full collection
+targets 10,000 independent scene/world seeds and 50,000 views at the existing
+seed-level split. All views from a seed belong to one split. The implementation
+currently exposes the bounded native smoke entry point for v3.
 
-Vox2Pix pairs one raw 48³ world region with five camera poses, five three-layer
-geometric projections, and five RGB frames. The pilot measures storage costs
-and the coverage of the three layers. Biome and sampling metadata support
-coverage analysis. Future model input uses node identity, raw `param2`, and
-discrete face direction.
+| Scene kind | Future target | Native smoke |
+| --- | ---: | ---: |
+| Surface | 60% / 6,000 scenes | 1 scene × 5 views |
+| Cave | 30% / 3,000 scenes | 1 scene × 5 views |
+| Underwater | 10% / 1,000 scenes | 1 scene × 5 views |
 
-## Pilot and formal plan
+Future Surface and Cave sampling aims to cover the existing 25 biome groups.
+Underwater follows available natural water without equal biome quotas. The
+three-scene smoke uses natural scenes without imposing biome balance.
 
-| Stage | Independent world seeds | Views per scene | RGB frames | Surface / shallow / deep per biome |
-| --- | ---: | ---: | ---: | --- |
-| Compression pilot | 200 | 5 | 1,000 | 5/2/1, 5/1/2 or 4/2/2 |
-| Formal plan | 10,000 | 5 | 50,000 | 240/80/80 |
+## Scene anchors and visibility
 
-The pilot uses 640×360. It allocates eight scenes to each of the 25 VAE biome
-groups. A permutation determined by the pilot seed assigns the three patterns
-to 10, 10, and 5 groups respectively, for totals of 120/40/40. An unfilled slot
-remains a gap under its original biome and height. The pilot is train-like and
-stores each independent `world_seed`. The formal plan uses world-seed-level
-80/10/10 splitting to keep each seed in a single split.
+- Surface stands on native terrain with the camera in air. Cave stands on a
+  native supported floor with body clearance and a roof. There are no depth
+  classes. The scene stores both the surface biome and the biome at foot height.
+  The reporting label comes from the surface biome.
+- Cave candidates prioritize both ordinary and large Mapgen cave notifications.
+  Candidate generation reuses connected free-space searches. Membership checks
+  require a roof within 12 voxels of the nominal eye, two contiguous natural
+  roof cells, nearby roof coverage of at least 5/9, at most 12/32 open upper rays,
+  and at least 2/8 lateral rays hitting terrain. These are provisional local
+  geometry thresholds. A cave entrance may remain open, and terrain outside
+  the crop does not enter the enclosure calculation.
+- Underwater starts in a naturally generated water column. The observer sinks
+  using native liquid physics, with no target position, preset bottom height
+  or active crop during descent. Once the actual player position settles on
+  natural support, the recorder constructs the 48³ crop at its matching
+  integer cell. It checks the saved eye against the actual liquid volume.
+  Water transmits the near-field visibility rays.
+- The integer anchor is at index `[24,24,24]` of the ENU array. The default
+  initial search band is configurable via `--survey-y -112 240`. The settled
+  underwater crop is independently emerged within playable native map bounds.
+  Center and full free ratios are diagnostics. There are 40 bins (8 yaw × 5
+  pitch), and each scene requires at least 20 active bins using the 1.6 voxel
+  visibility radius.
+- The nominal eye height is 1.6. Each projection uses the captured RGB camera
+  position, direction and both FOVs. Consecutive native captures bracket the
+  rendered frame and confirm the scene's Node IDs and raw param2 match the other
+  views. Search diagnostics record the attempts, candidate counts and rejection
+  reasons.
 
-## Geometry and scene selection
+## Single-surface projection and storage
 
-- Luanti XYZ uses X east, Y up, Z north. The stored array is ENU
-  `[x,z,y]`. Given integer foot anchor `(fx,fy,fz)`, stored index
-  `[i,j,k]` refers to the world voxel centered at
-  `(fx-24+i, fy-24+k, fz-24+j)` in XYZ. Store this region origin in both
-  conventions. Voxel boundaries lie half a voxel from these integer centers.
-  The nominal first-person eye is `(0,1.6,0)` in foot-local XYZ. Craftium's
-  actual first-person eye is used as reported. Vertically, the validator
-  accepts up to 0.05 voxel of deviation from nominal, including a stock eye
-  height of 1.625.
-- Reuse Mapgen v7, native biome lookup and the VAE biome grouping. Resolve the
-  surface reference `S` from solid native terrain in the sampled column.
-  Surface candidates descend from the highest standable floor, including tree
-  tops. Over exposed water, the virtual foot is the first Air node above the
-  highest water node in the column. The technical observer stays there and
-  uses the same native first-person camera as an observer over land.
-- The shallow band is `[S-24,S-8]`. The deep band is `[-38,S-32]`.
-  In both cases the complete 48³ region lies within `[-62,193]` vertically.
-  Search real six-connected air/water cavities in native terrain. Check a
-  supporting floor, clearance for the standing body, and overhead terrain.
-  At an integer foot, requiring Air at vertical offsets 0, 1 and 2 covers the
-  1.8-voxel standing collision column under the half-voxel boundary convention.
-  Camera occupancy is checked separately. Try other floors of the current
-  component before another component, then another location, then another seed.
-- The center 16³ must have at least one-third free space and the full 48³ at
-  least one-quarter. Air and water are free, and the eye cell is always air.
-  The scene must have at least 20 open views. The `voxel-centers-r1.6-v2`
-  lookup maps a voxel to affected view regions if its center lies at most
-  1.6 voxels from the nominal eye. Generate it deterministically from integer
-  node centers and rays from `(0,1.6,0)`, then reuse it for all scenes.
-  Air and water leave these regions open. Eight 45° yaw bins and five 36° pitch
-  bins form 40 regions. Choose five open bins uniformly without replacement and
-  sample one concrete angle pair per bin. Yaw zero is +Z, positive yaw looks
-  toward −X, and positive pitch looks downward. Region IDs are
-  `8 * pitch_bin + yaw_bin` from the lowest pitch bin upward numerically.
-- Capture RGB and actual eye position, direction, and both FOVs from the same
-  Craftium observation. Verify the reported eye occupies Air and the client
-  has reached the requested angles. Use the actual reported eye relative to
-  the foot, direction, FOV and pixel centers for white projection. Record the
-  actual world position and height, foot anchor, projection origin, nominal
-  height, lookup version and radius per view. Also record requested and actual
-  angles, resolution, gamma, time,
-  weather, engine/game revisions, and render settings. The fixed capture
-  settings request vertical FOV 72°, gamma 3.0, noon and clear weather
-  (`mcl_doWeatherCycle=false`, `mcl_weather.change_weather("none")`).
-  HUD and camera motion effects, waving, dynamic shadows and auto exposure
-  are disabled. Verify the same native node IDs and raw states across all five
-  views before committing.
+| Data | Shape per scene | Dtype |
+| --- | --- | --- |
+| Native RGB | 5 × 640 × 360 × 3, PNG | uint8 |
+| Scene Node ID | 48 × 48 × 48, ENU | uint16 |
+| Scene raw param2 | 48 × 48 × 48, ENU | uint8 |
+| Surface Node ID | 5 × 360 × 640 | uint16 |
+| Surface raw param2 | 5 × 360 × 640 | uint8 |
+| Surface face direction | 5 × 360 × 640 | uint8 |
+| Water Count | 5 × 360 × 640 | uint8 |
 
-The complete foot-relative lookup offsets are given below in Luanti XYZ.
-`x,z ∈ {-1,0,1}` means all nine pairs. The 20 offsets include the cell
-containing the nominal camera, which is Air in eligible scenes. The support
-center at `y=-1` lies 2.6 voxels from the nominal camera and is excluded.
+Each ray records the first non-Air, non-Water entry hit, including Glass.
+The face codes in Luanti XYZ are 0=+X, 1=−X, 2=+Y, 3=−Y, 4=+Z, 5=−Z.
+BACKGROUND stores ID 65535, param2 0 and face 255. The projector reuses native
+node boxes and the existing approximations for meshes, textured cutouts and
+unsupported geometry, with approximation counts in metadata.
 
-| Y center | Horizontal pairs (X,Z) | Count |
-| --- | --- | ---: |
-| 0 | (0,0) | 1 |
-| 1 | x,z ∈ {-1,0,1} | 9 |
-| 2 | x,z ∈ {-1,0,1} | 9 |
-| 3 | (0,0) | 1 |
+Each Water voxel contributes at most one count when a positive-length liquid
+intersection is completed before the ray's termination. This includes a
+submerged ray origin if the ray exits that liquid. Grazing contacts and the
+empty part of a partial voxel contribute zero. Counts saturate at 255, and
+BACKGROUND preserves the count. The volume uses the pinned renderer's
+source, flow and neighbor corner interpolation rules within the 48³ crop.
 
-## White model and storage
+The white representation uses five bytes per pixel in separate Zarr v2
+Blosc/Zstd fields. No depth, UV, continuous normals or embeddings are saved.
+The dataset vocabulary maps Node IDs to canonical names. A directory is
+committed atomically after saving its voxel grid, metadata, five RGB frames,
+four image fields and any auxiliary lighting frames.
 
-Trace each pixel ray into the 48³ region. Save its first three distinct
-non-air voxel entry surfaces. Skip exits and multiple hits on one voxel.
-Transparent and opaque voxels both occupy a layer and the ray continues
-through them. Six face codes select the signed dominant axis of the surface
-normal in **Luanti XYZ**. The codes are 0=+X, 1=−X, 2=+Y, 3=−Y, 4=+Z,
-and 5=−Z. An empty layer is `(65535, 0, 255)`. The format has no depth, UV,
-continuous normal, light or precomputed embedding.
+## Rendering and light
 
-The root vocabulary maps stable integer IDs to canonical Node Names.
-Each scene contains one `scene_node_id:uint16[48,48,48]` and a separate
-`scene_param2:uint8[48,48,48]`. Each view contributes one lossless PNG
-and a slice of `white_node_id:uint16`, `white_param2:uint8` and
-`white_face:uint8`, all shaped `[5,3,H,W]`. Zarr v2 with Blosc/Zstd stores
-the arrays separately. The manifest and scene JSON describe sampling and
-geometry. A scene becomes visible as committed after its arrays, PNGs and
-metadata are written together. Rerun the same command to fill missing slots.
+The same native settings apply to all three kinds. Capture uses gamma 3.0,
+fixed daylight, clear weather, hidden HUD and first-person held model,
+`viewing_range=30`, directional colored fog and `fog_start=0.8`. Native sky,
+sun and clouds remain in RGB. Distance culling and fog reduce far-field
+mismatch. RGB may still depict geometry outside the 48³ projection.
 
-## Validation and storage gate
+The official RGB uses `display_gamma=3.0` and `lighting_floor=0.35` for all
+three kinds. The client maps each Luanti gamma-curve output $L_\gamma$ to
+$L_\min+(1-L_\min)L_\gamma$ in its render LUT, leaving the native engine
+default at zero. This render transform preserves Node ID, param2 and light
+storage and does not affect world light propagation. The fixed recorder
+hides the HUD and wield model and leaves the observer's hand empty.
 
-`check` is a read-only validator for exact pilot quotas, independent seeds,
-camera/region coordinates, equality of the observed and projection origins,
-the current visibility lookup, raw and white array shapes and dtypes, PNG sizes,
-and layer sentinels. The geometry fixtures exercise air, opaque and transparent
-hits, adjacent cubes, non-full geometry and underwater rejection. A complete
-pilot reports biome/height and view bins, node and node-state visibility,
-face codes, layer validity and water/glass frequency by layer.
+A matching-pose comparison in each scene stores gamma 3.0 with Floor 0.0
+and 0.35 outside the official 15 frames. Both views use the same native
+world and camera. Validation checks the renderer's applied settings and
+stable geometry, and the report uses Rec.709 luma on the saved sRGB bytes
+for comparable mean, median and near-black proportions. Native material
+shading and fog still affect the final pixel RGB.
 
-`compression-report` records RGB size distribution, each compressed array
-field, raw-map and metadata bytes, actual camera-height minimum, mean, maximum
-and population standard deviation across all views, and total GB and GiB.
-It scales measured 1K bytes by 50. A result of at most decimal 100 GB recommends 640×360.
-Larger estimates recommend 320×180. Both remain manual decisions for the
-formal dataset.
+## Smoke and compatibility
 
-## Provisional until measured
+The locked run is one scene per kind and 15 native RGB views, followed by
+`validate` and `report`. The `--scenes-per-kind 3` option selects 45 frames
+for a separately requested run. The offline HTML uses relative files and
+includes RGB, surface, face, Water Count, hit/background, camera and lighting comparison.
+The report separates structural validation and measured lighting behavior.
 
-RGB registration against the live renderer, sampler success for all quotas,
-and meaningful layer-2/3 coverage need the user-run pilot. The white projection
-queries native connected and rotated nodeboxes. Its plant and flowing-liquid
-geometry uses engine definitions and state, and unsupported renderer-specific
-draw types use native selection-box proxies. Render texture alpha, animated
-materials, and renderer-only mesh details can produce boundary differences.
-Scene metadata records approximations. Synthetic success does not establish
-pixel-perfect Native alignment or prove the 50K size estimate.
-
-Run and output details are in [the module README](vox2pix_data/README.md).
+The camera-1.6 v2 1K pilot used three hit layers and surface/shallow/deep
+quotas. It remains readable with its existing Viewer and has separate
+[historical results](vox2pix_data/reports/pilot_1k/README.md). Its scenes are
+incompatible with v3. See [commands](vox2pix_data/README.md) for the separate
+v3 output path.

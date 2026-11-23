@@ -53,16 +53,19 @@ def search_world(native, kind, config, rng, library_path, stats, sites, columns)
                 nodes, native.definitions, kind, rng, stats, low[1], hints=relative_hints):
             if time.monotonic() >= native.search_deadline:
                 raise TimeoutError("V3 per-scene search deadline expired")
-            local = nodes[x-24:x+24, z-24:z+24, y-24:y+24]
             foot = tuple(int(offset + origin) for offset, origin in zip((x, y, z), low, strict=True))
             try:
-                scene_visibility(local, native.definitions, kind)
-                anchor, _, _ = native.command("anchor", foot_xyz=foot, surface_y=surface_y,
-                                              anchor_kind=anchor_kind)
-                if not anchor["valid"]:
-                    raise RejectedScene("Native standing anchor mismatch")
+                if kind != "underwater":
+                    scene_visibility(nodes[x-24:x+24, z-24:z+24, y-24:y+24], native.definitions, kind)
+                    anchor, _, _ = native.command("anchor", foot_xyz=foot, surface_y=surface_y,
+                                                  anchor_kind=anchor_kind)
+                    if not anchor["valid"]:
+                        raise RejectedScene("Native standing anchor mismatch")
                 stats["capture_attempts"] += 1
                 result = native.acquire(foot, anchor_kind, config, rng, library_path, scene_kind=kind)
+                if kind == "underwater":
+                    anchor, _, _ = native.command("anchor", foot_xyz=result[0]["foot_anchor_xyz"],
+                                                  surface_y=surface_y, anchor_kind=anchor_kind)
             except RejectedScene as exc:
                 stats[str(exc)] += 1
                 continue
@@ -78,7 +81,7 @@ def capture_v3(slot, config, craftium_dir, library_path, attempts, sites, column
     engine_build, game_build = _builds(Path(craftium_dir))
     started = time.monotonic()
     stats = Counter(world_starts=0, surveys=0, cave_hints=0, candidate_floors=0, capture_attempts=0)
-    settings = dict(SETUP, **V3_RGB, vox2pix_v3=True, enable_vl_wieldlight=True,
+    settings = dict(SETUP, **V3_RGB, vox2pix_v3=True, voxwm_lighting_probe=True,
                     vox2pix_cave_hints=slot["kind"] == "cave", voxwm_skip_rgb=True)
     for attempt in range(first, first + attempts):
         if time.monotonic() >= started + seconds:
@@ -88,7 +91,7 @@ def capture_v3(slot, config, craftium_dir, library_path, attempts, sites, column
         try:
             with RenderSession(
                 "procedural", seed, config["renderer"], craftium_dir, scene_script=HERE / "scene.lua",
-                scene_assets=(REUSED_LUA / "biome_search.lua", REUSED_LUA / "scene_geometry.lua", HERE / "lighting.lua"),
+                scene_assets=(REUSED_LUA / "biome_search.lua", REUSED_LUA / "scene_geometry.lua"),
                 native_settings=settings, image_size=(config["width"], config["height"]),
                 fixed_step=True, voxel_observation=False, render_rgb=True,
             ) as session:

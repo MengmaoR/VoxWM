@@ -9,7 +9,7 @@ import numpy as np
 from vae_data.sharded.protocol import BIOMES, WORLD_BOTTOM, WORLD_TOP
 
 VERSION = "vox2pix-pilot-v2-camera16"
-V3_VERSION = "vox2pix-v3-surface-watercount-cave-underwater-torch"
+V3_VERSION = "vox2pix-v3-surface-watercount-cave-underwater-lightfloor"
 V3_KINDS = ("surface", "cave", "underwater")
 HEIGHTS = ("surface", "shallow", "deep")
 CENTER = (slice(16, 32),) * 3
@@ -33,7 +33,7 @@ SETTINGS = dict(
     starting_inventory_creative="",
 )
 V3_RGB = dict(viewing_range=30, enable_fog=True, directional_colored_fog=True,
-              fog_start=.8, display_gamma=3.0)
+              fog_start=.8, display_gamma=3.0, lighting_floor=.35)
 
 
 def v3_plan(config):
@@ -101,8 +101,8 @@ def require_air_camera(nodes, definitions, local_xyz):
         raise RejectedScene("Camera cell is not air")
 
 
-@lru_cache(maxsize=1)
-def visibility_lookup():
+@lru_cache(maxsize=32)
+def visibility_lookup(camera_origin=NOMINAL_CAMERA_XYZ):
     """Rasterize nearby foot-relative ENU node centers once per process."""
     rays = np.array([
         [direction_for_angles(yaw * 45 + (u + .5) * 5, -90 + pitch * 36 + (v + .5) * 4)
@@ -110,10 +110,10 @@ def visibility_lookup():
         for pitch, yaw in product(range(5), range(8))
     ])
     rays[np.abs(rays) < 1e-12] = 1e-12
-    camera_x, camera_y, camera_z = NOMINAL_CAMERA_XYZ
+    camera_x, camera_y, camera_z = camera_origin
     extents = [range(math.ceil(coord - VISIBILITY_RADIUS), math.floor(coord + VISIBILITY_RADIUS) + 1)
                for coord in (camera_x, camera_z, camera_y)]
-    camera_xyz = np.asarray(NOMINAL_CAMERA_XYZ)
+    camera_xyz = np.asarray(camera_origin)
     result = {}
     for dx, dz, dy in product(*extents):
         center = np.array([dx, dy, dz]) - camera_xyz

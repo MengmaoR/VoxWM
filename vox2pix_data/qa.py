@@ -75,7 +75,8 @@ def validate_camera_protocol(meta):
     require(meta.get("visibility_lookup_version") == VISIBILITY_LOOKUP_VERSION, "Incorrect visibility lookup version")
 
 
-def validate_view(view, config, foot, active, meta, nodes, definitions, *, camera_check=require_air_camera):
+def validate_view(view, config, foot, active, meta, nodes, definitions,
+                  *, camera_check=require_air_camera, actual_foot=None):
     ident = view.get("region_id")
     require(type(ident) is int and 0 <= ident < 40 and active[ident], "View region is not active")
     requested_yaw = number(view, "requested_yaw_deg")
@@ -86,11 +87,12 @@ def validate_view(view, config, foot, active, meta, nodes, definitions, *, camer
             "View foot anchor differs from the scene anchor")
     camera = vector(view, "actual_camera_world_xyz")
     try:
-        local_xyz = camera_local_xyz(camera, foot)
+        camera_above_foot = camera_local_xyz(camera, foot if actual_foot is None else actual_foot)
+        local_xyz = camera - foot
         camera_check(nodes, definitions, local_xyz)
     except RejectedScene as exc:
         raise ValueError(str(exc)) from exc
-    require(math.isclose(number(view, "actual_camera_height_above_foot"), local_xyz[1], rel_tol=0, abs_tol=1e-10),
+    require(math.isclose(number(view, "actual_camera_height_above_foot"), camera_above_foot[1], rel_tol=0, abs_tol=1e-10),
             "Recorded camera height differs from the captured position")
     require(np.array_equal(vector(view, "projection_origin_local_xyz"), local_xyz),
             "White Model origin differs from the captured RGB camera position")

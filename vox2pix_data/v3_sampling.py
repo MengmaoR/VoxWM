@@ -31,22 +31,28 @@ def require_camera(nodes, definitions, local_xyz, kind, water_contains=None):
         raise RejectedScene("Underwater camera is outside the actual liquid volume")
 
 
-def scene_visibility(nodes, definitions, kind):
+def scene_visibility(nodes, definitions, kind, camera_origin=NOMINAL_CAMERA_XYZ):
     if nodes.shape != (SIDE,) * 3:
         raise ValueError("Scene requires one 48³ voxel map")
     air, free, _, _ = node_flags(nodes, definitions)
-    x, y, z = (math.floor(value + .5) + SIDE // 2 for value in NOMINAL_CAMERA_XYZ)
+    x, y, z = (math.floor(value + .5) + SIDE // 2 for value in camera_origin)
     eye = (x, z, y)
     expected = (free[eye] and not air[eye]) if kind == "underwater" else air[eye]
     if not expected:
         raise RejectedScene(f"Nominal camera cell has wrong medium for {kind}")
     active = np.ones(40, dtype=bool)
-    for offset, bins in visibility_lookup().items():
+    for offset, bins in visibility_lookup(tuple(camera_origin)).items():
         if not free[tuple(SIDE // 2 + d for d in offset)]:
             active[bins] = False
     if active.sum() < 20:
         raise RejectedScene("Fewer than 20 active view regions")
     return float(free[CENTER].mean()), float(free.mean()), active.tolist()
+
+
+def settled_anchor(player_xyz):
+    """The voxel containing the resting foot, just above a half-cell boundary."""
+    x, y, z = player_xyz
+    return tuple(math.floor(value + .5) for value in (x, y + .002, z))
 
 
 @lru_cache(maxsize=1)
@@ -103,14 +109,28 @@ def site_candidates(survey, definitions, kind, rng, rejected, y_min, hints=()):
     air, free, _, terrain = node_flags(survey, definitions)
     layers = np.arange(survey.shape[2])
     surface = np.where(terrain, layers, -1).max(axis=2)
-    medium = free & ~air if kind == "underwater" else air
+    if kind == "underwater":
+        wet = free & ~air
+        # Choose a submerged start, not a prescribed floor. The search band is
+        # only for discovering a water column. Its actual bed is resolved later.
+        submerged = wet[..., :-2] & wet[..., 1:-1] & wet[..., 2:]
+        starts = np.where(submerged, layers[:-2], -1).max(axis=2)
+        candidates = np.argwhere(starts >= 0)
+        rejected["candidate_floors"] += len(candidates)
+        if not len(candidates):
+            rejected["site: no submerged starts"] += 1
+        for index in rng.permutation(len(candidates)):
+            x, z = map(int, candidates[index])
+            y = int(starts[x, z])
+            yield (x, y, z), max(int(surface[x, z]), y + 2) + y_min, "underwater_floor"
+        return
     y = slice(24, survey.shape[2] - 23)
     positions = (slice(24, survey.shape[0] - 23), slice(24, survey.shape[1] - 23))
     index = (*positions, y)
     xs, zs = positions
     ys = layers[y]
     # Three native standing cells: one below the eye, the eye cell, and the foot cell.
-    valid = medium[index] & medium[xs, zs, ys + 1] & medium[xs, zs, ys + 2]
+    valid = air[index] & air[xs, zs, ys + 1] & air[xs, zs, ys + 2]
     if kind == "surface":
         # Tree canopies are not standable terrain anchors. Air above a natural top is.
         valid &= (ys == surface[xs, zs, None] + 1)

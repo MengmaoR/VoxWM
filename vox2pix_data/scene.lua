@@ -9,7 +9,6 @@ local box_names, box_types = {}, {}
 local cave_events, v3_cave_events = {}, {}
 local cave_hints_enabled = mt.settings:get_bool("vox2pix_cave_hints", false)
 local v3_scene = mt.settings:get_bool("vox2pix_v3", false)
-local lighting = v3_scene and dofile(mod .. "/lighting.lua")
 assert(voxwm_clock and voxwm_region and mt.get_node_boxes, "Build the VoxWM fixed24 engine")
 assert(voxwm_clock().region_capture_version == "voxwm-region-integer-v1", "Build integer-origin region capture")
 
@@ -193,6 +192,8 @@ local function survey(r)
         mt.after(0, function()
             if r.failed then
                 reply(r, {status="emergence_failed"})
+            elseif r.kind == "emerge_capture" then
+                reply(r, {status="capture_emerged"})
             else
                 local vm = VoxelManip()
                 local vlow, vhigh = vm:read_from_map(low, high)
@@ -312,16 +313,44 @@ local function find_site(r)
     return best or last_result
 end
 
+local function resting_support(player)
+    local pos = player:get_pos()
+    local box = player:get_properties().collisionbox
+    local bottom = pos.y + box[2]
+    local min_x, max_x = pos.x + box[1], pos.x + box[4]
+    local min_z, max_z = pos.z + box[3], pos.z + box[6]
+    local support, best_gap
+    for x=math.floor(min_x+.5),math.floor(max_x+.5) do
+        for z=math.floor(min_z+.5),math.floor(max_z+.5) do
+            for y=math.floor(bottom)-1,math.floor(bottom+.5) do
+                local at = {x=x, y=y, z=z}
+                local def = mt.registered_nodes[mt.get_node(at).name]
+                if geometry.terrain(def) then
+                    for _, shape in ipairs(mt.get_node_boxes("collision_box", at)) do
+                        local top = y + shape[5]
+                        local gap = bottom - top
+                        if gap >= -.005 and gap <= .18 and (not best_gap or gap < best_gap)
+                            and min_x < x+shape[4] and max_x > x+shape[1]
+                            and min_z < z+shape[6] and max_z > z+shape[3] then
+                            support, best_gap = {support_xyz={x,y,z}, support_top_y=top}, gap
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return support
+end
+
 local function pose(r, player)
     if r.relocate then
         local foot = xyz(r.foot_xyz)
         player:set_properties({is_visible=false})
-        local observer = {gravity=0, speed=0, jump=0}
-        -- Liquid sinking has its own multiplier, independent of player gravity.
-        if v3_scene then observer.liquid_sink = 0 end
+        local natural_sink = v3_scene and r.anchor_kind == "underwater_floor"
+        local observer = {gravity=natural_sink and 1 or 0, speed=0, jump=0}
+        if natural_sink then observer.liquid_sink = 1 end
         player:set_physics_override(observer)
         player:set_pos(foot)
-        if lighting then lighting.configure(player, true) end
     end
     clean_hud(player)
     player:set_look_horizontal(math.rad(r.yaw))
@@ -334,7 +363,9 @@ local function snapshot(r, player)
     local foot = vector.add(low, 24)
     local ok, payload = pcall(voxwm_region, low)
     if not ok then reply(r, {status="snapshot_failed", reason=tostring(payload)}); return end
-    if not anchor_valid(foot, r.anchor_kind) then
+    local underwater = v3_scene and r.anchor_kind == "underwater_floor"
+    local support = underwater and resting_support(player)
+    if (underwater and not support) or (not underwater and not anchor_valid(foot, r.anchor_kind)) then
         reply(r, {status="snapshot_failed", reason="Native anchor changed"}); return
     end
     write("vox2pix_region.bin", payload)
@@ -355,9 +386,18 @@ local function snapshot(r, player)
         weather=mcl_weather.get_weather(), gamma=tonumber(mt.settings:get("display_gamma")),
         rgb_enabled=not mt.settings:get_bool("voxwm_skip_rgb"),
         engine_us=mt.get_us_time()}
-    if lighting then
-        state.torch = lighting.observe(player)
-        state.native_render_settings = lighting.settings()
+    if v3_scene then
+        state.native_render_settings = {
+            viewing_range=tonumber(mt.settings:get("viewing_range")),
+            enable_fog=mt.settings:get_bool("enable_fog"),
+            directional_colored_fog=mt.settings:get_bool("directional_colored_fog"),
+            fog_start=tonumber(mt.settings:get("fog_start")),
+            display_gamma=tonumber(mt.settings:get("display_gamma")),
+            lighting_floor=tonumber(mt.settings:get("lighting_floor")),
+        }
+        state.hud_wielditem_hidden = player:hud_get_flags().wielditem == false
+        state.wielded_item = player:get_wielded_item():get_name()
+        state.underwater_support = support or nil
     end
     reply(r, state)
 end
@@ -384,14 +424,14 @@ mt.registered_voxwm_poststeps = {function()
     last = r.request_id
     -- Native scene searches advance physics without drawing RGB. Rendering is
     -- restored before the usual camera settle ticks and every saved view.
-    if r.kind ~= "snapshot" and r.kind ~= "torch" then
+    if r.kind ~= "snapshot" and r.kind ~= "emerge_capture" then
         mt.settings:set_bool("voxwm_skip_rgb", r.kind ~= "pose")
     end
     if r.kind == "search" then
         reply(r, find_site(r))
     elseif v3_scene and r.kind == "search_v3" then
         reply(r, r.scene_kind == "underwater" and find_water_site(r) or {status="found", site={r.x,r.z}})
-    elseif r.kind == "survey" then
+    elseif r.kind == "survey" or (v3_scene and r.kind == "emerge_capture") then
         survey(r)
     elseif r.kind == "surface_biomes" then
         local names = {}
@@ -401,9 +441,6 @@ mt.registered_voxwm_poststeps = {function()
         check_anchor(r)
     elseif r.kind == "pose" then
         pose(r, player)
-    elseif lighting and r.kind == "torch" then
-        lighting.configure(player, r.enabled)
-        reply(r, {status="torch_changed"})
     elseif r.kind == "snapshot" then
         snapshot(r, player)
     else

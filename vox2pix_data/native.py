@@ -118,7 +118,7 @@ class NativeScene:
                         raise
                     raise ConnectionError(f"Unaligned native tick during {kind}") from exc
                 return row, rgb, info
-        raise TimeoutError(f"Native {kind} did not finish within 90 seconds")
+        raise TimeoutError(f"Native {kind} exceeded its command or scene deadline")
 
     def survey(self, site, survey_columns=16, biome=None):
         x, z = site
@@ -149,20 +149,92 @@ class NativeScene:
         ids = self.lookup[state["node"]]
         if (ids == 65535).any():
             raise RuntimeError("Native region contains an unregistered content ID")
+        if "native_render_settings" in row:
+            self.region_light = state["light"].copy()
         arrays = ids, state["param2"].copy()
         return arrays, row, rgb, info
 
+    def sink_to_floor(self, spawn):
+        """Observe the natural descent without positioning or inspecting a crop."""
+        recent = deque(maxlen=12)
+        while time.monotonic() < self.search_deadline:
+            _, info = self.step()
+            player = np.asarray(info["player_pos"], dtype=np.float64)
+            recent.append(player)
+            if (len(recent) == recent.maxlen and player[1] < spawn[1] - .005
+                    and np.max(np.ptp(recent, axis=0)) <= .003):
+                return player, int(info["native_client_tick"])
+        raise TimeoutError("Underwater observer did not settle before the scene deadline")
+
+    def renderer_lighting(self):
+        path = self.session.world / "client_clock.txt.lighting"
+        try:
+            fields = path.read_text().split()
+        except FileNotFoundError as exc:
+            raise RuntimeError("The native renderer did not publish lighting-floor evidence") from exc
+        tick, gamma, floor, zero, maximum, pending, version = fields
+        return dict(render_tick=int(tick), display_gamma=float(gamma), lighting_floor=float(floor),
+                    lut_zero=int(zero), lut_max=int(maximum), pending_meshes=int(pending), version=version)
+
+    def check_light_frame(self, capture, floor):
+        lighting = self.renderer_lighting()
+        tick = int(capture["native_clock"]["server_tick"])
+        expected_zero = math.floor(floor * 255 + .5)
+        if (lighting["render_tick"] != tick - 1 or lighting["lighting_floor"] != floor
+                or lighting["display_gamma"] != V3_RGB["display_gamma"]
+                or lighting["lut_zero"] != expected_zero or lighting["lut_max"] != 255
+                or lighting["pending_meshes"] != 0 or lighting["version"] != "voxwm-light-floor-v1"):
+            raise RejectedScene(f"Client lighting floor or mesh did not settle for render tick {tick - 1}: {lighting}")
+        if capture["wielded_item"] or not capture["hud_wielditem_hidden"]:
+            raise RejectedScene("Native observer has a visible wield model or an item selected")
+        return lighting
+
+    def request_floor(self, floor):
+        request = self.session.world / "client_clock.txt.lighting_request"
+        pending = request.with_suffix(".tmp")
+        pending.write_text(f"{floor}\n")
+        pending.replace(request)
+
+    def wait_lighting(self, floor):
+        while time.monotonic() < self.search_deadline:
+            self.step()
+            light = self.renderer_lighting()
+            if light["lighting_floor"] == floor and light["pending_meshes"] == 0:
+                return
+        raise TimeoutError("Native lighting remesh exceeded the scene deadline")
+
     def acquire(self, foot, kind, config, rng, library_path, scene_kind=None):
-        origin = tuple(coordinate - 24 for coordinate in foot)
-        # Neither the initial player position nor the camera position sets the crop.
-        self.command("pose", relocate=True, foot_xyz=foot, anchor_kind=kind, yaw=0., pitch=0.)
+        initial = self.command("pose", relocate=True, foot_xyz=foot, anchor_kind=kind, yaw=0., pitch=0.)
+        underwater_descent = None
+        if scene_kind == "underwater":
+            from .v3_sampling import settled_anchor
+
+            spawn = foot
+            settled, final_tick = self.sink_to_floor(spawn)
+            foot = settled_anchor(settled)
+            origin = tuple(coordinate - 24 for coordinate in foot)
+            emerged, _, _ = self.command("emerge_capture", low_xyz=origin,
+                                         high_xyz=tuple(coordinate + 47 for coordinate in origin))
+            if emerged["status"] != "capture_emerged":
+                raise RejectedScene("Final underwater 48³ region could not emerge")
+            underwater_descent = dict(spawn_player_xyz=list(spawn), settled_player_xyz=settled.tolist(),
+                                      ticks=final_tick - int(initial[2]["native_client_tick"]))
+        else:
+            origin = tuple(coordinate - 24 for coordinate in foot)
         for _ in range(72):
             self.step()
-        baseline, _, _, _ = self.geometry_snapshot(origin, kind, boxes=True)
+        if scene_kind:
+            self.wait_lighting(V3_RGB["lighting_floor"])
+        baseline, base_capture, _, base_info = self.geometry_snapshot(origin, kind, boxes=True)
         if scene_kind:
             from . import v3_sampling
 
-            center, full, active = v3_sampling.scene_visibility(baseline[0], self.stable_defs, scene_kind)
+            eye = tuple(np.asarray(base_info["cam_pos"]) - foot)
+            if underwater_descent:
+                underwater_descent.update(base_capture["underwater_support"])
+                center, full, active = v3_sampling.scene_visibility(baseline[0], self.stable_defs, scene_kind, eye)
+            else:
+                center, full, active = v3_sampling.scene_visibility(baseline[0], self.stable_defs, scene_kind)
             cave = v3_sampling.cave_evidence(baseline[0], self.stable_defs) if scene_kind == "cave" else None
         else:
             center, full, active = scene_visibility(baseline[0], self.stable_defs)
@@ -181,6 +253,8 @@ class NativeScene:
             # Allow force-move, the client mesh draw list and the framebuffer to settle.
             for _ in range(12):
                 self.step()
+            if scene_kind:
+                self.wait_lighting(V3_RGB["lighting_floor"])
             previous, prior, _, _ = self.geometry_snapshot(origin, kind)
             current, capture, rgb, info = self.geometry_snapshot(origin, kind)
             tick = int(capture["native_clock"]["server_tick"])
@@ -190,14 +264,21 @@ class NativeScene:
                    for state in (previous, current) for field, expected in zip(state, baseline)):
                 raise RejectedScene("Node Name or raw param2 changed between native views")
             position = np.asarray(info["cam_pos"], dtype=np.float64)
-            projection_origin = camera_local_xyz(position, foot)
+            real_foot = np.asarray(info["player_pos"], dtype=np.float64) if scene_kind else foot
+            eye_height = float(camera_local_xyz(position, real_foot if underwater_descent else foot)[1])
+            projection_origin = position - foot
             if scene_kind:
                 v3_sampling.require_camera(current[0], self.stable_defs, projection_origin,
                                            scene_kind, projector.water_contains)
-                if (capture["native_render_settings"] != V3_RGB or capture["torch"] != prior["torch"]
-                        or not capture["torch"]["enabled"] or not capture["torch"]["hidden"]):
-                    raise RejectedScene("V3 native render settings or wielded torch have not settled")
-                view.update(torch=capture["torch"], camera_medium="water" if scene_kind == "underwater" else "air")
+                if capture["native_render_settings"] != V3_RGB:
+                    raise RejectedScene("V3 native render settings differ from protocol")
+                if underwater_descent and (np.max(np.abs(real_foot - settled)) > .003
+                                           or np.max(np.abs(projection_origin - eye)) > .003):
+                    raise RejectedScene("Underwater observer moved after settling")
+                lighting = self.check_light_frame(capture, V3_RGB["lighting_floor"])
+                view.update(renderer_lighting=lighting, lighting_floor=lighting["lighting_floor"],
+                            display_gamma=lighting["display_gamma"], actual_player_world_xyz=real_foot.tolist(),
+                            camera_medium="water" if scene_kind == "underwater" else "air")
             else:
                 require_air_camera(current[0], self.stable_defs, projection_origin)
             direction = np.asarray(info["cam_dir"], dtype=np.float64)
@@ -224,7 +305,7 @@ class NativeScene:
             render = projector.render_v3 if scene_kind else projector.render
             whites.append(render(projection_origin, direction, fov_x, fov_y, width, height))
             view.update(foot_anchor_world_xyz=list(foot), actual_camera_world_xyz=position.tolist(),
-                        actual_camera_height_above_foot=float(projection_origin[1]),
+                        actual_camera_height_above_foot=eye_height,
                         nominal_camera_height=NOMINAL_CAMERA_HEIGHT,
                         projection_origin_local_xyz=projection_origin.tolist(),
                         visibility_radius=VISIBILITY_RADIUS, visibility_lookup_version=VISIBILITY_LOOKUP_VERSION,
@@ -256,43 +337,58 @@ class NativeScene:
         )
         if not scene_kind:
             return meta, self.vocabulary, arrays, rgbs
-        meta.update(native_render_settings=capture["native_render_settings"], cave_evidence=cave,
+        meta.update(render_settings=dict(meta["render_settings"], **V3_RGB),
+                    native_render_settings=capture["native_render_settings"], cave_evidence=cave,
+                    lighting_floor=V3_RGB["lighting_floor"], display_gamma=V3_RGB["display_gamma"],
+                    settled_player_xyz=(settled.tolist() if underwater_descent else base_info["player_pos"].tolist()),
                     terrain_nodes=sorted(d["name"] for d in self.definitions.values() if d["terrain"] and d["walkable"]),
                     water_definitions={d["name"]: d for d in self.definitions.values() if d["water"]})
-        auxiliary = {}
-        if scene_kind in ("cave", "underwater"):
-            meta["torch_ab"], auxiliary = self.torch_comparison(
-                origin, kind, baseline, views[-1], rgbs[-1], info, len(views) - 1)
+        if underwater_descent:
+            meta.update(underwater_descent=underwater_descent, visibility_camera_local_xyz=list(eye))
+        meta["lighting_comparison"], auxiliary = self.lighting_comparison(
+            origin, kind, baseline, views[-1], rgbs[-1], info, len(views) - 1, projector, whites[-1])
         return meta, self.vocabulary, arrays, rgbs, auxiliary
 
-    def torch_comparison(self, origin, kind, baseline, view, on_rgb, on_camera, index):
-        from .v3_report import brightness
-
-        self.command("torch", enabled=False)
-        for _ in range(72):
-            self.step()
-        previous, prior, _, _ = self.geometry_snapshot(origin, kind)
-        state, off, off_rgb, off_camera = self.geometry_snapshot(origin, kind)
-        if any(not np.array_equal(data, reference)
-               for snapshot in (previous, state) for data, reference in zip(snapshot, baseline, strict=True)):
-            raise RejectedScene("Node Name or raw param2 changed during Torch A/B")
-        if (off["native_clock"]["server_tick"] != prior["native_clock"]["server_tick"] + 1
-                or off["torch"] != prior["torch"] or off["torch"]["enabled"]
-                or any(not np.allclose(off_camera[key], on_camera[key], atol=1e-6, rtol=0)
-                       for key in ("cam_pos", "cam_dir", "cam_fov_x", "cam_fov_y"))):
-            raise RejectedScene("Torch OFF view did not settle at the original camera pose")
-        dark, lit = brightness(off_rgb), brightness(on_rgb)
-        on = view["torch"]
-        if not on["module_available"]:
-            status = "MODULE_UNAVAILABLE"
-        elif (lit["mean_luma"] > dark["mean_luma"] + .5
-              and (off["torch"]["light"] != on["light"] or off["torch"]["param1"] != on["param1"])):
-            status = "VERIFIED"
-        else:
-            status = "NO_MEASURABLE_LIGHT"
-        return (dict(view_index=index, voxel_identity_unchanged=True, off=off["torch"], on=on,
-                     status=status, off_brightness=dark, on_brightness=lit),
-                dict(torch_off=off_rgb.copy(), torch_on=on_rgb))
+    def lighting_comparison(self, origin, kind, baseline, view, proposed_rgb, proposed_camera,
+                            index, projector, proposed_white):
+        native_light = self.region_light.copy()
+        camera_keys = ("cam_pos", "cam_dir", "cam_fov_x", "cam_fov_y")
+        proposed_camera = {key: np.asarray(proposed_camera[key]).copy() for key in camera_keys}
+        self.request_floor(0.)
+        try:
+            self.wait_lighting(0.)
+            previous, prior, _, _ = self.geometry_snapshot(origin, kind)
+            prior_light = self.region_light
+            current, capture, control_rgb, control_camera = self.geometry_snapshot(origin, kind)
+            tick = int(capture["native_clock"]["server_tick"]) - 1
+            evidence = self.check_light_frame(capture, 0.)
+            if tick != int(prior["native_clock"]["server_tick"]):
+                raise RejectedScene("Lighting control render was not bracketed by consecutive voxel snapshots")
+            if any(not np.array_equal(data, reference)
+                   for state in (previous, current) for data, reference in zip(state, baseline, strict=True)):
+                raise RejectedScene("Node ID or param2 changed during lighting comparison")
+            if not np.array_equal(native_light, self.region_light) or not np.array_equal(native_light, prior_light):
+                raise RejectedScene("Native voxel param1 changed during lighting comparison")
+            if any(not np.allclose(control_camera[key], proposed_camera[key], atol=1e-6, rtol=0)
+                   for key in camera_keys):
+                raise RejectedScene("Lighting control camera pose differs from the proposed frame")
+            height, width, _ = control_rgb.shape
+            control_white = projector.render_v3(view["projection_origin_local_xyz"], view["cam_dir_xyz"],
+                                                view["fov_x_rad"], view["fov_y_rad"], width, height)
+            if any(not np.array_equal(a, b) for a, b in zip(control_white, proposed_white, strict=True)):
+                raise RejectedScene("White model changed during lighting comparison")
+            control_rgb = control_rgb.copy()
+        finally:
+            self.request_floor(V3_RGB["lighting_floor"])
+        keys = ("actual_camera_world_xyz", "cam_dir_xyz", "fov_x_rad", "fov_y_rad", "display_gamma",
+                "lighting_floor", "renderer_lighting", "render_simulation_tick")
+        proposed = {key: view[key] for key in keys}
+        x, y, z = (math.floor(value + 24.5) for value in view["projection_origin_local_xyz"])
+        proposed["native_eye_param1"] = int(native_light[x, z, y])
+        control = dict(proposed, lighting_floor=0., renderer_lighting=evidence, render_simulation_tick=tick)
+        return (dict(view_index=index, voxel_identity_unchanged=True, light_identity_unchanged=True,
+                     white_identity_unchanged=True, control=control, proposed=proposed),
+                dict(floor_000=control_rgb, floor_035=proposed_rgb))
 
 
 def _search_world(native, slot, config, rng, library_path, rejected, sites_per_world,

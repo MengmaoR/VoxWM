@@ -1,0 +1,253 @@
+diff --git a/src/light.cpp b/src/light.cpp
+--- a/src/light.cpp
++++ b/src/light.cpp
+@@ -3,6 +3,7 @@
+ // Copyright (C) 2013 celeron55, Perttu Ahola <celeron55@gmail.com>
+ 
+ #include "light.h"
++#include "voxwm_lighting_floor.h"
+ #include <algorithm>
+ #include <cmath>
+ #include "util/numeric.h"
+@@ -42,7 +43,7 @@
+ 
+ 
+ // Initialize or update the light value tables using the specified gamma
+-void set_light_table(float gamma)
++void set_light_table(float gamma, float lighting_floor)
+ {
+ // Lighting curve bounding gradients
+ 	const float alpha = rangelim(g_settings->getFloat("lighting_alpha"), 0.0f, 3.0f);
+@@ -73,6 +74,7 @@
+ 			light_LUT[i] = std::min((u8)254, light_LUT[i - 1]) + 1;
+ 		}
+ 	}
++	voxwm_apply_lighting_floor(light_LUT, lighting_floor);
+ }
+ 
+ #endif
+diff --git a/src/light.h b/src/light.h
+--- a/src/light.h
++++ b/src/light.h
+@@ -51,7 +51,7 @@
+ // 0.0 <= return value <= 1.0
+ float decode_light_f(float light_f);
+ 
+-void set_light_table(float gamma);
++void set_light_table(float gamma, float lighting_floor = 0.0f);
+ 
+ #endif
+ 
+diff --git a/src/defaultsettings.cpp b/src/defaultsettings.cpp
+--- a/src/defaultsettings.cpp
++++ b/src/defaultsettings.cpp
+@@ -279,6 +279,8 @@
+ 	settings->setDefault("lighting_alpha", "0.0");
+ 	settings->setDefault("lighting_beta", "1.5");
+ 	settings->setDefault("display_gamma", "1.0");
++	settings->setDefault("lighting_floor", "0.0");
++	settings->setDefault("voxwm_lighting_probe", "false");
+ 	settings->setDefault("lighting_boost", "0.2");
+ 	settings->setDefault("lighting_boost_center", "0.5");
+ 	settings->setDefault("lighting_boost_spread", "0.2");
+diff --git a/builtin/settingtypes.txt b/builtin/settingtypes.txt
+--- a/builtin/settingtypes.txt
++++ b/builtin/settingtypes.txt
+@@ -568,6 +568,9 @@
+ #    light, it has very little effect on natural night light.
+ display_gamma (Light curve gamma) float 1.0 0.33 3.0
+ 
++#    Minimum rendered light. The underlying node light and propagation are unchanged.
++lighting_floor (Minimum rendered light) float 0.0 0.0 1.0
++
+ #    The strength (darkness) of node ambient-occlusion shading.
+ #    Lower is darker, Higher is lighter. The valid range of values for this
+ #    setting is 0.25 to 4.0 inclusive. If the value is out of range it will be
+diff --git a/src/client/game.cpp b/src/client/game.cpp
+--- a/src/client/game.cpp
++++ b/src/client/game.cpp
+@@ -7,6 +7,9 @@
+ #include <cstdio>
+ #include <iomanip>
+ #include <cmath>
++#include <fstream>
++#include "light.h"
++#include "voxwm_lighting_floor.h"
+ #include "client/renderingengine.h"
+ #include "camera.h"
+ #include "client.h"
+@@ -1010,7 +1013,15 @@
+ 
+ 	draw_times.reset();
+ 
+-	set_light_table(g_settings->getFloat("display_gamma"));
++	const float gamma = g_settings->getFloat("display_gamma");
++	float lighting_floor = voxwm_limit_lighting_floor(g_settings->getFloat("lighting_floor"));
++	if (lighting_floor > 0.0f) {
++		client->voxwmSetLightingFloor(gamma, lighting_floor);
++	} else {
++		set_light_table(gamma);
++	}
++	const std::string probe = voxwmFixed24() && g_settings->getBool("voxwm_lighting_probe")
++			? g_settings->get("voxwm_client_clock_file") + ".lighting" : "";
+ 
+ 	m_touch_simulate_aux1 = g_settings->getBool("fast_move")
+ 			&& client->checkPrivilege("fast");
+@@ -1090,6 +1101,16 @@
+ 		if (m_is_paused)
+ 			dtime = 0.0f;
+ 
++		if (!probe.empty() && client->voxwmLightingPending() == 0) {
++			float requested;
++			if (std::ifstream(probe + "_request") >> requested) {
++				requested = voxwm_limit_lighting_floor(requested);
++				if (requested != lighting_floor) {
++					client->voxwmSetLightingFloor(gamma, requested);
++					lighting_floor = requested;
++				}
++			}
++		}
+ 		step(dtime);
+ 
+ 		processClientEvents(&cam_view_target);
+@@ -1099,6 +1120,12 @@
+ 		updateSound(dtime);
+ 		processPlayerInteraction(dtime, m_game_ui->m_flags.show_hud);
+ 		updateFrame(&graph, &stats, dtime, cam_view);
++		if (!probe.empty() && device->isWindowVisible() && !g_settings->getBool("voxwm_skip_rgb")) {
++			std::ofstream stamp(probe, std::ios::trunc);
++			stamp << voxwmClientTick.load() << " " << gamma << " " << lighting_floor
++					<< " " << int(decode_light(0)) << " " << int(decode_light(LIGHT_SUN))
++					<< " " << client->voxwmLightingPending() << " voxwm-light-floor-v1\n";
++		}
+ 		updateProfilerGraphs(&graph);
+ 
+                 /* When running headless we assume that the window is always focused, thus, this block is never run */
+diff --git a/src/client/client.h b/src/client/client.h
+--- a/src/client/client.h
++++ b/src/client/client.h
+@@ -304,6 +304,8 @@
+ 	// Including blocks at appropriate edges
+ 	void addUpdateMeshTaskWithEdge(v3s16 blockpos, bool ack_to_server=false, bool urgent=false);
+ 	void addUpdateMeshTaskForNode(v3s16 nodepos, bool ack_to_server=false, bool urgent=false);
++	void voxwmSetLightingFloor(float gamma, float floor);
++	size_t voxwmLightingPending() const { return m_voxwm_lighting_pending.size(); }
+ 
+ 	bool hasClientEvents() const { return !m_client_event_queue.empty(); }
+ 	// Get event from queue. If queue is empty, it triggers an assertion failure.
+@@ -495,6 +497,7 @@
+         void pyConnStep(LocalPlayer *player, Camera *camera, float dtime);
+ 
+ 	std::unique_ptr<MeshUpdateManager> m_mesh_update_manager;
++	std::unordered_set<v3s16> m_voxwm_lighting_pending;
+ 	ClientEnvironment m_env;
+ 	std::unique_ptr<ParticleManager> m_particle_manager;
+ 	std::unique_ptr<con::IConnection> m_con;
+diff --git a/src/client/client.cpp b/src/client/client.cpp
+--- a/src/client/client.cpp
++++ b/src/client/client.cpp
+@@ -914,6 +914,8 @@
+ 		while (m_mesh_update_manager->getNextResult(r))
+ 		{
+ 			num_processed_meshes++;
++			if (r.lighting_epoch == m_mesh_update_manager->lightingEpoch())
++				m_voxwm_lighting_pending.erase(r.p);
+ 
+ 			std::vector<MinimapMapblock*> minimap_mapblocks;
+ 			bool do_mapper_update = true;
+@@ -2074,6 +2076,31 @@
+ 	sendChatMessage(message);
+ }
+ 
++void Client::voxwmSetLightingFloor(float gamma, float floor)
++{
++	// Terrain meshes bake decoded light, so reapply it to loaded visible meshes.
++	// The LUT is shared with mesh workers; update it between worker lifetimes.
++	m_mesh_update_manager->stop();
++	m_mesh_update_manager->wait();
++	m_mesh_update_manager->advanceLightingEpoch();
++	set_light_table(gamma, floor);
++	m_voxwm_lighting_pending.clear();
++	auto &map = m_env.getClientMap();
++	v3s16 low, high, p;
++	map.getBlocksInViewRange(floatToInt(m_env.getLocalPlayer()->getPosition(), BS),
++			&low, &high, g_settings->getFloat("viewing_range") + MAP_BLOCKSIZE);
++	const MeshGrid &grid = getMeshGrid();
++	for (p.X = low.X; p.X <= high.X; ++p.X)
++	for (p.Y = low.Y; p.Y <= high.Y; ++p.Y)
++	for (p.Z = low.Z; p.Z <= high.Z; ++p.Z) {
++		if (map.getBlockNoCreateNoEx(p)) {
++			if (m_voxwm_lighting_pending.insert(grid.getMeshPos(p)).second)
++				m_mesh_update_manager->updateBlock(&map, p, false, false);
++		}
++	}
++	m_mesh_update_manager->start();
++}
++
+ void Client::addUpdateMeshTask(v3s16 p, bool ack_to_server, bool urgent)
+ {
+ 	// Check if the block exists to begin with. In the case when a non-existing
+diff --git a/src/client/mesh_generator_thread.h b/src/client/mesh_generator_thread.h
+--- a/src/client/mesh_generator_thread.h
++++ b/src/client/mesh_generator_thread.h
+@@ -81,6 +81,7 @@
+ 	v3s16 p = v3s16(-1338, -1338, -1338);
+ 	MapBlockMesh *mesh = nullptr;
+ 	u8 solid_sides;
++	u64 lighting_epoch = 0;
+ 	std::vector<v3s16> ack_list;
+ 	bool urgent = false;
+ 	std::vector<MapBlock *> map_blocks;
+@@ -125,11 +126,14 @@
+ 	void wait();
+ 
+ 	bool isRunning();
++	u64 lightingEpoch() const { return m_lighting_epoch; }
++	void advanceLightingEpoch() { ++m_lighting_epoch; }
+ 
+ private:
+ 	void deferUpdate();
+ 
+ 
++	u64 m_lighting_epoch = 0;
+ 	MeshUpdateQueue m_queue_in;
+ 	MutexedQueue<MeshUpdateResult> m_queue_out;
+ 	MutexedQueue<MeshUpdateResult> m_queue_out_urgent;
+diff --git a/src/client/mesh_generator_thread.cpp b/src/client/mesh_generator_thread.cpp
+--- a/src/client/mesh_generator_thread.cpp
++++ b/src/client/mesh_generator_thread.cpp
+@@ -225,6 +225,7 @@
+ 		r.p = q->p;
+ 		r.mesh = mesh_new;
+ 		r.solid_sides = get_solid_sides(q->data);
++		r.lighting_epoch = m_manager->lightingEpoch();
+ 		r.ack_list = std::move(q->ack_list);
+ 		r.urgent = q->urgent;
+ 		r.map_blocks = q->map_blocks;
+diff --git a/src/voxwm_lighting_floor.h b/src/voxwm_lighting_floor.h
+new file mode 100644
+--- /dev/null
++++ b/src/voxwm_lighting_floor.h
+@@ -0,0 +1,22 @@
++// Luanti opt-in rendered light floor for Vox2Pix.
++#pragma once
++
++#include <algorithm>
++#include <cmath>
++#include <cstddef>
++#include <cstdint>
++
++inline float voxwm_limit_lighting_floor(float value)
++{
++	return std::isfinite(value) ? std::clamp(value, 0.0f, 1.0f) : 0.0f;
++}
++
++template <std::size_t N>
++void voxwm_apply_lighting_floor(std::uint8_t (&lut)[N], float floor)
++{
++	floor = voxwm_limit_lighting_floor(floor);
++	if (floor == 0.0f)
++		return; // Preserve the original quantization at default settings.
++	for (auto &brightness : lut)
++		brightness = static_cast<std::uint8_t>(std::lround(255.0f * floor + (1.0f - floor) * brightness));
++}

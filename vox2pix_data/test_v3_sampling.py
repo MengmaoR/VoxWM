@@ -6,7 +6,7 @@ import unittest
 import numpy as np
 
 from .protocol import NOMINAL_CAMERA_XYZ, RejectedScene
-from .v3_sampling import cave_evidence, require_camera, scene_visibility, site_candidates
+from .v3_sampling import cave_evidence, require_camera, scene_visibility, settled_anchor, site_candidates
 
 
 DEFINITIONS = {
@@ -68,4 +68,11 @@ class NativeKindGates(unittest.TestCase):
         survey[..., 40:] = 2
         foot, _, kind = next(site_candidates(survey, DEFINITIONS, "underwater",
                                             np.random.default_rng(42), Counter(), -112))
-        self.assertEqual((foot[1], kind), (40, "underwater_floor"))
+        self.assertEqual((foot[1], kind), (93, "underwater_floor"))
+
+    def test_underwater_discovery_has_no_bed_or_crop_requirement(self):
+        survey = np.full((64, 64, 96), 2, dtype=np.uint16)
+        start, _, _ = next(site_candidates(survey, DEFINITIONS, "underwater",
+                                          np.random.default_rng(42), Counter(), -112))
+        self.assertEqual(start[1], 93)
+        self.assertEqual(settled_anchor((-90.2, -112.501, 17.2)), (-90, -112, 17))
