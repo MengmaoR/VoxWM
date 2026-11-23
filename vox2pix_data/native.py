@@ -231,7 +231,12 @@ class NativeScene:
 
             eye = tuple(np.asarray(base_info["cam_pos"]) - foot)
             if underwater_descent:
-                underwater_descent.update(base_capture["underwater_support"])
+                support = base_capture["underwater_support"]
+                native_xyz = support["support_xyz"]
+                support_xyz = [int(coordinate) for coordinate in native_xyz]
+                if support_xyz != native_xyz:
+                    raise RejectedScene("Native support coordinate is outside the integer lattice")
+                underwater_descent.update(support, support_xyz=support_xyz)
                 center, full, active = v3_sampling.scene_visibility(baseline[0], self.stable_defs, scene_kind, eye)
             else:
                 center, full, active = v3_sampling.scene_visibility(baseline[0], self.stable_defs, scene_kind)
@@ -278,6 +283,7 @@ class NativeScene:
                 lighting = self.check_light_frame(capture, V3_RGB["lighting_floor"])
                 view.update(renderer_lighting=lighting, lighting_floor=lighting["lighting_floor"],
                             display_gamma=lighting["display_gamma"], actual_player_world_xyz=real_foot.tolist(),
+                            hud_wielditem_hidden=capture["hud_wielditem_hidden"], wielded_item=capture["wielded_item"],
                             camera_medium="water" if scene_kind == "underwater" else "air")
             else:
                 require_air_camera(current[0], self.stable_defs, projection_origin)

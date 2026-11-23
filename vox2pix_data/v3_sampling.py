@@ -116,7 +116,7 @@ def site_candidates(survey, definitions, kind, rng, rejected, y_min, hints=()):
         submerged = wet[..., :-2] & wet[..., 1:-1] & wet[..., 2:]
         starts = np.where(submerged, layers[:-2], -1).max(axis=2)
         candidates = np.argwhere(starts >= 0)
-        rejected["candidate_floors"] += len(candidates)
+        rejected["candidate_water_columns"] += len(candidates)
         if not len(candidates):
             rejected["site: no submerged starts"] += 1
         for index in rng.permutation(len(candidates)):

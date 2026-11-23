@@ -412,11 +412,13 @@ def report(root):
         scene_kind = escape(meta["kind"].title())
         search = meta["search_stats"]
         views = "".join(_view_block(relative, row) for row in rows)
+        search_count = (f"{search.get('candidate_water_columns', search['candidate_floors'])} submerged starts"
+                        if meta["kind"] == "underwater" else f"{search['candidate_floors']} candidate floors")
         sections.append(f"""<section><h2>{scene_kind} · Scene {meta['scene_id']:04d}</h2>
 <p>Seed {meta['world_seed']} · Surface biome {escape(meta['surface_biome'])} · Foot biome {escape(meta['foot_biome'])}
  · {sum(meta['active_view_regions'])}/40 active regions · <a href="{relative}/scene.json">Scene metadata</a></p>
 <p>Search: {meta['search_seconds']:.1f} s · {search['world_starts']} worlds · {search['surveys']} surveys
- · {search['cave_hints']} cave hints · {search['candidate_floors']} candidate floors.</p>
+ · {search['cave_hints']} cave hints · {search_count}.</p>
 {_cave_block(meta)}{_underwater_block(meta)}{_lighting_block(lighting, comparison, meta['kind'])}{views}</section>""")
 
     summary = _scan(root, allow_partial=True, visit=export)
