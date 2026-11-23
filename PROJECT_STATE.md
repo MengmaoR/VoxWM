@@ -1,6 +1,6 @@
 # VoxWM 当前状态
 
-**Vox2Pix 原生 Fog 20–30 格校准通过。** 8 个标记距离和原有三个场景的 15 个机位完成 OFF / 旧 0.8 / 新 2/3 对照。实际 Fog Start/End 为 20/30 格，地图 draw range 30 格，原生 GPU Far Plane 2000 格。24 格标记可辨，30/32 格标记核心像素与 Fog Color 一致。采用版本 `vox2pix-v3-materialambient-linear-fog20-30`，保留材质照明和 48³ 观测。原生 OpenGL 测试使用 Mesa 软件渲染。下一步等待用户决定新场景 smoke 范围。[协议](VOX2PIX_DATA_COLLECTION_PROTOCOL.md) · [实测报告](vox2pix_data/reports/v3_fog20/README.md)
+**Vox2Pix 独立 RGB48 / Fog20–30 校准通过。** 实际 map draw range 为 48 格，Fog Start/End 为 20/30，Far Plane 为 2000。14 个距离证实 32–48 格标记仍提交绘制且完全雾化，52 格的边界泄漏同样被雾遮蔽。三类原场景完成 15 对机位对照。48³ 观测、White Model 和 Water Count 保留原定义。实测为 Mesa 原生软件渲染，Surface View 3 有原生雾色变化。采用版本 `vox2pix-v3-local48-rgb48-absolute-fog20-30`。下一步等待用户决定新场景 smoke，正式数据尚未采集。[协议](VOX2PIX_DATA_COLLECTION_PROTOCOL.md) · [实测报告](vox2pix_data/reports/v3_fog48/README.md)
 
 **E01-Masked 27,000 步验证最优 checkpoint 已完成冻结审计，结论为 FREEZE WITH KNOWN D3 LIMITATION。**
 

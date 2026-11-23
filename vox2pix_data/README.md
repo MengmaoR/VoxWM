@@ -152,10 +152,67 @@ os.execv(sys.executable, [
 PY
 ```
 
-For a separately approved new smoke, use `--mode smoke
---lighting-profile material-ambient-fog20`, the fog checkout and a fresh
-dataset path. Legacy smoke resume commands must pass their original
-`--lighting-profile global-lut` or `material-ambient`.
+The draw30 profile remains available as `material-ambient-fog20` for legacy
+replay. Its range is recorded independently from the current draw48 profile.
+
+## Independent RGB48 and absolute fog
+
+The active profile is `material-ambient-fog20-draw48`, version
+`vox2pix-v3-local48-rgb48-absolute-fog20-30`. Its 48³ voxel observation
+keeps half extent 24. Native RGB drawing uses 48 blocks and the absolute
+Fog Start/End settings use 20/30 blocks. Material lighting is unchanged.
+The native camera far plane follows its original calculation.
+
+Use a separate configured checkout at Craftium
+`ca8b2762aea46d10a88c53f6411ff1f0dbdf3b49` and the pinned VoxeLibre game.
+In the existing Linux software-rendering environment, build and run from
+the repository root.
+
+```bash
+BUILD_THREADS=22 bash scripts/build_vox2pix_fog48.sh third_party/craftium_vox2pix_fog48
+python3 scripts/test_vox2pix_fog48.py --craftium-dir third_party/craftium_vox2pix_fog48
+.venv/bin/python -m unittest vox2pix_data.test_fog48_report vox2pix_data.test_v3_projection -q
+
+.venv/bin/python -m vox2pix_data.fog_range48 \
+  --dataset outputs/vox2pix_v3_lightfloor_15 \
+  --craftium-dir third_party/craftium_vox2pix_fog48 \
+  --output outputs/vox2pix_fog48/replay/fog_range_48_test \
+  --scene-timeout 180
+```
+
+The offline report is `OUTPUT/index.html`. Calibration uses one
+temporary native wool panel at 14 camera distances with Fog OFF/draw48,
+Fog20–30/draw30 and Fog20–30/draw48. The three recorded scenes reuse
+their existing five poses and compare the two fogged draw ranges. The
+White Model and Water Count previews read the original saved arrays.
+Native probes record actual loaded and submitted solid-mesh MapBlocks.
+Twelve fixed24 ticks after each range switch allow the draw list to refresh.
+
+For the existing server's user-installed Xvfb, the exact environment-aware
+replay command is below.
+
+```bash
+.venv/bin/python - <<'PY'
+import json
+import os
+from pathlib import Path
+import sys
+
+os.environ.update(json.loads(Path("vae_data/configs/collection_64x1_clip2.json").read_text())["environment"])
+os.environ["CUDA_VISIBLE_DEVICES"] = ""
+os.execv(sys.executable, [
+    sys.executable, "-B", "-u", "-m", "vox2pix_data.fog_range48",
+    "--dataset", "outputs/vox2pix_v3_lightfloor_15",
+    "--craftium-dir", "third_party/craftium_vox2pix_fog48",
+    "--output", "outputs/vox2pix_fog48/replay/fog_range_48_test",
+    "--scene-timeout", "180",
+])
+PY
+```
+
+For a separately authorized new smoke, explicitly use `--mode smoke
+--lighting-profile material-ambient-fog20-draw48` with this checkout and
+a fresh dataset directory. Previous datasets require their original profile.
 
 ## Historical v2 1K compression pilot
 

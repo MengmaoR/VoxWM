@@ -1,6 +1,6 @@
 # VoxWM — Voxel VAE E01-Masked
 
-Vox2Pix v3 已通过原生 Fog 20–30 格校准，并完成三个原有场景的 15 个机位对照。当前使用 48³ 观测、30 格 RGB draw range、材质照明、单层白模和 Water Count。[Fog 实测](vox2pix_data/reports/v3_fog20/README.md) · [材质照明实测](vox2pix_data/reports/v3_material_lighting/README.md)
+Vox2Pix v3 已通过独立 RGB48 / Fog20–30 原生校准，并完成三个原有场景的 15 对机位对照。当前使用 48³ 观测、48 格 RGB draw range、独立绝对雾效、材质照明、单层白模和 Water Count。[实测与限制](vox2pix_data/reports/v3_fog48/README.md) · [材质照明实测](vox2pix_data/reports/v3_material_lighting/README.md)
 
 历史 Vox2Pix v2 1K 共 200 个场景、1,000 个视角。[三层白模 Viewer](vox2pix_data/README.md#inspect-an-existing-pilot) · [实测速率与采集日志](vox2pix_data/reports/pilot_1k/README.md)。
 

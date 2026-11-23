@@ -2,8 +2,8 @@
 
 Vox2Pix 当前采用 [v3 数据协议](VOX2PIX_DATA_COLLECTION_PROTOCOL.md)。类别为 Surface、Cave、Underwater，白模保存单层首次非水命中及 Water Count。保留实际 RGB 相机、48³ 脚底锚定、名义眼高与可见性半径 1.6、40 个视角区中至少 20 个可用。空余率只作分析。v2 1K 结果作为独立历史保留。
 
-- 当前 v3 profile 为 `material-ambient-fog20`，版本 `vox2pix-v3-materialambient-linear-fog20-30`。48³ 观测半宽为 24，原生 RGB 地图 draw range 为 30，线性 Fog 为 20–30 格，`fog_start=0.6666667`。Gamma 3.0、全局 LUT 下限 0、固体材质下限 0.35。每张图保留实际 driver 与 nodes Shader 的 Fog 探针，检查同帧距离和 draw range。GPU Far Plane 沿用原生算法。历史 profile 须显式选择，新旧数据分目录。
-- 本次已完成独立标记场景 8 个距离的原生 Fog OFF / 旧 0.8 / 新 2/3 对照，以及原有三个场景的 15 个机位回放。历史数据与报告保留。新增正式场景采集、更大采集和训练由用户授权。水下观察者自然沉底，再从真实位置建立 48³。
+- 当前 v3 profile 为 `material-ambient-fog20-draw48`，版本 `vox2pix-v3-local48-rgb48-absolute-fog20-30`。48³ 观测半宽 24，原生 RGB map draw range 48，独立绝对 Fog Start/End 为 20/30 格。Gamma 3.0、全局 LUT 下限 0、固体材质下限 0.35。GPU Far Plane 沿用原生算法。White Model 仅遍历实际保存的观测立方体，出界返回 BACKGROUND。每张图记录实际 driver、nodes Shader、loaded/submitted MapBlock 和服务器范围。
+- 已完成 14 个标记距离的 OFF/draw48、Fog/draw30、Fog/draw48 校准，以及三个原场景各 5 对机位回放。32–48 格几何仍提交绘制并被雾遮蔽。52 格的 MapBlock 边界保留已记录。临时 RGB 回放可固定已保存的真实位姿；正式采集保持原生水下下沉。历史 profile 显式选择并保留原数据。后续正式采集和训练由用户授权。
 
 数据采集和 E00 小样本验证阶段已结束。当前活动方向是`voxel_vae/`的 E01-Masked Combined-Token 3D ResNet VAE。E00 的 Plain 与 Masked 产物保留作历史。`python -m vae_data` → `vae_data/sharded/`及[数据协议](VAE_DATA_COLLECTION_PROTOCOL.md)继续定义只读正式数据格式。
 
