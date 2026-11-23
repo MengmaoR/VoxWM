@@ -1,6 +1,8 @@
 # VoxWM — Voxel VAE E01-Masked
 
-Vox2Pix 1K 已完成原生采集和验证，共 200 个场景、1,000 个视角。[Voxel、相机、RGB 与三层白模 Viewer](vox2pix_data/README.md#inspect-an-existing-pilot) · [实测速率与采集日志](vox2pix_data/reports/pilot_1k/README.md)。
+Vox2Pix v3 已通过三类场景共 15 帧的原生验证。实验使用单层白模、Water Count 和统一的原生亮度下限。[v3 采集与报告命令](vox2pix_data/README.md#v3-native-smoke) · [实测照明与沉底结果](vox2pix_data/reports/v3_lightfloor_smoke/README.md)。
+
+历史 Vox2Pix v2 1K 共 200 个场景、1,000 个视角。[三层白模 Viewer](vox2pix_data/README.md#inspect-an-existing-pilot) · [实测速率与采集日志](vox2pix_data/reports/pilot_1k/README.md)。
 
 两个正式100K Clip已完成。E01-Masked 用两个 Clip 的完整训练集训练 Combined-Token 3D ResNet VAE。E00 小样本结果保留为历史。VAE 从每个 48³ 样本读取中心 16³，训练保存分项 loss 曲线并支持独立验证早停。[E01 数据准备、训练与监控命令](voxel_vae/README.md)
 

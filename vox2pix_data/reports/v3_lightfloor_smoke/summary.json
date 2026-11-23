@@ -1,0 +1,1244 @@
+{
+  "status": "NATIVE VERIFIED",
+  "protocol_version": "vox2pix-v3-surface-watercount-cave-underwater-lightfloor",
+  "capture_status": "NATIVE CAPTURE VERIFIED",
+  "scene_count": 3,
+  "frame_count": 15,
+  "expected_scene_count": 3,
+  "kind_counts": {
+    "surface": 1,
+    "cave": 1,
+    "underwater": 1
+  },
+  "missing_slots": [],
+  "engine_build": "ca8b2762aea46d10a88c53f6411ff1f0dbdf3b49",
+  "game_build": "178c71b1e7d6ec35c0d9c481c55eb306d6f330bc",
+  "lighting_comparison": {
+    "0": {
+      "view_index": 4,
+      "voxel_identity_unchanged": true,
+      "light_identity_unchanged": true,
+      "white_identity_unchanged": true,
+      "control": {
+        "actual_camera_world_xyz": [
+          7432.0,
+          3.5999999046325684,
+          -2936.0
+        ],
+        "cam_dir_xyz": [
+          -0.7758543841037651,
+          -0.6151055331173118,
+          -0.14033943777653957
+        ],
+        "fov_x_rad": 1.8239540100097655,
+        "fov_y_rad": 1.2566371154785156,
+        "display_gamma": 3.0,
+        "lighting_floor": 0.0,
+        "renderer_lighting": {
+          "render_tick": 2401,
+          "display_gamma": 3.0,
+          "lighting_floor": 0.0,
+          "lut_zero": 0,
+          "lut_max": 255,
+          "pending_meshes": 0,
+          "version": "voxwm-light-floor-v1"
+        },
+        "render_simulation_tick": 2401,
+        "native_eye_param1": 15
+      },
+      "proposed": {
+        "actual_camera_world_xyz": [
+          7432.0,
+          3.5999999046325684,
+          -2936.0
+        ],
+        "cam_dir_xyz": [
+          -0.7758543841037651,
+          -0.6151055331173118,
+          -0.14033943777653957
+        ],
+        "fov_x_rad": 1.8239540100097655,
+        "fov_y_rad": 1.2566371154785156,
+        "display_gamma": 3.0,
+        "lighting_floor": 0.35,
+        "renderer_lighting": {
+          "render_tick": 2396,
+          "display_gamma": 3.0,
+          "lighting_floor": 0.35,
+          "lut_zero": 89,
+          "lut_max": 255,
+          "pending_meshes": 0,
+          "version": "voxwm-light-floor-v1"
+        },
+        "render_simulation_tick": 2396,
+        "native_eye_param1": 15
+      },
+      "status": "VERIFIED",
+      "control_brightness": {
+        "mean_luma": 88.97116157118052,
+        "median_luma": 87.715,
+        "near_black_fraction": 0.0,
+        "near_white_fraction": 0.0
+      },
+      "proposed_brightness": {
+        "mean_luma": 85.6270991597222,
+        "median_luma": 82.299,
+        "near_black_fraction": 0.0,
+        "near_white_fraction": 0.0
+      }
+    },
+    "1": {
+      "view_index": 4,
+      "voxel_identity_unchanged": true,
+      "light_identity_unchanged": true,
+      "white_identity_unchanged": true,
+      "control": {
+        "actual_camera_world_xyz": [
+          -7374.0,
+          -34.400001525878906,
+          20627.0
+        ],
+        "cam_dir_xyz": [
+          0.8441082833686679,
+          -0.5092652333862836,
+          0.16772038639478115
+        ],
+        "fov_x_rad": 1.8239540100097655,
+        "fov_y_rad": 1.2566371154785156,
+        "display_gamma": 3.0,
+        "lighting_floor": 0.0,
+        "renderer_lighting": {
+          "render_tick": 1878,
+          "display_gamma": 3.0,
+          "lighting_floor": 0.0,
+          "lut_zero": 0,
+          "lut_max": 255,
+          "pending_meshes": 0,
+          "version": "voxwm-light-floor-v1"
+        },
+        "render_simulation_tick": 1878,
+        "native_eye_param1": 0
+      },
+      "proposed": {
+        "actual_camera_world_xyz": [
+          -7374.0,
+          -34.400001525878906,
+          20627.0
+        ],
+        "cam_dir_xyz": [
+          0.8441082833686679,
+          -0.5092652333862836,
+          0.16772038639478115
+        ],
+        "fov_x_rad": 1.8239540100097655,
+        "fov_y_rad": 1.2566371154785156,
+        "display_gamma": 3.0,
+        "lighting_floor": 0.35,
+        "renderer_lighting": {
+          "render_tick": 1873,
+          "display_gamma": 3.0,
+          "lighting_floor": 0.35,
+          "lut_zero": 89,
+          "lut_max": 255,
+          "pending_meshes": 0,
+          "version": "voxwm-light-floor-v1"
+        },
+        "render_simulation_tick": 1873,
+        "native_eye_param1": 0
+      },
+      "status": "VERIFIED",
+      "control_brightness": {
+        "mean_luma": 0.0,
+        "median_luma": 0.0,
+        "near_black_fraction": 1.0,
+        "near_white_fraction": 0.0
+      },
+      "proposed_brightness": {
+        "mean_luma": 39.778660435763896,
+        "median_luma": 39.0682,
+        "near_black_fraction": 0.0,
+        "near_white_fraction": 0.0
+      }
+    },
+    "2": {
+      "view_index": 4,
+      "voxel_identity_unchanged": true,
+      "light_identity_unchanged": true,
+      "white_identity_unchanged": true,
+      "control": {
+        "actual_camera_world_xyz": [
+          -7552.0,
+          -5.899975776672363,
+          -19727.0
+        ],
+        "cam_dir_xyz": [
+          -0.7688314047262389,
+          0.21433395307326503,
+          0.6024609760529439
+        ],
+        "fov_x_rad": 1.8239540100097655,
+        "fov_y_rad": 1.2566371154785156,
+        "display_gamma": 3.0,
+        "lighting_floor": 0.0,
+        "renderer_lighting": {
+          "render_tick": 2332,
+          "display_gamma": 3.0,
+          "lighting_floor": 0.0,
+          "lut_zero": 0,
+          "lut_max": 255,
+          "pending_meshes": 0,
+          "version": "voxwm-light-floor-v1"
+        },
+        "render_simulation_tick": 2332,
+        "native_eye_param1": 7
+      },
+      "proposed": {
+        "actual_camera_world_xyz": [
+          -7552.0,
+          -5.899975776672363,
+          -19727.0
+        ],
+        "cam_dir_xyz": [
+          -0.7688314047262389,
+          0.21433395307326503,
+          0.6024609760529439
+        ],
+        "fov_x_rad": 1.8239540100097655,
+        "fov_y_rad": 1.2566371154785156,
+        "display_gamma": 3.0,
+        "lighting_floor": 0.35,
+        "renderer_lighting": {
+          "render_tick": 2327,
+          "display_gamma": 3.0,
+          "lighting_floor": 0.35,
+          "lut_zero": 89,
+          "lut_max": 255,
+          "pending_meshes": 0,
+          "version": "voxwm-light-floor-v1"
+        },
+        "render_simulation_tick": 2327,
+        "native_eye_param1": 7
+      },
+      "status": "VERIFIED",
+      "control_brightness": {
+        "mean_luma": 89.12927666493056,
+        "median_luma": 75.49040000000001,
+        "near_black_fraction": 0.0,
+        "near_white_fraction": 0.0
+      },
+      "proposed_brightness": {
+        "mean_luma": 95.08471853993052,
+        "median_luma": 81.6876,
+        "near_black_fraction": 0.0,
+        "near_white_fraction": 0.0
+      }
+    }
+  },
+  "scenes": [
+    {
+      "scene_id": 0,
+      "kind": "surface",
+      "world_seed": 42,
+      "foot_anchor_xyz": [
+        7432,
+        2,
+        -2936
+      ],
+      "settled_player_xyz": [
+        7432.0,
+        2.0,
+        -2936.0
+      ],
+      "underwater_descent": null,
+      "surface_biome": "IcePlains",
+      "foot_biome": "IcePlains",
+      "active_view_regions": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "native_render_settings": {
+        "directional_colored_fog": true,
+        "display_gamma": 3.0,
+        "enable_fog": true,
+        "fog_start": 0.8,
+        "lighting_floor": 0.35,
+        "viewing_range": 30.0
+      },
+      "cave_evidence": null,
+      "search_seconds": 32.033529847860336,
+      "search_stats": {
+        "world_starts": 1,
+        "surveys": 2,
+        "cave_hints": 0,
+        "candidate_floors": 2,
+        "capture_attempts": 1,
+        "site: no surface floor candidates": 1,
+        "sites_without_accepted_anchor": 1
+      }
+    },
+    {
+      "scene_id": 1,
+      "kind": "cave",
+      "world_seed": 1908133298,
+      "foot_anchor_xyz": [
+        -7374,
+        -36,
+        20627
+      ],
+      "settled_player_xyz": [
+        -7374.0,
+        -36.0,
+        20627.0
+      ],
+      "underwater_descent": null,
+      "surface_biome": "Savanna_beach",
+      "foot_biome": "Savanna_underground",
+      "active_view_regions": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "native_render_settings": {
+        "directional_colored_fog": true,
+        "display_gamma": 3.0,
+        "enable_fog": true,
+        "fog_start": 0.8,
+        "lighting_floor": 0.35,
+        "viewing_range": 30.0
+      },
+      "cave_evidence": {
+        "roof_distance": 0.8999999999999999,
+        "roof_thickness": 21,
+        "roof_coverage": 1.0,
+        "sky_open_fraction": 0.0625,
+        "side_enclosed_fraction": 0.875,
+        "sky_rays": 32,
+        "lateral_rays": 8,
+        "threshold_status": "provisional"
+      },
+      "search_seconds": 32.14502273499966,
+      "search_stats": {
+        "world_starts": 1,
+        "surveys": 1,
+        "cave_hints": 3,
+        "candidate_floors": 112,
+        "capture_attempts": 3,
+        "Cave: no nearby two-cell roof": 0,
+        "Node Name or raw param2 changed between native views": 2
+      }
+    },
+    {
+      "scene_id": 2,
+      "kind": "underwater",
+      "world_seed": 1668782906,
+      "foot_anchor_xyz": [
+        -7552,
+        -7,
+        -19727
+      ],
+      "settled_player_xyz": [
+        -7552.0,
+        -7.499975681304932,
+        -19727.0
+      ],
+      "underwater_descent": {
+        "spawn_player_xyz": [
+          -7552,
+          -1,
+          -19727
+        ],
+        "settled_player_xyz": [
+          -7552.0,
+          -7.499975681304932,
+          -19727.0
+        ],
+        "ticks": 44,
+        "support_top_y": -7.5,
+        "support_xyz": [
+          -7552,
+          -8,
+          -19727
+        ]
+      },
+      "surface_biome": "FlowerForest_beach",
+      "foot_biome": "SunflowerPlains_ocean",
+      "active_view_regions": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "native_render_settings": {
+        "directional_colored_fog": true,
+        "display_gamma": 3.0,
+        "enable_fog": true,
+        "fog_start": 0.8,
+        "lighting_floor": 0.35,
+        "viewing_range": 30.0
+      },
+      "cave_evidence": null,
+      "search_seconds": 63.92516219615936,
+      "search_stats": {
+        "world_starts": 1,
+        "surveys": 1,
+        "cave_hints": 0,
+        "candidate_floors": 0,
+        "capture_attempts": 6,
+        "candidate_water_columns": 1402,
+        "Lighting control camera pose differs from the proposed frame": 3,
+        "Node Name or raw param2 changed between native views": 1,
+        "Native anchor changed": 1
+      }
+    }
+  ],
+  "views": [
+    {
+      "scene_id": 0,
+      "kind": "surface",
+      "view_index": 0,
+      "brightness": {
+        "mean_luma": 122.06089543402778,
+        "median_luma": 90.3592,
+        "near_black_fraction": 0.0,
+        "near_white_fraction": 0.0
+      },
+      "grid_anchor_xyz": [
+        7432,
+        2,
+        -2936
+      ],
+      "foot_xyz": [
+        7432.0,
+        2.0,
+        -2936.0
+      ],
+      "camera_xyz": [
+        7432.0,
+        3.5999999046325684,
+        -2936.0
+      ],
+      "yaw_deg": 305.34426384451336,
+      "pitch_deg": 22.649277107595854,
+      "fov_x_rad": 1.8239540100097655,
+      "fov_y_rad": 1.2566371154785156,
+      "gamma": 3.0,
+      "camera_medium": "air",
+      "lighting_floor": 0.35,
+      "renderer_lighting": {
+        "render_tick": 2332,
+        "display_gamma": 3.0,
+        "lighting_floor": 0.35,
+        "lut_zero": 89,
+        "lut_max": 255,
+        "pending_meshes": 0,
+        "version": "voxwm-light-floor-v1"
+      },
+      "valid_hit_fraction": 0.12764756944444444,
+      "background_fraction": 0.8723524305555556,
+      "water_min": 0,
+      "water_max": 62,
+      "water_nonzero_fraction": 0.7083203125,
+      "background_with_water_fraction": 0.5806727430555556,
+      "warnings": []
+    },
+    {
+      "scene_id": 0,
+      "kind": "surface",
+      "view_index": 1,
+      "brightness": {
+        "mean_luma": 161.46511606597218,
+        "median_luma": 160.85359999999997,
+        "near_black_fraction": 0.0,
+        "near_white_fraction": 0.005668402777777777
+      },
+      "grid_anchor_xyz": [
+        7432,
+        2,
+        -2936
+      ],
+      "foot_xyz": [
+        7432.0,
+        2.0,
+        -2936.0
+      ],
+      "camera_xyz": [
+        7432.0,
+        3.5999999046325684,
+        -2936.0
+      ],
+      "yaw_deg": 155.2723163214969,
+      "pitch_deg": -76.638342722306,
+      "fov_x_rad": 1.8239540100097655,
+      "fov_y_rad": 1.2566371154785156,
+      "gamma": 3.0,
+      "camera_medium": "air",
+      "lighting_floor": 0.35,
+      "renderer_lighting": {
+        "render_tick": 2348,
+        "display_gamma": 3.0,
+        "lighting_floor": 0.35,
+        "lut_zero": 89,
+        "lut_max": 255,
+        "pending_meshes": 0,
+        "version": "voxwm-light-floor-v1"
+      },
+      "valid_hit_fraction": 0.0,
+      "background_fraction": 1.0,
+      "water_min": 0,
+      "water_max": 0,
+      "water_nonzero_fraction": 0.0,
+      "background_with_water_fraction": 0.0,
+      "warnings": []
+    },
+    {
+      "scene_id": 0,
+      "kind": "surface",
+      "view_index": 2,
+      "brightness": {
+        "mean_luma": 84.09280036545138,
+        "median_luma": 83.6388,
+        "near_black_fraction": 0.0,
+        "near_white_fraction": 0.0
+      },
+      "grid_anchor_xyz": [
+        7432,
+        2,
+        -2936
+      ],
+      "foot_xyz": [
+        7432.0,
+        2.0,
+        -2936.0
+      ],
+      "camera_xyz": [
+        7432.0,
+        3.5999999046325684,
+        -2936.0
+      ],
+      "yaw_deg": 356.66171399937036,
+      "pitch_deg": 77.16475956151223,
+      "fov_x_rad": 1.8239540100097655,
+      "fov_y_rad": 1.2566371154785156,
+      "gamma": 3.0,
+      "camera_medium": "air",
+      "lighting_floor": 0.35,
+      "renderer_lighting": {
+        "render_tick": 2364,
+        "display_gamma": 3.0,
+        "lighting_floor": 0.35,
+        "lut_zero": 89,
+        "lut_max": 255,
+        "pending_meshes": 0,
+        "version": "voxwm-light-floor-v1"
+      },
+      "valid_hit_fraction": 0.555234375,
+      "background_fraction": 0.444765625,
+      "water_min": 0,
+      "water_max": 67,
+      "water_nonzero_fraction": 0.9344140625,
+      "background_with_water_fraction": 0.444765625,
+      "warnings": []
+    },
+    {
+      "scene_id": 0,
+      "kind": "surface",
+      "view_index": 3,
+      "brightness": {
+        "mean_luma": 173.16533808854172,
+        "median_luma": 171.69719999999998,
+        "near_black_fraction": 0.0,
+        "near_white_fraction": 0.005876736111111111
+      },
+      "grid_anchor_xyz": [
+        7432,
+        2,
+        -2936
+      ],
+      "foot_xyz": [
+        7432.0,
+        2.0,
+        -2936.0
+      ],
+      "camera_xyz": [
+        7432.0,
+        3.5999999046325684,
+        -2936.0
+      ],
+      "yaw_deg": 351.9919686457955,
+      "pitch_deg": -74.03142268032867,
+      "fov_x_rad": 1.8239540100097655,
+      "fov_y_rad": 1.2566371154785156,
+      "gamma": 3.0,
+      "camera_medium": "air",
+      "lighting_floor": 0.35,
+      "renderer_lighting": {
+        "render_tick": 2380,
+        "display_gamma": 3.0,
+        "lighting_floor": 0.35,
+        "lut_zero": 89,
+        "lut_max": 255,
+        "pending_meshes": 0,
+        "version": "voxwm-light-floor-v1"
+      },
+      "valid_hit_fraction": 0.0,
+      "background_fraction": 1.0,
+      "water_min": 0,
+      "water_max": 0,
+      "water_nonzero_fraction": 0.0,
+      "background_with_water_fraction": 0.0,
+      "warnings": []
+    },
+    {
+      "scene_id": 0,
+      "kind": "surface",
+      "view_index": 4,
+      "brightness": {
+        "mean_luma": 85.6270991597222,
+        "median_luma": 82.299,
+        "near_black_fraction": 0.0,
+        "near_white_fraction": 0.0
+      },
+      "grid_anchor_xyz": [
+        7432,
+        2,
+        -2936
+      ],
+      "foot_xyz": [
+        7432.0,
+        2.0,
+        -2936.0
+      ],
+      "camera_xyz": [
+        7432.0,
+        3.5999999046325684,
+        -2936.0
+      ],
+      "yaw_deg": 100.25301130048857,
+      "pitch_deg": 37.9595889131816,
+      "fov_x_rad": 1.8239540100097655,
+      "fov_y_rad": 1.2566371154785156,
+      "gamma": 3.0,
+      "camera_medium": "air",
+      "lighting_floor": 0.35,
+      "renderer_lighting": {
+        "render_tick": 2396,
+        "display_gamma": 3.0,
+        "lighting_floor": 0.35,
+        "lut_zero": 89,
+        "lut_max": 255,
+        "pending_meshes": 0,
+        "version": "voxwm-light-floor-v1"
+      },
+      "valid_hit_fraction": 0.2533723958333333,
+      "background_fraction": 0.7466276041666666,
+      "water_min": 0,
+      "water_max": 67,
+      "water_nonzero_fraction": 0.9457638888888888,
+      "background_with_water_fraction": 0.6923914930555556,
+      "warnings": []
+    },
+    {
+      "scene_id": 1,
+      "kind": "cave",
+      "view_index": 0,
+      "brightness": {
+        "mean_luma": 41.26891897222222,
+        "median_luma": 39.353,
+        "near_black_fraction": 0.0,
+        "near_white_fraction": 0.0
+      },
+      "grid_anchor_xyz": [
+        -7374,
+        -36,
+        20627
+      ],
+      "foot_xyz": [
+        -7374.0,
+        -36.0,
+        20627.0
+      ],
+      "camera_xyz": [
+        -7374.0,
+        -34.400001525878906,
+        20627.0
+      ],
+      "yaw_deg": 184.78744841212506,
+      "pitch_deg": 34.22979175004727,
+      "fov_x_rad": 1.8239540100097655,
+      "fov_y_rad": 1.2566371154785156,
+      "gamma": 3.0,
+      "camera_medium": "air",
+      "lighting_floor": 0.35,
+      "renderer_lighting": {
+        "render_tick": 1809,
+        "display_gamma": 3.0,
+        "lighting_floor": 0.35,
+        "lut_zero": 89,
+        "lut_max": 255,
+        "pending_meshes": 0,
+        "version": "voxwm-light-floor-v1"
+      },
+      "valid_hit_fraction": 1.0,
+      "background_fraction": 0.0,
+      "water_min": 0,
+      "water_max": 0,
+      "water_nonzero_fraction": 0.0,
+      "background_with_water_fraction": 0.0,
+      "warnings": []
+    },
+    {
+      "scene_id": 1,
+      "kind": "cave",
+      "view_index": 1,
+      "brightness": {
+        "mean_luma": 29.62109036024306,
+        "median_luma": 28.71,
+        "near_black_fraction": 0.0,
+        "near_white_fraction": 0.0
+      },
+      "grid_anchor_xyz": [
+        -7374,
+        -36,
+        20627
+      ],
+      "foot_xyz": [
+        -7374.0,
+        -36.0,
+        20627.0
+      ],
+      "camera_xyz": [
+        -7374.0,
+        -34.400001525878906,
+        20627.0
+      ],
+      "yaw_deg": 141.5107677540369,
+      "pitch_deg": -25.387324041139557,
+      "fov_x_rad": 1.8239540100097655,
+      "fov_y_rad": 1.2566371154785156,
+      "gamma": 3.0,
+      "camera_medium": "air",
+      "lighting_floor": 0.35,
+      "renderer_lighting": {
+        "render_tick": 1825,
+        "display_gamma": 3.0,
+        "lighting_floor": 0.35,
+        "lut_zero": 89,
+        "lut_max": 255,
+        "pending_meshes": 0,
+        "version": "voxwm-light-floor-v1"
+      },
+      "valid_hit_fraction": 0.982109375,
+      "background_fraction": 0.017890625,
+      "water_min": 0,
+      "water_max": 0,
+      "water_nonzero_fraction": 0.0,
+      "background_with_water_fraction": 0.0,
+      "warnings": []
+    },
+    {
+      "scene_id": 1,
+      "kind": "cave",
+      "view_index": 2,
+      "brightness": {
+        "mean_luma": 36.32497034548611,
+        "median_luma": 35.484199999999994,
+        "near_black_fraction": 0.0,
+        "near_white_fraction": 0.0
+      },
+      "grid_anchor_xyz": [
+        -7374,
+        -36,
+        20627
+      ],
+      "foot_xyz": [
+        -7374.0,
+        -36.0,
+        20627.0
+      ],
+      "camera_xyz": [
+        -7374.0,
+        -34.400001525878906,
+        20627.0
+      ],
+      "yaw_deg": 242.414507026178,
+      "pitch_deg": 14.29903968029899,
+      "fov_x_rad": 1.8239540100097655,
+      "fov_y_rad": 1.2566371154785156,
+      "gamma": 3.0,
+      "camera_medium": "air",
+      "lighting_floor": 0.35,
+      "renderer_lighting": {
+        "render_tick": 1841,
+        "display_gamma": 3.0,
+        "lighting_floor": 0.35,
+        "lut_zero": 89,
+        "lut_max": 255,
+        "pending_meshes": 0,
+        "version": "voxwm-light-floor-v1"
+      },
+      "valid_hit_fraction": 1.0,
+      "background_fraction": 0.0,
+      "water_min": 0,
+      "water_max": 0,
+      "water_nonzero_fraction": 0.0,
+      "background_with_water_fraction": 0.0,
+      "warnings": []
+    },
+    {
+      "scene_id": 1,
+      "kind": "cave",
+      "view_index": 3,
+      "brightness": {
+        "mean_luma": 32.79191628211806,
+        "median_luma": 31.4974,
+        "near_black_fraction": 8.680555555555556e-05,
+        "near_white_fraction": 0.0
+      },
+      "grid_anchor_xyz": [
+        -7374,
+        -36,
+        20627
+      ],
+      "foot_xyz": [
+        -7374.0,
+        -36.0,
+        20627.0
+      ],
+      "camera_xyz": [
+        -7374.0,
+        -34.400001525878906,
+        20627.0
+      ],
+      "yaw_deg": 110.94506532979229,
+      "pitch_deg": -18.38435410031471,
+      "fov_x_rad": 1.8239540100097655,
+      "fov_y_rad": 1.2566371154785156,
+      "gamma": 3.0,
+      "camera_medium": "air",
+      "lighting_floor": 0.35,
+      "renderer_lighting": {
+        "render_tick": 1857,
+        "display_gamma": 3.0,
+        "lighting_floor": 0.35,
+        "lut_zero": 89,
+        "lut_max": 255,
+        "pending_meshes": 0,
+        "version": "voxwm-light-floor-v1"
+      },
+      "valid_hit_fraction": 0.9795399305555555,
+      "background_fraction": 0.020460069444444444,
+      "water_min": 0,
+      "water_max": 0,
+      "water_nonzero_fraction": 0.0,
+      "background_with_water_fraction": 0.0,
+      "warnings": []
+    },
+    {
+      "scene_id": 1,
+      "kind": "cave",
+      "view_index": 4,
+      "brightness": {
+        "mean_luma": 39.778660435763896,
+        "median_luma": 39.0682,
+        "near_black_fraction": 0.0,
+        "near_white_fraction": 0.0
+      },
+      "grid_anchor_xyz": [
+        -7374,
+        -36,
+        20627
+      ],
+      "foot_xyz": [
+        -7374.0,
+        -36.0,
+        20627.0
+      ],
+      "camera_xyz": [
+        -7374.0,
+        -34.400001525878906,
+        20627.0
+      ],
+      "yaw_deg": 281.23803828356347,
+      "pitch_deg": 30.614899693332262,
+      "fov_x_rad": 1.8239540100097655,
+      "fov_y_rad": 1.2566371154785156,
+      "gamma": 3.0,
+      "camera_medium": "air",
+      "lighting_floor": 0.35,
+      "renderer_lighting": {
+        "render_tick": 1873,
+        "display_gamma": 3.0,
+        "lighting_floor": 0.35,
+        "lut_zero": 89,
+        "lut_max": 255,
+        "pending_meshes": 0,
+        "version": "voxwm-light-floor-v1"
+      },
+      "valid_hit_fraction": 1.0,
+      "background_fraction": 0.0,
+      "water_min": 0,
+      "water_max": 0,
+      "water_nonzero_fraction": 0.0,
+      "background_with_water_fraction": 0.0,
+      "warnings": []
+    },
+    {
+      "scene_id": 2,
+      "kind": "underwater",
+      "view_index": 0,
+      "brightness": {
+        "mean_luma": 116.17174562326383,
+        "median_luma": 117.23599999999999,
+        "near_black_fraction": 0.0,
+        "near_white_fraction": 0.0
+      },
+      "grid_anchor_xyz": [
+        -7552,
+        -7,
+        -19727
+      ],
+      "foot_xyz": [
+        -7552.0,
+        -7.499975681304932,
+        -19727.0
+      ],
+      "camera_xyz": [
+        -7552.0,
+        -5.899975776672363,
+        -19727.0
+      ],
+      "yaw_deg": 186.85005674643645,
+      "pitch_deg": 88.9792170755922,
+      "fov_x_rad": 1.8239540100097655,
+      "fov_y_rad": 1.2566371154785156,
+      "gamma": 3.0,
+      "camera_medium": "water",
+      "lighting_floor": 0.35,
+      "renderer_lighting": {
+        "render_tick": 2263,
+        "display_gamma": 3.0,
+        "lighting_floor": 0.35,
+        "lut_zero": 89,
+        "lut_max": 255,
+        "pending_meshes": 0,
+        "version": "voxwm-light-floor-v1"
+      },
+      "valid_hit_fraction": 1.0,
+      "background_fraction": 0.0,
+      "water_min": 1,
+      "water_max": 8,
+      "water_nonzero_fraction": 1.0,
+      "background_with_water_fraction": 0.0,
+      "warnings": []
+    },
+    {
+      "scene_id": 2,
+      "kind": "underwater",
+      "view_index": 1,
+      "brightness": {
+        "mean_luma": 73.88821245399303,
+        "median_luma": 75.0612,
+        "near_black_fraction": 0.0,
+        "near_white_fraction": 0.0
+      },
+      "grid_anchor_xyz": [
+        -7552,
+        -7,
+        -19727
+      ],
+      "foot_xyz": [
+        -7552.0,
+        -7.499975681304932,
+        -19727.0
+      ],
+      "camera_xyz": [
+        -7552.0,
+        -5.899975776672363,
+        -19727.0
+      ],
+      "yaw_deg": 207.09928363140244,
+      "pitch_deg": -70.79456175255234,
+      "fov_x_rad": 1.8239540100097655,
+      "fov_y_rad": 1.2566371154785156,
+      "gamma": 3.0,
+      "camera_medium": "water",
+      "lighting_floor": 0.35,
+      "renderer_lighting": {
+        "render_tick": 2279,
+        "display_gamma": 3.0,
+        "lighting_floor": 0.35,
+        "lut_zero": 89,
+        "lut_max": 255,
+        "pending_meshes": 0,
+        "version": "voxwm-light-floor-v1"
+      },
+      "valid_hit_fraction": 0.013546006944444444,
+      "background_fraction": 0.9864539930555556,
+      "water_min": 8,
+      "water_max": 31,
+      "water_nonzero_fraction": 1.0,
+      "background_with_water_fraction": 0.9864539930555556,
+      "warnings": [
+        "Local input produces very few Surface hits"
+      ]
+    },
+    {
+      "scene_id": 2,
+      "kind": "underwater",
+      "view_index": 2,
+      "brightness": {
+        "mean_luma": 92.36745911979166,
+        "median_luma": 80.7598,
+        "near_black_fraction": 0.0,
+        "near_white_fraction": 0.0
+      },
+      "grid_anchor_xyz": [
+        -7552,
+        -7,
+        -19727
+      ],
+      "foot_xyz": [
+        -7552.0,
+        -7.499975681304932,
+        -19727.0
+      ],
+      "camera_xyz": [
+        -7552.0,
+        -5.899975776672363,
+        -19727.0
+      ],
+      "yaw_deg": 190.47669490515523,
+      "pitch_deg": -17.093859250232352,
+      "fov_x_rad": 1.8239540100097655,
+      "fov_y_rad": 1.2566371154785156,
+      "gamma": 3.0,
+      "camera_medium": "water",
+      "lighting_floor": 0.35,
+      "renderer_lighting": {
+        "render_tick": 2295,
+        "display_gamma": 3.0,
+        "lighting_floor": 0.35,
+        "lut_zero": 89,
+        "lut_max": 255,
+        "pending_meshes": 0,
+        "version": "voxwm-light-floor-v1"
+      },
+      "valid_hit_fraction": 0.4625390625,
+      "background_fraction": 0.5374609375,
+      "water_min": 6,
+      "water_max": 55,
+      "water_nonzero_fraction": 1.0,
+      "background_with_water_fraction": 0.5374609375,
+      "warnings": []
+    },
+    {
+      "scene_id": 2,
+      "kind": "underwater",
+      "view_index": 3,
+      "brightness": {
+        "mean_luma": 101.53471521961804,
+        "median_luma": 94.96039999999999,
+        "near_black_fraction": 0.0,
+        "near_white_fraction": 0.0
+      },
+      "grid_anchor_xyz": [
+        -7552,
+        -7,
+        -19727
+      ],
+      "foot_xyz": [
+        -7552.0,
+        -7.499975681304932,
+        -19727.0
+      ],
+      "camera_xyz": [
+        -7552.0,
+        -5.899975776672363,
+        -19727.0
+      ],
+      "yaw_deg": 178.38481554007006,
+      "pitch_deg": 2.0129357167937814,
+      "fov_x_rad": 1.8239540100097655,
+      "fov_y_rad": 1.2566371154785156,
+      "gamma": 3.0,
+      "camera_medium": "water",
+      "lighting_floor": 0.35,
+      "renderer_lighting": {
+        "render_tick": 2311,
+        "display_gamma": 3.0,
+        "lighting_floor": 0.35,
+        "lut_zero": 89,
+        "lut_max": 255,
+        "pending_meshes": 0,
+        "version": "voxwm-light-floor-v1"
+      },
+      "valid_hit_fraction": 0.6775130208333333,
+      "background_fraction": 0.3224869791666667,
+      "water_min": 5,
+      "water_max": 55,
+      "water_nonzero_fraction": 1.0,
+      "background_with_water_fraction": 0.3224869791666667,
+      "warnings": []
+    },
+    {
+      "scene_id": 2,
+      "kind": "underwater",
+      "view_index": 4,
+      "brightness": {
+        "mean_luma": 95.08471853993052,
+        "median_luma": 81.6876,
+        "near_black_fraction": 0.0,
+        "near_white_fraction": 0.0
+      },
+      "grid_anchor_xyz": [
+        -7552,
+        -7,
+        -19727
+      ],
+      "foot_xyz": [
+        -7552.0,
+        -7.499975681304932,
+        -19727.0
+      ],
+      "camera_xyz": [
+        -7552.0,
+        -5.899975776672363,
+        -19727.0
+      ],
+      "yaw_deg": 51.91753418265806,
+      "pitch_deg": -12.376454739347203,
+      "fov_x_rad": 1.8239540100097655,
+      "fov_y_rad": 1.2566371154785156,
+      "gamma": 3.0,
+      "camera_medium": "water",
+      "lighting_floor": 0.35,
+      "renderer_lighting": {
+        "render_tick": 2327,
+        "display_gamma": 3.0,
+        "lighting_floor": 0.35,
+        "lut_zero": 89,
+        "lut_max": 255,
+        "pending_meshes": 0,
+        "version": "voxwm-light-floor-v1"
+      },
+      "valid_hit_fraction": 0.4963020833333333,
+      "background_fraction": 0.5036979166666666,
+      "water_min": 3,
+      "water_max": 55,
+      "water_nonzero_fraction": 1.0,
+      "background_with_water_fraction": 0.5036979166666666,
+      "warnings": []
+    }
+  ]
+}

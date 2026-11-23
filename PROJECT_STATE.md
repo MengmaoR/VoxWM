@@ -1,6 +1,6 @@
 # VoxWM 当前状态
 
-**Vox2Pix 1K Compression Pilot 已修订为 `vox2pix-pilot-v2-camera16`，NOT NATIVE VERIFIED。** 旧版 2.0 格眼高与半径已废弃，旧版试采产物已清理。新版使用默认第一人称相机、同帧实测投影原点和 1.6 格可见性半径。下一步由用户手动采集 200 个场景 × 5 视角，检查实际眼高、配额、几何对齐和压缩。Implementation complete != 1K dataset collected。[实验协议](VOX2PIX_DATA_COLLECTION_PROTOCOL.md) · [执行命令](vox2pix_data/README.md)
+**Vox2Pix v3 Lighting Floor Smoke — NATIVE VERIFIED。** 已完成 Surface、Cave、Underwater 各 1 场景、5 个视角，共 15 帧。RGB 统一使用 gamma 3.0、Floor 0.35，配套单层 Surface、Water Count 和 BACKGROUND。水下以实际沉底位置建立 48³。三类均保存同机位照明对照，暗洞平均亮度从 0 提至 39.78（量程 0–255）。历史 v2 1K 单独保留；45 帧与正式采集待用户决定。[协议](VOX2PIX_DATA_COLLECTION_PROTOCOL.md) · [复现命令](vox2pix_data/README.md#v3-native-smoke) · [实测报告](vox2pix_data/reports/v3_lightfloor_smoke/README.md)
 
 **E01-Masked 27,000 步验证最优 checkpoint 已完成冻结审计，结论为 FREEZE WITH KNOWN D3 LIMITATION。**
 
