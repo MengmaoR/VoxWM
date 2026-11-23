@@ -45,16 +45,20 @@ def set_material(native, global_floor, ambient):
     temporary.replace(path)
 
 
-def material_frame(native, meta, view, scene, mode):
+def wait_material(native, mode):
     global_floor, ambient = MODES[mode]
     set_material(native, global_floor, ambient)
     while time.monotonic() < native.search_deadline:
         native.step()
         p = probe_material(native)
         if (p["lighting_floor"], p["solid_ambient_floor"], p["pending_meshes"]) == (global_floor, ambient, 0):
-            break
-    else:
-        raise TimeoutError(f"Material renderer did not settle for mode {mode}")
+            return
+    raise TimeoutError(f"Material renderer did not settle for mode {mode}")
+
+
+def material_frame(native, meta, view, scene, mode):
+    global_floor, ambient = MODES[mode]
+    wait_material(native, mode)
     rgb, light_proof, light = capture(native, meta, view, scene, global_floor)
     p = probe_material(native)
     if (p["lighting_floor"], p["solid_ambient_floor"], p["pending_meshes"]) != (global_floor, ambient, 0):
@@ -66,19 +70,26 @@ def material_frame(native, meta, view, scene, mode):
 
 
 def triplet(native, meta, view, scene):
+    settling = "raw light"
     while time.monotonic() < native.search_deadline:
         images, probes, lights = {}, {}, {}
         try:
-            for mode in MODES:
+            # Keep the native LUT at zero for consecutive A/C. B can affect
+            # native sky-brightness history even after its remesh finishes.
+            for mode in ("A", "C"):
                 images[mode], probes[mode], lights[mode] = material_frame(native, meta, view, scene, mode)
+            changed = [key for key in ("fog_rgba", "fog_distance", "native_eye_post_effect_rgba")
+                       if probes["C"][key] != probes["A"][key]]
+            if changed:
+                settling = ", ".join(changed)
+                continue
+            images["B"], probes["B"], lights["B"] = material_frame(native, meta, view, scene, "B")
         except LightInTransition:
             continue
         if all(np.array_equal(lights["A"], light) for light in lights.values()):
-            for key in ("fog_rgba", "fog_distance", "native_eye_post_effect_rgba"):
-                if probes["C"][key] != probes["A"][key]:
-                    raise RejectedScene(f"Native {key} changed between A and C")
             return images, probes, lights["A"]
-    raise TimeoutError("Identical raw light did not stabilize across A/B/C")
+        settling = "raw light"
+    raise TimeoutError(f"Matching {settling} did not stabilize across the material comparison")
 
 
 def legacy_frame(scene_path, config, vocabulary, craftium_dir, seconds):
@@ -100,6 +111,7 @@ def compare_scene(scene_path, output, config, vocabulary, craftium_dir, legacy_d
                         render_settings=MATERIAL_PROBE_SETTINGS) as (native, meta, scene, restored):
         results = []
         for index, view in enumerate(meta["views"]):
+            wait_material(native, "A")
             aim_recorded_view(native, view)
             images, probes, light = triplet(native, meta, view, scene)
             x, y, z = (int(np.floor(n + 24.5)) for n in view["projection_origin_local_xyz"])
