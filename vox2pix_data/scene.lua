@@ -6,18 +6,33 @@ local search = dofile(mod .. "/biome_search.lua")
 local geometry = dofile(mod .. "/scene_geometry.lua")
 local pending, started, last = nil, false, 0
 local box_names, box_types = {}, {}
-local cave_events = {}
+local cave_events, v3_cave_events = {}, {}
 local cave_hints_enabled = mt.settings:get_bool("vox2pix_cave_hints", false)
+local v3_scene = mt.settings:get_bool("vox2pix_v3", false)
+local lighting = v3_scene and dofile(mod .. "/lighting.lua")
 assert(voxwm_clock and voxwm_region and mt.get_node_boxes, "Build the VoxWM fixed24 engine")
 assert(voxwm_clock().region_capture_version == "voxwm-region-integer-v1", "Build integer-origin region capture")
 
 if cave_hints_enabled then
-    mt.set_gen_notify({large_cave_begin=true, large_cave_end=true})
+    local event_names = {"large_cave_begin", "large_cave_end"}
+    if v3_scene then
+        -- Both ordinary and large cave endpoints are registered in mapgen.cpp.
+        event_names[#event_names + 1] = "cave_begin"
+        event_names[#event_names + 1] = "cave_end"
+    end
+    local notification_flags = {}
+    for _, kind in ipairs(event_names) do notification_flags[kind] = true end
+    mt.set_gen_notify(notification_flags)
     mt.register_on_generated(function()
         local events = mt.get_mapgen_object("gennotify") or {}
-        for _, kind in ipairs({"large_cave_begin", "large_cave_end"}) do
+        for _, kind in ipairs(event_names) do
             for _, p in ipairs(events[kind] or {}) do
-                if p.y >= -62 and p.y <= -15 then
+                if v3_scene then
+                    if pending then
+                        local key = math.floor(p.x / 8) .. ":" .. math.floor(p.y / 8) .. ":" .. math.floor(p.z / 8)
+                        v3_cave_events[key] = p
+                    end
+                elseif p.y >= -62 and p.y <= -15 then
                     if #cave_events == 192 then table.remove(cave_events, 1) end
                     cave_events[#cave_events + 1] = p
                 end
@@ -159,6 +174,18 @@ end
 
 local function survey(r)
     local low, high = xyz(r.low_xyz), xyz(r.high_xyz)
+    local limit = tonumber(mt.get_mapgen_setting("mapgen_limit")) or 31000
+    local margin = (tonumber(mt.get_mapgen_setting("chunksize")) or 5) * 16 + 16
+    if v3_scene then
+        for _, axis in ipairs({"x", "y", "z"}) do
+            if low[axis] <= -limit + margin or high[axis] >= limit - margin then
+                reply(r, {status="survey_outside_mapgen_limit"})
+                return
+            end
+        end
+        -- Events from this emergence alone; no cross-site/world accumulation.
+        v3_cave_events = {}
+    end
     pending = r
     mt.emerge_area(vector.subtract(low, 1), vector.add(high, 1), function(_, action, remaining)
         if action == mt.EMERGE_ERRORED or action == mt.EMERGE_CANCELLED then r.failed = true end
@@ -184,7 +211,24 @@ local function survey(r)
                     assert(file:write(string.char(unpack(column))))
                 end end
                 assert(file:close())
-                reply(r, {status="surveyed", cave_hints=nearby_cave_hints(r, low, high)})
+                local hints
+                if v3_scene then
+                    hints = {}
+                    for _, pos in pairs(v3_cave_events) do
+                        if pos.x >= low.x and pos.x <= high.x and pos.y >= low.y and pos.y <= high.y
+                            and pos.z >= low.z and pos.z <= high.z then
+                            hints[#hints+1] = {pos.x, pos.y, pos.z}
+                        end
+                    end
+                    table.sort(hints, function(a, b)
+                        if a[1] ~= b[1] then return a[1] < b[1] end
+                        if a[2] ~= b[2] then return a[2] < b[2] end
+                        return a[3] < b[3]
+                    end)
+                else
+                    hints = nearby_cave_hints(r, low, high)
+                end
+                reply(r, {status="surveyed", cave_hints=hints})
             end
             pending = nil
         end)
@@ -195,7 +239,12 @@ local function anchor_valid(foot, kind)
     -- The standing collision box occupies these cells under the native
     -- integer-centered convention. Eye clearance is checked from its packet.
     for dy=0,2 do
-        if mt.get_node(vector.offset(foot, 0, dy, 0)).name ~= "air" then return false end
+        local node = mt.get_node(vector.offset(foot, 0, dy, 0))
+        if kind == "underwater_floor" then
+            if mt.get_item_group(node.name, "water") <= 0 then return false end
+        elseif node.name ~= "air" then
+            return false
+        end
     end
     local below = vector.offset(foot, 0, -1, 0)
     if kind == "surface_water" then
@@ -203,6 +252,7 @@ local function anchor_valid(foot, kind)
     end
     local def = mt.registered_nodes[mt.get_node(below).name]
     if not def or def.walkable == false or (def.liquidtype and def.liquidtype ~= "none") then return false end
+    if v3_scene and not geometry.terrain(def) then return false end
     for _, box in ipairs(mt.get_node_boxes("collision_box", below)) do
         if box[1] < 0 and box[3] < 0 and box[4] > 0 and box[6] > 0 then return true end
     end
@@ -216,8 +266,35 @@ end
 
 local function check_anchor(r)
     local foot = xyz(r.foot_xyz)
-    reply(r, {status="anchor", biome=surface_biome({x=foot.x, y=r.surface_y, z=foot.z}),
-        valid=anchor_valid(foot, r.anchor_kind)})
+    local biome = surface_biome({x=foot.x, y=r.surface_y, z=foot.z})
+    local result = {status="anchor", biome=biome, valid=anchor_valid(foot, r.anchor_kind)}
+    if v3_scene then
+        result.surface_biome = biome
+        result.foot_biome = surface_biome(foot)
+    end
+    reply(r, result)
+end
+
+local function find_water_site(r)
+    -- Prefer low or submerged spawn hints near the waterline. The v7 spawn
+    -- query can also return nil above high land, so the survey verifies water.
+    local water = tonumber(mt.get_mapgen_setting("water_level")) or 1
+    local best, best_score = {r.x, r.z}, 0
+    for _, offset in ipairs({{0,0}, {64,0}, {-64,0}, {0,64}, {0,-64}, {128,128},
+            {-128,128}, {128,-128}, {-128,-128}, {256,0}, {-256,0}, {0,256}, {0,-256}}) do
+        local x, z = r.x + offset[1], r.z + offset[2]
+        if not mt.get_spawn_level(x, z) then
+            local score = 1
+            for _, side in ipairs({{48,0}, {-48,0}, {0,48}, {0,-48}}) do
+                local shore = mt.get_spawn_level(x + side[1], z + side[2])
+                if shore and shore <= water + 8 then score = score + 2 end
+            end
+            if score > best_score then
+                best, best_score = {x, z}, score
+            end
+        end
+    end
+    return {status="found", site=best}
 end
 
 local function find_site(r)
@@ -241,6 +318,7 @@ local function pose(r, player)
         player:set_properties({is_visible=false})
         player:set_physics_override({gravity=0, speed=0, jump=0})
         player:set_pos(foot)
+        if lighting then lighting.configure(player, true) end
     end
     clean_hud(player)
     player:set_look_horizontal(math.rad(r.yaw))
@@ -248,7 +326,7 @@ local function pose(r, player)
     reply(r, {status="posed"})
 end
 
-local function snapshot(r)
+local function snapshot(r, player)
     local low = xyz(r.low_xyz)
     local foot = vector.add(low, 24)
     local ok, payload = pcall(voxwm_region, low)
@@ -270,10 +348,15 @@ local function snapshot(r)
         end
         write("vox2pix_boxes.json", {boxes=boxes})
     end
-    reply(r, {status="captured", world_time=mt.get_timeofday(),
+    local state = {status="captured", world_time=mt.get_timeofday(),
         weather=mcl_weather.get_weather(), gamma=tonumber(mt.settings:get("display_gamma")),
         rgb_enabled=not mt.settings:get_bool("voxwm_skip_rgb"),
-        engine_us=mt.get_us_time()})
+        engine_us=mt.get_us_time()}
+    if lighting then
+        state.torch = lighting.observe(player)
+        state.native_render_settings = lighting.settings()
+    end
+    reply(r, state)
 end
 
 mt.register_on_joinplayer(function(player)
@@ -298,9 +381,13 @@ mt.registered_voxwm_poststeps = {function()
     last = r.request_id
     -- Native scene searches advance physics without drawing RGB. Rendering is
     -- restored before the usual camera settle ticks and every saved view.
-    if r.kind ~= "snapshot" then mt.settings:set_bool("voxwm_skip_rgb", r.kind ~= "pose") end
+    if r.kind ~= "snapshot" and r.kind ~= "torch" then
+        mt.settings:set_bool("voxwm_skip_rgb", r.kind ~= "pose")
+    end
     if r.kind == "search" then
         reply(r, find_site(r))
+    elseif v3_scene and r.kind == "search_v3" then
+        reply(r, r.scene_kind == "underwater" and find_water_site(r) or {status="found", site={r.x,r.z}})
     elseif r.kind == "survey" then
         survey(r)
     elseif r.kind == "surface_biomes" then
@@ -311,8 +398,11 @@ mt.registered_voxwm_poststeps = {function()
         check_anchor(r)
     elseif r.kind == "pose" then
         pose(r, player)
+    elseif lighting and r.kind == "torch" then
+        lighting.configure(player, r.enabled)
+        reply(r, {status="torch_changed"})
     elseif r.kind == "snapshot" then
-        snapshot(r)
+        snapshot(r, player)
     else
         error("Unknown Vox2Pix native request: " .. tostring(r.kind))
     end

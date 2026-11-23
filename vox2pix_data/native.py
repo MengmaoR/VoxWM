@@ -18,7 +18,7 @@ from voxwm_gt.session import GTSession
 from .geometry import Projector
 from .protocol import (
     BIOMES, NOMINAL_CAMERA_HEIGHT, SETTINGS, SURVEY_SIDE, VISIBILITY_LOOKUP_VERSION,
-    VISIBILITY_RADIUS, WORLD_BOTTOM, WORLD_TOP, RejectedScene, camera_angles,
+    VISIBILITY_RADIUS, V3_RGB, WORLD_BOTTOM, WORLD_TOP, RejectedScene, camera_angles,
     camera_local_xyz, direction_for_angles, region_id, require_air_camera, sample_views,
     scene_visibility, site_candidates,
 )
@@ -106,7 +106,7 @@ class NativeScene:
         temporary.write_text(json.dumps(dict(request_id=self.seq, kind=kind, **fields), allow_nan=False))
         temporary.replace(target)
         response = world / "vox2pix_response.json"
-        deadline = time.monotonic() + 90
+        deadline = min(time.monotonic() + 90, getattr(self, "search_deadline", math.inf))
         while time.monotonic() < deadline:
             rgb, info = self.step()
             row = json.loads(response.read_text()) if response.is_file() else {}
@@ -152,14 +152,20 @@ class NativeScene:
         arrays = ids, state["param2"].copy()
         return arrays, row, rgb, info
 
-    def acquire(self, foot, kind, config, rng, library_path):
+    def acquire(self, foot, kind, config, rng, library_path, scene_kind=None):
         origin = tuple(coordinate - 24 for coordinate in foot)
         # Neither the initial player position nor the camera position sets the crop.
         self.command("pose", relocate=True, foot_xyz=foot, anchor_kind=kind, yaw=0., pitch=0.)
         for _ in range(72):
             self.step()
         baseline, _, _, _ = self.geometry_snapshot(origin, kind, boxes=True)
-        center, full, active = scene_visibility(baseline[0], self.stable_defs)
+        if scene_kind:
+            from . import v3_sampling
+
+            center, full, active = v3_sampling.scene_visibility(baseline[0], self.stable_defs, scene_kind)
+            cave = v3_sampling.cave_evidence(baseline[0], self.stable_defs) if scene_kind == "cave" else None
+        else:
+            center, full, active = scene_visibility(baseline[0], self.stable_defs)
         box_rows = json.loads((self.session.world / "vox2pix_boxes.json").read_text())["boxes"]
         projector = Projector(library_path).scene(
             *baseline, self.stable_defs, dict(box_rows or []), foot_xyz=foot
@@ -185,7 +191,15 @@ class NativeScene:
                 raise RejectedScene("Node Name or raw param2 changed between native views")
             position = np.asarray(info["cam_pos"], dtype=np.float64)
             projection_origin = camera_local_xyz(position, foot)
-            require_air_camera(current[0], self.stable_defs, projection_origin)
+            if scene_kind:
+                v3_sampling.require_camera(current[0], self.stable_defs, projection_origin,
+                                           scene_kind, projector.water_contains)
+                if (capture["native_render_settings"] != V3_RGB or capture["torch"] != prior["torch"]
+                        or not capture["torch"]["enabled"] or not capture["torch"]["hidden"]):
+                    raise RejectedScene("V3 native render settings or wielded torch have not settled")
+                view.update(torch=capture["torch"], camera_medium="water" if scene_kind == "underwater" else "air")
+            else:
+                require_air_camera(current[0], self.stable_defs, projection_origin)
             direction = np.asarray(info["cam_dir"], dtype=np.float64)
             norm = float(np.linalg.norm(direction))
             if not np.isfinite(norm) or norm < 1e-10:
@@ -207,7 +221,8 @@ class NativeScene:
             if rgb.shape != (height, width, 3) or rgb.dtype != np.uint8:
                 raise RuntimeError("Native RGB packet has the wrong size or dtype")
             rgbs.append(rgb.copy())
-            whites.append(projector.render(projection_origin, direction, fov_x, fov_y, width, height))
+            render = projector.render_v3 if scene_kind else projector.render
+            whites.append(render(projection_origin, direction, fov_x, fov_y, width, height))
             view.update(foot_anchor_world_xyz=list(foot), actual_camera_world_xyz=position.tolist(),
                         actual_camera_height_above_foot=float(projection_origin[1]),
                         nominal_camera_height=NOMINAL_CAMERA_HEIGHT,
@@ -219,8 +234,10 @@ class NativeScene:
                         world_time=capture["world_time"], weather=capture["weather"],
                         simulation_tick=tick, render_simulation_tick=tick - 1)
         arrays = dict(scene_node_id=baseline[0], scene_param2=baseline[1])
-        for name, fields in zip(("white_node_id", "white_param2", "white_face"), zip(*whites)):
-            arrays[name] = np.stack(fields)
+        fields = (("surface_node_id", "surface_param2", "surface_face_dir", "water_count") if scene_kind
+                  else ("white_node_id", "white_param2", "white_face"))
+        for name, values in zip(fields, zip(*whites), strict=True):
+            arrays[name] = np.stack(values)
         meta = dict(
             data_source="native",
             foot_anchor_xyz=list(foot), region_origin_xyz=list(origin),
@@ -237,7 +254,45 @@ class NativeScene:
             water_nodes=sorted(d["name"] for d in self.definitions.values() if d["water"]),
             glass_nodes=sorted(d["name"] for d in self.definitions.values() if d["glass"]),
         )
-        return meta, self.vocabulary, arrays, rgbs
+        if not scene_kind:
+            return meta, self.vocabulary, arrays, rgbs
+        meta.update(native_render_settings=capture["native_render_settings"], cave_evidence=cave,
+                    terrain_nodes=sorted(d["name"] for d in self.definitions.values() if d["terrain"] and d["walkable"]),
+                    water_definitions={d["name"]: d for d in self.definitions.values() if d["water"]})
+        auxiliary = {}
+        if scene_kind in ("cave", "underwater"):
+            meta["torch_ab"], auxiliary = self.torch_comparison(
+                origin, kind, baseline, views[-1], rgbs[-1], info, len(views) - 1)
+        return meta, self.vocabulary, arrays, rgbs, auxiliary
+
+    def torch_comparison(self, origin, kind, baseline, view, on_rgb, on_camera, index):
+        from .v3_report import brightness
+
+        self.command("torch", enabled=False)
+        for _ in range(72):
+            self.step()
+        previous, prior, _, _ = self.geometry_snapshot(origin, kind)
+        state, off, off_rgb, off_camera = self.geometry_snapshot(origin, kind)
+        if any(not np.array_equal(data, reference)
+               for snapshot in (previous, state) for data, reference in zip(snapshot, baseline, strict=True)):
+            raise RejectedScene("Node Name or raw param2 changed during Torch A/B")
+        if (off["native_clock"]["server_tick"] != prior["native_clock"]["server_tick"] + 1
+                or off["torch"] != prior["torch"] or off["torch"]["enabled"]
+                or any(not np.allclose(off_camera[key], on_camera[key], atol=1e-6, rtol=0)
+                       for key in ("cam_pos", "cam_dir", "cam_fov_x", "cam_fov_y"))):
+            raise RejectedScene("Torch OFF view did not settle at the original camera pose")
+        dark, lit = brightness(off_rgb), brightness(on_rgb)
+        on = view["torch"]
+        if not on["module_available"]:
+            status = "MODULE_UNAVAILABLE"
+        elif (lit["mean_luma"] > dark["mean_luma"] + .5
+              and (off["torch"]["light"] != on["light"] or off["torch"]["param1"] != on["param1"])):
+            status = "VERIFIED"
+        else:
+            status = "NO_MEASURABLE_LIGHT"
+        return (dict(view_index=index, voxel_identity_unchanged=True, off=off["torch"], on=on,
+                     status=status, off_brightness=dark, on_brightness=lit),
+                dict(torch_off=off_rgb.copy(), torch_on=on_rgb))
 
 
 def _search_world(native, slot, config, rng, library_path, rejected, sites_per_world,

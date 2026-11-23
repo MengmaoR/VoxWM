@@ -71,6 +71,112 @@ bool slab(const Vec &origin, const Vec &ray, const Vec &min, const Vec &max,
     return true;
 }
 
+struct GridRay {
+    Cell cell{}, step{};
+    Vec next{}, period{};
+    double t = 0, exit = 0;
+    int face = -1;
+
+    GridRay(const Vec &origin, const Vec &ray, double start) {
+        double entry;
+        if (!slab(origin, ray, {low, low, low}, {high, high, high}, entry, exit, face)) {
+            t = exit;
+            return;
+        }
+        t = std::max(entry, start);
+        if (t >= exit)
+            return;
+        if (t > entry)
+            face = -1;
+        const auto pos = origin + ray * (t + eps);
+        for (int axis = 0; axis < 3; ++axis) {
+            cell[axis] = std::clamp(int(std::floor(pos[axis] - low)), 0, size - 1);
+            step[axis] = ray[axis] >= 0 ? 1 : -1;
+            if (std::abs(ray[axis]) < eps) {
+                next[axis] = period[axis] = inf;
+            } else {
+                next[axis] = (low + cell[axis] + (step[axis] > 0) - origin[axis]) / ray[axis];
+                period[axis] = std::abs(1 / ray[axis]);
+            }
+        }
+    }
+
+    bool active() const { return t < exit - eps; }
+    double end() const { return std::min({next[0], next[1], next[2], exit}); }
+
+    void advance(double end) {
+        if (end >= exit - eps) {
+            t = exit;
+            return;
+        }
+        t = end;
+        face = -1;
+        for (int axis = 0; axis < 3; ++axis) {
+            if (next[axis] > end + eps)
+                continue;
+            cell[axis] += step[axis];
+            next[axis] += period[axis];
+            if (face < 0)
+                face = 2 * axis + (step[axis] > 0);
+        }
+        if (std::any_of(cell.begin(), cell.end(), [](int x) { return x < 0 || x >= size; }))
+            t = exit;
+    }
+};
+
+struct Interval {
+    double first, last;
+
+    // Intersect with the half-space offset + rate*t <= 0.
+    bool clip(double offset, double rate, bool include_boundary) {
+        if (std::abs(rate) < eps)
+            return include_boundary ? offset <= eps : offset < -eps;
+        const double boundary = -offset / rate;
+        if (rate > 0)
+            last = std::min(last, boundary);
+        else
+            first = std::max(first, boundary);
+        return last - first > eps;
+    }
+};
+
+bool crosses_water(const Vec &origin, const Vec &ray, const Cell &cell,
+                   const float *top, double first, double last, double stop) {
+    if (last - first <= eps)
+        return false;
+    Vec from_base{};
+    for (int i = 0; i < 3; ++i) {
+        from_base[i] = origin[i] - (low + cell[i]);
+        if (std::abs(ray[i]) < eps && (from_base[i] <= eps || from_base[i] >= 1 - eps))
+            return false;  // A ray along the outside face has no interior segment.
+    }
+    if (top[0] == top[1] && top[0] == top[2] && top[0] == top[3]) {
+        Interval interval{first, last};
+        return interval.clip(from_base[1] - (.5 + top[0]), ray[1], false)
+            && interval.last <= stop + eps;
+    }
+
+    // Luanti triangulates a nonplanar top with the diagonal (0,1) -> (1,0).
+    // Each triangle caps a convex prism. The internal diagonal isn't a water exit.
+    const double diagonal = from_base[0] + from_base[2] - 1;
+    const double slope = ray[0] + ray[2];
+    Interval a{first, last}, b{first, last};
+    const double ax = double(top[1]) - top[0], az = double(top[1]) - top[2];
+    const double bx = double(top[2]) - top[3], bz = double(top[0]) - top[3];
+    const bool a_valid = a.clip(-diagonal, -slope, true) &&
+        a.clip(from_base[1] - (.5 + top[2] - ax + ax * from_base[0] + az * from_base[2]),
+               ray[1] - ax * ray[0] - az * ray[2], false);
+    const bool b_valid = b.clip(diagonal, slope, true) &&
+        b.clip(from_base[1] - (.5 + top[3] + bx * from_base[0] + bz * from_base[2]),
+               ray[1] - bx * ray[0] - bz * ray[2], false);
+    if (a_valid && b_valid && std::max(a.first, b.first) <= std::min(a.last, b.last) + eps)
+        return std::max(a.last, b.last) <= stop + eps;
+    return (a_valid && a.last <= stop + eps) || (b_valid && b.last <= stop + eps);
+}
+
+constexpr uint8_t saturated_water_count(unsigned count) { return std::min(count, 255u); }
+static_assert(saturated_water_count(300) == 255);
+
 struct Shape {
     int owner;
     int kind; // 0 box, 1 two-sided triangle, 2 outward triangle
@@ -138,36 +244,15 @@ struct Scene {
 
     std::array<Hit, 3> trace(const Vec &origin, const Vec &ray) const {
         std::array<Hit, 3> result{};
-        double entry, exit;
-        int face;
-        if (!slab(origin, ray, {low, low, low}, {high, high, high}, entry, exit, face))
-            return result;
         // The engine's near plane is 0.1 voxels along the camera forward axis.
-        double t = std::max(entry, 0.1);
-        if (t >= exit)
-            return result;
-        if (t > entry)
-            face = -1;
-        const auto pos = origin + ray * (t + eps);
-        Cell p, step;
-        Vec next, period;
-        for (int axis = 0; axis < 3; ++axis) {
-            p[axis] = std::clamp(int(std::floor(pos[axis] - low)), 0, size - 1);
-            step[axis] = ray[axis] >= 0 ? 1 : -1;
-            if (std::abs(ray[axis]) < eps) {
-                next[axis] = period[axis] = inf;
-            } else {
-                next[axis] = (low + p[axis] + (step[axis] > 0) - origin[axis]) / ray[axis];
-                period[axis] = std::abs(1 / ray[axis]);
-            }
-        }
+        GridRay grid(origin, ray, .1);
         int count = 0;
-        while (count < 3 && t < exit - eps) {
-            const double end = std::min({next[0], next[1], next[2], exit});
-            const int index = flat(p);
+        while (count < 3 && grid.active()) {
+            const double end = grid.end();
+            const int index = flat(grid.cell);
             std::array<Hit, 3> local{};
             const auto insert = [&](Hit hit) {
-                if (!(hit.t >= t - eps && hit.t <= end + eps))
+                if (!(hit.t >= grid.t - eps && hit.t <= end + eps))
                     return;
                 // A voxel can contribute one entry even if several primitives are hit.
                 for (int i = 0; i < count; ++i)
@@ -186,30 +271,48 @@ struct Scene {
                     if (hit.t < value.t)
                         std::swap(hit, value);
             };
-            if (face >= 0 && cubes[index])
-                insert({t, index, face});
+            if (grid.face >= 0 && cubes[index])
+                insert({grid.t, index, grid.face});
             for (const int candidate : entries[index])
                 insert(shapes[candidate].entry(origin, ray));
             for (const auto &hit : local)
                 if (hit.owner >= 0 && count < 3)
                     result[count++] = hit;
 
-            if (end >= exit - eps)
-                break;
-            t = end;
-            face = -1;
-            for (int axis = 0; axis < 3; ++axis) {
-                if (next[axis] > end + eps)
-                    continue;
-                p[axis] += step[axis];
-                next[axis] += period[axis];
-                if (face < 0)
-                    face = 2 * axis + (step[axis] > 0);
-            }
-            if (std::any_of(p.begin(), p.end(), [](int x) { return x < 0 || x >= size; }))
-                break;
+            grid.advance(end);
         }
         return result;
+    }
+
+    Hit trace_v3(const Vec &origin, const Vec &ray, const float *tops, uint8_t &water) const {
+        GridRay grid(origin, ray, 0);
+        unsigned count = 0;
+        for (; grid.active(); grid.advance(grid.end())) {
+            const double end = grid.end();
+            const int index = flat(grid.cell);
+            const auto *top = tops + 4 * index;
+            const bool wet = top[0] >= -.5f;
+            Hit nearest;
+            const double visible_start = std::max(grid.t, .1);
+            if (grid.face >= 0 && grid.t >= .1 - eps && cubes[index] && !wet)
+                nearest = {grid.t, index, grid.face};
+            for (const auto candidate : entries[index]) {
+                const auto &shape = shapes[candidate];
+                if (tops[4 * shape.owner] >= -.5f)
+                    continue;
+                const auto hit = shape.entry(origin, ray);
+                if (hit.t >= visible_start - eps && hit.t <= end + eps && hit.t < nearest.t)
+                    nearest = hit;
+            }
+            if (wet && crosses_water(origin, ray, grid.cell, top, grid.t, end, nearest.t))
+                ++count;
+            if (nearest.owner >= 0) {
+                water = saturated_water_count(count);
+                return nearest;
+            }
+        }
+        water = saturated_water_count(count);
+        return {};
     }
 };
 } // namespace
@@ -250,6 +353,27 @@ void vox2pix_render(const void *scene, const double *camera, const double *direc
                 params[out] = hit.owner < 0 ? 0 : world.params[hit.owner];
                 faces[out] = hit.owner < 0 ? empty_face : hit.face;
             }
+        }
+    }
+}
+
+void vox2pix_render_v3(const void *scene, const float *tops, const double *camera, const double *direction,
+                       double fov_x, double fov_y, int w, int h, uint16_t *nodes,
+                       uint8_t *params, uint8_t *faces, uint8_t *water) {
+    const auto &world = *static_cast<const Scene *>(scene);
+    const Vec origin{camera[0], camera[1], camera[2]};
+    const Vec forward = unit({direction[0], direction[1], direction[2]});
+    const Vec right = unit(cross({0., 1., 0.}, forward)) * std::tan(fov_x / 2);
+    const Vec up = unit(cross(forward, right)) * std::tan(fov_y / 2);
+    for (int y = 0; y < h; ++y) {
+        const Vec row = forward + up * (1 - 2 * (y + .5) / h);
+        for (int x = 0; x < w; ++x) {
+            const int out = y * w + x;
+            const Vec ray = row + right * (2 * (x + .5) / w - 1);
+            const auto hit = world.trace_v3(origin, ray, tops, water[out]);
+            nodes[out] = hit.owner < 0 ? empty_id : world.ids[hit.owner];
+            params[out] = hit.owner < 0 ? 0 : world.params[hit.owner];
+            faces[out] = hit.owner < 0 ? empty_face : hit.face;
         }
     }
 }

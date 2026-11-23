@@ -20,6 +20,12 @@ WHITE_FIELDS = {
     "white_param2": np.dtype("u1"),
     "white_face": np.dtype("u1"),
 }
+V3_WHITE_FIELDS = {
+    "surface_node_id": np.dtype("<u2"),
+    "surface_param2": np.dtype("u1"),
+    "surface_face_dir": np.dtype("u1"),
+    "water_count": np.dtype("u1"),
+}
 FIELDS = RAW_FIELDS | WHITE_FIELDS
 EMPTY_NODE = 65535
 EMPTY_FACE = 255
@@ -67,16 +73,20 @@ def committed_paths(root):
 
 
 def scene_shapes(config):
-    white = (config["views_per_scene"], 3, config["height"], config["width"])
-    return {name: (48, 48, 48) for name in RAW_FIELDS} | dict.fromkeys(WHITE_FIELDS, white)
+    views, height, width = (config[key] for key in ("views_per_scene", "height", "width"))
+    white = (dict.fromkeys(V3_WHITE_FIELDS, (views, height, width)) if config.get("mode") == "smoke"
+             else dict.fromkeys(WHITE_FIELDS, (views, 3, height, width)))
+    return {name: (48, 48, 48) for name in RAW_FIELDS} | white
 
 
 def array_schema(arrays, config):
-    if set(arrays) != set(FIELDS):
-        raise ValueError(f"Expected exactly these array fields: {', '.join(FIELDS)}")
-    for name, shape in scene_shapes(config).items():
-        if arrays[name].shape != shape or arrays[name].dtype != FIELDS[name]:
-            raise ValueError(f"{name} must have shape {shape} and dtype {FIELDS[name]}")
+    fields = RAW_FIELDS | V3_WHITE_FIELDS if config.get("mode") == "smoke" else FIELDS
+    shapes = scene_shapes(config)
+    if set(arrays) != set(shapes):
+        raise ValueError(f"Expected exactly these array fields: {', '.join(shapes)}")
+    for name, shape in shapes.items():
+        if arrays[name].shape != shape or arrays[name].dtype != fields[name]:
+            raise ValueError(f"{name} must have shape {shape} and dtype {fields[name]}")
 
 
 def read_arrays(scene, config):
@@ -104,6 +114,7 @@ class DatasetWriter:
     def __init__(self, root, config):
         self.root = Path(root)
         self.config = config
+        self.v3 = config.get("mode") == "smoke"
         self.lock = None
 
     def __enter__(self):
@@ -119,7 +130,13 @@ class DatasetWriter:
                 fcntl.flock(self.lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
             except BlockingIOError as exc:
                 raise ValueError(f"Vox2Pix collection is already writing {self.root}") from exc
-            expected = {"version": VERSION, "config": self.config, "axes": "ENU",
+            if self.v3:
+                from .protocol import V3_VERSION, v3_plan
+
+                version, slots = V3_VERSION, v3_plan(self.config)
+            else:
+                version, slots = VERSION, plan(self.config["seed"])
+            expected = {"version": version, "config": self.config, "axes": "ENU",
                         "node_vocabulary": "node_vocabulary.json", "scene_storage": "scene-directories"}
             if manifest.exists():
                 if read_json(manifest) != expected:
@@ -130,7 +147,7 @@ class DatasetWriter:
                 write_json(manifest, expected)
             self.scenes_dir = self.root / "scenes"
             self.scenes_dir.mkdir(exist_ok=True)
-            self.slots = {slot["scene_id"]: slot for slot in plan(self.config["seed"])}
+            self.slots = {slot["scene_id"]: slot for slot in slots}
             self.paths = committed_paths(self.root)
             if not set(self.paths) <= self.slots.keys():
                 raise ValueError("Existing scene IDs do not belong to the pilot plan")
@@ -172,7 +189,7 @@ class DatasetWriter:
         if type(seed) is not int or seed in self.seeds:
             raise ValueError(f"Invalid or duplicate world seed for scene {scene_id}")
 
-    def commit(self, meta, vocabulary, arrays, rgbs):
+    def commit(self, meta, vocabulary, arrays, rgbs, aux_rgbs=None):
         scene_id = meta.get("scene_id")
         self.verify_slot(meta, scene_id)
         if scene_id in self.paths:
@@ -186,9 +203,17 @@ class DatasetWriter:
         array_schema(arrays, self.config)
         if len(rgbs) != self.config["views_per_scene"]:
             raise ValueError("Incorrect number of RGB views")
-        from .qa import validate_payload
+        if self.v3:
+            from .v3_report import validate_payload, validate_torch_pair
 
-        validate_payload(meta, self.config, vocabulary, self.slots[scene_id], arrays)
+            validate_payload(meta, self.config, vocabulary, self.slots[scene_id], arrays)
+            validate_torch_pair(meta, aux_rgbs or {})
+        else:
+            from .qa import validate_payload
+
+            if aux_rgbs:
+                raise ValueError("The v2 dataset does not store v3 auxiliary frames")
+            validate_payload(meta, self.config, vocabulary, self.slots[scene_id], arrays)
         name = f"scene_{scene_id:04d}"
         final = self.scenes_dir / name
         with tempfile.TemporaryDirectory(prefix=f".{name}.partial-", dir=self.scenes_dir) as temporary:
@@ -196,17 +221,19 @@ class DatasetWriter:
             group = zarr.open_group(str(stage / "voxels.zarr"), mode="w")
             compressor = Blosc(cname="zstd", clevel=3, shuffle=Blosc.SHUFFLE)
             for key, array in arrays.items():
-                chunks = array.shape if key in RAW_FIELDS else (1, 1, min(128, array.shape[-2]),
-                                                                  min(128, array.shape[-1]))
+                chunks = array.shape if key in RAW_FIELDS else (
+                    (1,) * (array.ndim - 2) + tuple(min(128, size) for size in array.shape[-2:]))
                 group.create_dataset(key, data=array, chunks=chunks, compressor=compressor,
                                      write_empty_chunks=True)
             rgb_path = stage / "rgb"
             rgb_path.mkdir()
             for index, rgb in enumerate(rgbs):
-                if (rgb.shape != (self.config["height"], self.config["width"], 3)
-                        or rgb.dtype != np.uint8):
-                    raise ValueError(f"RGB view {index} must be H×W×3 uint8")
-                Image.fromarray(rgb).save(rgb_path / f"{index:03d}.png", format="PNG")
+                self.save_rgb(rgb_path / f"{index:03d}.png", rgb)
+            if aux_rgbs:
+                qa_path = stage / "qa"
+                qa_path.mkdir()
+                for label, rgb in aux_rgbs.items():
+                    self.save_rgb(qa_path / f"{label}.png", rgb)
             write_json(stage / "scene.json", meta)
             if self.vocabulary is None:
                 write_json(self.root / "node_vocabulary.json", vocabulary)
@@ -216,3 +243,9 @@ class DatasetWriter:
         self.seeds.add(meta["world_seed"])
         self.provenance = provenance
         return final
+
+    def save_rgb(self, path, rgb):
+        if (rgb.shape != (self.config["height"], self.config["width"], 3)
+                or rgb.dtype != np.uint8):
+            raise ValueError(f"RGB view {path.name} must be H×W×3 uint8")
+        Image.fromarray(rgb).save(path, format="PNG")

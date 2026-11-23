@@ -1,4 +1,4 @@
-"""CPU three-layer projection of engine-derived voxel surfaces.
+"""CPU pinhole projection of engine-derived voxel surfaces.
 
 Luanti source references: client/content_mapblock.cpp (nodeboxes, fencelike,
 plantlike and flowing-liquid geometry), mapnode.cpp (param2 interpretation),
@@ -113,8 +113,14 @@ def _plant_quads(definition, param2, coordinates, rooted):
         yield vertices
 
 
-def _liquid_quads(nodes, params, names, definition, at, flowing):
-    """Native corner levels with an entry surface per voxel, even at shared sides."""
+def is_water_liquid(definition):
+    # The water group also includes solid waterlogged mangrove roots.
+    return bool(definition.get("water") and (definition.get("liquidtype") in {"source", "flowing"}
+                or definition.get("drawtype") in {"liquid", "flowingliquid"}))
+
+
+def _liquid_top(nodes, params, names, definition, at, flowing):
+    """The four Luanti corner levels in the drawLiquidTop vertex order."""
     x, y, z = at
     source = names.get(definition.get("liquid_alternative_source"), -1)
     air = names["air"]
@@ -145,7 +151,12 @@ def _liquid_quads(nodes, params, names, definition, at, flowing):
         return sum(levels) / len(levels) if levels else 0
 
     corners = ((0, 1), (1, 1), (1, 0), (0, 0))
-    top = np.array([(dx - 0.5, level(dx, dz), dz - 0.5) for dx, dz in corners])
+    return np.array([(dx - 0.5, level(dx, dz), dz - 0.5) for dx, dz in corners])
+
+
+def _liquid_quads(nodes, params, names, definition, at, flowing):
+    """Native corner levels with an entry surface per voxel, even at shared sides."""
+    top = _liquid_top(nodes, params, names, definition, at, flowing)
     bottom = top.copy()
     bottom[:, 1] = -0.5
     yield top
@@ -153,6 +164,51 @@ def _liquid_quads(nodes, params, names, definition, at, flowing):
     for i in range(4):
         j = (i + 1) % 4
         yield np.array((top[i], bottom[i], bottom[j], top[j]))
+
+
+def _flowing_water(definition):
+    return definition.get("drawtype") == "flowingliquid" or definition.get("liquidtype") == "flowing"
+
+
+def _water_tops(nodes, params, definitions):
+    tops = np.full((*nodes.shape, 4), -1., dtype=np.float32)
+    names = {d["name"]: i for i, d in definitions.items()}
+    for node in np.unique(nodes):
+        definition = definitions[int(node)]
+        if not is_water_liquid(definition):
+            continue
+        mask = nodes == node
+        if not _flowing_water(definition):
+            tops[mask] = .5
+            continue
+        for x, z, y in np.argwhere(mask):
+            tops[x, z, y] = _liquid_top(nodes, params, names, definition, (x, y, z), node)[:, 1]
+    return tops
+
+
+def water_contains(nodes, params, definitions, local_xyz):
+    """Test the actual Luanti XYZ eye point against the v3 liquid volume."""
+    xyz = np.asarray(local_xyz, dtype=float)
+    if xyz.shape != (3,) or not np.isfinite(xyz).all():
+        return False
+    center = np.floor(xyz + .5).astype(int)
+    x, y, z = center + SIZE // 2
+    if min(x, y, z) < 0 or max(x, y, z) >= SIZE:
+        return False
+    node = int(nodes[x, z, y])
+    definition = definitions[node]
+    if not is_water_liquid(definition):
+        return False
+    dx, dy, dz = xyz - center
+    if dy <= -.5:
+        return False
+    if not _flowing_water(definition):
+        return dy < .5
+    names = {d["name"]: i for i, d in definitions.items()}
+    a, b, c, d = _liquid_top(nodes, params, names, definition, (x, y, z), node)[:, 1].astype(np.float32)
+    u, v = dx + .5, dz + .5
+    height = a + (b - a) * u + (c - b) * (1 - v) if u + v >= 1 else d + (c - d) * u + (a - d) * v
+    return bool(dy < height)
 
 
 def _fence_boxes(nodes, kinds, at):
@@ -234,6 +290,9 @@ class Projector:
         lib.vox2pix_render.argtypes = (pointer, pointer, pointer, ct.c_double, ct.c_double,
                                      ct.c_int, ct.c_int, pointer, pointer, pointer)
         lib.vox2pix_render.restype = None
+        lib.vox2pix_render_v3.argtypes = (pointer, pointer, pointer, pointer, ct.c_double, ct.c_double,
+                                        ct.c_int, ct.c_int, pointer, pointer, pointer, pointer)
+        lib.vox2pix_render_v3.restype = None
         self.library = lib
 
     def scene(self, node_id, param2, definitions, boxes, *, foot_xyz=(0, 0, 0)):
@@ -250,6 +309,8 @@ class TraceScene:
             self.node_id, self.param2, definitions, boxes, foot_xyz
         )
         self.library = library
+        self.definitions = definitions
+        self._tops = None
         self.handle = library.vox2pix_scene(
             _pointer(self.node_id), _pointer(self.param2), _pointer(self.cubes), _pointer(shapes), len(shapes)
         )
@@ -257,7 +318,8 @@ class TraceScene:
             raise MemoryError("Could not build the White Model geometry index")
         self._cleanup = weakref.finalize(self, library.vox2pix_destroy, self.handle)
 
-    def render(self, cam_xyz_local, direction_xyz, fov_x, fov_y, width, height):
+    @staticmethod
+    def _camera(cam_xyz_local, direction_xyz, fov_x, fov_y, width, height):
         origin = np.ascontiguousarray(cam_xyz_local, dtype=np.float64)
         direction = np.ascontiguousarray(direction_xyz, dtype=np.float64)
         if (origin.shape != (3,) or direction.shape != (3,) or not np.isfinite(origin).all()
@@ -265,8 +327,25 @@ class TraceScene:
             raise ValueError("Invalid or pole-degenerate Craftium camera pose")
         if not (0 < fov_x < math.pi and 0 < fov_y < math.pi and width > 0 and height > 0):
             raise ValueError("Invalid pinhole intrinsics or resolution")
+        return origin, direction
+
+    def render(self, cam_xyz_local, direction_xyz, fov_x, fov_y, width, height):
+        origin, direction = self._camera(cam_xyz_local, direction_xyz, fov_x, fov_y, width, height)
         shape = (3, height, width)
         layers = tuple(np.empty(shape, dtype=dtype) for dtype in (np.uint16, np.uint8, np.uint8))
         self.library.vox2pix_render(self.handle, _pointer(origin), _pointer(direction),
                                     fov_x, fov_y, width, height, *map(_pointer, layers))
         return layers
+
+    def water_contains(self, local_xyz):
+        return water_contains(self.node_id, self.param2, self.definitions, local_xyz)
+
+    def render_v3(self, cam_xyz_local, direction_xyz, fov_x, fov_y, width, height):
+        origin, direction = self._camera(cam_xyz_local, direction_xyz, fov_x, fov_y, width, height)
+        if self._tops is None:
+            self._tops = _water_tops(self.node_id, self.param2, self.definitions)
+        fields = tuple(np.empty((height, width), dtype=dtype)
+                       for dtype in (np.uint16, np.uint8, np.uint8, np.uint8))
+        self.library.vox2pix_render_v3(self.handle, _pointer(self._tops), _pointer(origin), _pointer(direction),
+                                       fov_x, fov_y, width, height, *map(_pointer, fields))
+        return fields

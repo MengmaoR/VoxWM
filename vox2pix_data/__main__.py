@@ -1,6 +1,6 @@
 """User-run Vox2Pix pilot collection and read-only QA."""
 import argparse
-from concurrent.futures import FIRST_COMPLETED, ProcessPoolExecutor, wait
+from concurrent.futures import FIRST_COMPLETED, ProcessPoolExecutor, as_completed, wait
 import json
 from multiprocessing import get_context
 from pathlib import Path
@@ -22,6 +22,13 @@ def parser():
     commands = root.add_subparsers(dest="command", required=True)
     collect = commands.add_parser("collect", help="collect or resume the 1K pilot")
     collect.add_argument("--dataset", type=Path, required=True)
+    collect.add_argument("--mode", choices=["pilot-v2", "smoke"], default="pilot-v2",
+                         help="smoke uses the isolated v3 native dataset protocol")
+    collect.add_argument("--scene-kinds", nargs=3, default=["surface", "cave", "underwater"])
+    collect.add_argument("--scenes-per-kind", type=int, choices=[1, 3], default=1)
+    collect.add_argument("--scene-timeout", type=positive, default=180, help="v3 seconds available per scene")
+    collect.add_argument("--survey-y", type=int, nargs=2, metavar=("MIN", "MAX"),
+                         help="v3 world Y range to explore (default: -112 240)")
     collect.add_argument("--scenes", type=int, choices=[200], default=200)
     collect.add_argument("--views-per-scene", type=int, choices=[5], default=5)
     collect.add_argument("--width", type=int, choices=[640], default=640)
@@ -41,6 +48,8 @@ def parser():
     for name, help_text in (
         ("check", "validate a complete pilot without writing to disk"),
         ("compression-report", "write measured compression and coverage reports"),
+        ("validate", "validate a completed v3 native smoke dataset"),
+        ("report", "export the v3 native smoke report as offline HTML"),
     ):
         command = commands.add_parser(name, help=help_text)
         command.add_argument("--dataset", type=Path, required=True)
@@ -53,6 +62,53 @@ def parser():
     viewer.add_argument("--dataset", type=Path, required=True)
     viewer.add_argument("--port", type=int, default=8767)
     return root
+
+
+def collect_smoke(args):
+    from .geometry import build_library
+    from .native import WORLDS_PER_SLOT, SEED_SPACE
+    from .protocol import V3_KINDS, RejectedScene
+    from .storage import DatasetWriter
+    from .v3_native import capture_v3
+    from .v3_sampling import SURVEY_Y
+
+    if set(args.scene_kinds) != set(V3_KINDS):
+        raise ValueError("Smoke collection requires surface, cave and underwater")
+    bounds = list(args.survey_y or SURVEY_Y)
+    if not -30900 <= bounds[0] < bounds[1] <= 30900 or not 48 <= bounds[1] - bounds[0] + 1 <= 512:
+        raise ValueError("Survey must span 48–512 cells within the playable Lua map")
+    worlds = args.search_rounds * WORLDS_PER_SLOT
+    first = args.search_round * WORLDS_PER_SLOT
+    if (first + worlds) * 200 > SEED_SPACE:
+        raise ValueError("Search rounds exceed the independent world seed space")
+    config = {key: getattr(args, key) for key in ("mode", "views_per_scene", "width", "height", "seed", "renderer")}
+    config.update(scenes=3 * args.scenes_per_kind, scenes_per_kind=args.scenes_per_kind,
+                  scene_kinds=list(V3_KINDS), survey_y=bounds)
+    with DatasetWriter(args.dataset, config) as writer:
+        missing = [slot for scene_id, slot in writer.slots.items() if scene_id not in writer.completed]
+        if missing:
+            with TemporaryDirectory(prefix="vox2pix-v3-projector-") as tmp:
+                library = build_library(Path(tmp))
+                with ProcessPoolExecutor(max_workers=min(args.workers, len(missing)),
+                                         mp_context=get_context("spawn")) as pool:
+                    pending = {
+                        pool.submit(capture_v3, slot, config, args.craftium_dir.resolve(), library,
+                                    worlds, args.sites_per_world, args.survey_columns, args.scene_timeout, first): slot
+                        for slot in missing
+                    }
+                    for future in as_completed(pending):
+                        try:
+                            result = future.result()
+                            writer.commit(*result)
+                        except RejectedScene as exc:
+                            print(f"V3 {pending[future]['kind']}: {exc}", file=sys.stderr, flush=True)
+                            continue
+                        meta = result[0]
+                        print(f"V3 committed {meta['kind']} scene {meta['scene_id']} in "
+                              f"{meta['search_seconds']:.1f}s: {meta['search_stats']}", flush=True)
+        count = len(writer.completed)
+        print(f"V3 committed {count}/{config['scenes']} scenes, {count * config['views_per_scene']} frames.", flush=True)
+        return int(count != config["scenes"])
 
 
 def collect_pilot(args):
@@ -146,13 +202,21 @@ def main(argv=None):
         options.error("--search-round must be nonnegative")
     try:
         if args.command == "collect":
-            return collect_pilot(args)
+            return collect_smoke(args) if args.mode == "smoke" else collect_pilot(args)
         if args.command == "dashboard":
             from .dashboard import show_dashboard
             return show_dashboard(args.dataset, args.log, args.interval, args.once)
         if args.command == "viewer":
             from .preview import serve
             serve(args.dataset, args.port)
+            return 0
+        if args.command in ("validate", "report"):
+            from .v3_report import report, validate
+
+            summary = (report if args.command == "report" else validate)(args.dataset)
+            print(f"{summary['status']} | {summary['capture_status']}")
+            if args.command == "report":
+                print(args.dataset / "report" / "index.html")
             return 0
         from .qa import check, compression_report
         if args.command == "check":

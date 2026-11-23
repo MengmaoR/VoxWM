@@ -9,6 +9,8 @@ import numpy as np
 from vae_data.sharded.protocol import BIOMES, WORLD_BOTTOM, WORLD_TOP
 
 VERSION = "vox2pix-pilot-v2-camera16"
+V3_VERSION = "vox2pix-v3-surface-watercount-cave-underwater-torch"
+V3_KINDS = ("surface", "cave", "underwater")
 HEIGHTS = ("surface", "shallow", "deep")
 CENTER = (slice(16, 32),) * 3
 SIDE = 48
@@ -30,6 +32,17 @@ SETTINGS = dict(
     enable_post_processing=False, enable_bloom=False, enable_water_reflections=False,
     starting_inventory_creative="",
 )
+V3_RGB = dict(viewing_range=30, enable_fog=True, directional_colored_fog=True,
+              fog_start=.8, display_gamma=3.0)
+
+
+def v3_plan(config):
+    kinds = config["scene_kinds"]
+    count = config["scenes_per_kind"]
+    if tuple(kinds) != V3_KINDS or type(count) is not int or count not in (1, 3):
+        raise ValueError("V3 smoke requires 1 or 3 scenes per kind for surface, cave and underwater")
+    return [dict(scene_id=index * count + offset, kind=kind)
+            for index, kind in enumerate(kinds) for offset in range(count)]
 
 
 class RejectedScene(RuntimeError):
