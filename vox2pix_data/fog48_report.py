@@ -28,8 +28,29 @@ def write_marker(output, row, images):
                 and abs(probe.get("actual_map_draw_range", -1) - 48.) <= .001)
     loaded = PANEL_BLOCK in probe.get("loaded_mapblocks_xyz", [])
     submitted = PANEL_BLOCK in probe.get("submitted_mapblocks_xyz", [])
-    result["checks"].update(runtime_fog=runtime and range_ok,
-                            marker_geometry_submitted=(result["distance"] > 48 or submitted))
+    result["checks"].update(runtime_fog=runtime and range_ok, marker_geometry_submitted=submitted)
+    if result["distance"] > 48 and not submitted:
+        # Beyond the nominal range, native culling can leave only sky/background.
+        # There is then no marker fragment on which to fit a fog equation.
+        driver_ok = (probe.get("fog_enabled") is True and probe.get("directional_colored_fog") is True
+                     and probe.get("fog_type") == "linear"
+                     and abs(probe.get("actual_fog_start", -1) - 20.) <= .001
+                     and abs(probe.get("actual_fog_end", -1) - 30.) <= .001
+                     and (probe.get("shader_uniforms_bound") is True
+                          or not probe.get("submitted_mapblocks_xyz")))
+        result["checks"].update(runtime_fog=driver_ok and range_ok,
+                                marker_geometry_submitted=None, native_color_equation=None,
+                                endpoint_hidden=None)
+        result["outside_range_assessment"] = "Native background only. Marker visibility requires image inspection."
+    for mode, mode_probe in result["probes"].items():
+        metrics = result["image_metrics"][mode]
+        if PANEL_BLOCK not in mode_probe.get("submitted_mapblocks_xyz", []):
+            metrics["theoretical_fog_factor"] = metrics["native_fog_factor"]
+            metrics["measurement_status"] = "INAPPLICABLE — marker geometry was not submitted"
+            for field in ("native_fog_factor", "native_tinted_target_rgb", "native_model_mean_abs_error",
+                          "fixed_color_linear_mean_abs_error", "fitted_native_fog_factor",
+                          "marker_texture_std", "residual_color_fraction"):
+                metrics[field] = None
     result["marker_mapblock"] = dict(xyz=PANEL_BLOCK, loaded_in_C=loaded, submitted_in_C=submitted,
                                       submitted_in_B=PANEL_BLOCK in result["probes"]["B"].get(
                                           "submitted_mapblocks_xyz", []))
@@ -97,12 +118,12 @@ def _marker_section(row):
         submitted = PANEL_BLOCK in probe.get("submitted_mapblocks_xyz", [])
         table.append((mode, f"{probe['actual_map_draw_range']:g}",
                       f"{probe['actual_fog_start']:.4f} / {probe['actual_fog_end']:.4f}",
-                      f"{metrics['native_fog_factor']:.1%}",
+                      "N/A" if metrics["native_fog_factor"] is None else f"{metrics['native_fog_factor']:.1%}",
                       "/".join(f"{value:.2f}" for value in metrics["mean_rgb"]),
                       f"{metrics['rgb_distance_from_fog']:.3f}", str(submitted)))
     return (f"<article><h3>{row['distance']:g} blocks · measured {row['measured_distance']:.6f}</h3>"
             f'<div class="triple">{full}</div><div class="triple crops">{crops}</div>' +
-            fog_report._table(("Mode", "Native draw range", "Actual fog start / end", "Fog factor", "Marker mean RGB",
+            fog_report._table(("Mode", "Native draw range", "Actual fog start / end", "Fog factor", "Sample mean RGB",
                                "RGB distance to fog", "Panel MapBlock submitted"), table) +
             fog_report._details("Marker and native renderer evidence", row) + "</article>")
 
@@ -124,7 +145,8 @@ def finish_report(output, marker_rows, scene_rows, metadata):
     root.mkdir(parents=True, exist_ok=True)
     markers = sorted(marker_rows, key=lambda row: row["distance"])
     expected_distances = tuple(row["distance"] for row in markers) == DISTANCES
-    native = expected_distances and all(all(row["checks"].values()) for row in markers)
+    native = expected_distances and all(all(value is not False for value in row["checks"].values())
+                                        for row in markers)
     compared = len(scene_rows) == 15 and {row["kind"] for row in scene_rows} == {"surface", "cave", "underwater"}
     status = "PASS" if native and compared else "FAIL"
     verification = dict(unit_verified=metadata.get("unit_verified", False),
@@ -144,7 +166,8 @@ def finish_report(output, marker_rows, scene_rows, metadata):
         stats = row["image_metrics"]["C"]
         block = row["marker_mapblock"]
         cells.append((f"{row['distance']:g}", f"{row['measured_distance']:.6f}",
-                      f"{stats['native_fog_factor']:.1%}", f"{stats['mean_luma']:.3f}",
+                      "N/A" if stats["native_fog_factor"] is None else f"{stats['native_fog_factor']:.1%}",
+                      f"{stats['mean_luma']:.3f}",
                       f"{stats['rgb_distance_from_fog']:.3f}",
                       f"{probe['actual_map_draw_range']:g}", str(block["submitted_in_B"]), str(block["submitted_in_C"])))
     groups = defaultdict(list)
@@ -168,7 +191,7 @@ pre{{white-space:pre-wrap;overflow-wrap:anywhere}}summary{{cursor:pointer}}figca
 <main><h1>Vox2Pix · Draw range 48 with independent fog 20–30</h1>
 <p>Native measurement checks {status} · <a href="summary.json">Measured JSON</a></p>{verification_table}
 <p>A draws to 48 with fog disabled. B draws to 30 and C draws to 48. B and C share absolute fog distances 20–30, Gamma 3.0, global light floor 0 and solid ambient 0.35.</p>
-<p>The calibrated native panel is the sole world geometry. Its MapBlock submission proves geometry reaches the renderer even when fog conceals its color. The 52-block case records native MapBlock bounding-volume leakage. It is excluded from a strict nominal-range submission requirement.</p>
+<p>The calibrated native panel is the sole world geometry. Its MapBlock submission proves geometry reaches the renderer even when fog conceals its color. The 52-block case records native MapBlock bounding-volume leakage. It is excluded from a strict nominal-range submission requirement. When the marker mesh is culled, its factor and color-equation tests are inapplicable. The sampled RGB then describes native background, and image inspection records whether any colored marker leaks remain.</p>
 {fog_report._table(('Target blocks', 'Measured blocks', 'C fog blend', 'C luma', 'C RGB distance to fog', 'C draw range', 'B submitted', 'C submitted'), cells)}
 {fog_report._figure(Path('calibration_montage.png'), 'All measured distances · A / B / C')}
 <p>Fog factor is linear in native Euclidean camera distance. Native directional fog also tints the fog target with clarity. RGB residuals use that existing Shader equation. Saved White Model previews cover the stored 48³ volume only.</p>

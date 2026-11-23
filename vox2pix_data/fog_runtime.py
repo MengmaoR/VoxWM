@@ -56,6 +56,10 @@ def validate_fog_absolute(probe, *, viewing_range=48, enabled=True, tick=None, s
     for key in ("loaded_mapblocks_xyz", "submitted_mapblocks_xyz"):
         if not isinstance(probe.get(key), list):
             raise ValueError(f"Missing actual native {key}")
+    for key in ("max_block_send_distance_nodes", "max_block_generate_distance_nodes"):
+        value = probe.get(key)
+        if not isinstance(value, (int, float)) or value < viewing_range:
+            raise ValueError(f"Native {key} cannot cover draw range {viewing_range}: {value}")
     bound = probe.get("shader_uniforms_bound")
     if not bound and probe["submitted_mapblocks_xyz"]:
         raise ValueError("Native map geometry was submitted without node fog uniforms")

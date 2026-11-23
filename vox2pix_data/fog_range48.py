@@ -34,14 +34,22 @@ def select_mode(native, mode):
     temporary = path.with_suffix(".tmp")
     temporary.write_text(f"{int(enabled)} 20 30 {viewing_range}\n")
     temporary.replace(path)
+    first_valid_tick = None
     while time.monotonic() < native.search_deadline:
         native.step()
         probe = read_fog(native)
         try:
             validate_fog_absolute(probe, enabled=enabled, viewing_range=viewing_range)
         except ValueError:
+            first_valid_tick = None
             continue
-        return
+        if first_valid_tick is None:
+            first_valid_tick = probe["render_tick"]
+        # Game::updateFrame refreshes the native draw list every 0.2 s.
+        # Twelve fixed24 ticks allow two complete refresh periods after
+        # the new range first reaches the actual renderer.
+        if probe["render_tick"] - first_valid_tick >= 12:
+            return
     raise TimeoutError(f"Independent fog range did not settle in mode {mode}: {probe}")
 
 
