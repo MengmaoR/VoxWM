@@ -143,6 +143,10 @@ def validate_payload(meta, config, vocabulary, slot, arrays):
                 and number(meta, "solid_ambient_floor") == ambient
                 and number(meta, "lighting_floor") == expected_rgb["lighting_floor"],
                 "Scene material ambient metadata differs from the selected profile")
+    if expected_rgb.get("voxwm_exact_draw_range"):
+        from .protocol import V3_FOG_GEOMETRY
+
+        require(meta.get("fog_geometry") == V3_FOG_GEOMETRY, "Native fog protocol geometry differs")
     validate_camera_protocol(meta)
     validate_visibility_lookup()
 
@@ -329,6 +333,8 @@ def _view_stats(meta, arrays, rgb_stats):
         if "solid_ambient_floor" in view:
             row.update(solid_ambient_floor=view["solid_ambient_floor"],
                        material_renderer_lighting=view["material_renderer_lighting"])
+        if "renderer_fog" in view:
+            row["renderer_fog"] = view["renderer_fog"]
         rows.append(row)
     return rows
 
@@ -364,6 +370,10 @@ def _view_block(scene_dir, row):
     light = row["brightness"]
     ambient = (f"<dt>Solid ambient floor</dt><dd>{row['solid_ambient_floor']:.2f}</dd>"
                if "solid_ambient_floor" in row else "")
+    fog = row.get("renderer_fog")
+    fog_text = (f"<dt>Actual fog range</dt><dd>{fog['actual_fog_start']:.3f}–"
+                f"{fog['actual_fog_end']:.3f} blocks · draw range {fog['draw_control_wanted_range']:.3f} "
+                f"· GPU far plane {fog['camera_far_plane']:.1f} blocks</dd>" if fog else "")
     return f"""
 <article><h3>View {index + 1} · Camera in {row['camera_medium']}</h3>
 <dl><dt>Foot XYZ</dt><dd>{vector_text(row['foot_xyz'])}</dd>
@@ -371,7 +381,7 @@ def _view_block(scene_dir, row):
 <dt>Actual camera XYZ</dt><dd>{vector_text(row['camera_xyz'])}</dd>
 <dt>Yaw / pitch</dt><dd>{row['yaw_deg']:.2f}° / {row['pitch_deg']:.2f}°</dd>
 <dt>FOV X × Y</dt><dd>{x:.2f}° × {y:.2f}°</dd><dt>Gamma</dt><dd>{row['gamma']:.1f}</dd>
-<dt>Global LUT floor</dt><dd>{row['lighting_floor']:.2f}</dd>{ambient}
+<dt>Global LUT floor</dt><dd>{row['lighting_floor']:.2f}</dd>{ambient}{fog_text}
 <dt>Mean / median luma</dt><dd>{light['mean_luma']:.3f} / {light['median_luma']:.3f}</dd>
 <dt>Near-black</dt><dd>{light['near_black_fraction']:.2%}</dd>
 <dt>Surface hit / BACKGROUND</dt><dd>{row['valid_hit_fraction']:.2%} / {row['background_fraction']:.2%}</dd>
@@ -479,7 +489,7 @@ def report(root):
     lighting_description = (
         "The native Light LUT uses gamma 3.0 and global floor 0.0. Comparisons switch the solid material "
         "ambient between 0.0 and 0.35 at the same native camera, terrain and light state."
-        if summary["protocol_version"] == V3_MATERIAL_VERSION else
+        if "materialambient" in summary["protocol_version"] else
         "The native Light LUT uses gamma 3.0. Comparisons switch its global floor between 0.0 and 0.35 "
         "at the same native camera, terrain and light state."
     )
