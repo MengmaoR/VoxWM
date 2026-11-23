@@ -1,0 +1,25 @@
+# Selected lines from the server collection logs. Timestamps in filenames are UTC.
+
+# collect-20261122-155613-camera16.log
+Scene 55 MushroomIsland deep: Scene 55 (MushroomIsland/deep) exhausted its search: {'no accepted anchor at site': 32}
+168/200 scenes committed; 32 slots remain unfilled.
+
+# collect-20261122-183731-cave-fill-r1.log
+Search 32 unfilled slots | {"search_round": 1, "search_rounds": 2, "sites_per_world": 8, "survey_columns": 32}
+Scene 134 MangroveSwamp deep: Scene 134 (MangroveSwamp/deep) exhausted its search: {'site: no standing cave floor with roof in height band': 52, 'no accepted anchor at site': 126, 'site: cave floors fail center16 free-space gate': 52, 'site: cave floors fail full48 free-space gate': 15, 'Fewer than 20 active view regions': 78, 'native anchor or biome mismatch': 698, 'biome_not_found': 2}
+194/200 scenes committed; 6 slots remain unfilled.
+
+# collect-20261122-185959-cave-fill-tail.log
+Search 6 unfilled slots | {"search_round": 3, "search_rounds": 8, "sites_per_world": 8, "survey_columns": 48, "land_priority": true} | parallel rounds True
+Committed scene 55 (196/200) | deep | seed round 7 | world 61 | site 3
+Vox2Pix collect: Server/client/Lua clock mismatch: {'server': 6078, 'request': 6079.0, 'client': 6079, 'lua': 6078.0}
+
+# collect-20261122-192317-cave-hints.log
+Search 4 unfilled slots | {"search_round": 11, "search_rounds": 12, "sites_per_world": 10, "survey_columns": 48, "land_priority": true, "cave_hints": true} | parallel rounds True
+Committed scene 135 (199/200) | deep | seed round 20 | world 164 | site 1
+199/200 scenes committed; 1 slots remain unfilled.
+
+# collect-20261122-193738-cave-last-slot.log
+Search 1 unfilled slots | {"search_round": 23, "search_rounds": 28, "sites_per_world": 10, "survey_columns": 48, "land_priority": true, "cave_hints": true} | parallel rounds True
+Committed scene 134 (200/200) | deep | seed round 35 | world 284 | site 8
+200/200 scenes committed; 0 slots remain unfilled.

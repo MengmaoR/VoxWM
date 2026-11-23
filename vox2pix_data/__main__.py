@@ -49,6 +49,9 @@ def parser():
     dashboard.add_argument("--log", type=Path, help="read a specific collector log")
     dashboard.add_argument("--interval", type=positive, default=5, help="refresh interval in seconds")
     dashboard.add_argument("--once", action="store_true", help="print one progress snapshot and exit")
+    viewer = commands.add_parser("viewer", help="open a read-only Vox2Pix scene Viewer")
+    viewer.add_argument("--dataset", type=Path, required=True)
+    viewer.add_argument("--port", type=int, default=8767)
     return root
 
 
@@ -147,6 +150,10 @@ def main(argv=None):
         if args.command == "dashboard":
             from .dashboard import show_dashboard
             return show_dashboard(args.dataset, args.log, args.interval, args.once)
+        if args.command == "viewer":
+            from .preview import serve
+            serve(args.dataset, args.port)
+            return 0
         from .qa import check, compression_report
         if args.command == "check":
             print(json.dumps(check(args.dataset), indent=2))

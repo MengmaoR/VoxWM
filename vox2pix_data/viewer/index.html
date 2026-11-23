@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vox2Pix 数据预览</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="style.css">
+  <script type="importmap">{"imports":{"three":"/vendor/three.module.min.js"}}</script>
+</head>
+<body>
+  <main>
+    <header>
+      <div><h1>Vox2Pix 数据预览</h1><p id="dataset-summary"></p></div>
+      <div class="selectors">
+        <label>高度<select id="height" disabled><option value="">全部高度</option></select></label>
+        <label>群落<select id="biome" disabled><option value="">全部群落</option></select></label>
+        <label>场景<select id="scene" disabled></select></label>
+        <label>视角<select id="view" disabled></select></label>
+      </div>
+    </header>
+    <p id="message" role="status">正在读取场景目录…</p>
+    <div class="workspace">
+      <section class="panel">
+        <div class="panel-header">
+          <h2>48³ Voxel 与相机</h2>
+          <div class="button-row">
+            <button id="follow" type="button" aria-pressed="false" disabled>使用记录视角</button>
+            <button id="reset" type="button" disabled>重置观察</button>
+          </div>
+        </div>
+        <div id="voxel-view"></div>
+        <div class="cutaway">
+          <label for="cutaway">上方剖切</label>
+          <input id="cutaway" type="range" min="0" max="47" value="47" disabled>
+          <output id="cutaway-level" for="cutaway">完整区域</output>
+        </div>
+        <dl id="pose" class="pose" aria-label="记录的相机位姿"></dl>
+      </section>
+      <section class="panel images">
+        <div class="panel-header"><h2>RGB</h2></div>
+        <div class="image-frame">
+          <img id="rgb" alt="所选视角的原始 RGB">
+          <span class="pixel-marker" hidden></span>
+        </div>
+        <div class="panel-header">
+          <h2>三层白模</h2>
+          <div id="layers" class="button-row" aria-label="白模层">
+            <button type="button" data-layer="0" aria-pressed="true" disabled>第 1 层</button>
+            <button type="button" data-layer="1" aria-pressed="false" disabled>第 2 层</button>
+            <button type="button" data-layer="2" aria-pressed="false" disabled>第 3 层</button>
+          </div>
+        </div>
+        <div class="image-frame">
+          <canvas id="white" aria-label="所选视角的白模，灰阶表示面方向"></canvas>
+          <span class="pixel-marker" hidden></span>
+        </div>
+        <div class="inspection">
+          <p id="coverage"></p>
+          <p id="pixel">点击 RGB 或白模，查看同一像素的三层原始数据。</p>
+          <ol id="hits"></ol>
+        </div>
+      </section>
+    </div>
+  </main>
+  <script type="module" src="viewer.js"></script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+stage,workers,parallel_seed_rounds,start_round,seed_rounds,sites_per_world,survey_columns,elapsed_seconds,worlds_started,surface_committed,shallow_committed,deep_committed,cumulative_scenes,slots_unfilled,log_file
+initial,8,false,0,1,4,16,4089.71,572,120,30,18,168,32,collect-20261122-155613-camera16.log
+wider_survey,24,false,1,2,8,32,808.09,147,0,9,17,194,6,collect-20261122-183731-cave-fill-r1.log
+land_priority,24,true,3,8,8,48,783.49,195,0,1,1,196,4,collect-20261122-185959-cave-fill-tail.log
+cave_hints,28,true,11,12,10,48,659.42,256,0,0,3,199,1,collect-20261122-192317-cave-hints.log
+last_slot,28,true,23,28,10,48,238.81,137,0,0,1,200,0,collect-20261122-193738-cave-last-slot.log

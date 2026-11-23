@@ -54,7 +54,8 @@ After all 200 scenes are committed, run:
 
 The last command writes `compression_report.json` and
 `compression_report.md` under the dataset root. The compression gate is
-based on the validated complete 1K pilot. The pilot remains **NOT NATIVE VERIFIED**.
+based on the validated complete 1K pilot. See the
+[measured pilot results and collection logs](reports/pilot_1k/README.md).
 
 Open a second server terminal to monitor the existing collector and output.
 
@@ -71,3 +72,26 @@ The root contains `manifest.json` and `node_vocabulary.json`. Each committed
 `scenes/scene_NNNN/` contains `scene.json`, `voxels.zarr/` and
 `rgb/000.png` through `rgb/004.png`. Read frame `i` from each white array by
 indexing it with the same `i` used in the PNG filename and `scene.json` views.
+
+## Inspect an existing pilot
+
+Run the read-only Viewer on the machine that holds the dataset.
+
+```bash
+.venv/bin/python -m vox2pix_data viewer \
+  --dataset outputs/vox2pix_pilot_1k_640x360 --port 8767
+```
+
+If the data lives on a server, connect with `ssh -L 8767:127.0.0.1:8767 aml-g06-gpu`
+and run the command above from the remote VoxWM checkout. Open
+[the Viewer](http://127.0.0.1:8767/) in your local browser. The Viewer reads
+the checked-in Three.js files offline and needs no simulator or GPU server.
+
+Select a committed scene and one of its five views. Orbit the 48³ voxel grid or
+switch to the selected camera pose. The height slider reveals enclosed caves
+in the 3D view. The RGB frame and the three grayscale
+white-model layers use the same view index. The layer inspector reads the saved
+Node Name, raw param2, and signed face code at the selected pixel. Empty hits are
+marked separately. The 3D view uses simplified blocks colored by Node Name.
+Scene 0134, view 5 is an example with a black native RGB frame and valid
+white-model hits.
