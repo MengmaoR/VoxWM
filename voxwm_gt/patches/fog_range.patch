@@ -102,7 +102,7 @@ index 603549d..7224562 100644
  
  	/*
 diff --git a/src/client/renderingengine.cpp b/src/client/renderingengine.cpp
-index e9d1801..b2ffedc 100644
+index e9d1801..cb62e51 100644
 --- a/src/client/renderingengine.cpp
 +++ b/src/client/renderingengine.cpp
 @@ -24,6 +24,7 @@
@@ -117,8 +117,8 @@ index e9d1801..b2ffedc 100644
  		if (fog_end > 0)
  			parameter = 1.0f / (1.0f - fog_start / fog_end);
  		m_fog_shading_parameter.set(&parameter, services);
-+		// These are the actual final driver values passed to native fog uniforms.
-+		if (services->getPixelShaderConstantID("fogDistance") >= 0 &&
++		// Record native world-node uniforms before later sky/cloud passes replace driver fog.
++		if (voxwm_fog_nodes_active && services->getPixelShaderConstantID("fogDistance") >= 0 &&
 +				services->getPixelShaderConstantID("fogShadingParameter") >= 0) {
 +			voxwm_fog_uniform_bound = true;
 +			voxwm_fog_uniform_distance = fog_end;
@@ -127,6 +127,53 @@ index e9d1801..b2ffedc 100644
  	}
  };
  
+diff --git a/src/client/shader.cpp b/src/client/shader.cpp
+index 63060bd..b031456 100644
+--- a/src/client/shader.cpp
++++ b/src/client/shader.cpp
+@@ -7,6 +7,7 @@
+ #include <iterator>
+ #include "shader.h"
+ #include "client/voxwm_material_ambient.h"
++#include "client/voxwm_fog_probe.h"
+ #include "irr_ptr.h"
+ #include "debug.h"
+ #include "filesys.h"
+@@ -161,10 +162,12 @@ private:
+ class ShaderCallback : public video::IShaderConstantSetCallBack
+ {
+ 	std::vector<std::unique_ptr<IShaderUniformSetter>> m_setters;
++	bool m_nodes_shader;
+ 
+ public:
+ 	template <typename Factories>
+-	ShaderCallback(const Factories &factories)
++	ShaderCallback(const Factories &factories, const std::string &name) :
++		m_nodes_shader(name == "nodes_shader")
+ 	{
+ 		for (auto &&factory : factories) {
+ 			auto *setter = factory->create();
+@@ -175,8 +178,11 @@ public:
+ 
+ 	virtual void OnSetConstants(video::IMaterialRendererServices *services, s32 userData) override
+ 	{
++		// Tag the callback, since sky/cloud passes use the same fog setter.
++		voxwm_fog_nodes_active = m_nodes_shader;
+ 		for (auto &&setter : m_setters)
+ 			setter->onSetUniforms(services);
++		voxwm_fog_nodes_active = false;
+ 	}
+ 
+ 	virtual void OnSetMaterial(const video::SMaterial& material) override
+@@ -747,7 +753,7 @@ ShaderInfo ShaderSource::generateShader(const std::string &name,
+ 		geometry_shader_ptr = geometry_shader.c_str();
+ 	}
+ 
+-	auto cb = make_irr<ShaderCallback>(m_uniform_factories);
++	auto cb = make_irr<ShaderCallback>(m_uniform_factories, name);
+ 	infostream << "Compiling high level shaders for " << log_name << std::endl;
+ 	s32 shadermat = gpu->addHighLevelShaderMaterial(
+ 		vertex_shader.c_str(), fragment_shader.c_str(), geometry_shader_ptr,
 diff --git a/src/client/sky.h b/src/client/sky.h
 index 7d3cdba..dc9a086 100644
 --- a/src/client/sky.h
@@ -141,14 +188,15 @@ index 7d3cdba..dc9a086 100644
  	video::SColor getFogColor() const {
 diff --git a/src/client/voxwm_fog_probe.h b/src/client/voxwm_fog_probe.h
 new file mode 100644
-index 0000000..9e4a96a
+index 0000000..4db363d
 --- /dev/null
 +++ b/src/client/voxwm_fog_probe.h
-@@ -0,0 +1,7 @@
+@@ -0,0 +1,8 @@
 +// Opt-in VoxWM diagnostics for native FogShaderUniformSetter values.
 +#pragma once
 +
 +inline bool voxwm_fog_uniform_bound = false;
++inline bool voxwm_fog_nodes_active = false;
 +inline float voxwm_fog_uniform_distance = 0.0f;
 +inline float voxwm_fog_uniform_parameter = 0.0f;
 +inline float voxwm_fog_before_clouds = 0.0f;

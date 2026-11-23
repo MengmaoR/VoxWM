@@ -10,6 +10,8 @@ import zarr
 
 from .fog_report import DISTANCES, finish_report, fog_factor, native_fog_target, write_existing, write_marker
 from .storage import EMPTY_NODE
+from .fog_runtime import validate_fog
+from .protocol import V3_FOG_PROFILE, V3_FOG_VERSION, V3_VERSION, v3_rgb, v3_version
 
 
 class Links(HTMLParser):
@@ -23,6 +25,31 @@ class Links(HTMLParser):
 
 
 class FogReportTests(unittest.TestCase):
+    def test_native_runtime_uses_block_distances_and_the_captured_rgb_tick(self):
+        probe = dict(version="voxwm-native-fog-v1", render_tick=73, fog_enabled=True,
+                     directional_colored_fog=True, viewing_range_config=30,
+                     draw_control_wanted_range=30, runData_fog_range=30,
+                     sky_fog_start_ratio=.6666667, shader_uniforms_bound=True,
+                     fog_type="linear", actual_fog_start=20.000001, actual_fog_end=30,
+                     shader_fog_distance=30, shader_fog_shading_parameter=3.0000003,
+                     camera_far_plane=3000)
+        self.assertIs(validate_fog(probe, tick=73), probe)
+        for updates, reason in (
+                ({"runData_fog_range": 15}, "Unexpected native runData_fog_range"),
+                ({"actual_fog_start": 200, "actual_fog_end": 300}, "Unexpected native actual_fog_start"),
+                ({"render_tick": 72}, "another RGB frame"),
+                ({"camera_far_plane": 30}, "far plane")):
+            with self.subTest(updates=updates), self.assertRaisesRegex(ValueError, reason):
+                validate_fog(dict(probe, **updates), tick=73)
+        candidate = {"lighting_profile": V3_FOG_PROFILE}
+        self.assertEqual(v3_version(candidate), V3_FOG_VERSION)
+        self.assertEqual(v3_version({}), V3_VERSION)
+        self.assertEqual(v3_rgb({})["fog_start"], .8)
+        self.assertEqual(v3_rgb(candidate)["fog_start"], .6666667)
+        self.assertEqual(v3_rgb(candidate)["viewing_range"], 30)
+        self.assertEqual(v3_rgb(candidate)["lighting_floor"], 0.)
+        self.assertEqual(v3_rgb(candidate)["solid_ambient_floor"], .35)
+
     def test_native_linear_factor_and_directional_tint(self):
         self.assertEqual([fog_factor(d, 20., 30.) for d in (10, 20, 22, 24, 25, 27, 29, 30, 32)],
                          [0., 0., .2, .4, .5, .7, .9, 1., 1.])

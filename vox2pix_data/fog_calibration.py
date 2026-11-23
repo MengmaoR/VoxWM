@@ -38,7 +38,7 @@ def select_fog(native, mode):
         except ValueError:
             continue
         return probe
-    raise TimeoutError(f"Native fog settings did not settle in mode {mode}")
+    raise TimeoutError(f"Native fog settings did not settle in mode {mode}: {probe}")
 
 
 def fog_frame(native, capture_row, mode):
