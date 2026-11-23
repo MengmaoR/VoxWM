@@ -9,6 +9,7 @@ local box_names, box_types = {}, {}
 local cave_events, v3_cave_events = {}, {}
 local cave_hints_enabled = mt.settings:get_bool("vox2pix_cave_hints", false)
 local v3_scene = mt.settings:get_bool("vox2pix_v3", false)
+local replay_restore = v3_scene and mt.settings:get_bool("vox2pix_replay_restore", false)
 assert(voxwm_clock and voxwm_region and mt.get_node_boxes, "Build the VoxWM fixed24 engine")
 assert(voxwm_clock().region_capture_version == "voxwm-region-integer-v1", "Build integer-origin region capture")
 
@@ -424,7 +425,7 @@ mt.registered_voxwm_poststeps = {function()
     last = r.request_id
     -- Native scene searches advance physics without drawing RGB. Rendering is
     -- restored before the usual camera settle ticks and every saved view.
-    if r.kind ~= "snapshot" and r.kind ~= "emerge_capture" then
+    if r.kind ~= "snapshot" and r.kind ~= "emerge_capture" and r.kind ~= "restore_replay_nodes" then
         mt.settings:set_bool("voxwm_skip_rgb", r.kind ~= "pose")
     end
     if r.kind == "search" then
@@ -439,6 +440,12 @@ mt.registered_voxwm_poststeps = {function()
         reply(r, {status="surface_biomes", names=names})
     elseif r.kind == "anchor" then
         check_anchor(r)
+    elseif replay_restore and r.kind == "restore_replay_nodes" then
+        -- Reconstruct saved Node ID and param2 only in the disposable RGB replay.
+        for _, node in ipairs(r.nodes) do
+            mt.swap_node(xyz(node), {name=node[4], param2=node[5]})
+        end
+        reply(r, {status="saved_nodes_restored"})
     elseif r.kind == "pose" then
         pose(r, player)
     elseif r.kind == "snapshot" then

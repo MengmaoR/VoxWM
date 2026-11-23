@@ -19,6 +19,21 @@ from .v3_native import survey
 from .v3_report import brightness
 
 
+class LightInTransition(RejectedScene):
+    """Native light has not stabilized across the candidate render."""
+
+
+def restore_saved_cells(native, meta, scene, vocabulary):
+    nodes, _, _, _ = native.geometry_snapshot(meta["region_origin_xyz"], meta["anchor_kind"])
+    indices = np.argwhere((nodes[0] != scene[0]) | (nodes[1] != scene[1]))
+    if len(indices):
+        ox, oy, oz = meta["region_origin_xyz"]
+        restore = [[int(x) + ox, int(y) + oy, int(z) + oz, vocabulary[scene[0][x, z, y]],
+                    int(scene[1][x, z, y])] for x, z, y in indices]
+        native.command("restore_replay_nodes", nodes=restore)
+    return len(indices)
+
+
 def capture(native, meta, view, scene, floor):
     native.wait_lighting(floor)
     origin, kind = meta["region_origin_xyz"], meta["anchor_kind"]
@@ -40,8 +55,22 @@ def capture(native, meta, view, scene, floor):
         if not np.allclose(actual, view[key], rtol=0, atol=.0001 if measured == "cam_pos" else 1e-6):
             raise RejectedScene(f"Actual camera {measured} differs from the saved view: {actual}")
     if not np.array_equal(light, native.region_light):
-        raise RejectedScene("Native light changed across the captured frame")
+        raise LightInTransition("Native light changed across the captured frame")
     return rgb.copy(), proof, light
+
+
+def paired_rgb(native, meta, view, scene, floor):
+    while time.monotonic() < native.search_deadline:
+        try:
+            native.request_floor(V3_RGB["lighting_floor"])
+            control, _, light = capture(native, meta, view, scene, V3_RGB["lighting_floor"])
+            native.request_floor(floor)
+            rgb, proof, proposed_light = capture(native, meta, view, scene, floor)
+        except LightInTransition:
+            continue
+        if np.array_equal(light, proposed_light):
+            return control, rgb, proof
+    raise TimeoutError("Same-camera lighting pair did not stabilize")
 
 
 def replay(scene_path, output, config, vocabulary, craftium_dir, floor, seconds):
@@ -53,7 +82,8 @@ def replay(scene_path, output, config, vocabulary, craftium_dir, floor, seconds)
     path = output / scene_path.name
     path.mkdir()
     size = config["width"], config["height"]
-    settings = dict(SETUP, **V3_RGB, vox2pix_v3=True, voxwm_lighting_probe=True, voxwm_skip_rgb=True)
+    settings = dict(SETUP, **V3_RGB, vox2pix_v3=True, voxwm_lighting_probe=True,
+                    voxwm_skip_rgb=True, vox2pix_replay_restore=True)
     records = []
     with RenderSession("procedural", meta["world_seed"], config["renderer"], craftium_dir,
                        scene_script=HERE / "scene.lua",
@@ -82,16 +112,15 @@ def replay(scene_path, output, config, vocabulary, craftium_dir, floor, seconds)
             native.sink_to_floor(spawn)
         for _ in range(72):
             native.step()
+        restored = restore_saved_cells(native, meta, scene, vocabulary)
+        if restored:
+            for _ in range(24):
+                native.step()
         for index, view in enumerate(meta["views"]):
-            native.request_floor(V3_RGB["lighting_floor"])
             native.command("pose", relocate=False, yaw=view["requested_yaw_deg"], pitch=view["requested_pitch_deg"])
             for _ in range(12):
                 native.step()
-            control, _, light = capture(native, meta, view, scene, V3_RGB["lighting_floor"])
-            native.request_floor(floor)
-            rgb, proof, proposed_light = capture(native, meta, view, scene, floor)
-            if not np.array_equal(light, proposed_light):
-                raise RejectedScene("Native light changed between comparison frames")
+            control, rgb, proof = paired_rgb(native, meta, view, scene, floor)
             with Image.open(scene_path / "rgb" / f"{index:03d}.png") as original:
                 original_rgb = np.asarray(original, dtype=np.int16)
             diff = np.mean(np.abs(control.astype(np.int16) - original_rgb))
@@ -100,7 +129,8 @@ def replay(scene_path, output, config, vocabulary, craftium_dir, floor, seconds)
             records.append(dict(index=index, control=brightness(control), relit=brightness(rgb),
                                 renderer_lighting=proof, control_original_mean_absolute_rgb_difference=float(diff)))
     print(f"{meta['kind']}: {len(records)} RGB views replayed with identical voxel state and camera", flush=True)
-    return dict(scene_id=meta["scene_id"], kind=meta["kind"], world_seed=meta["world_seed"], views=records)
+    return dict(scene_id=meta["scene_id"], kind=meta["kind"], world_seed=meta["world_seed"],
+                restored_voxels=restored, views=records)
 
 
 def report(root, rows, floor):
