@@ -2,6 +2,7 @@
 
 import argparse
 from concurrent.futures import ProcessPoolExecutor
+from contextlib import contextmanager
 from html import escape
 from multiprocessing import get_context
 from pathlib import Path
@@ -73,18 +74,18 @@ def paired_rgb(native, meta, view, scene, floor):
     raise TimeoutError("Same-camera lighting pair did not stabilize")
 
 
-def replay(scene_path, output, config, vocabulary, craftium_dir, floor, seconds):
+@contextmanager
+def recorded_scene(scene_path, config, vocabulary, craftium_dir, seconds, *, replay_surveys=True,
+                   render_settings=None):
+    """Open the exact saved view anchors in a disposable native world."""
     meta = read_json(scene_path / "scene.json")
     if _builds(craftium_dir) != (meta["engine_build"], meta["game_build"]):
         raise ValueError("The saved scene requires its original Craftium and VoxeLibre revisions")
     group = zarr.open_group(str(scene_path / "voxels.zarr"), mode="r")
     scene = tuple(group[key][:] for key in RAW_FIELDS)
-    path = output / scene_path.name
-    path.mkdir()
     size = config["width"], config["height"]
-    settings = dict(SETUP, **V3_RGB, vox2pix_v3=True, voxwm_lighting_probe=True,
+    settings = dict(SETUP, **(render_settings or V3_RGB), vox2pix_v3=True, voxwm_lighting_probe=True,
                     voxwm_skip_rgb=True, vox2pix_replay_restore=True)
-    records = []
     with RenderSession("procedural", meta["world_seed"], config["renderer"], craftium_dir,
                        scene_script=HERE / "scene.lua",
                        scene_assets=(REUSED_LUA / "biome_search.lua", REUSED_LUA / "scene_geometry.lua"),
@@ -97,10 +98,11 @@ def replay(scene_path, output, config, vocabulary, craftium_dir, floor, seconds)
         # Match the pilot's terrain emergence before visiting the saved camera.
         # There were no candidate captures in the preceding surface site.
         rng = np.random.default_rng(meta["world_seed"])
-        for _ in range(meta["site_attempt"]):
-            x, z = map(int, rng.integers(-24000, 24001, size=2))
-            hit, _, _ = native.command("search_v3", x=x, z=z, scene_kind=meta["kind"])
-            survey(native, hit["site"], 32, config["survey_y"])
+        if replay_surveys:
+            for _ in range(meta["site_attempt"]):
+                x, z = map(int, rng.integers(-24000, 24001, size=2))
+                hit, _, _ = native.command("search_v3", x=x, z=z, scene_kind=meta["kind"])
+                survey(native, hit["site"], 32, config["survey_y"])
         origin = meta["region_origin_xyz"]
         response, _, _ = native.command("emerge_capture", low_xyz=origin, high_xyz=[n + 47 for n in origin])
         if response["status"] != "capture_emerged":
@@ -116,10 +118,22 @@ def replay(scene_path, output, config, vocabulary, craftium_dir, floor, seconds)
         if restored:
             for _ in range(24):
                 native.step()
+        yield native, meta, scene, restored
+
+
+def aim_recorded_view(native, view):
+    native.command("pose", relocate=False, yaw=view["requested_yaw_deg"], pitch=view["requested_pitch_deg"])
+    for _ in range(12):
+        native.step()
+
+
+def replay(scene_path, output, config, vocabulary, craftium_dir, floor, seconds):
+    path = output / scene_path.name
+    path.mkdir()
+    records = []
+    with recorded_scene(scene_path, config, vocabulary, craftium_dir, seconds) as (native, meta, scene, restored):
         for index, view in enumerate(meta["views"]):
-            native.command("pose", relocate=False, yaw=view["requested_yaw_deg"], pitch=view["requested_pitch_deg"])
-            for _ in range(12):
-                native.step()
+            aim_recorded_view(native, view)
             control, rgb, proof = paired_rgb(native, meta, view, scene, floor)
             with Image.open(scene_path / "rgb" / f"{index:03d}.png") as original:
                 original_rgb = np.asarray(original, dtype=np.int16)

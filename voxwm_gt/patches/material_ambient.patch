@@ -1,0 +1,313 @@
+diff --git a/builtin/settingtypes.txt b/builtin/settingtypes.txt
+index f3c6774..272b734 100644
+--- a/builtin/settingtypes.txt
++++ b/builtin/settingtypes.txt
+@@ -571,6 +571,9 @@ display_gamma (Light curve gamma) float 1.0 0.33 3.0
+ #    Minimum rendered light. The underlying node light and propagation are unchanged.
+ lighting_floor (Minimum rendered light) float 0.0 0.0 1.0
+ 
++#    Minimum ambient coefficient for opaque and alpha-cutout terrain textures.
++solid_ambient_floor (Solid material ambient floor) float 0.0 0.0 1.0
++
+ #    The strength (darkness) of node ambient-occlusion shading.
+ #    Lower is darker, Higher is lighter. The valid range of values for this
+ #    setting is 0.25 to 4.0 inclusive. If the value is out of range it will be
+diff --git a/client/shaders/nodes_shader/opengl_fragment.glsl b/client/shaders/nodes_shader/opengl_fragment.glsl
+index ed0404c..1e77c1c 100644
+--- a/client/shaders/nodes_shader/opengl_fragment.glsl
++++ b/client/shaders/nodes_shader/opengl_fragment.glsl
+@@ -1,4 +1,9 @@
+ uniform sampler2D baseTexture;
++#if VOXWM_SOLID_AMBIENT
++// voxwm-material-ambient-v1
++uniform float solidAmbientFloor;
++uniform lowp vec4 materialColor;
++#endif
+ 
+ uniform vec3 dayLight;
+ uniform lowp vec4 fogColor;
+@@ -550,6 +555,20 @@ void main(void)
+ 	}
+ #endif
+ 
++#if VOXWM_SOLID_AMBIENT
++	if (solidAmbientFloor > 0.0 && materialColor.a == 1.0) {
++		// Match native applyFacesShading, including its neutral zero-normal case.
++		vec3 n2 = vNormal * vNormal;
++		float shade = 1.0;
++		if (vNormal.y < 0.0 || n2.x > 0.001 || n2.z > 0.001) {
++			float vertical = vNormal.y < 0.0 ? 0.447213 : 1.0;
++			shade = dot(n2, vec3(0.670820, vertical, 0.836660));
++		}
++		vec3 ambient = base.rgb * materialColor.rgb * (solidAmbientFloor * clamp(shade, 0.0, 1.0));
++		col.rgb = max(col.rgb, ambient);
++	}
++#endif
++
+ 	// Due to a bug in some (older ?) graphics stacks (possibly in the glsl compiler ?),
+ 	// the fog will only be rendered correctly if the last operation before the
+ 	// clamp() is an addition. Else, the clamp() seems to be ignored.
+diff --git a/src/client/clientmap.cpp b/src/client/clientmap.cpp
+index aad5c70..0a06328 100644
+--- a/src/client/clientmap.cpp
++++ b/src/client/clientmap.cpp
+@@ -14,6 +14,7 @@
+ #include "nodedef.h"
+ #include "profiler.h"
+ #include "settings.h"
++#include "client/voxwm_material_ambient.h"
+ #include "camera.h"               // CameraModes
+ #include "util/basic_macros.h"
+ #include "util/tracy_wrapper.h"
+@@ -1375,6 +1376,7 @@ void ClientMap::renderPostFx(CameraMode cam_mode)
+ 		post_color = video::SColor(255, 0, 0, 0);
+ 	}
+ 
++	voxwm_material_post_color = post_color;
+ 	if (post_color.getAlpha() != 0) {
+ 		// Draw a full-screen rectangle
+ 		video::IVideoDriver* driver = SceneManager->getVideoDriver();
+diff --git a/src/client/game.cpp b/src/client/game.cpp
+index 33789f2..603549d 100644
+--- a/src/client/game.cpp
++++ b/src/client/game.cpp
+@@ -10,6 +10,7 @@
+ #include <fstream>
+ #include "light.h"
+ #include "voxwm_lighting_floor.h"
++#include "client/voxwm_material_ambient.h"
+ #include "client/renderingengine.h"
+ #include "camera.h"
+ #include "client.h"
+@@ -205,6 +206,9 @@ class GameGlobalShaderUniformSetter : public IShaderUniformSetter
+ 	CachedPixelShaderSetting<float>
+ 		m_animation_timer_delta_pixel{"animationTimerDelta"};
+ 	CachedPixelShaderSetting<float, 3> m_day_light{"dayLight"};
++	CachedPixelShaderSetting<float> m_solid_ambient{"solidAmbientFloor"};
++	float m_solid_ambient_floor = 0.0f;
++	bool m_ambient_terrain = false;
+ 	CachedPixelShaderSetting<float, 3> m_minimap_yaw{"yawVec"};
+ 	CachedPixelShaderSetting<float, 3> m_camera_offset_pixel{"cameraOffset"};
+ 	CachedVertexShaderSetting<float, 3> m_camera_offset_vertex{"cameraOffset"};
+@@ -236,8 +240,8 @@ class GameGlobalShaderUniformSetter : public IShaderUniformSetter
+ 	CachedPixelShaderSetting<float>
+ 		m_volumetric_light_strength_pixel{"volumetricLightStrength"};
+ 
+-	static constexpr std::array<const char*, 1> SETTING_CALLBACKS = {
+-		"exposure_compensation",
++	static constexpr std::array<const char*, 2> SETTING_CALLBACKS = {
++		"exposure_compensation", "solid_ambient_floor",
+ 	};
+ 
+ public:
+@@ -245,6 +249,8 @@ public:
+ 	{
+ 		if (name == "exposure_compensation")
+ 			m_user_exposure_compensation = g_settings->getFloat("exposure_compensation", -1.0f, 1.0f);
++		if (name == "solid_ambient_floor")
++			m_solid_ambient_floor = voxwm_limit_lighting_floor(g_settings->getFloat(name));
+ 	}
+ 
+ 	static void settingsCallback(const std::string &name, void *userdata)
+@@ -262,6 +268,7 @@ public:
+ 			g_settings->registerChangedCallback(name, settingsCallback, this);
+ 
+ 		m_user_exposure_compensation = g_settings->getFloat("exposure_compensation", -1.0f, 1.0f);
++		onSettingsChange("solid_ambient_floor");
+ 		m_bloom_enabled = g_settings->getBool("enable_bloom");
+ 		m_volumetric_light_enabled = g_settings->getBool("enable_volumetric_lighting") && m_bloom_enabled;
+ 	}
+@@ -277,6 +284,11 @@ public:
+ 		video::SColorf sunlight;
+ 		get_sunlight_color(&sunlight, daynight_ratio);
+ 		m_day_light.set(sunlight, services);
++		if (services->getPixelShaderConstantID("solidAmbientFloor") >= 0) {
++			const float ambient = m_ambient_terrain ? m_solid_ambient_floor : 0.0f;
++			m_solid_ambient.set(&ambient, services);
++			voxwm_material_shader_drawn |= m_ambient_terrain;
++		}
+ 
+ 		u32 animation_timer = m_client->getEnv().getFrameTime() % 1000000;
+ 		float animation_timer_f = (float)animation_timer / 100000.f;
+@@ -376,6 +388,7 @@ public:
+ 
+ 	void onSetMaterial(const video::SMaterial &material) override
+ 	{
++		m_ambient_terrain = material.ColorParam.getAlpha() == 255;
+ 		video::ITexture *texture = material.getTexture(0);
+ 		if (texture) {
+ 			core::dimension2du size = texture->getSize();
+@@ -465,6 +478,8 @@ public:
+ 
+ #undef PROVIDE
+ 
++		constants["VOXWM_SOLID_AMBIENT"] = name == "nodes_shader" &&
++				voxwmSolidAmbientMaterial(material_type, drawtype) ? 1 : 0;
+ 		bool enable_waving_water = g_settings->getBool("enable_waving_water");
+ 		constants["ENABLE_WAVING_WATER"] = enable_waving_water ? 1 : 0;
+ 		if (enable_waving_water) {
+@@ -1022,6 +1037,7 @@ void Game::run()
+ 	}
+ 	const std::string probe = voxwmFixed24() && g_settings->getBool("voxwm_lighting_probe")
+ 			? g_settings->get("voxwm_client_clock_file") + ".lighting" : "";
++	const bool material_probe = !probe.empty() && g_settings->getBool("voxwm_material_lighting_probe");
+ 
+ 	m_touch_simulate_aux1 = g_settings->getBool("fast_move")
+ 			&& client->checkPrivilege("fast");
+@@ -1103,7 +1119,14 @@ void Game::run()
+ 
+ 		if (!probe.empty() && client->voxwmLightingPending() == 0) {
+ 			float requested;
+-			if (std::ifstream(probe + "_request") >> requested) {
++			std::ifstream request(probe + "_request");
++			if (request >> requested) {
++				float ambient;
++				if (material_probe && request >> ambient) {
++					ambient = voxwm_limit_lighting_floor(ambient);
++					if (ambient != g_settings->getFloat("solid_ambient_floor"))
++						g_settings->setFloat("solid_ambient_floor", ambient);
++				}
+ 				requested = voxwm_limit_lighting_floor(requested);
+ 				if (requested != lighting_floor) {
+ 					client->voxwmSetLightingFloor(gamma, requested);
+@@ -1119,12 +1142,36 @@ void Game::run()
+ 		updateCamera(dtime);
+ 		updateSound(dtime);
+ 		processPlayerInteraction(dtime, m_game_ui->m_flags.show_hud);
++		voxwm_material_shader_drawn = false;
+ 		updateFrame(&graph, &stats, dtime, cam_view);
+ 		if (!probe.empty() && device->isWindowVisible() && !g_settings->getBool("voxwm_skip_rgb")) {
+ 			std::ofstream stamp(probe, std::ios::trunc);
+ 			stamp << voxwmClientTick.load() << " " << gamma << " " << lighting_floor
+ 					<< " " << int(decode_light(0)) << " " << int(decode_light(LIGHT_SUN))
+ 					<< " " << client->voxwmLightingPending() << " voxwm-light-floor-v1\n";
++			if (material_probe) {
++				const auto tick = voxwmClientTick.load();
++				std::ofstream material(g_settings->get("voxwm_client_clock_file") + ".material_lighting",
++						std::ios::trunc);
++				material << tick << " " << gamma << " " << lighting_floor << " "
++						<< voxwm_limit_lighting_floor(g_settings->getFloat("solid_ambient_floor"))
++						<< " " << int(decode_light(0)) << " " << int(decode_light(LIGHT_SUN))
++						<< " " << client->voxwmLightingPending() << " " << voxwm_material_shader_loaded
++						<< " voxwm-material-ambient-v1\n";
++				video::SColor color(0);
++				video::E_FOG_TYPE type;
++				f32 start, end, density;
++				bool pixel_fog, range_fog;
++				RenderingEngine::get_video_driver()->getFog(
++						color, type, start, end, density, pixel_fog, range_fog);
++				const auto post = voxwm_material_post_color;
++				std::ofstream fog(g_settings->get("voxwm_client_clock_file") + ".material_fog",
++						std::ios::trunc);
++				fog << tick << " " << color.getRed() << " " << color.getGreen() << " "
++						<< color.getBlue() << " " << color.getAlpha() << " " << start << " " << end
++						<< " " << post.getRed() << " " << post.getGreen() << " " << post.getBlue()
++						<< " " << post.getAlpha() << " " << voxwm_material_shader_drawn << "\n";
++			}
+ 		}
+ 		updateProfilerGraphs(&graph);
+ 
+diff --git a/src/client/mapblock_mesh.cpp b/src/client/mapblock_mesh.cpp
+index a847471..be54a0f 100644
+--- a/src/client/mapblock_mesh.cpp
++++ b/src/client/mapblock_mesh.cpp
+@@ -10,6 +10,8 @@
+ #include "noise.h"
+ #include "profiler.h"
+ #include "shader.h"
++#include "client/voxwm_material_ambient.h"
++#include "settings.h"
+ #include "mesh.h"
+ #include "minimap.h"
+ #include "content_mapblock.h"
+@@ -686,6 +688,19 @@ MapBlockMesh::MapBlockMesh(Client *client, MeshMakeData *data):
+ 			// Create material
+ 			video::SMaterial material;
+ 			material.FogEnable = true;
++			// Keep base terrain tint independent of brightness. Overlay layers retain
++			// the default ColorParam, which cannot activate the ambient shader.
++			if (layer == 0 && (g_settings->getBool("voxwm_material_lighting_probe") ||
++					g_settings->getFloat("solid_ambient_floor") > 0.0f)) {
++				const auto &shader = m_shdrsrc->getShaderInfo(p.layer.shader_id);
++				const auto drawtype = shader.input_constants.find("DRAWTYPE");
++				if (drawtype != shader.input_constants.end() &&
++						voxwmSolidAmbientMaterial(p.layer.material_type,
++								static_cast<NodeDrawType>(std::get<int>(drawtype->second)))) {
++					material.ColorParam = p.layer.color;
++					material.ColorParam.setAlpha(255);
++				}
++			}
+ 			material.forEachTexture([] (auto &tex) {
+ 				tex.MinFilter = video::ETMINF_NEAREST_MIPMAP_NEAREST;
+ 				tex.MagFilter = video::ETMAGF_NEAREST;
+diff --git a/src/client/shader.cpp b/src/client/shader.cpp
+index 3238969..6491b2e 100644
+--- a/src/client/shader.cpp
++++ b/src/client/shader.cpp
+@@ -6,6 +6,7 @@
+ #include <fstream>
+ #include <iterator>
+ #include "shader.h"
++#include "client/voxwm_material_ambient.h"
+ #include "irr_ptr.h"
+ #include "debug.h"
+ #include "filesys.h"
+@@ -763,6 +764,12 @@ ShaderInfo ShaderSource::generateShader(const std::string &name,
+ 			strgettext("\nCheck debug.txt for details."));
+ 	}
+ 
++	if (name == "nodes_shader" && fragment_shader.find("voxwm-material-ambient-v1") != std::string::npos) {
++		const auto ambient = constants.find("VOXWM_SOLID_AMBIENT");
++		if (ambient != constants.end() && std::get<int>(ambient->second) == 1)
++			voxwm_material_shader_loaded = true;
++	}
++
+ 	// Apply the newly created material type
+ 	shaderinfo.material = (video::E_MATERIAL_TYPE) shadermat;
+ 	return shaderinfo;
+diff --git a/src/client/voxwm_material_ambient.h b/src/client/voxwm_material_ambient.h
+new file mode 100644
+index 0000000..e9d8a1d
+--- /dev/null
++++ b/src/client/voxwm_material_ambient.h
+@@ -0,0 +1,27 @@
++// Opt-in Vox2Pix material lighting, separate from the global Light LUT.
++#pragma once
++
++#include "nodedef.h"
++
++inline constexpr bool voxwmSolidAmbientMaterial(MaterialType material, NodeDrawType drawtype)
++{
++	if (material != TILE_MATERIAL_OPAQUE && material != TILE_MATERIAL_BASIC &&
++			material != TILE_MATERIAL_WAVING_LEAVES && material != TILE_MATERIAL_WAVING_PLANTS)
++		return false;
++	switch (drawtype) {
++	case NDT_NORMAL:
++	case NDT_MESH:
++	case NDT_NODEBOX:
++	case NDT_FENCELIKE:
++	case NDT_ALLFACES:
++	case NDT_PLANTLIKE:
++		return true;
++	default:
++		return false;
++	}
++}
++
++// Shader compilation, draws and post-effect probes all run on the client thread.
++inline bool voxwm_material_shader_loaded = false;
++inline bool voxwm_material_shader_drawn = false;
++inline video::SColor voxwm_material_post_color{0};
+diff --git a/src/defaultsettings.cpp b/src/defaultsettings.cpp
+index 12ffafd..ad2c878 100644
+--- a/src/defaultsettings.cpp
++++ b/src/defaultsettings.cpp
+@@ -280,6 +280,8 @@ void set_default_settings()
+ 	settings->setDefault("lighting_beta", "1.5");
+ 	settings->setDefault("display_gamma", "1.0");
+ 	settings->setDefault("lighting_floor", "0.0");
++	settings->setDefault("solid_ambient_floor", "0.0");
++	settings->setDefault("voxwm_material_lighting_probe", "false");
+ 	settings->setDefault("voxwm_lighting_probe", "false");
+ 	settings->setDefault("lighting_boost", "0.2");
+ 	settings->setDefault("lighting_boost_center", "0.5");
