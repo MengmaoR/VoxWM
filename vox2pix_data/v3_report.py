@@ -144,9 +144,10 @@ def validate_payload(meta, config, vocabulary, slot, arrays):
                 and number(meta, "lighting_floor") == expected_rgb["lighting_floor"],
                 "Scene material ambient metadata differs from the selected profile")
     if expected_rgb.get("voxwm_exact_draw_range"):
-        from .protocol import V3_FOG_GEOMETRY
+        from .protocol import V3_FOG48_GEOMETRY, V3_FOG_GEOMETRY
 
-        require(meta.get("fog_geometry") == V3_FOG_GEOMETRY, "Native fog protocol geometry differs")
+        geometry = V3_FOG48_GEOMETRY if "fog_end_distance" in expected_rgb else V3_FOG_GEOMETRY
+        require(meta.get("fog_geometry") == geometry, "Native fog protocol geometry differs")
     validate_camera_protocol(meta)
     validate_visibility_lookup()
 
@@ -218,10 +219,13 @@ def validate_payload(meta, config, vocabulary, slot, arrays):
         if ambient is not None:
             _validate_material_lighting(view, ambient)
         if expected_rgb.get("voxwm_exact_draw_range"):
-            from .fog_runtime import validate_fog
+            from .fog_runtime import validate_fog, validate_fog_absolute
 
-            validate_fog(view.get("renderer_fog", {}), ratio=expected_rgb["fog_start"],
-                         tick=view["render_simulation_tick"])
+            if "fog_end_distance" in expected_rgb:
+                validate_fog_absolute(view.get("renderer_fog", {}), tick=view["render_simulation_tick"])
+            else:
+                validate_fog(view.get("renderer_fog", {}), ratio=expected_rgb["fog_start"],
+                             tick=view["render_simulation_tick"])
         if water_surface:
             require(np.allclose(vector(view, "actual_player_world_xyz"), foot, atol=.003, rtol=0),
                     "Surface observer moved from its water-surface anchor")

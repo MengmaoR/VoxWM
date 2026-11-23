@@ -14,7 +14,7 @@ def read_fog(native):
 
 def validate_fog(probe, *, enabled=True, ratio=.6666667, tick=None):
     """Require the final driver and node-shader state for this exposure."""
-    if probe.get("version") != "voxwm-native-fog-v1":
+    if probe.get("version") not in ("voxwm-native-fog-v1", "voxwm-native-fog-v2"):
         raise ValueError("Native fog probe version differs")
     if tick is not None and probe.get("render_tick") != tick:
         raise ValueError("Fog probe belongs to another RGB frame")
@@ -36,4 +36,39 @@ def validate_fog(probe, *, enabled=True, ratio=.6666667, tick=None):
                 raise ValueError(f"Unexpected native {key}: {value}, expected {expected}")
     if not math.isfinite(probe.get("camera_far_plane", math.nan)) or probe["camera_far_plane"] <= 30:
         raise ValueError("GPU camera far plane has been reduced to the map range")
+    return probe
+
+
+def validate_fog_absolute(probe, *, viewing_range=48, enabled=True, tick=None, start=20, end=30):
+    """Check independent map draw range and absolute native fog endpoints."""
+    if probe.get("version") != "voxwm-native-fog-v2":
+        raise ValueError("Absolute fog requires the native v2 range probe")
+    if tick is not None and probe.get("render_tick") != tick:
+        raise ValueError("Fog probe belongs to another RGB frame")
+    if probe.get("fog_enabled") is not enabled or probe.get("directional_colored_fog") is not True:
+        raise ValueError("Native fog enable or directional setting differs")
+    if probe.get("fog_type") != "linear":
+        raise ValueError("Native fog type differs from linear")
+    for key in ("viewing_range_config", "draw_control_wanted_range", "actual_map_draw_range"):
+        value = probe.get(key)
+        if not isinstance(value, (int, float)) or not math.isclose(value, viewing_range, abs_tol=1e-4):
+            raise ValueError(f"Unexpected native {key}: {value}, expected {viewing_range}")
+    for key in ("loaded_mapblocks_xyz", "submitted_mapblocks_xyz"):
+        if not isinstance(probe.get(key), list):
+            raise ValueError(f"Missing actual native {key}")
+    bound = probe.get("shader_uniforms_bound")
+    if not bound and probe["submitted_mapblocks_xyz"]:
+        raise ValueError("Native map geometry was submitted without node fog uniforms")
+    if enabled:
+        fields = [("actual_fog_start_distance", start), ("actual_fog_end_distance", end)]
+        if bound:
+            fields.extend((("shader_fog_distance", end),
+                           ("shader_fog_shading_parameter", end / (end - start))))
+        for key, expected in fields:
+            value = probe.get(key)
+            if not isinstance(value, (int, float)) or not math.isclose(value, expected, abs_tol=1e-4):
+                raise ValueError(f"Unexpected native {key}: {value}, expected {expected}")
+    far = probe.get("camera_far_plane", math.nan)
+    if not isinstance(far, (int, float)) or not math.isfinite(far) or far <= viewing_range:
+        raise ValueError("GPU far plane is restricted to the map draw range")
     return probe

@@ -14,6 +14,8 @@ V3_MATERIAL_VERSION = "vox2pix-v3-surface-watercount-cave-underwater-materialamb
 V3_MATERIAL_PROFILE = "material-ambient"
 V3_FOG_PROFILE = "material-ambient-fog20"
 V3_FOG_VERSION = "vox2pix-v3-materialambient-linear-fog20-30"
+V3_FOG48_PROFILE = "material-ambient-fog20-draw48"
+V3_FOG48_VERSION = "vox2pix-v3-local48-rgb48-absolute-fog20-30"
 V3_KINDS = ("surface", "cave", "underwater")
 HEIGHTS = ("surface", "shallow", "deep")
 CENTER = (slice(16, 32),) * 3
@@ -43,10 +45,18 @@ V3_FOG_RGB = dict(V3_MATERIAL_RGB, fog_start=.6666667, voxwm_exact_draw_range=Tr
 V3_FOG_GEOMETRY = dict(voxel_observation_half_extent=24, rgb_viewing_range=30,
                       fog_start_distance=20, fog_end_distance=30,
                       fog_start_ratio=2 / 3, fog_type="linear")
+V3_FOG48_RGB = dict(V3_MATERIAL_RGB, viewing_range=48, voxwm_exact_draw_range=True,
+                   fog_start_distance=20., fog_end_distance=30.)
+del V3_FOG48_RGB["fog_start"]
+V3_FOG48_GEOMETRY = dict(voxel_observation_shape=[48, 48, 48],
+                        voxel_observation_half_extent=24, rgb_viewing_range=48,
+                        fog_start_distance=20, fog_end_distance=30, fog_type="linear")
 
 
 def v3_rgb(config):
     profile = config.get("lighting_profile", "global-lut")
+    if profile == V3_FOG48_PROFILE:
+        return V3_FOG48_RGB
     if profile == V3_FOG_PROFILE:
         return V3_FOG_RGB
     if profile == V3_MATERIAL_PROFILE:
@@ -57,6 +67,8 @@ def v3_rgb(config):
 
 
 def v3_version(config):
+    if v3_rgb(config) is V3_FOG48_RGB:
+        return V3_FOG48_VERSION
     if v3_rgb(config) is V3_FOG_RGB:
         return V3_FOG_VERSION
     return V3_MATERIAL_VERSION if v3_rgb(config) is V3_MATERIAL_RGB else V3_VERSION

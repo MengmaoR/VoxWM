@@ -1,0 +1,239 @@
+diff --git a/src/client/clientmap.cpp b/src/client/clientmap.cpp
+index 0a06328..4a76b81 100644
+--- a/src/client/clientmap.cpp
++++ b/src/client/clientmap.cpp
+@@ -15,6 +15,7 @@
+ #include "profiler.h"
+ #include "settings.h"
+ #include "client/voxwm_material_ambient.h"
++#include "client/voxwm_fog_probe.h"
+ #include "camera.h"               // CameraModes
+ #include "util/basic_macros.h"
+ #include "util/tracy_wrapper.h"
+@@ -982,6 +983,21 @@ void ClientMap::renderMap(video::IVideoDriver* driver, s32 pass)
+ 	const u32 daynight_ratio = m_client->getEnv().getDayNightRatio();
+ 
+ 	const v3f camera_position = m_camera_position;
++	const bool fog_probe = g_settings->getBool("voxwm_fog_probe");
++	if (fog_probe && !is_transparent_pass) {
++		voxwm_map_draw_range = m_control.wanted_range;
++		const v3s16 camera_block = getContainerPos(floatToInt(camera_position, BS), MAP_BLOCKSIZE);
++		const int extent = static_cast<int>(std::ceil(m_control.wanted_range / MAP_BLOCKSIZE)) + 1;
++		for (const auto &sector_entry : m_sectors) {
++			const MapSector &sector = *sector_entry.second;
++			for (const auto &entry : sector.getBlocks()) {
++				const v3s16 p = entry.second->getPos();
++				if (std::abs(p.X - camera_block.X) <= extent && std::abs(p.Y - camera_block.Y) <= extent &&
++						std::abs(p.Z - camera_block.Z) <= extent)
++					voxwm_loaded_mapblocks.push_back({p.X, p.Y, p.Z});
++			}
++		}
++	}
+ 
+ 	const auto mesh_grid = m_client->getMeshGrid();
+ 	// Gets world position from block map position
+@@ -1029,6 +1045,11 @@ void ClientMap::renderMap(video::IVideoDriver* driver, s32 pass)
+ 		if (is_frustum_culled(mesh_sphere_center, mesh_sphere_radius))
+ 			continue;
+ 
++		if (fog_probe && !is_transparent_pass && block_mesh->getMesh()->getMeshBufferCount() > 0) {
++			const v3s16 p = block->getPos();
++			voxwm_submitted_mapblocks.push_back({p.X, p.Y, p.Z});
++		}
++
+ 		// Mesh animation
+ 		if (pass == scene::ESNRP_SOLID) {
+ 			// 50 nodes is pretty arbitrary but it should work somewhat nicely
+@@ -1144,6 +1165,10 @@ void ClientMap::renderMap(video::IVideoDriver* driver, s32 pass)
+ 		g_profiler->avg("renderMap(): transparent buffers [#]", draw_order.size());
+ 	}
+ 
++	if (fog_probe) {
++		voxwm_map_drawcalls += drawcall_count;
++		voxwm_map_vertices += vertex_count;
++	}
+ 	g_profiler->avg(prefix + "vertices drawn [#]", vertex_count);
+ 	g_profiler->avg(prefix + "drawcalls [#]", drawcall_count);
+ 	g_profiler->avg(prefix + "material swaps [#]", material_swaps);
+diff --git a/src/client/game.cpp b/src/client/game.cpp
+index 7224562..08e594d 100644
+--- a/src/client/game.cpp
++++ b/src/client/game.cpp
+@@ -12,6 +12,7 @@
+ #include "voxwm_lighting_floor.h"
+ #include "client/voxwm_material_ambient.h"
+ #include "client/voxwm_fog_probe.h"
++#include "client/voxwm_fog_absolute.h"
+ #include "client/renderingengine.h"
+ #include "camera.h"
+ #include "client.h"
+@@ -1144,8 +1145,21 @@ void Game::run()
+ 		if (fog_probe) {
+ 			int enabled;
+ 			float ratio;
+-			if (std::ifstream(g_settings->get("voxwm_client_clock_file") + ".fog_request") >> enabled >> ratio) {
+-				if ((enabled == 0 || enabled == 1) && std::isfinite(ratio) && ratio >= 0.0f && ratio < 1.0f) {
++			std::ifstream request(g_settings->get("voxwm_client_clock_file") + ".fog_request");
++			if (request >> enabled >> ratio) {
++				float end, draw;
++				if (request >> end >> draw) {
++					if ((enabled != 0 && enabled != 1) || !std::isfinite(draw) || draw <= 0.0f || draw > 4000.0f)
++						throw std::invalid_argument("Invalid native fog draw range request");
++					voxwmAbsoluteFog(ratio, end);
++					m_cache_enable_fog = enabled != 0;
++					g_settings->setBool("enable_fog", m_cache_enable_fog);
++					g_settings->setFloat("fog_start_distance", ratio);
++					g_settings->setFloat("fog_end_distance", end);
++					g_settings->setFloat("viewing_range", draw);
++				} else if ((enabled == 0 || enabled == 1) && std::isfinite(ratio) && ratio >= 0.0f && ratio < 1.0f) {
++					g_settings->setFloat("fog_start_distance", -1.0f);
++					g_settings->setFloat("fog_end_distance", -1.0f);
+ 					m_cache_enable_fog = enabled != 0;
+ 					g_settings->setBool("enable_fog", m_cache_enable_fog);
+ 					g_settings->setFloat("fog_start", ratio);
+@@ -1158,6 +1172,11 @@ void Game::run()
+ 		processPlayerInteraction(dtime, m_game_ui->m_flags.show_hud);
+ 		voxwm_material_shader_drawn = false;
+ 		voxwm_fog_uniform_bound = false;
++		voxwm_loaded_mapblocks.clear();
++		voxwm_submitted_mapblocks.clear();
++		voxwm_map_drawcalls = 0;
++		voxwm_map_vertices = 0;
++		voxwm_map_draw_range = 0.0f;
+ 		updateFrame(&graph, &stats, dtime, cam_view);
+ 		if (!probe.empty() && device->isWindowVisible() && !g_settings->getBool("voxwm_skip_rgb")) {
+ 			std::ofstream stamp(probe, std::ios::trunc);
+@@ -1172,7 +1191,7 @@ void Game::run()
+ 				driver->getFog(color, type, start, end, density, pixel_fog, range_fog);
+ 				std::ofstream fog(g_settings->get("voxwm_client_clock_file") + ".fog", std::ios::trunc);
+ 				fog << std::setprecision(9) << std::boolalpha
+-						<< "{\"version\":\"voxwm-native-fog-v1\",\"render_tick\":" << voxwmClientTick.load()
++						<< "{\"version\":\"voxwm-native-fog-v2\",\"render_tick\":" << voxwmClientTick.load()
+ 						<< ",\"viewing_range_config\":" << g_settings->getFloat("viewing_range")
+ 						<< ",\"draw_control_wanted_range\":" << draw_control->wanted_range
+ 						<< ",\"sky_fog_distance\":" << sky->getFogDistance()
+@@ -1181,6 +1200,17 @@ void Game::run()
+ 						<< ",\"runData_fog_range\":" << runData.fog_range / BS
+ 						<< ",\"actual_fog_start\":" << start / BS
+ 						<< ",\"actual_fog_end\":" << end / BS
++						<< ",\"actual_fog_start_distance\":" << start / BS
++						<< ",\"actual_fog_end_distance\":" << end / BS
++						<< ",\"actual_map_draw_range\":" << voxwm_map_draw_range
++						<< ",\"max_block_send_distance\":" << g_settings->getS16("max_block_send_distance")
++						<< ",\"max_block_send_distance_nodes\":" << g_settings->getS16("max_block_send_distance") * MAP_BLOCKSIZE
++						<< ",\"max_block_generate_distance\":" << g_settings->getS16("max_block_generate_distance")
++						<< ",\"max_block_generate_distance_nodes\":" << g_settings->getS16("max_block_generate_distance") * MAP_BLOCKSIZE
++						<< ",\"active_object_send_range_blocks\":" << g_settings->getS16("active_object_send_range_blocks")
++						<< ",\"active_object_send_range_nodes\":" << g_settings->getS16("active_object_send_range_blocks") * MAP_BLOCKSIZE
++						<< ",\"map_drawcalls\":" << voxwm_map_drawcalls
++						<< ",\"map_vertices\":" << voxwm_map_vertices
+ 						<< ",\"actual_fog_color\":[" << color.getRed() << "," << color.getGreen()
+ 						<< "," << color.getBlue() << "," << color.getAlpha() << "]"
+ 						<< ",\"fog_enabled\":" << fogEnabled()
+@@ -1191,7 +1221,11 @@ void Game::run()
+ 						<< ",\"shader_fog_distance\":" << voxwm_fog_uniform_distance / BS
+ 						<< ",\"shader_fog_shading_parameter\":" << voxwm_fog_uniform_parameter
+ 						<< ",\"shader_uniforms_bound\":" << voxwm_fog_uniform_bound
+-						<< ",\"fog_type\":\"" << (type == video::EFT_FOG_LINEAR ? "linear" : "other") << "\"}\n";
++						<< ",\"fog_type\":\"" << (type == video::EFT_FOG_LINEAR ? "linear" : "other") << "\",\"loaded_mapblocks_xyz\":";
++				voxwmWriteMapblocks(fog, voxwm_loaded_mapblocks);
++				fog << ",\"submitted_mapblocks_xyz\":";
++				voxwmWriteMapblocks(fog, voxwm_submitted_mapblocks);
++				fog << "}\n";
+ 			}
+ 			if (material_probe) {
+ 				const auto tick = voxwmClientTick.load();
+@@ -4012,7 +4046,8 @@ void Game::updateFrame(ProfilerGraph *graph, RunStats *stats, f32 dtime,
+ 		Fog range
+ 	*/
+ 
+-	if (sky->getFogDistance() >= 0) {
++	if (sky->getFogDistance() >= 0 && !voxwmAbsoluteFog(
++			g_settings->getFloat("fog_start_distance"), g_settings->getFloat("fog_end_distance"))) {
+ 		draw_control->wanted_range = MYMIN(draw_control->wanted_range, sky->getFogDistance());
+ 	}
+ 	if (draw_control->range_all && sky->getFogDistance() < 0) {
+@@ -4242,12 +4277,15 @@ void Game::drawScene(ProfilerGraph *graph, RunStats *stats)
+ 	/*
+ 		Fog
+ 	*/
++	const float absolute_start = g_settings->getFloat("fog_start_distance");
++	const float absolute_end = g_settings->getFloat("fog_end_distance");
++	const bool absolute_fog = voxwmAbsoluteFog(absolute_start, absolute_end);
+ 	if (this->fogEnabled()) {
+ 		this->driver->setFog(
+ 				fog_color,
+ 				video::EFT_FOG_LINEAR,
+-				this->runData.fog_range * this->sky->getFogStart(),
+-				this->runData.fog_range * 1.0f,
++				absolute_fog ? absolute_start * BS : this->runData.fog_range * this->sky->getFogStart(),
++				absolute_fog ? absolute_end * BS : this->runData.fog_range,
+ 				0.f, // unused
+ 				false, // pixel fog
+ 				true // range fog
+diff --git a/src/client/voxwm_fog_absolute.h b/src/client/voxwm_fog_absolute.h
+new file mode 100644
+index 0000000..e5c88b9
+--- /dev/null
++++ b/src/client/voxwm_fog_absolute.h
+@@ -0,0 +1,13 @@
++// Independent world-node fog distances. -1/-1 preserves native legacy behavior.
++#pragma once
++#include <cmath>
++#include <stdexcept>
++
++inline bool voxwmAbsoluteFog(float start, float end)
++{
++	if (start == -1.0f && end == -1.0f)
++		return false;
++	if (!std::isfinite(start) || !std::isfinite(end) || start < 0.0f || end <= start)
++		throw std::invalid_argument("Fog distances require 0 <= fog_start_distance < fog_end_distance");
++	return true;
++}
+diff --git a/src/client/voxwm_fog_probe.h b/src/client/voxwm_fog_probe.h
+index 4db363d..708f51c 100644
+--- a/src/client/voxwm_fog_probe.h
++++ b/src/client/voxwm_fog_probe.h
+@@ -1,8 +1,29 @@
+ // Opt-in VoxWM diagnostics for native FogShaderUniformSetter values.
+ #pragma once
++#include <array>
++#include <ostream>
++#include <vector>
+ 
+ inline bool voxwm_fog_uniform_bound = false;
+ inline bool voxwm_fog_nodes_active = false;
+ inline float voxwm_fog_uniform_distance = 0.0f;
+ inline float voxwm_fog_uniform_parameter = 0.0f;
+ inline float voxwm_fog_before_clouds = 0.0f;
++
++inline std::vector<std::array<int, 3>> voxwm_loaded_mapblocks;
++inline std::vector<std::array<int, 3>> voxwm_submitted_mapblocks;
++inline float voxwm_map_draw_range = 0.0f;
++inline unsigned voxwm_map_drawcalls = 0;
++inline unsigned voxwm_map_vertices = 0;
++
++inline void voxwmWriteMapblocks(std::ostream &out, const std::vector<std::array<int, 3>> &blocks)
++{
++	out << "[";
++	bool first = true;
++	for (const auto &p : blocks) {
++		if (!first) out << ",";
++		first = false;
++		out << "[" << p[0] << "," << p[1] << "," << p[2] << "]";
++	}
++	out << "]";
++}
+diff --git a/src/defaultsettings.cpp b/src/defaultsettings.cpp
+index 1dbc438..843b036 100644
+--- a/src/defaultsettings.cpp
++++ b/src/defaultsettings.cpp
+@@ -283,6 +283,8 @@ void set_default_settings()
+ 	settings->setDefault("solid_ambient_floor", "0.0");
+ 	settings->setDefault("voxwm_exact_draw_range", "false");
+ 	settings->setDefault("voxwm_fog_probe", "false");
++	settings->setDefault("fog_start_distance", "-1");
++	settings->setDefault("fog_end_distance", "-1");
+ 	settings->setDefault("voxwm_material_lighting_probe", "false");
+ 	settings->setDefault("voxwm_lighting_probe", "false");
+ 	settings->setDefault("lighting_boost", "0.2");

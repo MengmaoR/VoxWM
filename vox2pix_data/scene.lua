@@ -403,6 +403,12 @@ local function snapshot(r, player)
         end
         if mt.settings:get_bool("voxwm_fog_probe", false) then
             state.native_render_settings.voxwm_exact_draw_range = mt.settings:get_bool("voxwm_exact_draw_range")
+            local fog_end = tonumber(mt.settings:get("fog_end_distance"))
+            if fog_end and fog_end > 0 then
+                state.native_render_settings.fog_start = nil
+                state.native_render_settings.fog_start_distance = tonumber(mt.settings:get("fog_start_distance"))
+                state.native_render_settings.fog_end_distance = fog_end
+            end
         end
         state.hud_wielditem_hidden = player:hud_get_flags().wielditem == false
         state.wielded_item = player:get_wielded_item():get_name()

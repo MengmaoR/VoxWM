@@ -318,10 +318,14 @@ class NativeScene:
                     view.update(solid_ambient_floor=ambient,
                                 material_renderer_lighting=self.check_material_light_frame(lighting, ambient))
                 if rgb_settings.get("voxwm_exact_draw_range"):
-                    from .fog_runtime import read_fog, validate_fog
+                    from .fog_runtime import read_fog, validate_fog, validate_fog_absolute
 
-                    view["renderer_fog"] = validate_fog(
-                        read_fog(self), ratio=rgb_settings["fog_start"], tick=lighting["render_tick"])
+                    probe = read_fog(self)
+                    if "fog_end_distance" in rgb_settings:
+                        view["renderer_fog"] = validate_fog_absolute(probe, tick=lighting["render_tick"])
+                    else:
+                        view["renderer_fog"] = validate_fog(
+                            probe, ratio=rgb_settings["fog_start"], tick=lighting["render_tick"])
             else:
                 require_air_camera(current[0], self.stable_defs, projection_origin)
             direction = np.asarray(info["cam_dir"], dtype=np.float64)
@@ -389,9 +393,9 @@ class NativeScene:
         if ambient is not None:
             meta.update(solid_ambient_floor=ambient, lighting_profile=config["lighting_profile"])
         if rgb_settings.get("voxwm_exact_draw_range"):
-            from .protocol import V3_FOG_GEOMETRY
+            from .protocol import V3_FOG48_GEOMETRY, V3_FOG_GEOMETRY
 
-            meta["fog_geometry"] = dict(V3_FOG_GEOMETRY)
+            meta["fog_geometry"] = dict(V3_FOG48_GEOMETRY if "fog_end_distance" in rgb_settings else V3_FOG_GEOMETRY)
         if underwater_descent:
             meta.update(underwater_descent=underwater_descent, visibility_camera_local_xyz=list(eye))
         meta["lighting_comparison"], auxiliary = self.lighting_comparison(

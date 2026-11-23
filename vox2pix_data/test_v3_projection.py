@@ -46,6 +46,14 @@ class V3ProjectionTests(unittest.TestCase):
         self.nodes[24, 26:29, 24] = 2
         self.assertEqual(self.trace(), (65535, 0, 255, 3))
 
+    def test_cube_corner_surface_beyond_radius24_remains_available(self):
+        self.nodes[44, 44, 24] = 1
+        self.assertEqual(self.trace(direction=(1., 0., 1.))[:2], (1, 7))
+
+    def test_water_count_stops_at_the_stored_cube_boundary(self):
+        self.nodes[24, 44:48, 24] = 2
+        self.assertEqual(self.trace(), (65535, 0, 255, 4))
+
     def test_initial_water_voxel_exited_before_near_plane(self):
         self.nodes[24, 24, 24] = 2
         origin = (0, 0, .45)

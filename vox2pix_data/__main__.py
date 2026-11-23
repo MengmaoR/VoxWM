@@ -9,7 +9,7 @@ from tempfile import TemporaryDirectory
 
 from voxwm_gt.session import DEFAULT_CRAFTIUM
 
-from .protocol import V3_FOG_PROFILE, V3_MATERIAL_PROFILE
+from .protocol import V3_FOG48_PROFILE, V3_FOG_PROFILE, V3_MATERIAL_PROFILE
 
 
 def positive(value):
@@ -26,8 +26,9 @@ def parser():
     collect.add_argument("--dataset", type=Path, required=True)
     collect.add_argument("--mode", choices=["pilot-v2", "smoke"], default="pilot-v2",
                          help="smoke uses the isolated v3 native dataset protocol")
-    collect.add_argument("--lighting-profile", choices=["global-lut", V3_MATERIAL_PROFILE, V3_FOG_PROFILE],
-                         default=V3_FOG_PROFILE, help="v3 profile, including versioned native fog20–30")
+    collect.add_argument("--lighting-profile",
+                         choices=["global-lut", V3_MATERIAL_PROFILE, V3_FOG_PROFILE, V3_FOG48_PROFILE],
+                         default=V3_FOG48_PROFILE, help="v3 profile with independent RGB draw and fog ranges")
     collect.add_argument("--scene-kinds", nargs=3, default=["surface", "cave", "underwater"])
     collect.add_argument("--scenes-per-kind", type=int, choices=[1, 3], default=1)
     collect.add_argument("--scene-timeout", type=positive, default=180, help="v3 seconds available per scene")
