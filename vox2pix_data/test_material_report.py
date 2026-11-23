@@ -9,7 +9,9 @@ import numpy as np
 import zarr
 
 from .material_report import finish_report, region_masks, write_comparison
+from .protocol import V3_MATERIAL_PROFILE, V3_VERSION, v3_lighting_images, v3_version
 from .storage import EMPTY_NODE
+from .v3_report import validate_lighting_pair
 
 
 class ImageLinks(HTMLParser):
@@ -23,6 +25,35 @@ class ImageLinks(HTMLParser):
 
 
 class MaterialReportTests(unittest.TestCase):
+    def test_material_capture_requires_a_probe_from_the_same_frame(self):
+        config = {"lighting_profile": V3_MATERIAL_PROFILE}
+        self.assertEqual(v3_version({}), V3_VERSION)
+        self.assertNotEqual(v3_version(config), V3_VERSION)
+        self.assertEqual(v3_lighting_images({}), ("floor_000", "floor_035"))
+
+        def view(tick, ambient):
+            lut = dict(render_tick=tick, display_gamma=3.0, lighting_floor=0., lut_zero=0,
+                       lut_max=255, pending_meshes=0)
+            return dict(render_simulation_tick=tick, display_gamma=3.0, gamma=3.0,
+                        lighting_floor=0., solid_ambient_floor=ambient,
+                        renderer_lighting=dict(lut, version="voxwm-light-floor-v1"),
+                        material_renderer_lighting=dict(lut, solid_ambient_floor=ambient,
+                                                        version="voxwm-material-ambient-v1", shader_bound=True),
+                        actual_camera_world_xyz=[1., 2., 3.], cam_dir_xyz=[1., 0., 0.],
+                        fov_x_rad=1.57, fov_y_rad=1.25)
+
+        control, proposed = view(11, 0.), view(8, .35)
+        meta = dict(kind="cave", views=[proposed], lighting_comparison=dict(
+            view_index=0, light_identity_unchanged=True, voxel_identity_unchanged=True,
+            white_identity_unchanged=True, control=control, proposed=proposed))
+        dark = np.zeros((2, 2, 3), dtype="u1")
+        lit = np.full_like(dark, 35)
+        frames = dict(zip(v3_lighting_images(config), (dark, lit), strict=True))
+        self.assertEqual(validate_lighting_pair(meta, frames, [lit], config)["status"], "VERIFIED")
+        control["material_renderer_lighting"]["render_tick"] += 1
+        with self.assertRaisesRegex(ValueError, "differs from the native RGB frame"):
+            validate_lighting_pair(meta, frames, [lit], config)
+
     def test_region_partition_is_exhaustive_and_ordered(self):
         surface = np.array([[0, 1], [EMPTY_NODE, EMPTY_NODE]], dtype=np.uint16)
         water = np.array([[0, 2], [1, 0]], dtype=np.uint8)

@@ -2,7 +2,7 @@
 
 Vox2Pix 当前采用 [v3 数据协议](VOX2PIX_DATA_COLLECTION_PROTOCOL.md)。类别为 Surface、Cave、Underwater，白模保存单层首次非水命中及 Water Count。保留实际 RGB 相机、48³ 脚底锚定、名义眼高与可见性半径 1.6、40 个视角区中至少 20 个可用。空余率只作分析。v2 1K 结果作为独立历史保留。
 
-- 用户已授权本次 v3 最小 Native smoke，仅每类 1 场景、每场景 5 个视角。真实 45 帧、更大采集和训练需单独授权。三类统一使用原生 `display_gamma=3.0`、`lighting_floor=0.35`。同场景同位姿的 Floor 0.0 / 0.35 对照单独保存。水下观察者自然沉底，再从真实位置建立 48³；不在下沉时固定高度或裁剪。
+- v3 材质照明候选统一用 `display_gamma=3.0`、`lighting_floor=0.0`、`solid_ambient_floor=0.35`，由 `--lighting-profile material-ambient` 显式选择。历史全局 LUT profile 和原始 15 帧保留。已授权的材质实验仅回放原有 3 场景、15 个机位，A/B/C 诊断独立保存。新增场景采集、更大采集和训练仍需用户授权。水下观察者自然沉底，再从真实位置建立 48³。
 
 数据采集和 E00 小样本验证阶段已结束。当前活动方向是`voxel_vae/`的 E01-Masked Combined-Token 3D ResNet VAE。E00 的 Plain 与 Masked 产物保留作历史。`python -m vae_data` → `vae_data/sharded/`及[数据协议](VAE_DATA_COLLECTION_PROTOCOL.md)继续定义只读正式数据格式。
 

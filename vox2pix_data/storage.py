@@ -131,9 +131,9 @@ class DatasetWriter:
             except BlockingIOError as exc:
                 raise ValueError(f"Vox2Pix collection is already writing {self.root}") from exc
             if self.v3:
-                from .protocol import V3_VERSION, v3_plan
+                from .protocol import v3_plan, v3_version
 
-                version, slots = V3_VERSION, v3_plan(self.config)
+                version, slots = v3_version(self.config), v3_plan(self.config)
             else:
                 version, slots = VERSION, plan(self.config["seed"])
             expected = {"version": version, "config": self.config, "axes": "ENU",
@@ -207,7 +207,7 @@ class DatasetWriter:
             from .v3_report import validate_lighting_pair, validate_payload
 
             validate_payload(meta, self.config, vocabulary, self.slots[scene_id], arrays)
-            validate_lighting_pair(meta, aux_rgbs or {}, rgbs)
+            validate_lighting_pair(meta, aux_rgbs or {}, rgbs, self.config)
         else:
             from .qa import validate_payload
 

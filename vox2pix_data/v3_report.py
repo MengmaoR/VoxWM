@@ -11,7 +11,8 @@ import numpy as np
 from PIL import Image
 
 from .protocol import (
-    NOMINAL_CAMERA_XYZ, PLAYER_AIR_OFFSETS, RejectedScene, V3_RGB, V3_VERSION, require_air_camera, v3_plan,
+    NOMINAL_CAMERA_XYZ, PLAYER_AIR_OFFSETS, RejectedScene, V3_MATERIAL_VERSION, V3_RGB,
+    require_air_camera, v3_lighting_images, v3_plan, v3_rgb, v3_version,
 )
 from .qa import (
     named_ids, number, require, validate_camera_protocol, validate_view,
@@ -23,7 +24,6 @@ from .storage import (
 )
 
 
-LIGHTING_PNGS = ("floor_000", "floor_035")
 CAVE_DARK_FRACTION = .5
 FACE_COLORS = np.array([(223, 103, 104), (130, 48, 58), (111, 195, 121),
                         (49, 110, 71), (111, 162, 233), (63, 78, 167)], dtype="u1")
@@ -52,9 +52,24 @@ def _validate_renderer_lighting(view, floor):
             "Native renderer light LUT or mesh state differs from this exposure")
 
 
-def validate_lighting_pair(meta, frames, official_rgb):
-    """Check the native comparison images and report their measured brightness."""
-    require(set(frames) == set(LIGHTING_PNGS), "Lighting comparison requires Floor 0.0 and Floor 0.35")
+def _validate_material_lighting(view, ambient):
+    probe = view.get("material_renderer_lighting")
+    light = view["renderer_lighting"]
+    frame_keys = ("render_tick", "display_gamma", "lighting_floor", "lut_zero", "lut_max", "pending_meshes")
+    require(number(view, "solid_ambient_floor") == ambient and isinstance(probe, dict)
+            and probe.get("version") == "voxwm-material-ambient-v1" and probe.get("shader_bound") is True
+            and number(probe, "solid_ambient_floor") == ambient
+            and all(probe.get(key) == light[key] for key in frame_keys),
+            "Material ambient proof differs from the native RGB frame")
+
+
+def validate_lighting_pair(meta, frames, official_rgb, config=None):
+    """Check the two native images for the selected rendering protocol."""
+    config = config or {}
+    rgb = v3_rgb(config)
+    ambient = rgb.get("solid_ambient_floor")
+    names = v3_lighting_images(config)
+    require(set(frames) == set(names), "Lighting comparison images differ from the selected profile")
     check = meta.get("lighting_comparison")
     require(isinstance(check, dict), "Missing native Lighting Comparison")
     for key in ("voxel_identity_unchanged", "light_identity_unchanged", "white_identity_unchanged"):
@@ -62,12 +77,17 @@ def validate_lighting_pair(meta, frames, official_rgb):
     index = check.get("view_index")
     require(type(index) is int and 0 <= index < len(meta["views"]), "Invalid lighting view index")
     main_view = meta["views"][index]
-    for label, expected_floor in (("control", 0.), ("proposed", V3_RGB["lighting_floor"])):
+    for label, expected_floor in (("control", 0.), ("proposed", rgb["lighting_floor"])):
         row = check[label]
         require(number(row, "lighting_floor") == expected_floor,
                 "Lighting Comparison floor differs from the requested setting")
         require(number(row, "display_gamma") == main_view["gamma"], "Display gamma changed in Lighting Comparison")
         _validate_renderer_lighting(row, expected_floor)
+        if ambient is not None:
+            _validate_material_lighting(row, 0. if label == "control" else ambient)
+            if label == "proposed":
+                require(row["material_renderer_lighting"] == main_view["material_renderer_lighting"],
+                        "Lighting Comparison has different material evidence from the dataset view")
         for key in ("actual_camera_world_xyz", "cam_dir_xyz"):
             require(np.allclose(vector(row, key), vector(main_view, key), rtol=0, atol=1e-6),
                     f"Lighting Comparison changed {key}")
@@ -78,9 +98,9 @@ def validate_lighting_pair(meta, frames, official_rgb):
     if any(value is not None for value in eye_light):
         require(all(type(value) is int and 0 <= value <= 255 for value in eye_light)
                 and eye_light[0] == eye_light[1], "Native eye-cell param1 differs across captures")
-    require(np.array_equal(frames["floor_035"], official_rgb[index]),
-            "Floor 0.35 PNG differs from its official dataset view")
-    control, proposed = (brightness(frames[label]) for label in LIGHTING_PNGS)
+    require(np.array_equal(frames[names[1]], official_rgb[index]),
+            "Proposed lighting PNG differs from its official dataset view")
+    control, proposed = (brightness(frames[label]) for label in names)
     status = "VERIFIED"
     if meta["kind"] == "cave":
         if control["near_black_fraction"] < CAVE_DARK_FRACTION:
@@ -114,8 +134,15 @@ def validate_payload(meta, config, vocabulary, slot, arrays):
     require(math.isclose(number(meta, "world_time"), .5, abs_tol=1e-5) and meta.get("weather") == "none"
             and number(meta, "gamma") == 3., "Invalid native daylight, weather or gamma")
     settings = meta.get("native_render_settings")
-    require(isinstance(settings, dict) and all(settings.get(key) == value for key, value in V3_RGB.items()),
+    expected_rgb = v3_rgb(config)
+    ambient = expected_rgb.get("solid_ambient_floor")
+    require(isinstance(settings, dict) and all(settings.get(key) == value for key, value in expected_rgb.items()),
             "Native viewing range, fog, gamma or brightness floor differs from the v3 protocol")
+    if ambient is not None:
+        require(meta.get("lighting_profile") == config["lighting_profile"]
+                and number(meta, "solid_ambient_floor") == ambient
+                and number(meta, "lighting_floor") == expected_rgb["lighting_floor"],
+                "Scene material ambient metadata differs from the selected profile")
     validate_camera_protocol(meta)
     validate_visibility_lookup()
 
@@ -182,8 +209,10 @@ def validate_payload(meta, config, vocabulary, slot, arrays):
     for view in views:
         require(view.get("camera_medium") == ("water" if kind == "underwater" else "air"),
                 "Recorded view medium differs from expected scene kind")
-        require(number(view, "lighting_floor") == V3_RGB["lighting_floor"], "Unexpected native brightness floor")
-        _validate_renderer_lighting(view, V3_RGB["lighting_floor"])
+        require(number(view, "lighting_floor") == expected_rgb["lighting_floor"], "Unexpected native brightness floor")
+        _validate_renderer_lighting(view, expected_rgb["lighting_floor"])
+        if ambient is not None:
+            _validate_material_lighting(view, ambient)
         if water_surface:
             require(np.allclose(vector(view, "actual_player_world_xyz"), foot, atol=.003, rtol=0),
                     "Surface observer moved from its water-surface anchor")
@@ -218,7 +247,8 @@ def _scan(root, allow_partial, visit=None):
     root = Path(root)
     manifest = read_json(root / "manifest.json")
     config = manifest["config"]
-    require(manifest.get("version") == V3_VERSION and manifest.get("axes") == "ENU" and config.get("mode") == "smoke"
+    version = v3_version(config)
+    require(manifest.get("version") == version and manifest.get("axes") == "ENU" and config.get("mode") == "smoke"
             and config.get("views_per_scene") == 5 and (config.get("width"), config.get("height")) == (640, 360),
             "Expected a native Vox2Pix v3 smoke dataset at 640×360 with five views per scene")
     slots = {slot["scene_id"]: slot for slot in v3_plan(config)}
@@ -246,7 +276,7 @@ def _scan(root, allow_partial, visit=None):
             rgb_stats = [brightness(frame) for frame in rgb]
             qa_paths = {p.stem: p for p in (path / "lighting_comparison").glob("*.png")}
             pair = {label: _read_png(p, config) for label, p in qa_paths.items()}
-            comparisons[scene_id] = validate_lighting_pair(meta, pair, rgb)
+            comparisons[scene_id] = validate_lighting_pair(meta, pair, rgb, config)
             kinds[meta["kind"]] += 1
             scene_rows.append({key: meta.get(key) for key in ("scene_id", "kind", "world_seed", "foot_anchor_xyz",
                                                             "settled_player_xyz", "underwater_descent",
@@ -261,7 +291,7 @@ def _scan(root, allow_partial, visit=None):
             raise ValueError(f"{path.name}: {exc}") from exc
     verified = not missing and bool(comparisons) and all(value["status"] == "VERIFIED"
                                                          for value in comparisons.values())
-    return dict(status="NATIVE VERIFIED" if verified else "NOT NATIVE VERIFIED", protocol_version=V3_VERSION,
+    return dict(status="NATIVE VERIFIED" if verified else "NOT NATIVE VERIFIED", protocol_version=version,
                 capture_status="INCOMPLETE" if missing else "NATIVE CAPTURE VERIFIED",
                 scene_count=len(paths), frame_count=len(view_rows), expected_scene_count=len(slots),
                 kind_counts=dict(kinds), missing_slots=[slots[index] for index in missing],
@@ -280,7 +310,7 @@ def _view_stats(meta, arrays, rgb_stats):
             warning.append("RGB is almost entirely dark")
         if empty.mean() >= .9 and meta["kind"] != "surface":
             warning.append("Local input produces very few Surface hits")
-        rows.append(dict(scene_id=meta["scene_id"], kind=meta["kind"], view_index=index, brightness=light,
+        row = dict(scene_id=meta["scene_id"], kind=meta["kind"], view_index=index, brightness=light,
                          grid_anchor_xyz=meta["foot_anchor_xyz"],
                          foot_xyz=view.get("actual_player_world_xyz", meta["foot_anchor_xyz"]),
                          camera_xyz=view["actual_camera_world_xyz"],
@@ -290,7 +320,11 @@ def _view_stats(meta, arrays, rgb_stats):
                          valid_hit_fraction=float((~empty).mean()),
                          background_fraction=float(empty.mean()), water_min=int(water.min()), water_max=int(water.max()),
                          water_nonzero_fraction=float((water > 0).mean()),
-                         background_with_water_fraction=float((empty & (water > 0)).mean()), warnings=warning))
+                         background_with_water_fraction=float((empty & (water > 0)).mean()), warnings=warning)
+        if "solid_ambient_floor" in view:
+            row.update(solid_ambient_floor=view["solid_ambient_floor"],
+                       material_renderer_lighting=view["material_renderer_lighting"])
+        rows.append(row)
     return rows
 
 
@@ -323,6 +357,8 @@ def _view_block(scene_dir, row):
                      zip(("rgb", "surface", "faces", "water", "hit"), legend, strict=True))
     warnings = "".join(f'<p class="warning">{escape(warning)}</p>' for warning in row["warnings"])
     light = row["brightness"]
+    ambient = (f"<dt>Solid ambient floor</dt><dd>{row['solid_ambient_floor']:.2f}</dd>"
+               if "solid_ambient_floor" in row else "")
     return f"""
 <article><h3>View {index + 1} · Camera in {row['camera_medium']}</h3>
 <dl><dt>Foot XYZ</dt><dd>{vector_text(row['foot_xyz'])}</dd>
@@ -330,7 +366,7 @@ def _view_block(scene_dir, row):
 <dt>Actual camera XYZ</dt><dd>{vector_text(row['camera_xyz'])}</dd>
 <dt>Yaw / pitch</dt><dd>{row['yaw_deg']:.2f}° / {row['pitch_deg']:.2f}°</dd>
 <dt>FOV X × Y</dt><dd>{x:.2f}° × {y:.2f}°</dd><dt>Gamma</dt><dd>{row['gamma']:.1f}</dd>
-<dt>Lighting floor</dt><dd>{row['lighting_floor']:.2f}</dd>
+<dt>Global LUT floor</dt><dd>{row['lighting_floor']:.2f}</dd>{ambient}
 <dt>Mean / median luma</dt><dd>{light['mean_luma']:.3f} / {light['median_luma']:.3f}</dd>
 <dt>Near-black</dt><dd>{light['near_black_fraction']:.2%}</dd>
 <dt>Surface hit / BACKGROUND</dt><dd>{row['valid_hit_fraction']:.2%} / {row['background_fraction']:.2%}</dd>
@@ -339,18 +375,20 @@ def _view_block(scene_dir, row):
 {warnings}<div class="images">{images}</div></article>"""
 
 
-def _lighting_block(scene_dir, check, kind):
+def _lighting_block(scene_dir, check, kind, image_names):
     warnings = ' class="warning"' if check["status"] != "VERIFIED" else ""
     captions = []
     for key in ("control", "proposed"):
         light = check[f"{key}_brightness"]
         floor = check[key]["lighting_floor"]
         zero = check[key]["renderer_lighting"]["lut_zero"]
-        captions.append(f"Floor {floor:.2f} · LUT[0] {zero} · mean / median {light['mean_luma']:.3f} / "
+        solid = check[key].get("solid_ambient_floor")
+        label = f"Global floor {floor:.2f}" + (f" · solid ambient {solid:.2f}" if solid is not None else "")
+        captions.append(f"{label} · LUT[0] {zero} · mean / median {light['mean_luma']:.3f} / "
                         f"{light['median_luma']:.3f} · near-black {light['near_black_fraction']:.2%} · "
                         f"near-white {light['near_white_fraction']:.2%}")
     rows = "".join(_image(scene_dir / f"{label}.png", caption)
-                   for label, caption in zip(LIGHTING_PNGS, captions, strict=True))
+                   for label, caption in zip(image_names, captions, strict=True))
     normalized = "Luma uses Rec. 709 on encoded RGB8 (0–255). Near-black &lt; 8. Near-white ≥ 247."
     near_white_gain = check["proposed_brightness"]["near_white_fraction"] - check["control_brightness"]["near_white_fraction"]
     bright_warning = ('<p class="warning">Near-white coverage increased by more than 10 percentage points.</p>'
@@ -424,7 +462,8 @@ def report(root):
  · {sum(meta['active_view_regions'])}/40 active regions · <a href="{relative}/scene.json">Scene metadata</a></p>
 <p>Search: {meta['search_seconds']:.1f} s · {search['world_starts']} worlds · {search['surveys']} surveys
  · {search['cave_hints']} cave hints · {search_count}.</p>
-{_cave_block(meta)}{_underwater_block(meta)}{_lighting_block(lighting, comparison, meta['kind'])}{views}</section>""")
+{_cave_block(meta)}{_underwater_block(meta)}{_lighting_block(lighting, comparison, meta['kind'], sorted(qa_paths))}
+{views}</section>""")
 
     summary = _scan(root, allow_partial=True, visit=export)
     output.mkdir(parents=True, exist_ok=True)
@@ -432,6 +471,13 @@ def report(root):
     status_class = ' class="warning"' if summary["status"] != "NATIVE VERIFIED" else ""
     omitted = ", ".join(f"{slot['kind']} {slot['scene_id']:04d}" for slot in summary["missing_slots"])
     incomplete = f'<p class="warning">Missing scenes: {escape(omitted)}</p>' if omitted else ""
+    lighting_description = (
+        "The native Light LUT uses gamma 3.0 and global floor 0.0. Comparisons switch the solid material "
+        "ambient between 0.0 and 0.35 at the same native camera, terrain and light state."
+        if summary["protocol_version"] == V3_MATERIAL_VERSION else
+        "The native Light LUT uses gamma 3.0. Comparisons switch its global floor between 0.0 and 0.35 "
+        "at the same native camera, terrain and light state."
+    )
     content = f"""<!doctype html>
 <html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Vox2Pix v3 native collection</title>
@@ -448,7 +494,7 @@ figure{{margin:0}}img{{width:100%;display:block;background:#0a0d15;aspect-ratio:
 <p{status_class}>{summary['status']} · {summary['capture_status']}</p>
 <p>{summary['scene_count']}/{summary['expected_scene_count']} scenes · {summary['frame_count']} native RGB views · <a href="summary.json">Summary JSON</a></p>
 {incomplete}<p>RGB retains native sky and fog. Distance fog limits far-field image mismatch; voxel projections cover the local 48³ input only. Surface imagery uses stored discrete attributes and approximate geometry for unsupported drawtypes.</p>
-<p>The native Light LUT uses display gamma 3.0 and brightness floor 0.35. The Lighting Comparisons use the same native camera, terrain and light state with floor 0.0 and 0.35. Cave verification uses a dark control (at least 50% near-black), a mean luma gain of at least 5, and below 50% near-black after applying the floor.</p>
+<p>{lighting_description} Cave verification uses a dark control (at least 50% near-black), a mean luma gain of at least 5, and below 50% near-black after applying the floor.</p>
 <p>Water Count includes a starting water voxel only when a ray traverses and exits actual liquid. Black in the Water Count panel means count zero. The face colors represent Luanti +X, −X, +Y, −Y, +Z and −Z.</p>
 {''.join(sections)}</main></html>"""
     temporary = output / ".index.html.tmp"

@@ -398,6 +398,9 @@ local function snapshot(r, player)
             display_gamma=tonumber(mt.settings:get("display_gamma")),
             lighting_floor=tonumber(mt.settings:get("lighting_floor")),
         }
+        if mt.settings:get_bool("voxwm_material_lighting_probe", false) then
+            state.native_render_settings.solid_ambient_floor = tonumber(mt.settings:get("solid_ambient_floor"))
+        end
         state.hud_wielditem_hidden = player:hud_get_flags().wielditem == false
         state.wielded_item = player:get_wielded_item():get_name()
         state.underwater_support = support or nil

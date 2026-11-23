@@ -9,7 +9,7 @@ import numpy as np
 
 from .geometry import is_water_liquid
 from .native import HERE, REUSED_LUA, SETUP, NativeScene, RenderSession, _builds, scene_world_seed
-from .protocol import SIDE, V3_RGB, RejectedScene
+from .protocol import SIDE, RejectedScene, v3_rgb
 from .v3_sampling import scene_visibility, site_candidates
 
 
@@ -81,8 +81,11 @@ def capture_v3(slot, config, craftium_dir, library_path, attempts, sites, column
     engine_build, game_build = _builds(Path(craftium_dir))
     started = time.monotonic()
     stats = Counter(world_starts=0, surveys=0, cave_hints=0, candidate_floors=0, capture_attempts=0)
-    settings = dict(SETUP, **V3_RGB, vox2pix_v3=True, voxwm_lighting_probe=True,
+    rgb = v3_rgb(config)
+    settings = dict(SETUP, **rgb, vox2pix_v3=True, voxwm_lighting_probe=True,
                     vox2pix_cave_hints=slot["kind"] == "cave", voxwm_skip_rgb=True)
+    if "solid_ambient_floor" in rgb:
+        settings["voxwm_material_lighting_probe"] = True
     for attempt in range(first, first + attempts):
         if time.monotonic() >= started + seconds:
             break

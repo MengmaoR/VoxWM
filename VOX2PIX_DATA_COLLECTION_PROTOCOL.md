@@ -1,6 +1,7 @@
 # Vox2Pix v3 data collection protocol
 
-Protocol identifier: `vox2pix-v3-surface-watercount-cave-underwater-lightfloor`.
+The v3 lighting candidate uses `vox2pix-v3-surface-watercount-cave-underwater-materialambient`.
+The published global-floor smoke retains `vox2pix-v3-surface-watercount-cave-underwater-lightfloor`.
 
 Each scene stores one native Mapgen v7 48³ voxel grid and five RGB views from
 the same foot anchor. The five camera orientations are independently sampled
@@ -91,19 +92,27 @@ fixed daylight, clear weather, hidden HUD and first-person held model,
 sun and clouds remain in RGB. Distance culling and fog reduce far-field
 mismatch. RGB may still depict geometry outside the 48³ projection.
 
-The official RGB uses `display_gamma=3.0` and `lighting_floor=0.35` for all
-three kinds. The client maps each Luanti gamma-curve output $L_\gamma$ to
-$L_\min+(1-L_\min)L_\gamma$ in its render LUT, leaving the native engine
-default at zero. This render transform preserves Node ID, param2 and light
-storage and does not affect world light propagation. The fixed recorder
-hides the HUD and wield model and leaves the observer's hand empty.
+For a new approved candidate smoke, explicitly select
+`--lighting-profile material-ambient` and use the isolated material-enabled
+Craftium build. All three scene kinds use `display_gamma=3.0`,
+`lighting_floor=0.0` and `solid_ambient_floor=0.35`. The native LUT still
+maps 0 to 0 and sunlight to 255. The world-node shader uses the sampled
+texture, material tint and face shading to set a minimum contribution before
+fog. Eligible opaque and alpha-cutout terrain receives this contribution.
+Liquids, glass, overlays, sky, fog and the underwater post-effect follow
+their native rendering paths. Raw light, Node ID, param2 and the White
+projection are preserved. Both engine settings default to zero.
 
-A matching-pose comparison in each scene stores gamma 3.0 with Floor 0.0
-and 0.35 outside the official 15 frames. Both views use the same native
-world and camera. Validation checks the renderer's applied settings and
-stable geometry, and the report uses Rec.709 luma on the saved sRGB bytes
-for comparable mean, median and near-black proportions. Native material
-shading and fog still affect the final pixel RGB.
+The legacy `global-lut` profile remains the collect CLI default for replay
+and resume of the published smoke. It uses gamma 3.0 and a global LUT floor
+of 0.35. Give the material profile a separate dataset path. Each profile
+stores its matched-pose zero-floor control outside the main 15 frames.
+Validation checks settings, render tick and stable geometry. The report
+uses Rec.709 luma on the saved RGB bytes.
+
+The [same-pose native A/B/C trial](vox2pix_data/reports/v3_material_lighting/README.md)
+supports selecting the material profile as the candidate for future smoke
+tests. The three saved scenes provide a limited test of material coverage.
 
 ## Smoke and compatibility
 

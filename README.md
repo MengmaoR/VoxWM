@@ -1,6 +1,6 @@
 # VoxWM — Voxel VAE E01-Masked
 
-Vox2Pix v3 已通过三类场景共 15 帧的原生验证。实验使用单层白模、Water Count 和统一的原生亮度下限。[v3 采集与报告命令](vox2pix_data/README.md#v3-native-smoke) · [实测照明与沉底结果](vox2pix_data/reports/v3_lightfloor_smoke/README.md)。
+Vox2Pix v3 已在三个原有场景的 15 个机位完成原生材质照明对照。候选照明仅在符合条件的世界节点材质上提高最低亮度，沿用单层白模和 Water Count。[材质照明实测](vox2pix_data/reports/v3_material_lighting/README.md) · [历史全局亮度对照](vox2pix_data/reports/v3_lightfloor_smoke/README.md)
 
 历史 Vox2Pix v2 1K 共 200 个场景、1,000 个视角。[三层白模 Viewer](vox2pix_data/README.md#inspect-an-existing-pilot) · [实测速率与采集日志](vox2pix_data/reports/pilot_1k/README.md)。
 

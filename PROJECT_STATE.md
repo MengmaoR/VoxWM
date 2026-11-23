@@ -1,6 +1,6 @@
 # VoxWM 当前状态
 
-**Vox2Pix v3 Lighting Floor Smoke — NATIVE VERIFIED。** 已完成 Surface、Cave、Underwater 各 1 场景、5 个视角，共 15 帧。RGB 统一使用 gamma 3.0、Floor 0.35，配套单层 Surface、Water Count 和 BACKGROUND。水下以实际沉底位置建立 48³。三类均保存同机位照明对照，暗洞平均亮度从 0 提至 39.78（量程 0–255）。历史 v2 1K 单独保留；45 帧与正式采集待用户决定。[协议](VOX2PIX_DATA_COLLECTION_PROTOCOL.md) · [复现命令](vox2pix_data/README.md#v3-native-smoke) · [实测报告](vox2pix_data/reports/v3_lightfloor_smoke/README.md)
+**Vox2Pix v3 材质照明候选已完成原生同机位回放。** Surface、Cave、Underwater 各 5 个原有机位完成 A/B/C 对照。C 使用 Gamma 3.0、全局 LUT 下限 0.0、固体材质下限 0.35。洞穴 View 5 的平均亮度从 0.00 升至 38.49，纹理、矿石和边缘可辨。A/C 的原生雾效参数及水下叠色一致。原始 15 帧和历史 v2 1K 保留。下一次新场景 smoke 待用户授权。[协议](VOX2PIX_DATA_COLLECTION_PROTOCOL.md) · [实测报告](vox2pix_data/reports/v3_material_lighting/README.md)
 
 **E01-Masked 27,000 步验证最优 checkpoint 已完成冻结审计，结论为 FREEZE WITH KNOWN D3 LIMITATION。**
 

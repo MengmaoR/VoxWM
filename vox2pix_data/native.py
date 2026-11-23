@@ -20,7 +20,7 @@ from .protocol import (
     BIOMES, NOMINAL_CAMERA_HEIGHT, SETTINGS, SURVEY_SIDE, VISIBILITY_LOOKUP_VERSION,
     VISIBILITY_RADIUS, V3_RGB, WORLD_BOTTOM, WORLD_TOP, RejectedScene, camera_angles,
     camera_local_xyz, direction_for_angles, region_id, require_air_camera, sample_views,
-    scene_visibility, site_candidates,
+    scene_visibility, site_candidates, v3_lighting_images, v3_rgb,
 )
 
 HERE = Path(__file__).resolve().parent
@@ -176,6 +176,16 @@ class NativeScene:
         return dict(render_tick=int(tick), display_gamma=float(gamma), lighting_floor=float(floor),
                     lut_zero=int(zero), lut_max=int(maximum), pending_meshes=int(pending), version=version)
 
+    def renderer_material_lighting(self):
+        path = self.session.world / "client_clock.txt.material_lighting"
+        try:
+            tick, gamma, floor, ambient, zero, maximum, pending, bound, version = path.read_text().split()
+        except (OSError, ValueError) as exc:
+            raise RuntimeError("The native renderer did not publish a valid material-lighting probe") from exc
+        return dict(render_tick=int(tick), display_gamma=float(gamma), lighting_floor=float(floor),
+                    solid_ambient_floor=float(ambient), lut_zero=int(zero), lut_max=int(maximum),
+                    pending_meshes=int(pending), shader_bound=bound == "1", version=version)
+
     def check_light_frame(self, capture, floor):
         lighting = self.renderer_lighting()
         tick = int(capture["native_clock"]["server_tick"])
@@ -189,21 +199,38 @@ class NativeScene:
             raise RejectedScene("Native observer has a visible wield model or an item selected")
         return lighting
 
-    def request_floor(self, floor):
+    def check_material_light_frame(self, light, ambient):
+        probe = self.renderer_material_lighting()
+        frame_keys = ("render_tick", "display_gamma", "lighting_floor", "lut_zero", "lut_max", "pending_meshes")
+        if (probe["version"] != "voxwm-material-ambient-v1" or not probe["shader_bound"]
+                or probe["solid_ambient_floor"] != ambient
+                or any(probe[key] != light[key] for key in frame_keys)):
+            raise RejectedScene(f"Material lighting does not match the captured RGB frame: {probe}")
+        return probe
+
+    def request_floor(self, floor, *, ambient=None):
         request = self.session.world / "client_clock.txt.lighting_request"
         pending = request.with_suffix(".tmp")
-        pending.write_text(f"{floor}\n")
+        pending.write_text(f"{floor}\n" if ambient is None else f"{floor} {ambient}\n")
         pending.replace(request)
 
-    def wait_lighting(self, floor):
+    def wait_lighting(self, floor, *, ambient=None):
         while time.monotonic() < self.search_deadline:
             self.step()
             light = self.renderer_lighting()
-            if light["lighting_floor"] == floor and light["pending_meshes"] == 0:
-                return
+            if light["lighting_floor"] != floor or light["pending_meshes"]:
+                continue
+            if ambient is not None:
+                probe = self.renderer_material_lighting()
+                if probe["solid_ambient_floor"] != ambient or probe["pending_meshes"]:
+                    continue
+            return
         raise TimeoutError("Native lighting remesh exceeded the scene deadline")
 
     def acquire(self, foot, kind, config, rng, library_path, scene_kind=None):
+        rgb_settings = v3_rgb(config) if scene_kind else V3_RGB
+        floor = rgb_settings["lighting_floor"]
+        ambient = rgb_settings.get("solid_ambient_floor")
         initial = self.command("pose", relocate=True, foot_xyz=foot, anchor_kind=kind, yaw=0., pitch=0.)
         underwater_descent = None
         if scene_kind == "underwater":
@@ -224,7 +251,7 @@ class NativeScene:
         for _ in range(72):
             self.step()
         if scene_kind:
-            self.wait_lighting(V3_RGB["lighting_floor"])
+            self.wait_lighting(floor, ambient=ambient)
         baseline, base_capture, _, base_info = self.geometry_snapshot(origin, kind, boxes=True)
         if scene_kind:
             from . import v3_sampling
@@ -259,7 +286,7 @@ class NativeScene:
             for _ in range(12):
                 self.step()
             if scene_kind:
-                self.wait_lighting(V3_RGB["lighting_floor"])
+                self.wait_lighting(floor, ambient=ambient)
             previous, prior, _, _ = self.geometry_snapshot(origin, kind)
             current, capture, rgb, info = self.geometry_snapshot(origin, kind)
             tick = int(capture["native_clock"]["server_tick"])
@@ -275,18 +302,21 @@ class NativeScene:
             if scene_kind:
                 v3_sampling.require_camera(current[0], self.stable_defs, projection_origin,
                                            scene_kind, projector.water_contains)
-                if capture["native_render_settings"] != V3_RGB:
+                if capture["native_render_settings"] != rgb_settings:
                     raise RejectedScene("V3 native render settings differ from protocol")
                 if underwater_descent and (np.max(np.abs(real_foot - settled)) > .003
                                            or np.max(np.abs(projection_origin - eye)) > .003):
                     raise RejectedScene("Underwater observer moved after settling")
                 if kind == "surface_water" and np.max(np.abs(real_foot - foot)) > .003:
                     raise RejectedScene("Surface observer moved from its water-surface anchor")
-                lighting = self.check_light_frame(capture, V3_RGB["lighting_floor"])
+                lighting = self.check_light_frame(capture, floor)
                 view.update(renderer_lighting=lighting, lighting_floor=lighting["lighting_floor"],
                             display_gamma=lighting["display_gamma"], actual_player_world_xyz=real_foot.tolist(),
                             hud_wielditem_hidden=capture["hud_wielditem_hidden"], wielded_item=capture["wielded_item"],
                             camera_medium="water" if scene_kind == "underwater" else "air")
+                if ambient is not None:
+                    view.update(solid_ambient_floor=ambient,
+                                material_renderer_lighting=self.check_material_light_frame(lighting, ambient))
             else:
                 require_air_camera(current[0], self.stable_defs, projection_origin)
             direction = np.asarray(info["cam_dir"], dtype=np.float64)
@@ -345,31 +375,39 @@ class NativeScene:
         )
         if not scene_kind:
             return meta, self.vocabulary, arrays, rgbs
-        meta.update(render_settings=dict(meta["render_settings"], **V3_RGB),
+        meta.update(render_settings=dict(meta["render_settings"], **rgb_settings),
                     native_render_settings=capture["native_render_settings"], cave_evidence=cave,
-                    lighting_floor=V3_RGB["lighting_floor"], display_gamma=V3_RGB["display_gamma"],
+                    lighting_floor=floor, display_gamma=rgb_settings["display_gamma"],
                     settled_player_xyz=(settled.tolist() if underwater_descent else base_info["player_pos"].tolist()),
                     terrain_nodes=sorted(d["name"] for d in self.definitions.values() if d["terrain"] and d["walkable"]),
                     water_definitions={d["name"]: d for d in self.definitions.values() if d["water"]})
+        if ambient is not None:
+            meta.update(solid_ambient_floor=ambient, lighting_profile=config["lighting_profile"])
         if underwater_descent:
             meta.update(underwater_descent=underwater_descent, visibility_camera_local_xyz=list(eye))
         meta["lighting_comparison"], auxiliary = self.lighting_comparison(
-            origin, kind, baseline, views[-1], rgbs[-1], info, len(views) - 1, projector, whites[-1])
+            origin, kind, baseline, views[-1], rgbs[-1], info, len(views) - 1,
+            projector, whites[-1], config)
         return meta, self.vocabulary, arrays, rgbs, auxiliary
 
     def lighting_comparison(self, origin, kind, baseline, view, proposed_rgb, proposed_camera,
-                            index, projector, proposed_white):
+                            index, projector, proposed_white, config):
+        settings = v3_rgb(config)
+        ambient = settings.get("solid_ambient_floor")
+        control_ambient = 0. if ambient is not None else None
         native_light = self.region_light.copy()
         camera_keys = ("cam_pos", "cam_dir", "cam_fov_x", "cam_fov_y")
         proposed_camera = {key: np.asarray(proposed_camera[key]).copy() for key in camera_keys}
-        self.request_floor(0.)
+        self.request_floor(0., ambient=control_ambient)
         try:
-            self.wait_lighting(0.)
+            self.wait_lighting(0., ambient=control_ambient)
             previous, prior, _, _ = self.geometry_snapshot(origin, kind)
             prior_light = self.region_light
             current, capture, control_rgb, control_camera = self.geometry_snapshot(origin, kind)
             tick = int(capture["native_clock"]["server_tick"]) - 1
             evidence = self.check_light_frame(capture, 0.)
+            if control_ambient is not None:
+                material_control = self.check_material_light_frame(evidence, control_ambient)
             if tick != int(prior["native_clock"]["server_tick"]):
                 raise RejectedScene("Lighting control render was not bracketed by consecutive voxel snapshots")
             if any(not np.array_equal(data, reference)
@@ -387,16 +425,20 @@ class NativeScene:
                 raise RejectedScene("White model changed during lighting comparison")
             control_rgb = control_rgb.copy()
         finally:
-            self.request_floor(V3_RGB["lighting_floor"])
+            self.request_floor(settings["lighting_floor"], ambient=ambient)
         keys = ("actual_camera_world_xyz", "cam_dir_xyz", "fov_x_rad", "fov_y_rad", "display_gamma",
                 "lighting_floor", "renderer_lighting", "render_simulation_tick")
         proposed = {key: view[key] for key in keys}
         x, y, z = (math.floor(value + 24.5) for value in view["projection_origin_local_xyz"])
         proposed["native_eye_param1"] = int(native_light[x, z, y])
         control = dict(proposed, lighting_floor=0., renderer_lighting=evidence, render_simulation_tick=tick)
+        if ambient is not None:
+            control.update(solid_ambient_floor=control_ambient, material_renderer_lighting=material_control)
+            proposed.update(solid_ambient_floor=ambient, material_renderer_lighting=view["material_renderer_lighting"])
+        names = v3_lighting_images(config)
         return (dict(view_index=index, voxel_identity_unchanged=True, light_identity_unchanged=True,
                      white_identity_unchanged=True, control=control, proposed=proposed),
-                dict(floor_000=control_rgb, floor_035=proposed_rgb))
+                dict(zip(names, (control_rgb, proposed_rgb), strict=True)))
 
 
 def _search_world(native, slot, config, rng, library_path, rejected, sites_per_world,
