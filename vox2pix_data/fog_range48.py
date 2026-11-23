@@ -136,6 +136,9 @@ def replay_scene(scene_path, output, config, vocabulary, craftium, seconds):
     with recorded_scene(scene_path, config, vocabulary, craftium, seconds,
                         replay_surveys=False, render_settings=SETTINGS) as (native, meta, scene, restored):
         for index, view in enumerate(meta["views"]):
+            native.command("pose", relocate=True, replay_hold=True,
+                           foot_xyz=view["actual_player_world_xyz"], anchor_kind=meta["anchor_kind"],
+                           yaw=view["requested_yaw_deg"], pitch=view["requested_pitch_deg"])
             aim_recorded_view(native, view)
             restorations = []
             while time.monotonic() < native.search_deadline:
@@ -166,6 +169,8 @@ def replay_scene(scene_path, output, config, vocabulary, craftium, seconds):
             evidence = dict(node_id_identical=True, raw_param1_identical=True, raw_param2_identical=True,
                             camera_pose_identical=True, white_identical=True,
                             white_data_source="read-only original White Model, face IDs and Water Count",
+                            replay_camera_control="saved native player pose held in disposable RGB replay",
+                            replay_held_player_xyz=view["actual_player_world_xyz"],
                             restored_saved_cells=restored,
                             saved_cell_restorations_before_pair=restorations)
             row = dict(scene_id=meta["scene_id"], kind=meta["kind"], world_seed=meta["world_seed"],
