@@ -316,7 +316,10 @@ local function pose(r, player)
     if r.relocate then
         local foot = xyz(r.foot_xyz)
         player:set_properties({is_visible=false})
-        player:set_physics_override({gravity=0, speed=0, jump=0})
+        local observer = {gravity=0, speed=0, jump=0}
+        -- Liquid sinking has its own multiplier, independent of player gravity.
+        if v3_scene then observer.liquid_sink = 0 end
+        player:set_physics_override(observer)
         player:set_pos(foot)
         if lighting then lighting.configure(player, true) end
     end

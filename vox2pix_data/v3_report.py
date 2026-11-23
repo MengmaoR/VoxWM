@@ -73,7 +73,8 @@ def validate_torch_pair(meta, frames):
     if not check["on"]["module_available"]:
         require(status == "MODULE_UNAVAILABLE", "Missing module was misreported as effective")
     if status == "VERIFIED":
-        require(check["on"]["module_available"] and actual["on"]["mean_luma"] > actual["off"]["mean_luma"],
+        require(check["on"]["module_available"] and actual["on"]["mean_luma"] > actual["off"]["mean_luma"] + .5
+                and any(check["on"].get(key) != check["off"].get(key) for key in ("light", "param1")),
                 "Torch was reported as verified without native brightness improvement")
 
 
@@ -86,12 +87,15 @@ def validate_payload(meta, config, vocabulary, slot, arrays):
     require(type(meta.get("world_seed")) is int, "Invalid world seed")
     for key in ("surface_biome", "foot_biome", "engine_build", "game_build"):
         require(isinstance(meta.get(key), str) and bool(meta[key]), f"Missing {key}")
+    require(meta.get("native_biome") == meta["surface_biome"], "Expected native_biome to use the surface label")
     kind = slot["kind"]
     foot = vector(meta, "foot_anchor_xyz", integer=True)
     origin = vector(meta, "region_origin_xyz", integer=True)
     origin_enu = vector(meta, "region_origin_enu", integer=True)
     require(np.array_equal(origin, foot - 24) and np.array_equal(origin_enu, origin[[0, 2, 1]]),
             "Invalid foot-centered 48³ coordinates")
+    y_min, y_max = config["survey_y"]
+    require(y_min <= origin[1] <= y_max - 47, "The 48³ crop lies outside the v3 survey range")
     require(math.isclose(number(meta, "world_time"), .5, abs_tol=1e-5) and meta.get("weather") == "none"
             and number(meta, "gamma") == 3., "Invalid native daylight, weather or gamma")
     settings = meta.get("native_render_settings")
@@ -182,7 +186,7 @@ def _scan(root, allow_partial, visit=None):
     require(paths.keys() <= slots.keys() and (allow_partial or not missing),
             f"Expected {len(slots)} committed scenes; found {len(paths)}")
     vocabulary = read_vocabulary(root) if paths else []
-    kinds, torch, seeds, view_rows = Counter(), {}, set(), []
+    kinds, torch, seeds, scene_rows, view_rows = Counter(), {}, set(), [], []
     provenance = None
     for scene_id, path in paths.items():
         try:
@@ -199,10 +203,16 @@ def _scan(root, allow_partial, visit=None):
             require(sorted((path / "rgb").iterdir()) == rgb_paths, "Missing or extra dataset RGB frames")
             rgb_stats = [brightness(_read_png(p, config)) for p in rgb_paths]
             qa_paths = {p.stem: p for p in (path / "qa").glob("*.png")}
-            validate_torch_pair(meta, {label: _read_png(p, config) for label, p in qa_paths.items()})
+            pair = {label: _read_png(p, config) for label, p in qa_paths.items()}
+            validate_torch_pair(meta, pair)
             if qa_paths:
+                require(np.array_equal(pair["torch_on"], _read_png(rgb_paths[meta["torch_ab"]["view_index"]], config)),
+                        "Torch ON PNG differs from its matching dataset RGB view")
                 torch[scene_id] = meta["torch_ab"]
             kinds[meta["kind"]] += 1
+            scene_rows.append({key: meta[key] for key in ("scene_id", "kind", "world_seed", "foot_anchor_xyz",
+                                                        "surface_biome", "foot_biome", "active_view_regions",
+                                                        "cave_evidence", "search_seconds", "search_stats")})
             rows = _view_stats(meta, arrays, rgb_stats)
             view_rows.extend(rows)
             if visit:
@@ -215,7 +225,7 @@ def _scan(root, allow_partial, visit=None):
                 scene_count=len(paths), frame_count=len(view_rows), expected_scene_count=len(slots),
                 kind_counts=dict(kinds), missing_slots=[slots[index] for index in missing],
                 engine_build=provenance[0] if provenance else None, game_build=provenance[1] if provenance else None,
-                torch_ab=torch, views=view_rows)
+                torch_ab=torch, scenes=scene_rows, views=view_rows)
 
 
 def _view_stats(meta, arrays, rgb_stats):
@@ -331,11 +341,14 @@ def report(root):
                                 ("hit", hits.astype("u1") * 255)):
                 Image.fromarray(image).save(scene_dir / f"{index:03d}_{name}.png")
         scene_kind = escape(meta["kind"].title())
+        search = meta["search_stats"]
         torch = _torch_block(relative, meta["torch_ab"]) if qa_paths else ""
         views = "".join(_view_block(relative, row) for row in rows)
         sections.append(f"""<section><h2>{scene_kind} · Scene {meta['scene_id']:04d}</h2>
 <p>Seed {meta['world_seed']} · Surface biome {escape(meta['surface_biome'])} · Foot biome {escape(meta['foot_biome'])}
  · {sum(meta['active_view_regions'])}/40 active regions · <a href="{relative}/scene.json">Scene metadata</a></p>
+<p>Search: {meta['search_seconds']:.1f} s · {search['world_starts']} worlds · {search['surveys']} surveys
+ · {search['cave_hints']} cave hints · {search['candidate_floors']} candidate floors.</p>
 {_cave_block(meta)}{torch}{views}</section>""")
 
     summary = _scan(root, allow_partial=True, visit=export)
