@@ -11,6 +11,7 @@ local cave_hints_enabled = mt.settings:get_bool("vox2pix_cave_hints", false)
 local v3_scene = mt.settings:get_bool("vox2pix_v3", false)
 local replay_restore = v3_scene and mt.settings:get_bool("vox2pix_replay_restore", false)
 local replay_held_foot = nil
+local replay_held_look = nil
 assert(voxwm_clock and voxwm_region and mt.get_node_boxes, "Build the VoxWM fixed24 engine")
 assert(voxwm_clock().region_capture_version == "voxwm-region-integer-v1", "Build integer-origin region capture")
 
@@ -353,6 +354,7 @@ local function pose(r, player)
     if r.relocate then
         local foot = xyz(r.foot_xyz)
         replay_held_foot = r.replay_hold and foot or nil
+        replay_held_look = nil
         player:set_properties({is_visible=false})
         local natural_sink = v3_scene and r.anchor_kind == "underwater_floor" and not r.replay_hold
         local observer = {gravity=natural_sink and 1 or 0, speed=0, jump=0}
@@ -360,6 +362,7 @@ local function pose(r, player)
         player:set_physics_override(observer)
         player:set_pos(foot)
     end
+    if replay_held_foot then replay_held_look = {yaw=r.yaw, pitch=r.pitch} end
     clean_hud(player)
     player:set_look_horizontal(math.rad(r.yaw))
     player:set_look_vertical(math.rad(r.pitch))
@@ -432,7 +435,11 @@ end)
 mt.registered_voxwm_poststeps = {function()
     local player = mt.get_connected_players()[1]
     if not player then return end
-    if replay_held_foot then player:set_pos(replay_held_foot) end
+    if replay_held_foot then
+        player:set_pos(replay_held_foot)
+        player:set_look_horizontal(math.rad(replay_held_look.yaw))
+        player:set_look_vertical(math.rad(replay_held_look.pitch))
+    end
     if mt.settings:get_bool("voxwm_exact_draw_range", false) then
         local sky = player:get_sky(true)
         local fog = sky.fog or {}

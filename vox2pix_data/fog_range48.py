@@ -5,6 +5,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from multiprocessing import get_context
 from pathlib import Path
 import subprocess
+import shutil
 from tempfile import TemporaryDirectory
 import time
 
@@ -188,6 +189,8 @@ def main():
     parser.add_argument("--craftium-dir", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--scene-timeout", type=int, default=180)
+    parser.add_argument("--reuse-calibration", type=Path,
+                        help="Reuse completed marker captures from this earlier diagnostic output")
     args = parser.parse_args()
     if args.output.exists() or args.scene_timeout <= 0:
         parser.error("Use a new output directory and a positive scene timeout")
@@ -203,7 +206,13 @@ def main():
         stage.mkdir()
         markers, rows = [], []
         try:
-            markers = calibration(craftium, stage, config["renderer"], args.scene_timeout)
+            if args.reuse_calibration:
+                markers = read_json(args.reuse_calibration / "calibration_rows.json")
+                if [row["distance"] for row in markers] != list(DISTANCES):
+                    raise ValueError("Reused calibration does not contain the 14 required marker distances")
+                shutil.copytree(args.reuse_calibration / "calibration", stage / "calibration")
+            else:
+                markers = calibration(craftium, stage, config["renderer"], args.scene_timeout)
             write_json(stage / "calibration_rows.json", markers)
             with ProcessPoolExecutor(max_workers=3, mp_context=get_context("spawn")) as pool:
                 jobs = [pool.submit(replay_scene, path, stage, config, vocabulary, craftium,
@@ -220,6 +229,7 @@ def main():
                                render_settings=SETTINGS, renderer=config["renderer"],
                                protocol_version=V3_FOG48_VERSION,
                                calibration="one disposable air world, camera translated toward one fixed panel",
+                               calibration_reused_from=str(args.reuse_calibration) if args.reuse_calibration else None,
                                production_scene_count=0, saved_view_count=15,
                                voxel_observation_shape=[48, 48, 48], voxel_observation_half_extent=24,
                                rgb_viewing_range=48, fog_start_distance=20, fog_end_distance=30))
