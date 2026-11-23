@@ -11,7 +11,8 @@ lighting patch and collect or resume the three independently seeded scenes and
 BUILD_THREADS=22 bash scripts/build_vox2pix_lighting.sh third_party/craftium_vox2pix_floor
 
 .venv/bin/python -m vox2pix_data collect \
-  --mode smoke --scene-kinds surface cave underwater --scenes-per-kind 1 \
+  --mode smoke --lighting-profile global-lut \
+  --scene-kinds surface cave underwater --scenes-per-kind 1 \
   --views-per-scene 5 --width 640 --height 360 --seed 42 --workers 3 \
   --renderer software --craftium-dir third_party/craftium_vox2pix_floor \
   --dataset outputs/vox2pix_v3_lightfloor_15 \
@@ -93,9 +94,72 @@ Use a new dataset path and the patched material checkout.
 .venv/bin/python -m vox2pix_data report --dataset outputs/vox2pix_v3_material_smoke_15
 ```
 
+## Native fog calibration
+
+The current smoke profile is `material-ambient-fog20`, versioned separately
+from both previous lighting trials. Its voxel observation half extent is
+24 and RGB draw range is 30. Native fog starts at 20 and ends at 30 blocks.
+The same material lighting uses global floor 0 and solid ambient 0.35.
+Use an isolated checkout at Craftium
+`ca8b2762aea46d10a88c53f6411ff1f0dbdf3b49` with its existing native dependencies,
+configured for the client build, and VoxeLibre
+`178c71b1e7d6ec35c0d9c481c55eb306d6f330bc`.
+
+Run in the original Linux software-rendering environment. The build helper
+applies the capture, material and fog patches to this checkout.
+
+```bash
+cmake -S third_party/craftium_vox2pix_fog -B third_party/craftium_vox2pix_fog \
+  -G Ninja -DCMAKE_BUILD_TYPE=Release -DRUN_IN_PLACE=TRUE \
+  -DBUILD_CLIENT=TRUE -DBUILD_SERVER=FALSE -DENABLE_LTO=FALSE \
+  -DCMAKE_PREFIX_PATH=/user-data/txj/.tools/craftium-deps
+BUILD_THREADS=22 bash scripts/build_vox2pix_fog.sh third_party/craftium_vox2pix_fog
+python3 scripts/test_vox2pix_fog.py --craftium-dir third_party/craftium_vox2pix_fog
+.venv/bin/python -m unittest vox2pix_data.test_fog_report -q
+
+.venv/bin/python -m vox2pix_data.fog_calibration \
+  --dataset outputs/vox2pix_v3_lightfloor_15 \
+  --craftium-dir third_party/craftium_vox2pix_fog \
+  --output outputs/vox2pix_fog20/replay/native_comparison \
+  --scene-timeout 180
+```
+
+The offline report is `OUTPUT/index.html`. It includes 20/22/24/25/27/29/30/32
+block marker images and all 15 recorded views in Fog OFF, old 0.8 and new
+0.6666667 modes. Runtime probes record final driver and node-shader values.
+Read `summary.json` for the measured calibration status.
+
+On the existing server with user-installed Xvfb libraries, the following
+command loads its recorded graphics environment before replay.
+
+```bash
+.venv/bin/python - <<'PY'
+import json
+import os
+from pathlib import Path
+import sys
+
+environment = json.loads(Path("vae_data/configs/collection_64x1_clip2.json").read_text())["environment"]
+os.environ.update(environment)
+os.environ["CUDA_VISIBLE_DEVICES"] = ""
+os.execv(sys.executable, [
+    sys.executable, "-B", "-u", "-m", "vox2pix_data.fog_calibration",
+    "--dataset", "outputs/vox2pix_v3_lightfloor_15",
+    "--craftium-dir", "third_party/craftium_vox2pix_fog",
+    "--output", "outputs/vox2pix_fog20/replay/native_comparison",
+    "--scene-timeout", "180",
+])
+PY
+```
+
+For a separately approved new smoke, use `--mode smoke
+--lighting-profile material-ambient-fog20`, the fog checkout and a fresh
+dataset path. Legacy smoke resume commands must pass their original
+`--lighting-profile global-lut` or `material-ambient`.
+
 ## Historical v2 1K compression pilot
 
-The active protocol is `vox2pix-pilot-v2-camera16`. Use a newly initialized pilot
+The v2 protocol is `vox2pix-pilot-v2-camera16`. Use a newly initialized pilot
 directory for this version. The compression report includes observed native
 camera heights across all views.
 

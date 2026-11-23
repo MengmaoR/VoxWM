@@ -1,6 +1,7 @@
 # Vox2Pix v3 data collection protocol
 
-The v3 lighting candidate uses `vox2pix-v3-surface-watercount-cave-underwater-materialambient`.
+The active v3 profile uses `vox2pix-v3-materialambient-linear-fog20-30`.
+The earlier material trial uses `vox2pix-v3-surface-watercount-cave-underwater-materialambient`.
 The published global-floor smoke retains `vox2pix-v3-surface-watercount-cave-underwater-lightfloor`.
 
 Each scene stores one native Mapgen v7 48³ voxel grid and five RGB views from
@@ -88,12 +89,12 @@ four image fields and any auxiliary lighting frames.
 
 The same native settings apply to all three kinds. Capture uses gamma 3.0,
 fixed daylight, clear weather, hidden HUD and first-person held model,
-`viewing_range=30`, directional colored fog and `fog_start=0.8`. Native sky,
+`viewing_range=30`, directional colored fog and `fog_start=0.6666667`. Native sky,
 sun and clouds remain in RGB. Distance culling and fog reduce far-field
 mismatch. RGB may still depict geometry outside the 48³ projection.
 
-For a new approved candidate smoke, explicitly select
-`--lighting-profile material-ambient` and use the isolated material-enabled
+For a new approved smoke, select
+`--lighting-profile material-ambient-fog20` and use the isolated fog-enabled
 Craftium build. All three scene kinds use `display_gamma=3.0`,
 `lighting_floor=0.0` and `solid_ambient_floor=0.35`. The native LUT still
 maps 0 to 0 and sunlight to 255. The world-node shader uses the sampled
@@ -103,9 +104,9 @@ Liquids, glass, overlays, sky, fog and the underwater post-effect follow
 their native rendering paths. Raw light, Node ID, param2 and the White
 projection are preserved. Both engine settings default to zero.
 
-The legacy `global-lut` profile remains the collect CLI default for replay
-and resume of the published smoke. It uses gamma 3.0 and a global LUT floor
-of 0.35. Give the material profile a separate dataset path. Each profile
+The new fog profile is the smoke CLI default. The explicit legacy
+`global-lut` and `material-ambient` profiles retain their recorded
+`fog_start=0.8`. Give the new profile a separate dataset path. Each profile
 stores its matched-pose zero-floor control outside the main 15 frames.
 Validation checks settings, render tick and stable geometry. The report
 uses Rec.709 luma on the saved RGB bytes.
@@ -113,6 +114,46 @@ uses Rec.709 luma on the saved RGB bytes.
 The [same-pose native A/B/C trial](vox2pix_data/reports/v3_material_lighting/README.md)
 supports selecting the material profile as the candidate for future smoke
 tests. The three saved scenes provide a limited test of material coverage.
+
+## Native RGB fog range
+
+The voxel observation is a 48³ cube with half extent 24 on each axis.
+The RGB map draw range is 30 blocks. Voxel availability depends on a ray's
+intersection with that cube. It has no spherical radius guarantee from
+the actual eye position.
+
+The new protocol records the following geometry.
+
+```json
+{
+  "voxel_observation_half_extent": 24,
+  "rgb_viewing_range": 30,
+  "fog_start_distance": 20,
+  "fog_end_distance": 30,
+  "fog_start_ratio": 0.6666666666666666,
+  "fog_type": "linear"
+}
+```
+
+The final native fog coefficient is `clamp((d - 20) / 10, 0, 1)`
+for Euclidean camera distance in blocks. The pinned native node shader
+also adjusts the directional fog target color according to clarity.
+The coefficient reaches one at 30, where geometry takes the fog color.
+MapBlock bounding volumes may retain faces beyond the nominal map
+draw range. Fog obscures those faces at its endpoint.
+
+An opt-in native camera setting fixes the map draw range to 30 through
+the existing draw-list mechanism. The GPU far plane keeps its original
+camera calculation. The observer's Sky fog distance and start overrides
+are cleared through the native player API so the capture settings apply.
+Cloud handling remains native. The probe records fog range both before
+and after cloud handling, final driver color and endpoints, actual node
+shader uniform values, FOV and camera planes in block units. The active
+capture rejects mismatched draw range, endpoints or render ticks.
+
+The [fog calibration runner](vox2pix_data/README.md#native-fog-calibration)
+uses a disposable marker world and replays the original three saved
+scenes. Its report records the measured status of the native calibration.
 
 ## Smoke and compatibility
 

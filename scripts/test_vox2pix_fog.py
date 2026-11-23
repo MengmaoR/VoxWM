@@ -24,6 +24,8 @@ def check(craftium):
     assert "2000 * BS : viewing_range * BS" in camera
     patch = (ROOT / "voxwm_gt/patches/fog_range.patch").read_text()
     assert "diff --git a/client/shaders" not in patch
+    assert 'm_nodes_shader(name == "nodes_shader")' in patch
+    assert 'voxwm_fog_nodes_active && services->getPixelShaderConstantID' in patch
     assert '"actual_fog_start' in patch and '"shader_uniforms_bound' in patch
     # Preserve the native algebra and its final-addition workaround in the compiled check.
     clarity = clarity.replace("length(eyeVec)", "distance").replace("0.0, 1.0", "0.0f, 1.0f")

@@ -4,6 +4,7 @@ import argparse
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from multiprocessing import get_context
 from pathlib import Path
+import subprocess
 from tempfile import TemporaryDirectory
 import time
 
@@ -12,7 +13,7 @@ import numpy as np
 from .fog_runtime import read_fog, validate_fog
 from .material_relight import probe_material
 from .native import HERE, NativeScene, RenderSession, SETUP, _builds
-from .protocol import RejectedScene, V3_RGB, V3_VERSION, v3_plan
+from .protocol import RejectedScene, V3_FOG_GEOMETRY, V3_FOG_VERSION, V3_RGB, V3_VERSION, v3_plan
 from .relight import LightInTransition, aim_recorded_view, capture, recorded_scene, restore_saved_cells
 from .storage import committed_paths, read_json, read_vocabulary, write_json
 
@@ -211,6 +212,10 @@ def main():
                           dict(source=str(args.dataset), engine_build=_builds(craftium)[0],
                                game_build=_builds(craftium)[1], modes={key: dict(enable_fog=e, fog_start=s)
                                for key, (e,s) in MODES.items()}, render_settings=SETTINGS,
+                               source_commit=subprocess.check_output(
+                                   ["git", "rev-parse", "HEAD"], cwd=HERE.parent, text=True).strip(),
+                               renderer=config["renderer"], protocol_version=V3_FOG_VERSION,
+                               fog_geometry=V3_FOG_GEOMETRY,
                                calibration="one disposable air world and one panel, camera translated along its view axis",
                                production_scene_count=0, saved_view_count=15, observation_shape=[48,48,48]))
         except Exception as exc:

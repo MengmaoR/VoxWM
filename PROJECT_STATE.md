@@ -1,6 +1,6 @@
 # VoxWM 当前状态
 
-**Vox2Pix v3 材质照明候选已完成原生同机位回放。** Surface、Cave、Underwater 各 5 个原有机位完成 A/B/C 对照。C 使用 Gamma 3.0、全局 LUT 下限 0.0、固体材质下限 0.35。洞穴 View 5 的平均亮度从 0.00 升至 38.49，纹理、矿石和边缘可辨。A/C 的原生雾效参数及水下叠色一致。原始 15 帧和历史 v2 1K 保留。下一次新场景 smoke 待用户授权。[协议](VOX2PIX_DATA_COLLECTION_PROTOCOL.md) · [实测报告](vox2pix_data/reports/v3_material_lighting/README.md)
+**Vox2Pix 原生 Fog 20–30 格校准通过。** 8 个标记距离和原有三个场景的 15 个机位完成 OFF / 旧 0.8 / 新 2/3 对照。实际 Fog Start/End 为 20/30 格，地图 draw range 30 格，原生 GPU Far Plane 2000 格。24 格标记可辨，30/32 格标记核心像素与 Fog Color 一致。采用版本 `vox2pix-v3-materialambient-linear-fog20-30`，保留材质照明和 48³ 观测。原生 OpenGL 测试使用 Mesa 软件渲染。下一步等待用户决定新场景 smoke 范围。[协议](VOX2PIX_DATA_COLLECTION_PROTOCOL.md) · [实测报告](vox2pix_data/reports/v3_fog20/README.md)
 
 **E01-Masked 27,000 步验证最优 checkpoint 已完成冻结审计，结论为 FREEZE WITH KNOWN D3 LIMITATION。**
 
