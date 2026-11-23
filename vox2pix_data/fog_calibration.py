@@ -13,8 +13,8 @@ from .fog_runtime import read_fog, validate_fog
 from .material_relight import probe_material
 from .native import HERE, NativeScene, RenderSession, SETUP, _builds
 from .protocol import RejectedScene, V3_RGB, V3_VERSION, v3_plan
-from .relight import LightInTransition, aim_recorded_view, capture, recorded_scene
-from .storage import committed_paths, read_json, read_vocabulary
+from .relight import LightInTransition, aim_recorded_view, capture, recorded_scene, restore_saved_cells
+from .storage import committed_paths, read_json, read_vocabulary, write_json
 
 
 DISTANCES = (20, 22, 24, 25, 27, 29, 30, 32)
@@ -41,8 +41,9 @@ def select_fog(native, mode):
     raise TimeoutError(f"Native fog settings did not settle in mode {mode}: {probe}")
 
 
-def fog_frame(native, capture_row, mode):
-    light = native.check_light_frame(capture_row, 0.)
+def fog_frame(native, capture_row, mode, *, light=None):
+    if light is None:
+        light = native.check_light_frame(capture_row, 0.)
     material = probe_material(native)
     native.check_material_light_frame(light, .35)
     fog = read_fog(native)
@@ -133,18 +134,31 @@ def replay_scene(scene_path, output, config, vocabulary, craftium_dir, seconds):
                         replay_surveys=False, render_settings=SETTINGS) as (native, meta, scene, restored):
         for index, view in enumerate(meta["views"]):
             aim_recorded_view(native, view)
+            restorations = []
             while time.monotonic() < native.search_deadline:
+                # Native water updates can continue while replaying the saved
+                # world. Restore the authoritative saved cells in this
+                # disposable copy before trying a complete matched triplet.
+                repaired = restore_saved_cells(native, meta, scene, vocabulary)
+                if repaired:
+                    restorations.append(repaired)
+                    print(f"{meta['kind']} view {index + 1}: restored {repaired} saved cells before retry", flush=True)
+                    for _ in range(8):
+                        native.step()
                 images, probes, lights = {}, {}, []
                 try:
                     for mode in MODES:
                         select_fog(native, mode)
                         rgb, light, raw_light = capture(native, meta, view, scene, 0.)
-                        row = dict(native_clock=dict(server_tick=light["render_tick"] + 1),
-                                   hud_wielditem_hidden=True, wielded_item="")
-                        probes[mode] = fog_frame(native, row, mode)
+                        probes[mode] = fog_frame(native, None, mode, light=light)
                         images[mode] = rgb
                         lights.append(raw_light)
                 except LightInTransition:
+                    continue
+                except RejectedScene as exc:
+                    if "voxels differ from the saved scene" not in str(exc):
+                        raise
+                    print(f"{meta['kind']} view {index + 1}: {exc}; retrying exact saved state", flush=True)
                     continue
                 if all(np.array_equal(lights[0], values) for values in lights[1:]):
                     break
@@ -153,7 +167,8 @@ def replay_scene(scene_path, output, config, vocabulary, craftium_dir, seconds):
             evidence = dict(node_id_identical=True, raw_param1_identical=True, raw_param2_identical=True,
                             camera_pose_identical=True, white_identical=True,
                             white_data_source="read-only saved White Model and Water Count",
-                            restored_saved_cells=restored)
+                            restored_saved_cells=restored,
+                            saved_cell_restorations_before_triplet=restorations)
             row = dict(scene_id=meta["scene_id"], kind=meta["kind"], world_seed=meta["world_seed"],
                        view_index=index, pose=view, probes=probes, evidence=evidence)
             results.append(write_existing(output, row, images, scene_path))
@@ -183,19 +198,27 @@ def main():
     with TemporaryDirectory(prefix=".fog-calibration-", dir=args.output.parent) as temporary:
         stage = Path(temporary) / "report"
         stage.mkdir()
-        marker_rows = calibration(craftium, stage, config["renderer"], args.scene_timeout)
-        rows = []
-        with ProcessPoolExecutor(max_workers=3, mp_context=get_context("spawn")) as pool:
-            jobs = [pool.submit(replay_scene, path, stage, config, vocabulary, craftium,
-                                args.scene_timeout) for path in paths.values()]
-            for job in as_completed(jobs):
-                rows.extend(job.result())
-        finish_report(stage, marker_rows, sorted(rows, key=lambda r: (r["scene_id"], r["view_index"])),
-                      dict(source=str(args.dataset), engine_build=_builds(craftium)[0],
-                           game_build=_builds(craftium)[1], modes={key: dict(enable_fog=e, fog_start=s)
-                           for key, (e,s) in MODES.items()}, render_settings=SETTINGS,
-                           calibration="one disposable air world and one panel, camera translated along its view axis",
-                           production_scene_count=0, saved_view_count=15, observation_shape=[48,48,48]))
+        marker_rows, rows = [], []
+        try:
+            marker_rows = calibration(craftium, stage, config["renderer"], args.scene_timeout)
+            write_json(stage / "calibration_rows.json", marker_rows)
+            with ProcessPoolExecutor(max_workers=3, mp_context=get_context("spawn")) as pool:
+                jobs = [pool.submit(replay_scene, path, stage, config, vocabulary, craftium,
+                                    args.scene_timeout) for path in paths.values()]
+                for job in as_completed(jobs):
+                    rows.extend(job.result())
+            finish_report(stage, marker_rows, sorted(rows, key=lambda r: (r["scene_id"], r["view_index"])),
+                          dict(source=str(args.dataset), engine_build=_builds(craftium)[0],
+                               game_build=_builds(craftium)[1], modes={key: dict(enable_fog=e, fog_start=s)
+                               for key, (e,s) in MODES.items()}, render_settings=SETTINGS,
+                               calibration="one disposable air world and one panel, camera translated along its view axis",
+                               production_scene_count=0, saved_view_count=15, observation_shape=[48,48,48]))
+        except Exception as exc:
+            failure = args.output.with_name(args.output.name + f".failed-{time.time_ns()}")
+            write_json(stage / "failure.json", dict(status="FAILED", error=f"{type(exc).__name__}: {exc}",
+                                                   completed_markers=marker_rows, completed_scene_views=rows))
+            stage.rename(failure)
+            raise RuntimeError(f"Native fog diagnostic failed; preserved outputs at {failure}") from exc
         stage.rename(args.output)
     print(args.output / "index.html")
 
