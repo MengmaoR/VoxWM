@@ -214,6 +214,20 @@ For a separately authorized new smoke, explicitly use `--mode smoke
 --lighting-profile material-ambient-fog20-draw48` with this checkout and
 a fresh dataset directory. Previous datasets require their original profile.
 
+For a small RGB-only preview of saved View 3/4/5 at draw range 128, with
+Fog OFF and absolute Fog 20–30, use the same renderer environment:
+
+```bash
+.venv/bin/python -m vox2pix_data.replay_rgb \
+  --dataset outputs/vox2pix_v3_lightfloor_15 \
+  --craftium-dir third_party/craftium_vox2pix_fog48 \
+  --output outputs/vox2pix_rgb128 \
+  --viewing-range 128 --views 3 4 5
+```
+
+This replays Surface/Cave/Underwater and writes 18 PNGs plus `index.html`.
+Use `--kinds surface` to limit the preview. The production profile stays unchanged.
+
 ## Historical v2 1K compression pilot
 
 The v2 protocol is `vox2pix-pilot-v2-camera16`. Use a newly initialized pilot

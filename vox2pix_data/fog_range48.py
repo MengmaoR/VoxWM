@@ -29,8 +29,8 @@ MARKER_NODE = [0, 2, 33]
 MARKER_BLOCK = [0, 0, 2]
 
 
-def select_mode(native, mode):
-    enabled, viewing_range = MODES[mode]
+def select_mode(native, mode, *, modes=MODES):
+    enabled, viewing_range = modes[mode]
     path = native.session.world / "client_clock.txt.fog_request"
     temporary = path.with_suffix(".tmp")
     temporary.write_text(f"{int(enabled)} 20 30 {viewing_range}\n")
@@ -54,11 +54,11 @@ def select_mode(native, mode):
     raise TimeoutError(f"Independent fog range did not settle in mode {mode}: {probe}")
 
 
-def frame_probe(native, mode, light):
+def frame_probe(native, mode, light, *, modes=MODES):
     material = probe_material(native)
     native.check_material_light_frame(light, .35)
     probe = read_fog(native)
-    validate_fog_absolute(probe, enabled=MODES[mode][0], viewing_range=MODES[mode][1],
+    validate_fog_absolute(probe, enabled=modes[mode][0], viewing_range=modes[mode][1],
                           tick=light["render_tick"])
     if probe["render_tick"] != material["render_tick"]:
         raise RejectedScene("Native fog and material probes belong to different RGB frames")
