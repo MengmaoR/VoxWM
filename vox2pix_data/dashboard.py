@@ -234,6 +234,15 @@ def v3_progress_lines(dataset, slots, config, committed, timestamps, state, job,
             lines.append(f"Live workers {job['live_workers']} | native worlds {len(job['worlds'])}")
     else:
         lines.append("Collector inactive | dashboard remains read-only")
+    adaptive = state.get("adaptive")
+    if adaptive:
+        best = adaptive.get("best_workers")
+        best_rate = adaptive.get("best_scenes_per_hour")
+        best_label = f"{best} ({best_rate:.1f} scenes/h)" if best_rate is not None else "--"
+        lines.append(f"Adaptive workers {adaptive['target']}/{adaptive['maximum']} ceiling "
+                     f"| best observed {best_label}")
+        lines.append(f"Adaptive {adaptive['phase']} / {adaptive['outcome']} "
+                     f"| {adaptive.get('reason') or 'comparing committed-scene throughput'}")
     for task in active:
         scene_id = task["scene_id"]
         if scene_id in committed:

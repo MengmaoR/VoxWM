@@ -1,0 +1,4 @@
+-r requirements-gt.txt
+zarr==2.18.7
+numcodecs==0.15.2
+pillow==11.3.0

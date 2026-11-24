@@ -61,6 +61,66 @@ class ProductionTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "only the final"):
             production_config(args)
 
+    def test_adaptive_cli_only_changes_runtime_scheduling(self):
+        with patch("vox2pix_data.production.collect_production", return_value=0) as collect:
+            self.assertEqual(main(["collect", "--mode", "production", "--dataset", "unused",
+                                   "--scenes", "200", "--workers", "16", "--adaptive-workers",
+                                   "--adaptive-start", "4", "--adaptive-window", "60"]), 0)
+            args = collect.call_args.args[0]
+            self.assertEqual((args.adaptive_workers, args.adaptive_start, args.adaptive_window),
+                             (True, 4, 60))
+            self.assertEqual(args.workers, 16)
+            config = production_config(args)
+            self.assertNotIn("adaptive_workers", config)
+            self.assertNotIn("adaptive_window", config)
+
+    def test_adaptive_limit_changes_keep_every_committed_scene(self):
+        class Controller:
+            target, maximum = 1, 2
+            best_workers, best_rate, phase, reason = 1, 1., "fixture", "fixture scheduling"
+
+            def __init__(self):
+                self.history = []
+                self.finished = False
+
+            def update(self, *, now, completed, in_flight, queued):
+                self.target = 1 if completed >= 3 else 2 if completed >= 1 else 1
+
+            def snapshot(self):
+                return dict(target=self.target, maximum=self.maximum, finished=self.finished)
+
+            def finish(self, **kwargs):
+                self.finished = True
+
+        lock = threading.Lock()
+        calls, active, peak = [], 0, 0
+
+        def capture(slot, *fields):
+            nonlocal active, peak
+            with lock:
+                active += 1
+                peak = max(peak, active)
+                calls.append(slot["scene_id"])
+            time.sleep(.01)
+            with lock:
+                active -= 1
+            return (slot,)
+
+        with TemporaryDirectory() as temporary, ThreadPoolExecutor(2) as pool:
+            writer = FixtureWriter(temporary)
+            args = options()
+            args.max_scenes = 10
+            controller = Controller()
+            progress = Progress(writer, controller.target)
+            self.assertEqual(run_tasks(writer, {}, args, "unused", pool, progress,
+                                       lambda: False, capture, controller), 0)
+            self.assertEqual(sorted(calls), list(range(10)))
+            self.assertEqual(writer.completed, set(range(10)))
+            self.assertEqual(peak, 2)
+            self.assertEqual(progress.state["workers"], 1)
+            self.assertTrue(progress.state["adaptive"]["finished"])
+            self.assertEqual(progress.state["status"], "COMPLETE")
+
     def test_two_parallel_slots_stop_at_limit_without_replacing_failures(self):
         lock = threading.Lock()
         calls, active, peak = [], 0, 0

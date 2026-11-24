@@ -17,6 +17,7 @@ from voxwm_gt.native import renderer_config
 from voxwm_gt.runtime import stop_tree
 
 from .geometry import build_library
+from .adaptive import AdaptiveConcurrency
 from .protocol import RejectedScene, V3_FINAL_PROFILE, V3_KINDS
 from .storage import DatasetWriter, read_json, write_json
 from .v3_native import capture_v3
@@ -153,7 +154,8 @@ def collection_pool(workers):
             os.environ[MARKER] = previous
 
 
-def run_tasks(writer, config, args, library, pool, progress, stop_requested, capture_fn=capture_v3):
+def run_tasks(writer, config, args, library, pool, progress, stop_requested,
+              capture_fn=capture_v3, adaptive=None):
     wanted = set(args.scene_ids) if args.scene_ids is not None else set(writer.slots)
     if not wanted <= writer.slots.keys():
         raise ValueError("Requested scene IDs are not in this dataset plan")
@@ -166,6 +168,9 @@ def run_tasks(writer, config, args, library, pool, progress, stop_requested, cap
     pending = {}
 
     def publish():
+        if adaptive is not None:
+            progress.state.update(workers=adaptive.target, worker_capacity=adaptive.maximum,
+                                  adaptive=adaptive.snapshot())
         progress.save(active=[record for _, record in pending.values()])
 
     while queue or pending:
@@ -183,6 +188,20 @@ def run_tasks(writer, config, args, library, pool, progress, stop_requested, cap
             record = dict(slot, started_at=time.time(), first_attempt=first, world_budget=args.worlds_per_task)
             pending[future] = slot, record
             publish()
+        if adaptive is not None:
+            before = adaptive.target
+            history_size = len(adaptive.history)
+            adaptive.update(now=time.monotonic(), completed=len(writer.completed),
+                            in_flight=len(pending), queued=len(queue))
+            if len(adaptive.history) != history_size or adaptive.target != before:
+                print(f"V3 adaptive workers {before}->{adaptive.target} | {adaptive.phase} "
+                      f"| best={adaptive.best_workers} at {adaptive.best_rate or 0:.1f} scenes/h "
+                      f"| {adaptive.reason or adaptive.history[-1].get('decision', '')}", flush=True)
+                publish()
+            if adaptive.target > before:
+                # Fill the higher limit before comparing another window; one pool,
+                # no restarted worlds and no repeat of already committed scenes.
+                continue
         ready, _ = wait(pending, timeout=1, return_when=FIRST_COMPLETED)
         for future in ready:
             slot, _ = pending.pop(future)
@@ -208,6 +227,9 @@ def run_tasks(writer, config, args, library, pool, progress, stop_requested, cap
             publish()
     incomplete = any(slot["scene_id"] not in writer.completed for slot in selected)
     status = "INCOMPLETE" if incomplete else "COMPLETE" if len(writer.completed) == len(writer.slots) else "LIMIT_REACHED"
+    if adaptive is not None:
+        adaptive.finish(now=time.monotonic(), completed=len(writer.completed))
+        publish()
     progress.save(status=status, active=[])
     return int(incomplete)
 
@@ -228,7 +250,12 @@ def collect_production(args):
             workers = min(worker_count(args.workers), max(1, len(writer.slots) - len(writer.completed)))
             if args.max_scenes is not None:
                 workers = min(workers, args.max_scenes)
-            progress = Progress(writer, workers)
+            adaptive = (AdaptiveConcurrency(workers, start_workers=args.adaptive_start,
+                                             window_seconds=args.adaptive_window)
+                        if getattr(args, "adaptive_workers", False) else None)
+            progress = Progress(writer, adaptive.target if adaptive else workers)
+            if adaptive is not None:
+                progress.save(worker_capacity=workers, adaptive=adaptive.snapshot())
             if len(writer.completed) == len(writer.slots):
                 progress.save(status="COMPLETE")
                 return 0
@@ -236,7 +263,8 @@ def collect_production(args):
                 with TemporaryDirectory(prefix="vox2pix-production-projector-") as temporary:
                     library = build_library(Path(temporary))
                     with collection_pool(workers) as pool:
-                        return run_tasks(writer, config, args, library, pool, progress, lambda: requested_stop)
+                        return run_tasks(writer, config, args, library, pool, progress,
+                                         lambda: requested_stop, adaptive=adaptive)
             except KeyboardInterrupt:
                 progress.save(status="INTERRUPTED", active=[])
                 return 130

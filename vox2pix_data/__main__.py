@@ -55,6 +55,12 @@ def parser():
     collect.add_argument("--seed", type=int, default=42)
     collect.add_argument("--workers", type=workers,
                          help="positive parallel count or auto; production defaults to available CPUs")
+    collect.add_argument("--adaptive-workers", action="store_true",
+                         help="production: ramp in-flight concurrency and roll back on sustained throughput decline")
+    collect.add_argument("--adaptive-start", type=positive, default=4,
+                         help="initial concurrency for --adaptive-workers (default: 4)")
+    collect.add_argument("--adaptive-window", type=positive, default=90,
+                         help="seconds per full-occupancy throughput comparison (default: 90)")
     collect.add_argument("--max-scenes", type=positive,
                          help="production: attempt at most this many missing scene slots in this invocation")
     collect.add_argument("--scene-ids", type=nonnegative, nargs="+",
@@ -236,6 +242,8 @@ def main(argv=None):
             options.error("Historical pilot-v2 has exactly 200 scene slots")
         if args.mode != "production" and (args.max_scenes is not None or args.scene_ids is not None):
             options.error("--max-scenes and --scene-ids require --mode production")
+        if args.adaptive_workers and args.mode != "production":
+            options.error("--adaptive-workers requires --mode production")
         args.renderer = renderer_config(args.renderer)[0]
         args.workers = worker_count(args.workers if args.workers is not None
                                    else "auto" if args.mode == "production" else 1)

@@ -1,5 +1,18 @@
 # Vox2Pix data collection
 
+## THU server: adaptive 1K in one collection
+
+[THU environment findings and complete installation/start/monitor commands](THU_SERVER.md).
+The existing `VoxEvolve` on THU is the old repository and has uncommitted work;
+create a separate `VoxWM` checkout. The retired AML host is no longer used.
+Use `collect --mode production --scenes 200 --workers auto --adaptive-workers
+--adaptive-start 4 --adaptive-window 60` for a single 1K dataset. The controller
+ramps concurrency using committed-scene throughput and backs off on a sustained
+drop. It retains all useful data and in-flight work, without separate pilot runs.
+`auto` without `--adaptive-workers` remains a fixed CPU-count limit. Dashboard
+and `collection_progress.json` expose tuning decisions and distinguish exhausted
+sample budget from a measured slowdown. THU Native collection has not been run.
+
 ## Local 1K pilot and compression report
 
 On this Mac, collect 200 scenes / 1,000 paired views with the final rendering

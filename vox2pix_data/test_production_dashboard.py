@@ -31,6 +31,15 @@ def state(**changes):
 
 
 class ProductionDashboardTests(TestCase):
+    def test_adaptive_current_ceiling_and_best_are_visible(self):
+        adaptive = dict(target=8, maximum=152, best_workers=4, best_scenes_per_hour=100.,
+                        phase="settling", outcome="searching", reason=None)
+        text = "\n".join(v3_progress_lines(Path("data"), SLOTS, CONFIG, set(), [],
+                                         state(adaptive=adaptive), JOB, 100., 700.))
+        self.assertIn("Adaptive workers 8/152 ceiling", text)
+        self.assertIn("best observed 4 (100.0 scenes/h)", text)
+        self.assertIn("settling / searching", text)
+
     def test_progress_uses_scene_counts_and_displays_active_biome(self):
         text = "\n".join(v3_progress_lines(Path("data"), SLOTS, CONFIG, set(), [],
                                          state(), JOB, 100., 700.))

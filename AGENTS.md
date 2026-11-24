@@ -1,5 +1,7 @@
 # VoxWM 执行守则
 
+- 2026-11-25 当前采集部署目标为 SSH 别名 `THU`；旧 `aml-g06-jump` / `aml-g06-gpu` 已停用，不再连接。Codex 本轮仅获 THU 只读环境检查授权，不远程安装、修改或启动采集。THU 原 `/home/user/WORK/txj/VoxEvolve` 是旧仓库且有未提交修改，不对它 pull/reset；用户在旁边单独部署 VoxWM。当前新增 `--adaptive-workers` 可在同一轮真实采集中按有效提交吞吐爬升/回退并行，`--workers auto` 单独使用仍是固定 CPU 数。只完成本地合成检查；THU 1K 及之后完整采集由用户手动启动，未测完不能宣称找到最优并行度。详见 `vox2pix_data/THU_SERVER.md`。
+
 Vox2Pix 当前采用 [v3 数据协议](VOX2PIX_DATA_COLLECTION_PROTOCOL.md)。类别为 Surface、Cave、Underwater，白模保存单层首次非水命中及 Water Count。保留实际 RGB 相机、48³ 脚底锚定、名义眼高与可见性半径 1.6、40 个视角区中至少 20 个可用。空余率只作分析。v2 1K 结果作为独立历史保留。
 
 - 当前唯一活跃 v3 渲染 profile 为 `material-ambient-fog20-draw32`，版本 `vox2pix-v3-local48-rgb32-absolute-fog20-30`。48³ 观测半宽 24，原生 RGB map draw range 32，独立绝对 Fog Start/End 为 20/30 格，原生线性雾。Gamma 3.0、全局 LUT 下限 0、固体材质下限 0.35。GPU Far Plane 沿用原生算法。White Model 仅遍历实际保存的观测立方体，出界返回 BACKGROUND；不修改 Camera、Foot Anchor、Water Count 或投影算法。
