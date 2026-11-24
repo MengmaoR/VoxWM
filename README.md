@@ -1,6 +1,6 @@
 # VoxWM — Voxel VAE E01-Masked
 
-Vox2Pix v3 当前最终候选为 **32 格 RGB draw range + 独立绝对 Fog20–30 + Material Ambient0.35**，保留 48³ 观测、单层白模和 Water Count。本轮重放原有三个场景的 15 个机位，Native / Visual 验证尚待实测；正式数据尚未采集。[当前配置与命令](vox2pix_data/README.md#final-native-rendering-rgb32) · [数据协议](VOX2PIX_DATA_COLLECTION_PROTOCOL.md) · [历史 RGB48 实测](vox2pix_data/reports/v3_fog48/README.md)
+Vox2Pix v3 当前采用 **32 格 RGB draw range + 独立绝对 Fog20–30 + Material Ambient0.35**，保留 48³ 观测、单层白模和 Water Count。12 距离校准、原有 15 帧回放和回归检查完成，结论为 **VERIFIED WITH KNOWN NATIVE VISUAL LIMITATION**：远处可能保留微弱均匀雾色色块和原生水下表面边界。正式 50K 数据尚未采集。[实测与限制](vox2pix_data/reports/final_rendering_32/README.md) · [运行命令](vox2pix_data/README.md#final-native-rendering-rgb32) · [数据协议](VOX2PIX_DATA_COLLECTION_PROTOCOL.md)
 
 历史 Vox2Pix v2 1K 共 200 个场景、1,000 个视角。[三层白模 Viewer](vox2pix_data/README.md#inspect-an-existing-pilot) · [实测速率与采集日志](vox2pix_data/reports/pilot_1k/README.md)。
 

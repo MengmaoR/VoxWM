@@ -228,7 +228,11 @@ def finish_report(output, marker_rows, scene_rows, metadata):
                         visual_verified=visual, dataset_collection_started=False)
     status = ("UNIT_FIXTURE" if fixture else "PASS" if native_ok and regression_ok and visual
               and verification["unit_verified"] else "NATIVE_PASS_VISUAL_PENDING" if native_ok and regression_ok else "FAIL")
+    limitations = metadata.get("visual_limitations", [])
+    if status == "PASS" and limitations:
+        status = "PASS_WITH_KNOWN_NATIVE_LIMITATION"
     summary = dict(status=status, verification=verification, metadata=metadata,
+                   visual_limitations=limitations,
                    fixed_calibration_camera=fixed_camera, calibration=markers, existing_scenes=scenes,
                    final_configuration=dict(voxel_observation=[48, 48, 48], voxel_observation_half_extent=24,
                        rgb_viewing_range=32, fog_start_distance=20, fog_end_distance=30, fog_type="native_linear",
@@ -249,9 +253,14 @@ def finish_report(output, marker_rows, scene_rows, metadata):
         fog_report._figure(Path("montage.png"), "All 12 distances · Fog OFF / final Fog20–30") + calibration_html), encoding="utf-8")
     probes = [row["probes"]["C"] for row in markers + scenes]
     fields = ("viewing_range_config", "draw_control_wanted_range", "actual_map_draw_range", "actual_fog_start_distance",
-              "actual_fog_end_distance", "camera_far_plane", "max_block_send_distance_nodes", "max_block_generate_distance_nodes")
+              "actual_fog_end_distance", "camera_far_plane", "max_block_send_distance_nodes", "max_block_generate_distance_nodes",
+              "active_object_send_range_nodes")
     runtime_table = fog_report._table(("Actual native measurement · node units", "Observed values"),
         ((field, ", ".join(str(value) for value in sorted({p.get(field) for p in probes if p.get(field) is not None}))) for field in fields))
+    runtime_table += fog_report._table(("Actual native lighting", "Observed values"),
+        ((field, ", ".join(str(value) for value in sorted({p["material_lighting"].get(field)
+          for p in probes if p["material_lighting"].get(field) is not None})))
+         for field in ("display_gamma", "lighting_floor", "solid_ambient_floor", "lut_zero", "lut_max")))
     scene_html = []
     for kind in ("surface", "cave", "underwater"):
         scene_html.append(f"<h2>{kind.title()}</h2>")
@@ -270,7 +279,8 @@ def finish_report(output, marker_rows, scene_rows, metadata):
                        mapblock_culling_beyond32="See outside_range_observations; no per-voxel hard clipping is added",
                        no_hard_cut_at24_or30=bool(calibration_ok), material_ambient=native_ok,
                        native_underwater_rendering="Original shaders and post-effect retained; visual review remains explicit")
-    contents = (f"<h1>Vox2Pix · final RGB32 / Fog20–30</h1><p>Result: {status}</p>" + verification_html +
+    limit_html = "".join(f"<p>{escape(note)}</p>" for note in limitations)
+    contents = (f"<h1>Vox2Pix · final RGB32 / Fog20–30</h1><p>Result: {status}</p>" + verification_html + limit_html +
                 "<h2>Final configuration</h2>" + fog_report._details("Locked configuration", summary["final_configuration"]) +
                 "<h2>Native runtime verification</h2>" + runtime_table +
                 "<h2>Fog calibration</h2><p><a href='../calibration/index.html'>Full fixed-camera calibration</a> · "

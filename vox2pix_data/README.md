@@ -9,10 +9,33 @@ extent 24. Gamma 3.0, native zero-floor LUT and solid material ambient 0.35
 remain unchanged. GPU Far Plane follows the original native camera calculation.
 The White Model, Water Count, BACKGROUND and scene sampling are unchanged.
 
-The final calibration and 15-frame replay are authorized; their measured status
-is PENDING until this run finishes. Formal 50K collection and training have not
-started. All older RGB ranges, ratio-fog and global-floor trials below are
-historical; use their explicit profiles only for their own data.
+The final calibration and 15-frame replay completed with status
+**VERIFIED WITH KNOWN NATIVE VISUAL LIMITATION**. The incremental engine build,
+25 Python tests and C++ absolute-fog policy checks passed. The fixed-camera test
+covered all 12 distances; all 15 saved poses matched the original Voxel/Camera,
+and White/Water/Face/BACKGROUND arrays were unchanged. Formal 50K collection and
+training have not started. Older RGB ranges, ratio-fog and global-floor trials
+below are historical; use their explicit profiles only for their own data.
+
+| Actual native measurement | Result |
+| --- | --- |
+| Map draw range / Fog Start / Fog End | 32 / 20 / 30 nodes |
+| GPU Far Plane | 2000 nodes, original native calculation |
+| Server send / generate / active-object limit | Each 8 MapBlocks / 128 nodes |
+| Loaded MapBlocks | 68–188 overall; 87–188 for existing scenes |
+| Marker geometry submitted | 31, 32 and bounding-volume-retained 34 nodes |
+| Marker core at 30–34 | Native Fog Color exactly; zero RGB error |
+| Maximum 22–29 shading-equation error | 0.447/255 |
+
+All 15 native eye post-effect RGBA values match the corresponding historical
+fog48 C views; Underwater remains [24,46,89,60]. The original underwater tint is
+preserved. Visual inspection covered all 12 marker distances and 15 RGB frames. Native Sky
+and Fog Color can leave a faint uniform patch after marker texture disappears
+(one center/background RGB difference was [3,2,0]). Native underwater surface
+polygon boundaries remain visible. This is not a claim that every fogged surface
+matches every background pixel or that water-surface boundaries disappeared.
+See the [measurement report](reports/final_rendering_32/README.md); its offline
+bundle is [final_rendering_32.zip](reports/final_rendering_32/final_rendering_32.zip).
 
 From the repository root, using the existing native client checkout and its
 Linux graphics environment:

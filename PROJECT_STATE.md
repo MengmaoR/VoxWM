@@ -1,6 +1,6 @@
 # VoxWM 当前状态
 
-**Vox2Pix 最终候选：RGB32 / 独立 Fog20–30 / Material Ambient0.35。** 当前版本 `vox2pix-v3-local48-rgb32-absolute-fog20-30`，48³ 观测和单层 White Model / Water Count 不变，原生 Far Plane 保持原算法。Unit、Native、Visual 验证尚待本轮实测；仅获准在原三个场景的 15 个机位重新采集 RGB，并完成 12 距离校准。输出：`outputs/vox2pix_final_rendering_32/report/index.html`。旧 draw30/48/128 为历史诊断，保留原数据。正式 50K 数据采集尚未开始。[协议](VOX2PIX_DATA_COLLECTION_PROTOCOL.md) · [本轮命令](vox2pix_data/README.md#final-native-rendering-rgb32)
+**Vox2Pix RGB32 / 独立 Fog20–30 / Material Ambient0.35：VERIFIED WITH KNOWN NATIVE VISUAL LIMITATION。** 25 项 Python Unit、C++ 策略测试、原生 build、12 距离固定相机校准和原三个场景的 15 帧回放完成。实测 draw32、Fog20/30、Far Plane2000，Server send/generate 均为8 MapBlocks（128格）。48³ Voxel/Camera 与原记录匹配，White/Water/Face/BACKGROUND 数组不变。31–32格和34格标记实际提交；30–34格标记纹理被雾完全遮蔽，但天空/Fog 色差可留微弱均匀色块，水下原生表面边界仍可见。版本 `vox2pix-v3-local48-rgb32-absolute-fog20-30`。[本轮报告](vox2pix_data/reports/final_rendering_32/README.md) · [命令](vox2pix_data/README.md#final-native-rendering-rgb32)。下一步等待用户检查报告并决定是否正式采集；50K采集和训练尚未开始。
 
 **E01-Masked 27,000 步验证最优 checkpoint 已完成冻结审计，结论为 FREEZE WITH KNOWN D3 LIMITATION。**
 

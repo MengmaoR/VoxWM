@@ -1,10 +1,12 @@
 # Vox2Pix v3 data collection protocol
 
 The sole active v3 rendering profile is `material-ambient-fog20-draw32`, version
-`vox2pix-v3-local48-rgb32-absolute-fog20-30`. Native and visual verification
-of this final candidate is PENDING until the current calibration and replay complete.
-The current authorization covers only that bounded verification; formal 50K
-collection and model training have not started.
+`vox2pix-v3-local48-rgb32-absolute-fog20-30`. The completed calibration and
+15-frame replay are **VERIFIED WITH KNOWN NATIVE VISUAL LIMITATION**.
+Unit Verified: 25 Python tests and the native C++ absolute-fog policy checks.
+Native Verified: incremental engine build, 12 fixed-camera marker distances and
+15 original scene poses. Visual Verified with the limitations below.
+Dataset Collection Not Started: no formal 50K collection or model training ran.
 
 | Setting | Active value |
 | --- | --- |
@@ -190,6 +192,23 @@ The offline report is `outputs/vox2pix_final_rendering_32/report/index.html`.
 It separates Unit Verified, Native Verified, Visual Verified and Dataset
 Collection Not Started. Success requires actual native driver/shader probes
 and image inspection; configuration alone does not establish verification.
+
+The final measured map draw range is 32, Fog Start/End are 20/30, and the
+native GPU Far Plane is 2000. Server send/generate/active-object limits are each
+8 MapBlocks / 128 nodes. Loaded MapBlocks range from 68–188 across calibration
+and replay (87–188 in existing scenes). The 31/32-node markers were submitted,
+as was the 34-node marker retained by MapBlock bounding-volume culling.
+The sampled marker core at 30–34 exactly matched its native Fog Color, with
+zero RGB error; the 22–29-node shading-equation error was at most 0.447/255.
+
+The native Sky gradient and Fog Color can leave a faint uniform patch despite
+complete loss of marker texture; one marker-center versus neighboring-background
+comparison differed by RGB [3,2,0]. The 34-node geometry retention is disclosed,
+not an exact per-voxel cutoff. All 15 native eye post-effect RGBA values equal their corresponding historical
+fog48 C values; Underwater remains [24,46,89,60]. Native underwater surface
+polygon boundaries remain visible. The verification does not claim perfect fog/background equality
+or elimination of every water-surface boundary. See the
+[measured report](vox2pix_data/reports/final_rendering_32/README.md).
 The projection continues to query only the stored 48³ cube, returning
 BACKGROUND on exit and counting only water traversed within that cube.
 
