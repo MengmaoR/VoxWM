@@ -1,0 +1,668 @@
+[
+  {
+    "workers": 4,
+    "command": [
+      "/Users/tianxj/Desktop/VoxWM/.venv/bin/python",
+      "-B",
+      "-u",
+      "-m",
+      "vox2pix_data",
+      "collect",
+      "--mode",
+      "production",
+      "--dataset",
+      "/Users/tianxj/Desktop/VoxWM/outputs/vox2pix_parallel_20261124/w4",
+      "--scenes",
+      "200",
+      "--max-scenes",
+      "30",
+      "--workers",
+      "4",
+      "--seed",
+      "42",
+      "--renderer",
+      "window",
+      "--craftium-dir",
+      "third_party/craftium_vox2pix_local32",
+      "--worlds-per-task",
+      "8",
+      "--task-retries",
+      "2",
+      "--scene-timeout",
+      "180"
+    ],
+    "source_commit": "c272b4b5d3c7d29dfeae4491e36d329950406600",
+    "wall_seconds": 292.4398686669301,
+    "exit_code": 0,
+    "stop_reason": null,
+    "completed": 30,
+    "frames": 150,
+    "status": "LIMIT_REACHED",
+    "counts": {
+      "surface": 18,
+      "cave": 9,
+      "underwater": 3
+    },
+    "attempts": 30,
+    "failed": 0,
+    "last_error": null,
+    "frames_per_hour": 1846.5334513435466,
+    "commit_8_to_22_frames_per_hour": 1969.0720188509358,
+    "peak_tree_rss_mib": 2080.828125,
+    "max_pressure": 2,
+    "swapin_delta_mib": 222.0625,
+    "swapout_delta_mib": 855.0,
+    "baseline": {
+      "time": 1795533561.2287202,
+      "pressure": 1,
+      "swap_used_mib": 10803.62,
+      "swapin_mib": 369179.25,
+      "swapout_mib": 420970.5625,
+      "pageout_mib": 75953.03125,
+      "compressor_mib": 5438.84375,
+      "tree_rss_mib": 0.0,
+      "tree_cpu_percent": 0,
+      "machine_cpu_percent": 168.49999999999997,
+      "windowserver_cpu_percent": 45.8,
+      "tree_processes": 0
+    },
+    "end": {
+      "time": 1795533853.727108,
+      "pressure": 2,
+      "swap_used_mib": 11434.62,
+      "swapin_mib": 369401.3125,
+      "swapout_mib": 421825.5625,
+      "pageout_mib": 76025.953125,
+      "compressor_mib": 5085.0625,
+      "tree_rss_mib": 0.0,
+      "tree_cpu_percent": 0,
+      "machine_cpu_percent": 342.7,
+      "windowserver_cpu_percent": 46.8,
+      "tree_processes": 0
+    },
+    "thermal_before": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\nNote: No CPU power status has been recorded",
+    "thermal_after": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\nNote: No CPU power status has been recorded",
+    "progress": {
+      "status": "LIMIT_REACHED",
+      "started_at": 1795533561.5605881,
+      "updated_at": 1795533852.6059608,
+      "collector_source": {
+        "git_commit": "c272b4b5d3c7d29dfeae4491e36d329950406600",
+        "working_tree_modified": false
+      },
+      "pid": 63061,
+      "workers": 4,
+      "scene_count": 200,
+      "completed": 30,
+      "initial_completed": 0,
+      "frames": 150,
+      "active": [],
+      "attempts": 30,
+      "failed": 0,
+      "exhausted_count": 0,
+      "last_error": null,
+      "commit_times": [
+        1795533598.178108,
+        1795533598.332907,
+        1795533604.6284711,
+        1795533609.321267,
+        1795533627.9347,
+        1795533628.372473,
+        1795533631.538988,
+        1795533655.0291998,
+        1795533661.983017,
+        1795533665.662411,
+        1795533689.532166,
+        1795533690.431205,
+        1795533722.167715,
+        1795533723.535412,
+        1795533730.266561,
+        1795533731.201552,
+        1795533748.4164622,
+        1795533757.075284,
+        1795533764.241837,
+        1795533766.811402,
+        1795533774.850263,
+        1795533783.008267,
+        1795533792.2401202,
+        1795533807.674939,
+        1795533810.6152818,
+        1795533821.241893,
+        1795533822.2206469,
+        1795533839.999747,
+        1795533843.979098,
+        1795533852.6054652
+      ],
+      "last_commit_at": 1795533852.6054652,
+      "counts": {
+        "surface": 18,
+        "cave": 9,
+        "underwater": 3
+      },
+      "biome_counts": {
+        "MesaBryce": {
+          "surface": 1,
+          "cave": 1
+        },
+        "MesaPlateauF": {
+          "surface": 1,
+          "cave": 1
+        },
+        "RoofedForest": {
+          "surface": 1,
+          "cave": 1
+        },
+        "Savanna": {
+          "surface": 1,
+          "cave": 1
+        },
+        "MushroomIsland": {
+          "surface": 1,
+          "cave": 1
+        },
+        "IcePlains": {
+          "surface": 1,
+          "cave": 1
+        },
+        "Taiga": {
+          "surface": 1,
+          "cave": 1
+        },
+        "Jungle": {
+          "surface": 1,
+          "cave": 1
+        },
+        "Forest": {
+          "surface": 1,
+          "cave": 1
+        },
+        "Desert": {
+          "surface": 1,
+          "cave": 0
+        },
+        "JungleEdge": {
+          "surface": 1,
+          "cave": 0
+        },
+        "BambooJungle": {
+          "surface": 1,
+          "cave": 0
+        },
+        "StoneBeach": {
+          "surface": 1,
+          "cave": 0
+        },
+        "Plains": {
+          "surface": 1,
+          "cave": 0
+        },
+        "MegaSpruceTaiga": {
+          "surface": 1,
+          "cave": 0
+        },
+        "FlowerForest": {
+          "surface": 1,
+          "cave": 0
+        },
+        "Mesa": {
+          "surface": 1,
+          "cave": 0
+        },
+        "MangroveSwamp": {
+          "surface": 1,
+          "cave": 0
+        }
+      },
+      "next_attempt": {}
+    },
+    "native_peer_closed_log_records": 6,
+    "full_active_samples": 50,
+    "median_tree_cpu_percent_full_active": 344.85,
+    "median_machine_cpu_percent_full_active": 671.75,
+    "projected_100k_hours": 54.15553123461669
+  },
+  {
+    "workers": 6,
+    "command": [
+      "/Users/tianxj/Desktop/VoxWM/.venv/bin/python",
+      "-B",
+      "-u",
+      "-m",
+      "vox2pix_data",
+      "collect",
+      "--mode",
+      "production",
+      "--dataset",
+      "/Users/tianxj/Desktop/VoxWM/outputs/vox2pix_parallel_20261124/w6",
+      "--scenes",
+      "200",
+      "--max-scenes",
+      "30",
+      "--workers",
+      "6",
+      "--seed",
+      "42",
+      "--renderer",
+      "window",
+      "--craftium-dir",
+      "third_party/craftium_vox2pix_local32",
+      "--worlds-per-task",
+      "8",
+      "--task-retries",
+      "2",
+      "--scene-timeout",
+      "180"
+    ],
+    "source_commit": "c272b4b5d3c7d29dfeae4491e36d329950406600",
+    "wall_seconds": 322.3456078330055,
+    "exit_code": 0,
+    "stop_reason": null,
+    "completed": 30,
+    "frames": 150,
+    "status": "LIMIT_REACHED",
+    "counts": {
+      "surface": 18,
+      "cave": 9,
+      "underwater": 3
+    },
+    "attempts": 30,
+    "failed": 0,
+    "last_error": null,
+    "frames_per_hour": 1675.2205920539568,
+    "commit_8_to_22_frames_per_hour": 1569.752220839733,
+    "peak_tree_rss_mib": 3067.125,
+    "max_pressure": 2,
+    "swapin_delta_mib": 771.5,
+    "swapout_delta_mib": 1562.6875,
+    "baseline": {
+      "time": 1795533863.846482,
+      "pressure": 1,
+      "swap_used_mib": 11434.62,
+      "swapin_mib": 369402.6875,
+      "swapout_mib": 421825.5625,
+      "pageout_mib": 76025.953125,
+      "compressor_mib": 4816.125,
+      "tree_rss_mib": 0.0,
+      "tree_cpu_percent": 0,
+      "machine_cpu_percent": 287.70000000000005,
+      "windowserver_cpu_percent": 49.7,
+      "tree_processes": 0
+    },
+    "end": {
+      "time": 1795534186.252372,
+      "pressure": 1,
+      "swap_used_mib": 12245.25,
+      "swapin_mib": 370174.1875,
+      "swapout_mib": 423388.25,
+      "pageout_mib": 76078.515625,
+      "compressor_mib": 4074.640625,
+      "tree_rss_mib": 0.0,
+      "tree_cpu_percent": 0,
+      "machine_cpu_percent": 156.99999999999991,
+      "windowserver_cpu_percent": 48.8,
+      "tree_processes": 0
+    },
+    "thermal_before": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\nNote: No CPU power status has been recorded",
+    "thermal_after": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\nNote: No CPU power status has been recorded",
+    "progress": {
+      "status": "LIMIT_REACHED",
+      "started_at": 1795533864.1211011,
+      "updated_at": 1795534182.698334,
+      "collector_source": {
+        "git_commit": "c272b4b5d3c7d29dfeae4491e36d329950406600",
+        "working_tree_modified": false
+      },
+      "pid": 67317,
+      "workers": 6,
+      "scene_count": 200,
+      "completed": 30,
+      "initial_completed": 0,
+      "frames": 150,
+      "active": [],
+      "attempts": 30,
+      "failed": 0,
+      "exhausted_count": 0,
+      "last_error": null,
+      "commit_times": [
+        1795533906.673998,
+        1795533908.237966,
+        1795533908.671469,
+        1795533935.05103,
+        1795533935.347633,
+        1795533939.210739,
+        1795533948.1322,
+        1795533974.588366,
+        1795533977.4283469,
+        1795534016.117163,
+        1795534016.489262,
+        1795534024.071412,
+        1795534037.235754,
+        1795534043.7799098,
+        1795534048.642272,
+        1795534067.084105,
+        1795534080.1686678,
+        1795534091.2498062,
+        1795534105.904147,
+        1795534108.617731,
+        1795534112.5727758,
+        1795534135.123256,
+        1795534146.554327,
+        1795534151.050698,
+        1795534153.06226,
+        1795534153.5931032,
+        1795534153.920649,
+        1795534174.249973,
+        1795534179.517496,
+        1795534182.6978219
+      ],
+      "last_commit_at": 1795534182.6978219,
+      "counts": {
+        "surface": 18,
+        "cave": 9,
+        "underwater": 3
+      },
+      "biome_counts": {
+        "MesaBryce": {
+          "surface": 1,
+          "cave": 1
+        },
+        "MesaPlateauF": {
+          "surface": 1,
+          "cave": 1
+        },
+        "RoofedForest": {
+          "surface": 1,
+          "cave": 1
+        },
+        "Savanna": {
+          "surface": 1,
+          "cave": 1
+        },
+        "MushroomIsland": {
+          "surface": 1,
+          "cave": 1
+        },
+        "Forest": {
+          "surface": 1,
+          "cave": 1
+        },
+        "IcePlains": {
+          "surface": 1,
+          "cave": 1
+        },
+        "Taiga": {
+          "surface": 1,
+          "cave": 1
+        },
+        "Jungle": {
+          "surface": 1,
+          "cave": 1
+        },
+        "Desert": {
+          "surface": 1,
+          "cave": 0
+        },
+        "JungleEdge": {
+          "surface": 1,
+          "cave": 0
+        },
+        "StoneBeach": {
+          "surface": 1,
+          "cave": 0
+        },
+        "BambooJungle": {
+          "surface": 1,
+          "cave": 0
+        },
+        "MegaSpruceTaiga": {
+          "surface": 1,
+          "cave": 0
+        },
+        "FlowerForest": {
+          "surface": 1,
+          "cave": 0
+        },
+        "Plains": {
+          "surface": 1,
+          "cave": 0
+        },
+        "MangroveSwamp": {
+          "surface": 1,
+          "cave": 0
+        },
+        "Mesa": {
+          "surface": 1,
+          "cave": 0
+        }
+      },
+      "next_attempt": {}
+    },
+    "native_peer_closed_log_records": 16,
+    "full_active_samples": 55,
+    "median_tree_cpu_percent_full_active": 386.7,
+    "median_machine_cpu_percent_full_active": 685.4,
+    "projected_100k_hours": 59.6936310801862
+  },
+  {
+    "workers": 8,
+    "command": [
+      "/Users/tianxj/Desktop/VoxWM/.venv/bin/python",
+      "-B",
+      "-u",
+      "-m",
+      "vox2pix_data",
+      "collect",
+      "--mode",
+      "production",
+      "--dataset",
+      "/Users/tianxj/Desktop/VoxWM/outputs/vox2pix_parallel_20261124/w8",
+      "--scenes",
+      "200",
+      "--max-scenes",
+      "30",
+      "--workers",
+      "8",
+      "--seed",
+      "42",
+      "--renderer",
+      "window",
+      "--craftium-dir",
+      "third_party/craftium_vox2pix_local32",
+      "--worlds-per-task",
+      "8",
+      "--task-retries",
+      "2",
+      "--scene-timeout",
+      "180"
+    ],
+    "source_commit": "c272b4b5d3c7d29dfeae4491e36d329950406600",
+    "wall_seconds": 425.70042637502775,
+    "exit_code": 0,
+    "stop_reason": null,
+    "completed": 30,
+    "frames": 150,
+    "status": "LIMIT_REACHED",
+    "counts": {
+      "surface": 18,
+      "cave": 9,
+      "underwater": 3
+    },
+    "attempts": 31,
+    "failed": 1,
+    "last_error": "cave search exhausted after 186.5s: {'world_starts': 1, 'surveys': 3, 'cave_hints': 0, 'candidate_floors': 315, 'capture_attempts': 27, 'Cave: no nearby two-cell roof': 103, 'native surface biome mismatch': 42, 'Fewer than 20 active view regions': 16, 'sites_without_accepted_anchor': 2, 'Node Name or raw param2 changed between native views': 13, 'Native observer has a visible wield model or an item selected': 10, 'Native standing anchor mismatch': 126, 'Native anchor changed': 4, 'Cave: insufficient nearby roof coverage': 1, 'Native survey exceeded its command or scene deadline': 1}",
+    "frames_per_hour": 1268.4976724084324,
+    "commit_8_to_22_frames_per_hour": 1249.7868365150662,
+    "peak_tree_rss_mib": 3082.9375,
+    "max_pressure": 2,
+    "swapin_delta_mib": 1053.21875,
+    "swapout_delta_mib": 1204.25,
+    "baseline": {
+      "time": 1795534196.377837,
+      "pressure": 1,
+      "swap_used_mib": 12237.25,
+      "swapin_mib": 370176.546875,
+      "swapout_mib": 423388.25,
+      "pageout_mib": 76078.515625,
+      "compressor_mib": 4030.828125,
+      "tree_rss_mib": 0.0,
+      "tree_cpu_percent": 0,
+      "machine_cpu_percent": 144.99999999999991,
+      "windowserver_cpu_percent": 47.4,
+      "tree_processes": 0
+    },
+    "end": {
+      "time": 1795534622.0762491,
+      "pressure": 1,
+      "swap_used_mib": 12377.5,
+      "swapin_mib": 371229.765625,
+      "swapout_mib": 424592.5,
+      "pageout_mib": 76170.84375,
+      "compressor_mib": 4126.609375,
+      "tree_rss_mib": 0.0,
+      "tree_cpu_percent": 0,
+      "machine_cpu_percent": 397.29999999999984,
+      "windowserver_cpu_percent": 47.4,
+      "tree_processes": 0
+    },
+    "thermal_before": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\nNote: No CPU power status has been recorded",
+    "thermal_after": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\nNote: No CPU power status has been recorded",
+    "progress": {
+      "status": "LIMIT_REACHED",
+      "started_at": 1795534196.633981,
+      "updated_at": 1795534621.450231,
+      "collector_source": {
+        "git_commit": "c272b4b5d3c7d29dfeae4491e36d329950406600",
+        "working_tree_modified": false
+      },
+      "pid": 71852,
+      "workers": 8,
+      "scene_count": 200,
+      "completed": 30,
+      "initial_completed": 0,
+      "frames": 150,
+      "active": [],
+      "attempts": 31,
+      "failed": 1,
+      "exhausted_count": 0,
+      "last_error": "cave search exhausted after 186.5s: {'world_starts': 1, 'surveys': 3, 'cave_hints': 0, 'candidate_floors': 315, 'capture_attempts': 27, 'Cave: no nearby two-cell roof': 103, 'native surface biome mismatch': 42, 'Fewer than 20 active view regions': 16, 'sites_without_accepted_anchor': 2, 'Node Name or raw param2 changed between native views': 13, 'Native observer has a visible wield model or an item selected': 10, 'Native standing anchor mismatch': 126, 'Native anchor changed': 4, 'Cave: insufficient nearby roof coverage': 1, 'Native survey exceeded its command or scene deadline': 1}",
+      "commit_times": [
+        1795534251.2734752,
+        1795534258.704125,
+        1795534259.5886889,
+        1795534264.388882,
+        1795534265.660819,
+        1795534277.7793741,
+        1795534294.32211,
+        1795534295.649578,
+        1795534310.25568,
+        1795534321.0955021,
+        1795534345.929963,
+        1795534360.886146,
+        1795534368.749558,
+        1795534388.819455,
+        1795534390.5652852,
+        1795534400.251631,
+        1795534413.2774432,
+        1795534414.193173,
+        1795534455.822557,
+        1795534471.9633448,
+        1795534481.5326452,
+        1795534497.283963,
+        1795534511.911982,
+        1795534512.375752,
+        1795534526.69892,
+        1795534527.9377348,
+        1795534532.0757089,
+        1795534539.461399,
+        1795534546.589493,
+        1795534621.449641
+      ],
+      "last_commit_at": 1795534621.449641,
+      "counts": {
+        "surface": 18,
+        "cave": 9,
+        "underwater": 3
+      },
+      "biome_counts": {
+        "MesaBryce": {
+          "surface": 1,
+          "cave": 1
+        },
+        "Jungle": {
+          "surface": 1,
+          "cave": 1
+        },
+        "MesaPlateauF": {
+          "surface": 1,
+          "cave": 1
+        },
+        "RoofedForest": {
+          "surface": 1,
+          "cave": 1
+        },
+        "Savanna": {
+          "surface": 1,
+          "cave": 1
+        },
+        "MushroomIsland": {
+          "surface": 1,
+          "cave": 1
+        },
+        "Forest": {
+          "surface": 1,
+          "cave": 1
+        },
+        "Taiga": {
+          "surface": 1,
+          "cave": 1
+        },
+        "JungleEdge": {
+          "surface": 1,
+          "cave": 0
+        },
+        "Desert": {
+          "surface": 1,
+          "cave": 0
+        },
+        "IcePlains": {
+          "surface": 1,
+          "cave": 1
+        },
+        "StoneBeach": {
+          "surface": 1,
+          "cave": 0
+        },
+        "Plains": {
+          "surface": 1,
+          "cave": 0
+        },
+        "MegaSpruceTaiga": {
+          "surface": 1,
+          "cave": 0
+        },
+        "BambooJungle": {
+          "surface": 1,
+          "cave": 0
+        },
+        "FlowerForest": {
+          "surface": 1,
+          "cave": 0
+        },
+        "Mesa": {
+          "surface": 1,
+          "cave": 0
+        },
+        "MangroveSwamp": {
+          "surface": 1,
+          "cave": 0
+        }
+      },
+      "next_attempt": {}
+    },
+    "native_peer_closed_log_records": 7,
+    "full_active_samples": 59,
+    "median_tree_cpu_percent_full_active": 374.0,
+    "median_machine_cpu_percent_full_active": 669.8,
+    "projected_100k_hours": 78.8334122916718
+  }
+]

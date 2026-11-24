@@ -7,7 +7,7 @@ Vox2Pix 当前采用 [v3 数据协议](VOX2PIX_DATA_COLLECTION_PROTOCOL.md)。�
 - 已知限制：34 格标记受 MapBlock 包围体影响仍被提交，30–34 格标记纹理完全雾化，但原生天空渐变与 Fog Color 可留下微弱均匀色块；水下原生表面多边形边界仍可见。不得宣称超过30格与所有背景完美一致或水下不存在任何边界。临时回放可保持已保存位姿；正式采集继续原生下沉。该渲染验证轮已结束，后续按最新授权执行；不自动启动50K正式采集或训练。
 - 旧 RGB draw24/30/48、比例雾 `fog_start=0.8` / `2/3` 和全局 LUT 下限 0.35 均 deprecated，仅为读取历史数据与显式回放保留。draw128 也仅为诊断预览。历史报告和数据只读，旧版结果不能充当最终32配置的新验证。
 - 当前新增正式并行采集入口 `collect --mode production` / `scripts/collect_vox2pix.sh`：10,000 独立场景×5视角，Surface/Cave/Underwater=6,000/3,000/1,000；Surface每25群落各240、Cave各120，水下不强制群落。仅父进程原子提交，已完成场景不覆盖；失败/中断保留seed游标，所有同seed视角共享80/10/10 split。生产保留五个实际RGB及原生probe，不逐场景重复lighting A/B。`--workers`支持正整数或auto，8是启动默认而非上限。Dashboard独立只读，后台由用户手动在tmux内运行；停止向专用采集pane发送Ctrl-C，由采集器清理自己标记的后代，不按全局进程名清理。
-- 本轮本地Native额度已用完：Mac独立local32引擎、2个并行worker、每task1个world且无重试，成功Surface和Underwater各1场景，共10RGB，0失败，约28.7秒；10场景测试计划仅提交2个，状态LIMIT_REACHED。Cave和Linux软件渲染大并行未在本轮实采，不据此外推50K吞吐或总耗时。不得自动追加Native、启动50K、访问服务器运行正式采集或启动训练。环境JSON仅注入environment，不继承VAE配额。
+- 本地 final32 完整1K已完成：2 workers、200场景/1000视角，分两次有效采集共2453.97秒（不计修复等待），约1467视角/小时。用户随后于2026-11-24明确授权4/6/8并行短测，每档同30场景/150视角；三档均已完成，实测约1847/1675/1268视角/小时，当前Mac推荐4 workers。详见`vox2pix_data/reports/parallel_mac_20261124/`。本次授权测试已结束，不自动追加Native、启动50K/100K正式采集、访问服务器运行或训练。环境JSON仅注入environment，不继承VAE配额。
 
 数据采集和 E00 小样本验证阶段已结束。当前活动方向是`voxel_vae/`的 E01-Masked Combined-Token 3D ResNet VAE。E00 的 Plain 与 Masked 产物保留作历史。`python -m vae_data` → `vae_data/sharded/`及[数据协议](VAE_DATA_COLLECTION_PROTOCOL.md)继续定义只读正式数据格式。
 
