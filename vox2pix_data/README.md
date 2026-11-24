@@ -1,5 +1,117 @@
 # Vox2Pix data collection
 
+## Parallel production collection
+
+`collect --mode production` uses the verified RGB32 / absolute Fog20–30
+profile and the existing native scene search and single-surface projector.
+The formal plan is 10,000 independent scene/world seeds × 5 views = 50,000
+frames: 6,000 Surface, 3,000 Cave and 1,000 Underwater. Surface assigns 240
+scenes to each of the 25 biome groups, Cave 120 each; Underwater follows natural
+water without a biome quota. The actual loaded surface biome must match its
+target. Unfilled targets remain missing. Each world seed has one 80/10/10
+train/validation/test assignment shared by all five views.
+
+Only the parent writes completed scenes; workers search and render independently.
+Scene directories are committed atomically. Re-running the same command resumes
+missing scenes and preserves completed data. Seed cursors advance before task
+dispatch so an interrupted or failed attempt is not reused. Production stores
+the five native RGB views and their runtime probes, without repeating lighting
+A/B controls for every scene. The production data format retains the same
+48³ Node ID / raw param2 and single-layer White Model / Water Count arrays.
+Each committed scene records the collector Git revision and working-tree state.
+A task exceeding its scene timeout plus 60 seconds for startup/cleanup stops
+the run and cleans its owned processes; committed scenes remain available for resume.
+
+The following commands are for manual execution from the repository root.
+They have **not** been used to start a formal 50K run.
+
+```bash
+# Foreground collection; workers is configurable, not capped at eight.
+bash scripts/collect_vox2pix.sh
+# Use CPU affinity / available CPU count instead of a fixed worker limit:
+VOX2PIX_WORKERS=auto bash scripts/collect_vox2pix.sh
+```
+
+Launcher variables are `VOXWM_PYTHON` (default `.venv/bin/python`),
+`VOX2PIX_DATASET` (`outputs/vox2pix_50k_rgb32`), `VOX2PIX_WORKERS` (`8`),
+`VOX2PIX_CRAFTIUM` (`third_party/craftium_vox2pix_fog48`) and optional
+`VOXWM_ENV_CONFIG`. The latter reads only a JSON `environment` dictionary;
+it does not read VAE quotas or start VAE collection. Extra CLI arguments take
+precedence over launcher defaults.
+
+For the server with user-installed Xvfb/Mesa, inherit its existing environment:
+
+```bash
+VOXWM_ENV_CONFIG=vae_data/configs/collection_64x1_clip2.json \
+VOX2PIX_WORKERS=8 bash scripts/collect_vox2pix.sh
+```
+
+On a machine with system graphics dependencies, omit `VOXWM_ENV_CONFIG` and use
+the inherited environment. The native build remains the isolated checkout
+described below; no new engine setup or dependency installation runs in this
+launcher. More workers are not guaranteed to improve throughput.
+
+For SSH-independent execution, open a dedicated tmux session, then run the
+foreground launcher **inside it**:
+
+```bash
+tmux new -s vox2pix50k -c "$PWD"
+# Inside the new tmux shell:
+mkdir -p runs/vox2pix_50k_rgb32
+VOXWM_ENV_CONFIG=vae_data/configs/collection_64x1_clip2.json \
+VOX2PIX_WORKERS=8 bash scripts/collect_vox2pix.sh \
+  >runs/vox2pix_50k_rgb32/collect.log 2>&1
+```
+
+Detach with `Ctrl-B`, then `D`; the collector and its child processes stay in
+the tmux session when SSH disconnects. tmux is not installed automatically.
+In a separate terminal, monitor without owning any collection processes:
+
+```bash
+.venv/bin/python -m vox2pix_data dashboard --dataset outputs/vox2pix_50k_rgb32
+# One snapshot, including all biome rows:
+.venv/bin/python -m vox2pix_data dashboard --dataset outputs/vox2pix_50k_rgb32 --once
+# Request Ctrl-C in the dedicated collector pane, allowing owned-child cleanup:
+tmux send-keys -t vox2pix50k:0.0 C-c
+```
+
+Closing the dashboard does not stop collection. Resume with the same launcher
+and dataset path; `--scene-ids 123 456` restricts work to missing chosen slots.
+Runtime worker counts and retry budgets may change on resume; the dataset's
+rendering, scene plan and seed configuration remain fixed. The dashboard shows
+actual commits, category/biome coverage, in-flight tasks, failures, average and
+recent rates and an empirical ETA. It does not infer a full-run throughput from
+the previous empty-world clock test.
+
+### Small local collection check
+
+The current authorized test is at most two native worlds. With the local macOS
+final-profile checkout, use one Surface slot and one Underwater slot from a
+ten-scene test plan with the same 60/30/10 allocation rule:
+
+```bash
+VOX2PIX_CRAFTIUM=third_party/craftium_vox2pix_local32 \
+VOX2PIX_DATASET=outputs/vox2pix_production_local2 \
+VOX2PIX_WORKERS=2 bash scripts/collect_vox2pix.sh \
+  --renderer window --scene-ids 0 3 --max-scenes 2 \
+  --scenes 10 --worlds-per-task 1 --task-retries 0 --scene-timeout 120
+```
+
+The local test completed **2/2 native worlds**: one Surface and one Underwater,
+five views each, for 10 saved RGB frames; zero failed tasks. Collection took
+approximately 28.7 seconds. Its final status is `LIMIT_REACHED`, with 2 of the
+10 planned test scenes committed, and the independent `dashboard --once` read
+that progress successfully. Data: `outputs/vox2pix_production_local2/`; log:
+`runs/vox2pix_production_local2/collect.log`.
+
+The test used native macOS window rendering and a separate
+`third_party/craftium_vox2pix_local32` build, preserving the older local engine.
+It did not collect a Cave scene or test Linux software rendering at large
+parallelism. The server can reuse its previously verified
+`third_party/craftium_vox2pix_fog48` checkout. This small test is deliberately
+partial and does not establish 50K throughput or completion time. Formal 50K
+collection has not been executed.
+
 ## Final native rendering RGB32
 
 The sole active profile is `material-ambient-fog20-draw32`, version

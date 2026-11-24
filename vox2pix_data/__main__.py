@@ -19,13 +19,24 @@ def positive(value):
     return number
 
 
+def nonnegative(value):
+    number = int(value)
+    if number < 0:
+        raise argparse.ArgumentTypeError("expected a nonnegative integer")
+    return number
+
+
+def workers(value):
+    return value if value == "auto" else positive(value)
+
+
 def parser():
-    root = argparse.ArgumentParser(prog="python -m vox2pix_data", description="Vox2Pix native 1K compression pilot")
+    root = argparse.ArgumentParser(prog="python -m vox2pix_data", description="Vox2Pix native scene collection")
     commands = root.add_subparsers(dest="command", required=True)
-    collect = commands.add_parser("collect", help="collect or resume the 1K pilot")
+    collect = commands.add_parser("collect", help="collect or resume native scenes")
     collect.add_argument("--dataset", type=Path, required=True)
-    collect.add_argument("--mode", choices=["pilot-v2", "smoke"], default="pilot-v2",
-                         help="smoke uses the isolated v3 native dataset protocol")
+    collect.add_argument("--mode", choices=["pilot-v2", "smoke", "production"], default="pilot-v2",
+                         help="production collects the final v3 50K-view plan; smoke preserves the 15-frame protocol")
     collect.add_argument("--lighting-profile",
                          choices=[V3_FINAL_PROFILE, "global-lut", V3_MATERIAL_PROFILE,
                                   V3_FOG_PROFILE, V3_FOG48_PROFILE],
@@ -36,12 +47,22 @@ def parser():
     collect.add_argument("--scene-timeout", type=positive, default=180, help="v3 seconds available per scene")
     collect.add_argument("--survey-y", type=int, nargs=2, metavar=("MIN", "MAX"),
                          help="v3 world Y range to explore (default: -112 240)")
-    collect.add_argument("--scenes", type=int, choices=[200], default=200)
+    collect.add_argument("--scenes", type=positive,
+                         help="production default: 10000 scenes; historical pilot-v2: 200")
     collect.add_argument("--views-per-scene", type=int, choices=[5], default=5)
     collect.add_argument("--width", type=int, choices=[640], default=640)
     collect.add_argument("--height", type=int, choices=[360], default=360)
     collect.add_argument("--seed", type=int, default=42)
-    collect.add_argument("--workers", type=positive, default=1)
+    collect.add_argument("--workers", type=workers,
+                         help="positive parallel count or auto; production defaults to available CPUs")
+    collect.add_argument("--max-scenes", type=positive,
+                         help="production: attempt at most this many missing scene slots in this invocation")
+    collect.add_argument("--scene-ids", type=nonnegative, nargs="+",
+                         help="production: collect only these existing plan slots")
+    collect.add_argument("--worlds-per-task", type=positive, default=8,
+                         help="production: maximum native worlds per task; use 1 for a tiny local check")
+    collect.add_argument("--task-retries", type=nonnegative, default=2,
+                         help="production: extra tasks per failed slot this invocation; 0 means one task only")
     collect.add_argument("--search-round", type=int, default=0, help="first seed round (zero is the original search)")
     collect.add_argument("--search-rounds", type=positive, default=1, help="rounds of eight worlds per unfilled slot")
     collect.add_argument("--parallel-rounds", action="store_true", help="search several seed rounds concurrently per missing slot")
@@ -50,7 +71,7 @@ def parser():
                          help="side of the footprint of candidate anchor columns")
     collect.add_argument("--land-priority", action="store_true", help="rank native land and biome hints for cave surveys")
     collect.add_argument("--cave-hints", action="store_true", help="survey nearby native large-cave endpoints")
-    collect.add_argument("--renderer", choices=["software"], default="software")
+    collect.add_argument("--renderer", choices=["software", "window", "auto"], default="auto")
     collect.add_argument("--craftium-dir", type=Path, default=DEFAULT_CRAFTIUM)
     for name, help_text in (
         ("check", "validate a complete pilot without writing to disk"),
@@ -205,14 +226,31 @@ def collect_pilot(args):
 def main(argv=None):
     options = parser()
     args = options.parse_args(argv)
+    if args.command == "collect":
+        from .production import worker_count
+        from voxwm_gt.native import renderer_config
+
+        if args.scenes is None:
+            args.scenes = 10000 if args.mode == "production" else 200
+        if args.mode == "pilot-v2" and args.scenes != 200:
+            options.error("Historical pilot-v2 has exactly 200 scene slots")
+        if args.mode != "production" and (args.max_scenes is not None or args.scene_ids is not None):
+            options.error("--max-scenes and --scene-ids require --mode production")
+        args.renderer = renderer_config(args.renderer)[0]
+        args.workers = worker_count(args.workers if args.workers is not None
+                                   else "auto" if args.mode == "production" else 1)
     if args.command == "collect" and args.seed < 0:
         options.error("--seed must be nonnegative")
     if args.command == "collect" and args.search_round < 0:
         options.error("--search-round must be nonnegative")
-    if args.command == "collect" and args.lighting_profile == V3_MATERIAL_PROFILE and args.mode != "smoke":
+    if args.command == "collect" and args.lighting_profile == V3_MATERIAL_PROFILE and args.mode not in ("smoke", "production"):
         options.error("--lighting-profile material-ambient requires --mode smoke")
     try:
         if args.command == "collect":
+            if args.mode == "production":
+                from .production import collect_production
+
+                return collect_production(args)
             return collect_smoke(args) if args.mode == "smoke" else collect_pilot(args)
         if args.command == "dashboard":
             from .dashboard import show_dashboard

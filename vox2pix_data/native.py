@@ -322,7 +322,8 @@ class NativeScene:
 
                     probe = read_fog(self)
                     if "fog_end_distance" in rgb_settings:
-                        view["renderer_fog"] = validate_fog_absolute(probe, tick=lighting["render_tick"])
+                        view["renderer_fog"] = validate_fog_absolute(
+                            probe, viewing_range=rgb_settings["viewing_range"], tick=lighting["render_tick"])
                     else:
                         view["renderer_fog"] = validate_fog(
                             probe, ratio=rgb_settings["fog_start"], tick=lighting["render_tick"])
@@ -398,6 +399,9 @@ class NativeScene:
             meta["fog_geometry"] = v3_fog_geometry(config)
         if underwater_descent:
             meta.update(underwater_descent=underwater_descent, visibility_camera_local_xyz=list(eye))
+        if config.get("mode") == "production":
+            meta["lighting_comparison"] = {"status": "NOT_COLLECTED_PRODUCTION"}
+            return meta, self.vocabulary, arrays, rgbs, {}
         meta["lighting_comparison"], auxiliary = self.lighting_comparison(
             origin, kind, baseline, views[-1], rgbs[-1], info, len(views) - 1,
             projector, whites[-1], config)
@@ -525,17 +529,21 @@ def _search_world(native, slot, config, rng, library_path, rejected, sites_per_w
     return None
 
 
-def scene_world_seed(scene_id, pilot_seed, attempt):
+def scene_world_seed(scene_id, pilot_seed, attempt, scene_count=PILOT_SCENES):
     # Round zero retains the original mapping. Each later round owns a fresh
     # range of the same permutation, with eight candidates for every slot.
     search_round, index = divmod(attempt, WORLDS_PER_SLOT)
-    ordinal = (search_round * PILOT_SCENES + scene_id) * WORLDS_PER_SLOT + index
+    if not 0 <= scene_id < scene_count or attempt < 0:
+        raise ValueError("Invalid scene slot or seed attempt")
+    ordinal = (search_round * scene_count + scene_id) * WORLDS_PER_SLOT + index
+    if ordinal >= SEED_SPACE:
+        raise ValueError("Search attempts exceed the independent world seed space")
     return (SEED_MULTIPLIER * ordinal + pilot_seed) % SEED_SPACE
 
 
-def scene_id_for_world_seed(world_seed, pilot_seed):
+def scene_id_for_world_seed(world_seed, pilot_seed, scene_count=PILOT_SCENES):
     ordinal = ((world_seed - pilot_seed) * SEED_MULTIPLIER_INVERSE) % SEED_SPACE
-    return (ordinal // WORLDS_PER_SLOT) % PILOT_SCENES
+    return (ordinal // WORLDS_PER_SLOT) % scene_count
 
 
 def capture_scene(slot, config, craftium_dir, library_path, search_round=0, search_rounds=1,

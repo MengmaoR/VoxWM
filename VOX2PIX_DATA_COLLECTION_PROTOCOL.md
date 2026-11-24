@@ -22,10 +22,10 @@ versioned data; no historical data or report is overwritten.
 
 Each scene stores one native Mapgen v7 48³ voxel grid and five RGB views from
 the same foot anchor. The five camera orientations are independently sampled
-without replacement from the active view regions. Future full collection
+without replacement from the active view regions. Production collection
 targets 10,000 independent scene/world seeds and 50,000 views at the existing
 seed-level split. All views from a seed belong to one split. The implementation
-currently exposes the bounded native smoke entry point for v3.
+exposes both the bounded native smoke and the resumable parallel production entry point.
 
 | Scene kind | Future target | Native smoke |
 | --- | ---: | ---: |
@@ -33,9 +33,52 @@ currently exposes the bounded native smoke entry point for v3.
 | Cave | 30% / 3,000 scenes | 1 scene × 5 views |
 | Underwater | 10% / 1,000 scenes | 1 scene × 5 views |
 
-Future Surface and Cave sampling aims to cover the existing 25 biome groups.
+Production Surface and Cave slots cover the existing 25 biome groups equally:
+240 Surface scenes and 120 Cave scenes per biome at the 10,000-scene scale.
 Underwater follows available natural water without equal biome quotas. The
 three-scene smoke uses natural scenes without imposing biome balance.
+
+## Parallel production execution
+
+`collect --mode production` uses the same final native rendering and v3 array
+schema. Its interleaved scene plan fixes Surface/Cave/Underwater at 60/30/10.
+Surface and Cave search the assigned biome using the existing native biome
+lookup and recheck the loaded anchor's surface biome. Underwater retains
+natural water search and unrestricted native sinking. A failed target leaves
+a gap; no other kind or biome substitutes for it.
+
+One parent writer atomically publishes completed scenes from a bounded number
+of spawned worker tasks. `--workers N|auto` sets the concurrency, with no fixed
+maximum of eight. Each scene stores its five views, actual camera, 48³ Node IDs
+and raw param2, single-surface White Model fields and Water Count. Production
+does not repeat historical lighting A/B controls; the five saved views retain
+their actual native fog and material-lighting probes.
+
+Production's seed mapping uses the dataset scene count as its stride, keeping
+scene/world attempt pairs distinct instead of reusing the old 200-scene pilot
+stride. Seed attempts are reserved before dispatch and persisted in
+`collection_progress.json`; completed scenes are never overwritten. All views
+of a world share its deterministic 80/10/10 split. The collection plan is
+versioned separately as `balanced-v3-1`, while the rendering version remains
+`vox2pix-v3-local48-rgb32-absolute-fog20-30`.
+
+The independent terminal dashboard reads the parent progress snapshot. It
+reports scene/frame and category/biome counts, active tasks, failed/exhausted
+attempts, rates and empirical ETA. Monitoring does not launch or own workers.
+User-run tmux retains the complete collector across SSH disconnects; Ctrl-C in
+its dedicated pane requests cleanup of this collector's tagged descendants.
+The thin launcher can inject an existing machine's JSON `environment` only.
+
+`--max-scenes` / `--scene-ids` bound a small test without changing its configured
+plan. This implementation round completed its strict two-world local budget:
+one Surface and one Underwater scene, 10 RGB frames, zero failed tasks, about
+28.7 seconds. Two workers used native macOS window rendering with an isolated
+local32 engine, one world per task and no retries. The 10-scene test plan ended
+at `LIMIT_REACHED` with 2 committed scenes; its independent dashboard read the
+progress successfully. Cave and Linux software rendering at large parallelism
+were not collected in this test, and these timings are not a 50K capacity estimate.
+No formal 50K collection, large benchmark or model training has run. Commands are in
+[`vox2pix_data/README.md`](vox2pix_data/README.md#parallel-production-collection).
 
 ## Scene anchors and visibility
 

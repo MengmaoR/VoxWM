@@ -2,6 +2,8 @@
 
 Vox2Pix v3 当前采用 **32 格 RGB draw range + 独立绝对 Fog20–30 + Material Ambient0.35**，保留 48³ 观测、单层白模和 Water Count。12 距离校准、原有 15 帧回放和回归检查完成，结论为 **VERIFIED WITH KNOWN NATIVE VISUAL LIMITATION**：远处可能保留微弱均匀雾色色块和原生水下表面边界。正式 50K 数据尚未采集。[实测与限制](vox2pix_data/reports/final_rendering_32/README.md) · [运行命令](vox2pix_data/README.md#final-native-rendering-rgb32) · [数据协议](VOX2PIX_DATA_COLLECTION_PROTOCOL.md)
 
+正式并行入口已完成：10,000 场景 × 5 视角，支持 scene 级续采、可调并行和独立进度监控。本地严格两次 Native 测试完成 Surface / Underwater 各一个、共 10 RGB；没有启动正式采集。[启动、监控、停止与恢复](vox2pix_data/README.md#parallel-production-collection) · [小测试记录](vox2pix_data/reports/production_parallel/README.md)
+
 历史 Vox2Pix v2 1K 共 200 个场景、1,000 个视角。[三层白模 Viewer](vox2pix_data/README.md#inspect-an-existing-pilot) · [实测速率与采集日志](vox2pix_data/reports/pilot_1k/README.md)。
 
 两个正式100K Clip已完成。E01-Masked 用两个 Clip 的完整训练集训练 Combined-Token 3D ResNet VAE。E00 小样本结果保留为历史。VAE 从每个 48³ 样本读取中心 16³，训练保存分项 loss 曲线并支持独立验证早停。[E01 数据准备、训练与监控命令](voxel_vae/README.md)

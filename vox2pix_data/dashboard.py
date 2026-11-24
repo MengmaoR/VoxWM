@@ -1,5 +1,6 @@
 """Read-only terminal progress for committed scenes and active native workers."""
 from collections import Counter, defaultdict
+import os
 from pathlib import Path
 import re
 import shutil
@@ -10,7 +11,7 @@ from vae_data.supervisor import _bar, _duration
 
 from .dashboard_processes import collector_process
 from .native import scene_id_for_world_seed
-from .protocol import HEIGHTS, plan
+from .protocol import HEIGHTS, V3_KINDS, plan, v3_plan
 from .storage import committed_paths, read_json
 
 ENDED = re.compile(rb"^\d+/\d+ scenes committed; (\d+) slots remain unfilled\.$")
@@ -160,23 +161,134 @@ def progress_lines(dataset, slots, config, committed, timestamps, job, log, init
     return lines
 
 
+def _pid_running(pid):
+    if not isinstance(pid, int) or pid <= 1:
+        return False
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    return True
+
+
+def production_rates(state, started, ended):
+    """Use this invocation's count for average and its retained commits for recent rate."""
+    elapsed = max(0, ended - started)
+    count = max(0, state["completed"] - state["initial_completed"])
+    average = count * 3600 / elapsed if count and elapsed else None
+    commits = [stamp for stamp in state.get("commit_times", []) if started <= stamp <= ended]
+    interval = min(elapsed, RECENT_SECONDS)
+    if len(commits) >= 1000:
+        interval = min(interval, ended - commits[0])
+    recent_count = sum(stamp > ended - interval for stamp in commits)
+    recent = recent_count * 3600 / interval if interval >= 30 and recent_count >= 2 else None
+    return average, recent
+
+
+def v3_progress_lines(dataset, slots, config, committed, timestamps, state, job,
+                      initialized, now, width=80):
+    """Scene-level progress; the monitor never starts or owns collection processes."""
+    state = state or {}
+    total = len(slots)
+    done = state.get("completed", len(committed))
+    missing = total - done
+    running = bool(job) or _pid_running(state.get("pid"))
+    status = state.get("status", "RUNNING" if running else "IDLE")
+    if not missing:
+        status = "COMPLETE"
+    elif status == "RUNNING" and not running:
+        status = "INACTIVE (last saved state RUNNING)"
+    started = state.get("started_at") or (job or {}).get("started") or initialized
+    last_commit = state.get("last_commit_at") or max(timestamps, default=None)
+    updated = state.get("updated_at", initialized)
+    ended = now if running else max(last_commit or started, updated, started)
+    average, recent = (production_rates(state, started, ended) if "initial_completed" in state
+                       else rates(timestamps, started, ended))
+    eta = "00:00:00" if not missing else "--"
+    if running and missing and recent and not state.get("exhausted_count", 0):
+        eta = _duration(3600 * missing / recent)
+    targets = Counter(slot["kind"] for slot in slots)
+    accepted = (Counter(state["counts"]) if "counts" in state else
+                Counter(slot["kind"] for slot in slots if slot["scene_id"] in committed))
+    frames = config["views_per_scene"]
+    failed = state.get("failed", 0)
+    active = state.get("active", [])
+    lines = [
+        f"Vox2Pix v3 {config['mode']} · {status} · elapsed {_duration(ended - started)}",
+        f"Scenes {done}/{total} {_bar(done, total)} | RGB frames {done * frames}/{total * frames}",
+        " | ".join(f"{kind} {accepted[kind]}/{targets[kind]}" for kind in V3_KINDS),
+        f"Remaining {missing} | failed attempts {failed} | exhausted slots {state.get('exhausted_count', 0)} "
+        f"| attempts {state.get('attempts', '--')} | last commit "
+        + (_duration(max(0, now - last_commit)) + " ago" if last_commit is not None else "--"),
+        "Scene rate " + (f"{average:.1f}/h" if average is not None else "--") + " average · "
+        + (f"{recent:.1f}/h" if recent is not None else "--") + f" recent (up to 10 min) | ETA {eta}",
+        f"Dataset {dataset} | last progress update {_duration(max(0, now - updated))} ago",
+    ]
+    workers = state.get("workers", (job or {}).get("workers", "--"))
+    if running:
+        lines.append(f"Collector PID {state.get('pid') or (job or {}).get('pid')} | worker limit {workers} "
+                     f"| in-flight scenes {len(active)}")
+        if job:
+            lines.append(f"Live workers {job['live_workers']} | native worlds {len(job['worlds'])}")
+    else:
+        lines.append("Collector inactive | dashboard remains read-only")
+    for task in active:
+        scene_id = task["scene_id"]
+        if scene_id in committed:
+            continue
+        elapsed = max(0, now - task.get("started_at", now))
+        lines.append(f"  scene {scene_id:04d} | {task['kind']} | {task.get('biome') or 'natural water'} "
+                     f"| {_duration(elapsed)} | {task.get('stage', 'search/capture')}")
+    biomes = sorted({slot["biome"] for slot in slots if slot.get("biome") is not None})
+    if biomes:
+        planned = Counter((slot["biome"], slot["kind"]) for slot in slots if slot.get("biome"))
+        selected = (Counter({(biome, kind): count for biome, kinds in state["biome_counts"].items()
+                             for kind, count in kinds.items()}) if "biome_counts" in state else
+                    Counter((slot["biome"], slot["kind"]) for slot in slots
+                            if slot.get("biome") and slot["scene_id"] in committed))
+        lines.extend(["", "Biome coverage · Surface accepted/target | Cave accepted/target"])
+        for biome in biomes:
+            cells = " | ".join(f"{kind} {selected[biome, kind]}/{planned[biome, kind]}"
+                               for kind in ("surface", "cave"))
+            lines.append(f"  {biome:<20} {cells}")
+        lines.append("  Underwater follows natural water; no fixed biome quota.")
+    if state.get("last_error"):
+        lines.extend(["", f"Last error: {state['last_error']}"])
+    return lines
+
+
 def show_dashboard(dataset, log_path=None, interval=5, once=False):
     dataset = dataset.resolve()
     manifest = dataset / "manifest.json"
     config = read_json(manifest)["config"]
-    slots = plan(config["seed"])
+    v3 = config.get("mode") in ("smoke", "production")
+    slots = v3_plan(config) if v3 else plan(config["seed"])
     initialized = manifest.stat().st_mtime
     log = RunLog()
     tty = sys.stdout.isatty()
     try:
         while True:
             job = collector_process(dataset)
-            log.read(select_log(dataset, job, log_path, initialized))
-            committed = committed_paths(dataset)
-            timestamps = [(scene / "scene.json").stat().st_mtime for scene in committed.values()]
+            if not v3:
+                log.read(select_log(dataset, job, log_path, initialized))
             width, height = shutil.get_terminal_size()
-            lines = progress_lines(dataset, slots, config, set(committed), timestamps, job, log,
-                                   initialized, time.time(), width)
+            if v3:
+                progress = dataset / "collection_progress.json"
+                state = read_json(progress) if progress.is_file() else None
+                if state and "initial_completed" in state and "biome_counts" in state:
+                    committed, timestamps = {}, []
+                else:
+                    committed = committed_paths(dataset)
+                    timestamps = [(scene / "scene.json").stat().st_mtime for scene in committed.values()]
+                lines = v3_progress_lines(dataset, slots, config, set(committed), timestamps, state,
+                                          job, initialized, time.time(), width)
+            else:
+                committed = committed_paths(dataset)
+                timestamps = [(scene / "scene.json").stat().st_mtime for scene in committed.values()]
+                lines = progress_lines(dataset, slots, config, set(committed), timestamps, job, log,
+                                       initialized, time.time(), width)
             if tty and not once:
                 if len(lines) >= height:
                     lines = lines[:max(1, height - 2)] + ["Use --once for all biome rows and failure details."]

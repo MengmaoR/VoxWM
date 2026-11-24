@@ -66,6 +66,11 @@ def _validate_material_lighting(view, ambient):
 def validate_lighting_pair(meta, frames, official_rgb, config=None):
     """Check the two native images for the selected rendering protocol."""
     config = config or {}
+    if config.get("mode") == "production":
+        require(not frames and meta.get("lighting_comparison") == {"status": "NOT_COLLECTED_PRODUCTION"},
+                "Production stores native per-view probes without extra lighting controls")
+        return dict(status="VERIFIED", method="Per-view native renderer probes; no repeated lighting experiment",
+                    control_collected=False)
     rgb = v3_rgb(config)
     ambient = rgb.get("solid_ambient_floor")
     names = v3_lighting_images(config)
@@ -119,6 +124,15 @@ def validate_payload(meta, config, vocabulary, slot, arrays):
     array_schema(arrays, config)
     require(all(meta.get(key) == value for key, value in slot.items()), "Scene does not match its scheduled slot")
     require(type(meta.get("world_seed")) is int, "Invalid world seed")
+    if config.get("mode") == "production":
+        from vae_pilot.sampling import biome_group, split_for_seed
+        from .protocol import BIOMES
+
+        require(meta.get("split") == split_for_seed(meta["world_seed"], [80, 10, 10]),
+                "Production split must follow the complete world seed")
+        if slot.get("biome") is not None:
+            require(biome_group(meta.get("surface_biome", ""), BIOMES) == slot["biome"],
+                    "Loaded surface biome differs from its production slot")
     for key in ("surface_biome", "foot_biome", "engine_build", "game_build"):
         require(isinstance(meta.get(key), str) and bool(meta[key]), f"Missing {key}")
     require(meta.get("native_biome") == meta["surface_biome"], "Expected native_biome to use the surface label")
@@ -222,7 +236,8 @@ def validate_payload(meta, config, vocabulary, slot, arrays):
             from .fog_runtime import validate_fog, validate_fog_absolute
 
             if "fog_end_distance" in expected_rgb:
-                validate_fog_absolute(view.get("renderer_fog", {}), tick=view["render_simulation_tick"])
+                validate_fog_absolute(view.get("renderer_fog", {}), viewing_range=expected_rgb["viewing_range"],
+                                      tick=view["render_simulation_tick"])
             else:
                 validate_fog(view.get("renderer_fog", {}), ratio=expected_rgb["fog_start"],
                              tick=view["render_simulation_tick"])
@@ -261,7 +276,7 @@ def _scan(root, allow_partial, visit=None):
     manifest = read_json(root / "manifest.json")
     config = manifest["config"]
     version = v3_version(config)
-    require(manifest.get("version") == version and manifest.get("axes") == "ENU" and config.get("mode") == "smoke"
+    require(manifest.get("version") == version and manifest.get("axes") == "ENU" and config.get("mode") in ("smoke", "production")
             and config.get("views_per_scene") == 5 and (config.get("width"), config.get("height")) == (640, 360),
             "Expected a native Vox2Pix v3 smoke dataset at 640×360 with five views per scene")
     slots = {slot["scene_id"]: slot for slot in v3_plan(config)}
@@ -395,6 +410,8 @@ def _view_block(scene_dir, row):
 
 
 def _lighting_block(scene_dir, check, kind, image_names):
+    if check.get("control_collected") is False:
+        return "<p>Production capture: native lighting/fog probes saved per view; no additional control images.</p>"
     warnings = ' class="warning"' if check["status"] != "VERIFIED" else ""
     captions = []
     for key in ("control", "proposed"):

@@ -58,7 +58,7 @@ def _world(entry):
     command = cwd / "worlds/world/vox2pix_command.json"
     try:
         kind = json.loads(command.read_text()).get("kind")
-        if kind in ("search", "survey", "anchor", "pose", "snapshot"):
+        if kind in ("search", "search_v3", "survey", "anchor", "pose", "snapshot"):
             world["kind"] = kind
     except (OSError, ValueError, AttributeError):
         pass
@@ -94,7 +94,11 @@ def collector_process(dataset, proc=Path("/proc")):
             cwd = (entry / "cwd").resolve(strict=True)
             if (cwd / path).resolve() != dataset:
                 continue
-            workers = int(_option(options, "--workers", "1"))
+            worker_option = _option(options, "--workers", "1")
+            if worker_option == "auto":
+                workers = len(os.sched_getaffinity(0)) if hasattr(os, "sched_getaffinity") else os.cpu_count() or 1
+            else:
+                workers = int(worker_option)
         except (OSError, RuntimeError, ValueError):
             continue
 

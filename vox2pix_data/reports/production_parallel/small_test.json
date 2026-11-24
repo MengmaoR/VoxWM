@@ -1,0 +1,52 @@
+{
+  "status": "BOUNDED_LOCAL_COLLECTION_PASSED",
+  "native_worlds": 2,
+  "workers": 2,
+  "failed_tasks": 0,
+  "completed_scenes": 2,
+  "planned_test_scenes": 10,
+  "final_collector_status": "LIMIT_REACHED",
+  "wall_seconds": 28.7239511013031,
+  "platform": "macOS window renderer; isolated final32 Native engine",
+  "cave_native_tested": false,
+  "linux_parallel_tested": false,
+  "formal_50k_started": false,
+  "scenes": [
+    {
+      "scene_id": 0,
+      "kind": "surface",
+      "world_seed": 42,
+      "split": "train",
+      "surface_biome": "MesaBryce",
+      "rgb_frames": 5,
+      "search_seconds": 21.643233875045553,
+      "draw_ranges": [
+        32
+      ],
+      "fog_start": [
+        20
+      ],
+      "fog_end": [
+        30
+      ]
+    },
+    {
+      "scene_id": 3,
+      "kind": "underwater",
+      "world_seed": 1429432514,
+      "split": "train",
+      "surface_biome": "SunflowerPlains",
+      "rgb_frames": 5,
+      "search_seconds": 27.291958583984524,
+      "draw_ranges": [
+        32
+      ],
+      "fog_start": [
+        20
+      ],
+      "fog_end": [
+        30
+      ]
+    }
+  ]
+}

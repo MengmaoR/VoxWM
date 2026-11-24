@@ -1,6 +1,8 @@
 # VoxWM 当前状态
 
-**Vox2Pix RGB32 / 独立 Fog20–30 / Material Ambient0.35：VERIFIED WITH KNOWN NATIVE VISUAL LIMITATION。** 25 项 Python Unit、C++ 策略测试、原生 build、12 距离固定相机校准和原三个场景的 15 帧回放完成。实测 draw32、Fog20/30、Far Plane2000，Server send/generate 均为8 MapBlocks（128格）。48³ Voxel/Camera 与原记录匹配，White/Water/Face/BACKGROUND 数组不变。31–32格和34格标记实际提交；30–34格标记纹理被雾完全遮蔽，但天空/Fog 色差可留微弱均匀色块，水下原生表面边界仍可见。版本 `vox2pix-v3-local48-rgb32-absolute-fog20-30`。[本轮报告](vox2pix_data/reports/final_rendering_32/README.md) · [命令](vox2pix_data/README.md#final-native-rendering-rgb32)。下一步等待用户检查报告并决定是否正式采集；50K采集和训练尚未开始。
+**Vox2Pix RGB32 / 独立 Fog20–30 / Material Ambient0.35：VERIFIED WITH KNOWN NATIVE VISUAL LIMITATION。** 25 项 Python Unit、C++ 策略测试、原生 build、12 距离固定相机校准和原三个场景的 15 帧回放完成。实测 draw32、Fog20/30、Far Plane2000，Server send/generate 均为8 MapBlocks（128格）。48³ Voxel/Camera 与原记录匹配，White/Water/Face/BACKGROUND 数组不变。31–32格和34格标记实际提交；30–34格标记纹理被雾完全遮蔽，但天空/Fog 色差可留微弱均匀色块，水下原生表面边界仍可见。版本 `vox2pix-v3-local48-rgb32-absolute-fog20-30`。[本轮报告](vox2pix_data/reports/final_rendering_32/README.md) · [命令](vox2pix_data/README.md#final-native-rendering-rgb32)。正式50K采集和训练仍未开始，当前工作转入下述采集程序验证。
+
+**Vox2Pix 正式并行采集入口已完成本地小闭环。** 目标10,000场景/50,000视角，Surface/Cave/Underwater=60/30/10，复用最终RGB32/Fog20–30配置；支持scene级恢复、可调并行和独立终端监控。Mac独立local32引擎用2个worker完成严格2个Native世界：Surface/Underwater各1，共10RGB，0失败，约28.7秒，状态LIMIT_REACHED（测试计划2/10）；Dashboard可独立读取。Cave和Linux软件渲染大并行未在本轮实采，不外推50K吞吐或总耗时。数据：`outputs/vox2pix_production_local2/`；日志：`runs/vox2pix_production_local2/collect.log`。下一步由用户手动启动正式采集，Codex不追加Native或训练。[运行命令](vox2pix_data/README.md#parallel-production-collection)。
 
 **E01-Masked 27,000 步验证最优 checkpoint 已完成冻结审计，结论为 FREEZE WITH KNOWN D3 LIMITATION。**
 

@@ -95,6 +95,23 @@ def v3_lighting_images(config):
 
 
 def v3_plan(config):
+    if config.get("mode") == "production":
+        count = config["scenes"]
+        if type(count) is not int or count < 10 or count % 10:
+            raise ValueError("Production scene count must be a positive multiple of ten")
+        biomes = np.random.default_rng(config["seed"]).permutation(sorted(BIOMES)).tolist()
+        pattern = ("surface", "cave", "surface", "underwater", "surface",
+                   "cave", "surface", "surface", "cave", "surface")
+        used = dict.fromkeys(V3_KINDS, 0)
+        slots = []
+        for index in range(count):
+            kind = pattern[index % len(pattern)]
+            slot = dict(scene_id=index, kind=kind)
+            if kind != "underwater":
+                slot["biome"] = biomes[used[kind] % len(biomes)]
+            used[kind] += 1
+            slots.append(slot)
+        return slots
     kinds = config["scene_kinds"]
     count = config["scenes_per_kind"]
     if tuple(kinds) != V3_KINDS or type(count) is not int or count not in (1, 3):

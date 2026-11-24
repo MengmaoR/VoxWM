@@ -11,6 +11,7 @@ from .geometry import is_water_liquid
 from .native import HERE, REUSED_LUA, SETUP, NativeScene, RenderSession, _builds, scene_world_seed
 from .protocol import SIDE, RejectedScene, v3_rgb
 from .v3_sampling import scene_visibility, site_candidates
+from vae_data.sharded.protocol import BIOMES, biome_group, split_for_seed
 
 
 def survey(native, site, columns, y_bounds):
@@ -27,7 +28,7 @@ def survey(native, site, columns, y_bounds):
     return nodes.reshape(side, side, top - bottom + 1), low, response.get("cave_hints") or []
 
 
-def search_world(native, kind, config, rng, library_path, stats, sites, columns):
+def search_world(native, kind, config, rng, library_path, stats, sites, columns, target_biome=None):
     local_hints = []
     for site_index in range(sites):
         if time.monotonic() >= native.search_deadline:
@@ -36,7 +37,14 @@ def search_world(native, kind, config, rng, library_path, stats, sites, columns)
             site = local_hints.pop()
         else:
             x, z = map(int, rng.integers(-24000, 24001, size=2))
-            row, _, _ = native.command("search_v3", x=x, z=z, scene_kind=kind)
+            if target_biome is not None:
+                row, _, _ = native.command("search", x=x, z=z, biome_groups=BIOMES,
+                                           biome_group=target_biome, resolution=64, max_checks=16384)
+                if row["status"] != "found":
+                    stats[row["status"]] += 1
+                    continue
+            else:
+                row, _, _ = native.command("search_v3", x=x, z=z, scene_kind=kind)
             site = row["site"]
         stats["surveys"] += 1
         try:
@@ -61,6 +69,9 @@ def search_world(native, kind, config, rng, library_path, stats, sites, columns)
                                                   anchor_kind=anchor_kind)
                     if not anchor["valid"]:
                         raise RejectedScene("Native standing anchor mismatch")
+                    if target_biome is not None and biome_group(anchor["surface_biome"], BIOMES) != target_biome:
+                        stats["native surface biome mismatch"] += 1
+                        continue
                 stats["capture_attempts"] += 1
                 result = native.acquire(foot, anchor_kind, config, rng, library_path, scene_kind=kind)
                 if kind == "underwater":
@@ -91,7 +102,10 @@ def capture_v3(slot, config, craftium_dir, library_path, attempts, sites, column
     for attempt in range(first, first + attempts):
         if time.monotonic() >= started + seconds:
             break
-        seed = scene_world_seed(slot["scene_id"], config["seed"], attempt)
+        seed = (scene_world_seed(slot["scene_id"], config["seed"], attempt,
+                                 scene_count=config["scenes"])
+                if config.get("mode") == "production" else
+                scene_world_seed(slot["scene_id"], config["seed"], attempt))
         stats["world_starts"] += 1
         try:
             with RenderSession(
@@ -105,13 +119,16 @@ def capture_v3(slot, config, craftium_dir, library_path, attempts, sites, column
                 for definition in (*native.definitions.values(), *native.stable_defs.values()):
                     definition["water"] = is_water_liquid(definition)
                 result = search_world(native, slot["kind"], config, np.random.default_rng(seed),
-                                      library_path, stats, sites, columns)
+                                      library_path, stats, sites, columns, slot.get("biome"))
         except (ConnectionError, TimeoutError, RejectedScene) as exc:
             stats[str(exc)] += 1
             result = None
         if result is not None:
             result[0].update(slot, world_seed=seed, engine_build=engine_build, game_build=game_build,
                              search_seconds=time.monotonic() - started, search_stats=dict(stats))
+            if config.get("mode") == "production":
+                result[0].update(seed_attempt=attempt, search_round=attempt // 8,
+                                 split=split_for_seed(seed, [80, 10, 10]))
             return result
         print(f"V3 rejected world {seed} for {slot['kind']}: {json.dumps(dict(stats))}", flush=True)
     raise RejectedScene(f"{slot['kind']} search exhausted after {time.monotonic() - started:.1f}s: {dict(stats)}")

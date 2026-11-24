@@ -29,7 +29,7 @@ V3_WHITE_FIELDS = {
 FIELDS = RAW_FIELDS | WHITE_FIELDS
 EMPTY_NODE = 65535
 EMPTY_FACE = 255
-SCENE_PATTERN = re.compile(r"scene_([0-9]{4})")
+SCENE_PATTERN = re.compile(r"scene_([0-9]{4,})")
 
 
 def write_json(path, payload):
@@ -74,13 +74,13 @@ def committed_paths(root):
 
 def scene_shapes(config):
     views, height, width = (config[key] for key in ("views_per_scene", "height", "width"))
-    white = (dict.fromkeys(V3_WHITE_FIELDS, (views, height, width)) if config.get("mode") == "smoke"
+    white = (dict.fromkeys(V3_WHITE_FIELDS, (views, height, width)) if config.get("mode") in ("smoke", "production")
              else dict.fromkeys(WHITE_FIELDS, (views, 3, height, width)))
     return {name: (48, 48, 48) for name in RAW_FIELDS} | white
 
 
 def array_schema(arrays, config):
-    fields = RAW_FIELDS | V3_WHITE_FIELDS if config.get("mode") == "smoke" else FIELDS
+    fields = RAW_FIELDS | V3_WHITE_FIELDS if config.get("mode") in ("smoke", "production") else FIELDS
     shapes = scene_shapes(config)
     if set(arrays) != set(shapes):
         raise ValueError(f"Expected exactly these array fields: {', '.join(shapes)}")
@@ -114,7 +114,7 @@ class DatasetWriter:
     def __init__(self, root, config):
         self.root = Path(root)
         self.config = config
-        self.v3 = config.get("mode") == "smoke"
+        self.v3 = config.get("mode") in ("smoke", "production")
         self.lock = None
 
     def __enter__(self):
