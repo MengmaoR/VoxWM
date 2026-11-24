@@ -39,6 +39,12 @@ int main() {
     assert(game.end(20, 30) == 300);
     assert(game.start(-1, -1) == 320);
     assert(game.end(-1, -1) == 480);
+    for (float range : {320.f, 480.f, 1280.f}) {
+        game.runData.fog_range = range;
+        assert(game.start(20, 30) == 200);
+        assert(game.end(20, 30) == 300);
+        assert(game.end(-1, -1) == range);
+    }
     for (const auto &p : {std::array<float,2>{-1,30}, {20,20}, {30,20}, {20,-1},
             {std::numeric_limits<float>::infinity(),30}, {20,std::numeric_limits<float>::quiet_NaN()}}) {
         bool failed = false;
@@ -74,7 +80,7 @@ def check(craftium):
         cxx = shlex.split(os.environ.get("CXX", "c++"))
         subprocess.run([*cxx, "-std=c++17", "test.cpp", "-o", "fog48_unit"], cwd=root, check=True)
         subprocess.run([root / "fog48_unit"], cwd=root, check=True)
-    print("Native absolute fog policy passed for draw48/fog20–30, legacy defaults, invalid settings and MapBlock coordinates")
+    print("Native absolute fog policy passed for draw32/48/128, independent fog20–30, legacy defaults and MapBlock coordinates")
 
 
 if __name__ == "__main__":

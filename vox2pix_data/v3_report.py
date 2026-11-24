@@ -144,9 +144,9 @@ def validate_payload(meta, config, vocabulary, slot, arrays):
                 and number(meta, "lighting_floor") == expected_rgb["lighting_floor"],
                 "Scene material ambient metadata differs from the selected profile")
     if expected_rgb.get("voxwm_exact_draw_range"):
-        from .protocol import V3_FOG48_GEOMETRY, V3_FOG_GEOMETRY
+        from .protocol import v3_fog_geometry
 
-        geometry = V3_FOG48_GEOMETRY if "fog_end_distance" in expected_rgb else V3_FOG_GEOMETRY
+        geometry = v3_fog_geometry(config)
         require(meta.get("fog_geometry") == geometry, "Native fog protocol geometry differs")
     validate_camera_protocol(meta)
     validate_visibility_lookup()

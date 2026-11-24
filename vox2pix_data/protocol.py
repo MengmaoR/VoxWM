@@ -16,6 +16,8 @@ V3_FOG_PROFILE = "material-ambient-fog20"
 V3_FOG_VERSION = "vox2pix-v3-materialambient-linear-fog20-30"
 V3_FOG48_PROFILE = "material-ambient-fog20-draw48"
 V3_FOG48_VERSION = "vox2pix-v3-local48-rgb48-absolute-fog20-30"
+V3_FINAL_PROFILE = "material-ambient-fog20-draw32"
+V3_FINAL_VERSION = "vox2pix-v3-local48-rgb32-absolute-fog20-30"
 V3_KINDS = ("surface", "cave", "underwater")
 HEIGHTS = ("surface", "shallow", "deep")
 CENTER = (slice(16, 32),) * 3
@@ -51,10 +53,16 @@ del V3_FOG48_RGB["fog_start"]
 V3_FOG48_GEOMETRY = dict(voxel_observation_shape=[48, 48, 48],
                         voxel_observation_half_extent=24, rgb_viewing_range=48,
                         fog_start_distance=20, fog_end_distance=30, fog_type="linear")
+# Historical profiles retain their recorded settings for reading and replay.
+# The active profile changes only native RGB draw range, leaving the projector intact.
+V3_FINAL_RGB = dict(V3_FOG48_RGB, viewing_range=32)
+V3_FINAL_GEOMETRY = dict(V3_FOG48_GEOMETRY, rgb_viewing_range=32, fog_type="native_linear")
 
 
 def v3_rgb(config):
     profile = config.get("lighting_profile", "global-lut")
+    if profile == V3_FINAL_PROFILE:
+        return V3_FINAL_RGB
     if profile == V3_FOG48_PROFILE:
         return V3_FOG48_RGB
     if profile == V3_FOG_PROFILE:
@@ -67,11 +75,19 @@ def v3_rgb(config):
 
 
 def v3_version(config):
+    if v3_rgb(config) is V3_FINAL_RGB:
+        return V3_FINAL_VERSION
     if v3_rgb(config) is V3_FOG48_RGB:
         return V3_FOG48_VERSION
     if v3_rgb(config) is V3_FOG_RGB:
         return V3_FOG_VERSION
     return V3_MATERIAL_VERSION if v3_rgb(config) is V3_MATERIAL_RGB else V3_VERSION
+
+
+def v3_fog_geometry(config):
+    if v3_rgb(config) is V3_FINAL_RGB:
+        return dict(V3_FINAL_GEOMETRY)
+    return dict(V3_FOG48_GEOMETRY if "fog_end_distance" in v3_rgb(config) else V3_FOG_GEOMETRY)
 
 
 def v3_lighting_images(config):

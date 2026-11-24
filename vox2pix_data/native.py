@@ -393,9 +393,9 @@ class NativeScene:
         if ambient is not None:
             meta.update(solid_ambient_floor=ambient, lighting_profile=config["lighting_profile"])
         if rgb_settings.get("voxwm_exact_draw_range"):
-            from .protocol import V3_FOG48_GEOMETRY, V3_FOG_GEOMETRY
+            from .protocol import v3_fog_geometry
 
-            meta["fog_geometry"] = dict(V3_FOG48_GEOMETRY if "fog_end_distance" in rgb_settings else V3_FOG_GEOMETRY)
+            meta["fog_geometry"] = v3_fog_geometry(config)
         if underwater_descent:
             meta.update(underwater_descent=underwater_descent, visibility_camera_local_xyz=list(eye))
         meta["lighting_comparison"], auxiliary = self.lighting_comparison(

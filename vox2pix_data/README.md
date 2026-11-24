@@ -1,6 +1,76 @@
 # Vox2Pix data collection
 
-## V3 native smoke
+## Final native rendering RGB32
+
+The sole active profile is `material-ambient-fog20-draw32`, version
+`vox2pix-v3-local48-rgb32-absolute-fog20-30`. Native RGB draw range is 32 nodes;
+independent absolute Fog Start/End are 20/30. The 48³ observation keeps half
+extent 24. Gamma 3.0, native zero-floor LUT and solid material ambient 0.35
+remain unchanged. GPU Far Plane follows the original native camera calculation.
+The White Model, Water Count, BACKGROUND and scene sampling are unchanged.
+
+The final calibration and 15-frame replay are authorized; their measured status
+is PENDING until this run finishes. Formal 50K collection and training have not
+started. All older RGB ranges, ratio-fog and global-floor trials below are
+historical; use their explicit profiles only for their own data.
+
+From the repository root, using the existing native client checkout and its
+Linux graphics environment:
+
+```bash
+BUILD_THREADS=22 bash scripts/build_vox2pix_fog48.sh third_party/craftium_vox2pix_fog48
+python3 scripts/test_vox2pix_fog48.py --craftium-dir third_party/craftium_vox2pix_fog48
+.venv/bin/python -m unittest vox2pix_data.test_final_protocol vox2pix_data.test_final_report -q
+
+.venv/bin/python -m vox2pix_data.final_rendering \
+  --dataset outputs/vox2pix_v3_lightfloor_15 \
+  --craftium-dir third_party/craftium_vox2pix_fog48 \
+  --output outputs/vox2pix_final_rendering_32 \
+  --scene-timeout 240
+```
+
+The checkout's historical `fog48` name identifies the build directory; its
+absolute-fog patch accepts 32 independently of Fog End. No shader rewrite is
+needed. On the server with user-installed Xvfb, launch the same command with
+the recorded environment:
+
+```bash
+.venv/bin/python - <<'PYENV'
+import json
+import os
+from pathlib import Path
+import sys
+
+os.environ.update(json.loads(Path("vae_data/configs/collection_64x1_clip2.json").read_text())["environment"])
+os.environ["CUDA_VISIBLE_DEVICES"] = ""
+os.execv(sys.executable, [
+    sys.executable, "-B", "-u", "-m", "vox2pix_data.final_rendering",
+    "--dataset", "outputs/vox2pix_v3_lightfloor_15",
+    "--craftium-dir", "third_party/craftium_vox2pix_fog48",
+    "--output", "outputs/vox2pix_final_rendering_32",
+    "--scene-timeout", "240",
+])
+PYENV
+```
+
+A fixed-camera disposable calibration world presents one marker at a time at
+10/18/20/22/24/25/27/29/30/31/32/34 nodes to prevent occlusion. It captures Fog OFF
+and final Fog20–30 without moving the camera. Existing Surface/Cave/Underwater
+seeds and all five saved poses per kind supply the 15 final RGB frames; no new
+world search runs. Native probes verify actual ranges, shader endpoints,
+server availability and lighting. Raw saved 48³ Node ID / param2 are checked
+at every replayed pose. White, Water Count and BACKGROUND previews use the
+original read-only arrays.
+
+Open `outputs/vox2pix_final_rendering_32/report/index.html` offline. It links the
+calibration report and shows RGB, White Model, Water Count, BACKGROUND and pose
+metadata. `manifest.json` records the final settings and source;
+`summary.json` separates native measurements and visual status. A 34-node
+marker can survive nominal range culling due to MapBlock bounding volumes;
+any retained geometry must still be hidden by Fog. Preserve the entire output
+directory when copying the offline report. Use a new output path for each replay.
+
+## Historical V3 global-LUT smoke
 
 For the legacy global-LUT profile, use the existing Linux software-rendering dependencies and a separate Craftium
 checkout configured for a client build. From the repository root, build its
@@ -94,9 +164,9 @@ Use a new dataset path and the patched material checkout.
 .venv/bin/python -m vox2pix_data report --dataset outputs/vox2pix_v3_material_smoke_15
 ```
 
-## Native fog calibration
+## Historical draw30 fog calibration
 
-The current smoke profile is `material-ambient-fog20`, versioned separately
+The deprecated draw30 smoke profile is `material-ambient-fog20`, versioned separately
 from both previous lighting trials. Its voxel observation half extent is
 24 and RGB draw range is 30. Native fog starts at 20 and ends at 30 blocks.
 The same material lighting uses global floor 0 and solid ambient 0.35.
@@ -153,11 +223,11 @@ PY
 ```
 
 The draw30 profile remains available as `material-ambient-fog20` for legacy
-replay. Its range is recorded independently from the current draw48 profile.
+replay. Its range is recorded independently from the historical draw48 profile.
 
 ## Independent RGB48 and absolute fog
 
-The active profile is `material-ambient-fog20-draw48`, version
+This deprecated historical profile is `material-ambient-fog20-draw48`, version
 `vox2pix-v3-local48-rgb48-absolute-fog20-30`. Its 48³ voxel observation
 keeps half extent 24. Native RGB drawing uses 48 blocks and the absolute
 Fog Start/End settings use 20/30 blocks. Material lighting is unchanged.
@@ -210,9 +280,9 @@ os.execv(sys.executable, [
 PY
 ```
 
-For a separately authorized new smoke, explicitly use `--mode smoke
---lighting-profile material-ambient-fog20-draw48` with this checkout and
-a fresh dataset directory. Previous datasets require their original profile.
+For an explicit historical draw48 reproduction, use `--mode smoke
+--lighting-profile material-ambient-fog20-draw48` with a fresh dataset directory.
+It is deprecated for new collection. Previous datasets retain their original profile.
 
 For a small RGB-only preview of saved View 3/4/5 at draw range 128, with
 Fog OFF and absolute Fog 20–30, use the same renderer environment:

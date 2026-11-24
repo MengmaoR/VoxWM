@@ -1,9 +1,22 @@
 # Vox2Pix v3 data collection protocol
 
-The active v3 profile uses `vox2pix-v3-local48-rgb48-absolute-fog20-30`.
-The earlier coupled draw/fog trial uses `vox2pix-v3-materialambient-linear-fog20-30`.
-The earlier material trial uses `vox2pix-v3-surface-watercount-cave-underwater-materialambient`.
-The published global-floor smoke retains `vox2pix-v3-surface-watercount-cave-underwater-lightfloor`.
+The sole active v3 rendering profile is `material-ambient-fog20-draw32`, version
+`vox2pix-v3-local48-rgb32-absolute-fog20-30`. Native and visual verification
+of this final candidate is PENDING until the current calibration and replay complete.
+The current authorization covers only that bounded verification; formal 50K
+collection and model training have not started.
+
+| Setting | Active value |
+| --- | --- |
+| Voxel observation / half extent | 48³ / 24 nodes per axis |
+| Native RGB map draw range | 32 nodes |
+| Independent native linear Fog Start / End | 20 / 30 nodes |
+| Gamma / global LUT floor / solid material floor | 3.0 / 0.0 / 0.35 |
+
+RGB draw ranges 24, 30 and 48, ratio Fog `fog_start=0.8` / `2/3`, and global
+`lighting_floor=0.35` are deprecated. The 128-node run is a diagnostic preview.
+Legacy profiles remain explicit options for reading and replaying their own
+versioned data; no historical data or report is overwritten.
 
 Each scene stores one native Mapgen v7 48³ voxel grid and five RGB views from
 the same foot anchor. The five camera orientations are independently sampled
@@ -90,13 +103,13 @@ four image fields and any auxiliary lighting frames.
 
 The same native settings apply to all three kinds. Capture uses gamma 3.0,
 fixed daylight, clear weather, hidden HUD and first-person held model,
-`viewing_range=48`, directional colored fog and independent absolute fog
+`viewing_range=32`, directional colored fog and independent absolute fog
 distances `fog_start_distance=20` and `fog_end_distance=30`. Native sky,
 sun and clouds remain in RGB. Distance culling and fog reduce far-field
 mismatch. RGB may still depict geometry outside the 48³ projection.
 
 For a new approved smoke, select
-`--lighting-profile material-ambient-fog20-draw48` and use the isolated fog-enabled
+`--lighting-profile material-ambient-fog20-draw32` and use the isolated fog-enabled
 Craftium build. All three scene kinds use `display_gamma=3.0`,
 `lighting_floor=0.0` and `solid_ambient_floor=0.35`. The native LUT still
 maps 0 to 0 and sunlight to 255. The world-node shader uses the sampled
@@ -107,7 +120,8 @@ their native rendering paths. Raw light, Node ID, param2 and the White
 projection are preserved. Both engine settings default to zero.
 
 The independent-range profile is the smoke CLI default. The explicit legacy
-`global-lut`, `material-ambient` and `material-ambient-fog20` profiles
+`global-lut`, `material-ambient`, `material-ambient-fog20` and
+`material-ambient-fog20-draw48` profiles
 retain their recorded settings. Give the new profile a separate dataset path. Each profile
 stores its matched-pose zero-floor control outside the main 15 frames.
 Validation checks settings, render tick and stable geometry. The report
@@ -120,7 +134,7 @@ tests. The three saved scenes provide a limited test of material coverage.
 ## Native RGB fog range
 
 The voxel observation is a 48³ cube with half extent 24 on each axis.
-The RGB map draw range is 48 blocks. Voxel availability depends on a ray's
+The RGB map draw range is 32 blocks. Voxel availability depends on a ray's
 intersection with that cube. It has no spherical radius guarantee from
 the actual eye position.
 
@@ -130,10 +144,10 @@ The new protocol records the following geometry.
 {
   "voxel_observation_shape": [48, 48, 48],
   "voxel_observation_half_extent": 24,
-  "rgb_viewing_range": 48,
+  "rgb_viewing_range": 32,
   "fog_start_distance": 20,
   "fog_end_distance": 30,
-  "fog_type": "linear"
+  "fog_type": "native_linear"
 }
 ```
 
@@ -141,11 +155,12 @@ The final native fog coefficient is `clamp((d - 20) / 10, 0, 1)`
 for Euclidean camera distance in blocks. The pinned native node shader
 also adjusts the directional fog target color according to clarity.
 The coefficient reaches one at 30, where geometry takes the fog color.
-World geometry from 30 through 48 remains eligible for native map
+World geometry from 30 through 32 remains eligible for native map
 rendering and is fully fogged. MapBlock bounding volumes may retain
-faces beyond the nominal 48-block map range.
+faces beyond the nominal 32-block map range. Such retained geometry must
+also be hidden by Fog. RGB is not hard-cut at either 24 or 30.
 
-An opt-in native camera setting fixes the map draw range to 48 through
+An opt-in native camera setting fixes the map draw range to 32 through
 the existing draw-list mechanism. The GPU far plane keeps its original
 camera calculation. Native `driver->setFog` reads the independent absolute
 start and end settings, converted with BS. The `-1/-1` engine defaults
@@ -161,12 +176,22 @@ nodes. The client requests its wanted range in MapBlocks; the server
 adds a one-MapBlock margin. The capture checks that configured server
 limits cover its map range. These diagnostics are metadata.
 
-The [independent-range calibration](vox2pix_data/README.md#independent-rgb48-and-absolute-fog)
-uses a disposable marker world at 14 distances and replays the original
-three saved scenes. At 32–48, the test requires actual submission of the
-marker's MapBlock in the captured frame. The projection continues to
-query only the stored 48³ cube, returning BACKGROUND on exit and counting
-only water traversed within that cube.
+The [final calibration](vox2pix_data/README.md#final-native-rendering-rgb32)
+uses a disposable native world with a fixed camera, sequential non-occluding
+marker placements at 10/18/20/22/24/25/27/29/30/31/32/34 nodes, and Fog OFF / final
+Fog20–30 exposures. At 31–32 it requires actual submission of the marker's
+MapBlock. At 34 it reports any bounding-volume retention and checks that Fog
+hides the retained geometry. The marker world is independent of production scenes.
+The final 15-frame replay reuses the original three world seeds, foot anchors,
+actual camera poses, voxel maps and saved White / Water / BACKGROUND arrays.
+No world search or new scene generation is part of that replay.
+
+The offline report is `outputs/vox2pix_final_rendering_32/report/index.html`.
+It separates Unit Verified, Native Verified, Visual Verified and Dataset
+Collection Not Started. Success requires actual native driver/shader probes
+and image inspection; configuration alone does not establish verification.
+The projection continues to query only the stored 48³ cube, returning
+BACKGROUND on exit and counting only water traversed within that cube.
 
 ## Smoke and compatibility
 
