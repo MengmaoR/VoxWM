@@ -117,6 +117,15 @@ def validate_lighting_pair(meta, frames, official_rgb, config=None):
     return dict(check, status=status, control_brightness=control, proposed_brightness=proposed)
 
 
+def _captured_player_foot(view, settled_player):
+    if settled_player is None:
+        return None
+    captured = vector(view, "actual_player_world_xyz")
+    require(np.allclose(captured, settled_player, atol=.003, rtol=0),
+            "Player moved after settling underwater")
+    return captured
+
+
 def validate_payload(meta, config, vocabulary, slot, arrays):
     from .geometry import is_water_liquid, water_contains
     from .v3_sampling import cave_evidence, scene_visibility, settled_anchor
@@ -222,7 +231,8 @@ def validate_payload(meta, config, vocabulary, slot, arrays):
             require_air_camera(grid, rules, eye)
 
     ids, ticks = zip(*(validate_view(view, config, foot, active, meta, nodes, definitions,
-                                    camera_check=require_medium, actual_foot=actual_foot) for view in views))
+                                    camera_check=require_medium,
+                                    actual_foot=_captured_player_foot(view, actual_foot)) for view in views))
     require(len(set(ids)) == len(ids) and all(a < b for a, b in zip(ticks, ticks[1:])),
             "View regions must be distinct and native ticks increasing")
     for view in views:
@@ -245,8 +255,6 @@ def validate_payload(meta, config, vocabulary, slot, arrays):
             require(np.allclose(vector(view, "actual_player_world_xyz"), foot, atol=.003, rtol=0),
                     "Surface observer moved from its water-surface anchor")
         if actual_foot is not None:
-            require(np.allclose(vector(view, "actual_player_world_xyz"), actual_foot, atol=.003, rtol=0),
-                    "Player moved after settling underwater")
             require(np.allclose(vector(view, "projection_origin_local_xyz"), view_origin, atol=.003, rtol=0),
                     "Underwater visibility was evaluated at a different eye position")
 
