@@ -1,5 +1,33 @@
 # Vox2Pix data collection
 
+## Local 1K pilot and compression report
+
+On this Mac, collect 200 scenes / 1,000 paired views with the final rendering
+profile and two workers. This yields 120 Surface, 60 Cave and 20 Underwater
+scenes. Use a fresh directory; repeating the same command resumes missing slots.
+
+```bash
+VOXWM_ENV_CONFIG= \
+VOX2PIX_CRAFTIUM=third_party/craftium_vox2pix_local32 \
+VOX2PIX_DATASET=outputs/vox2pix_pilot_1k_rgb32 \
+VOX2PIX_WORKERS=2 bash scripts/collect_vox2pix.sh --renderer window --scenes 200
+
+.venv/bin/python -m vox2pix_data compression-report \
+  --dataset outputs/vox2pix_pilot_1k_rgb32
+```
+
+Voxel and White Model arrays are compressed with Blosc/Zstd during collection;
+RGB is PNG. `compression-report` measures those existing files and writes
+`compression_report.json` / `compression_report.md`. It reads Zarr metadata
+and file sizes without decoding arrays or recompressing them. The report covers
+the single Surface Node ID, raw param2, Face Direction and Water Count, raw 48³
+inputs, PNGs and metadata. Auxiliary smoke lighting images are counted separately.
+Partial datasets are marked `INCOMPLETE`. The 50K size estimate uses the actual
+saved frame count; it does not apply the historical resolution/storage gate.
+Logical stored bytes exclude filesystem padding, logs, runtime state and generated
+reports. No `.tar.zst` archive is created by this reporting command.
+Historical V2 datasets continue to use their original report implementation.
+
 ## Parallel production collection
 
 `collect --mode production` uses the verified RGB32 / absolute Fog20–30

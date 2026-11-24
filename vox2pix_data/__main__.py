@@ -267,10 +267,13 @@ def main(argv=None):
             if args.command == "report":
                 print(args.dataset / "report" / "index.html")
             return 0
-        from .qa import check, compression_report
         if args.command == "check":
+            from .qa import check
+
             print(json.dumps(check(args.dataset), indent=2))
         else:
+            from .compression import compression_report
+
             compression_report(args.dataset)
             print(args.dataset / "compression_report.md")
     except (OSError, RuntimeError, ValueError) as exc:
