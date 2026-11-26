@@ -1,0 +1,1083 @@
+{
+  "status": "PASS",
+  "source_archives": [
+    "/Users/tianxj/Desktop/VoxWM-Dataset/VAE/data/vae_200k_by_category/vae_100k_static.tar.zst",
+    "/Users/tianxj/Desktop/VoxWM-Dataset/VAE/data/vae_200k_by_category/vae_100k_dynamic.tar.zst"
+  ],
+  "source_selection": "user-authorized canonical Static/Dynamic repacks; original clip roots superseded for this analysis",
+  "shape": [
+    48,
+    48,
+    48
+  ],
+  "total_snapshots": 200000,
+  "total_full48_voxels": 22118400000,
+  "groups": {
+    "train": {
+      "Static": {
+        "snapshots": 79870,
+        "voxels": 8832983040,
+        "unique_tokens": 1398,
+        "untrained_unique_tokens": 204
+      },
+      "Dynamic": {
+        "snapshots": 80130,
+        "voxels": 8861736960,
+        "unique_tokens": 1387,
+        "untrained_unique_tokens": 120
+      },
+      "D1": {
+        "snapshots": 20135,
+        "voxels": 2226769920,
+        "unique_tokens": 1177,
+        "untrained_unique_tokens": 62
+      },
+      "D2": {
+        "snapshots": 20025,
+        "voxels": 2214604800,
+        "unique_tokens": 1170,
+        "untrained_unique_tokens": 49
+      },
+      "D3": {
+        "snapshots": 19910,
+        "voxels": 2201886720,
+        "unique_tokens": 1160,
+        "untrained_unique_tokens": 43
+      },
+      "D4": {
+        "snapshots": 20060,
+        "voxels": 2218475520,
+        "unique_tokens": 1185,
+        "untrained_unique_tokens": 48
+      }
+    },
+    "validation": {
+      "Static": {
+        "snapshots": 10080,
+        "voxels": 1114767360,
+        "unique_tokens": 1275,
+        "untrained_unique_tokens": 107
+      },
+      "Dynamic": {
+        "snapshots": 9920,
+        "voxels": 1097072640,
+        "unique_tokens": 1140,
+        "untrained_unique_tokens": 35
+      },
+      "D1": {
+        "snapshots": 2410,
+        "voxels": 266526720,
+        "unique_tokens": 835,
+        "untrained_unique_tokens": 10
+      },
+      "D2": {
+        "snapshots": 2470,
+        "voxels": 273162240,
+        "unique_tokens": 869,
+        "untrained_unique_tokens": 11
+      },
+      "D3": {
+        "snapshots": 2620,
+        "voxels": 289751040,
+        "unique_tokens": 906,
+        "untrained_unique_tokens": 13
+      },
+      "D4": {
+        "snapshots": 2420,
+        "voxels": 267632640,
+        "unique_tokens": 901,
+        "untrained_unique_tokens": 21
+      }
+    },
+    "test": {
+      "Static": {
+        "snapshots": 10050,
+        "voxels": 1111449600,
+        "unique_tokens": 1298,
+        "untrained_unique_tokens": 130
+      },
+      "Dynamic": {
+        "snapshots": 9950,
+        "voxels": 1100390400,
+        "unique_tokens": 1163,
+        "untrained_unique_tokens": 41
+      },
+      "D1": {
+        "snapshots": 2455,
+        "voxels": 271503360,
+        "unique_tokens": 915,
+        "untrained_unique_tokens": 10
+      },
+      "D2": {
+        "snapshots": 2505,
+        "voxels": 277032960,
+        "unique_tokens": 850,
+        "untrained_unique_tokens": 15
+      },
+      "D3": {
+        "snapshots": 2470,
+        "voxels": 273162240,
+        "unique_tokens": 932,
+        "untrained_unique_tokens": 16
+      },
+      "D4": {
+        "snapshots": 2520,
+        "voxels": 278691840,
+        "unique_tokens": 924,
+        "untrained_unique_tokens": 30
+      }
+    }
+  },
+  "validation": {
+    "reference": {
+      "canonical_K": 1580,
+      "canonical_semantic_sha256": "25af338d8200eaceedf62bd33dc76d769dcec27f526e6df34280c43c9b3f979a",
+      "training_vocabulary_file_sha256": "bc383e57f882433099ef4e27832f24e19093649456e2ef217a51df0bc81758d0",
+      "token_frequency_file_sha256": "7acc34875022771203718528f0f6db628012c22b22726c442c96f6d281a336f2",
+      "split_file_sha256": "eb6c3f14ed77932d99ce505bc442051605dfa0016be8f45f5b2e3b3898aacdb6",
+      "original_dataset_index_expected_sha256": "9b0cdb13e41fee88acb18a3f60091f582842806806fb64657acad31142acbe3b",
+      "center_train_unique": 1306,
+      "U0": 274,
+      "heldout_only": 27,
+      "never_seen_in_center_splits": 247,
+      "original_training_roots_mapping_checks": [
+        {
+          "root": "/user-data/txj/VoxWM/outputs/vae_100k_clip1",
+          "local_K": 1538,
+          "mapping_count": 1538,
+          "ids_in_range": true,
+          "injective": true,
+          "identity_mapping": false,
+          "recorded_local_vocabulary_sha256": "205c9ebf4d53888fd84afd28e7351cc44f17380482b5143b859fbfc5da0aa4e9",
+          "recorded_dataset_manifest_sha256": "bc38033eeac782f13715d4ae6252fc2ea2f47da16161f0b255b479b7a9591838",
+          "actual_original_local_vocabulary_verified": false,
+          "semantic_check_boundary": "original local vocabulary files not supplied; structural LUT checks only"
+        },
+        {
+          "root": "/user-data/txj/VoxWM/outputs/vae_100k_clip2",
+          "local_K": 1537,
+          "mapping_count": 1537,
+          "ids_in_range": true,
+          "injective": true,
+          "identity_mapping": false,
+          "recorded_local_vocabulary_sha256": "021e952508fa34ff5c1c46bc6666c567c9b52c7effa8647557f5868f9cdf8056",
+          "recorded_dataset_manifest_sha256": "bc38033eeac782f13715d4ae6252fc2ea2f47da16161f0b255b479b7a9591838",
+          "actual_original_local_vocabulary_verified": false,
+          "semantic_check_boundary": "original local vocabulary files not supplied; structural LUT checks only"
+        }
+      ]
+    },
+    "sources": [
+      {
+        "archive": "/Users/tianxj/Desktop/VoxWM-Dataset/VAE/data/vae_200k_by_category/vae_100k_static.tar.zst",
+        "root_name": "vae_100k_static",
+        "category": "Static",
+        "canonical_K": 1580,
+        "canonical_semantic_sha256": "25af338d8200eaceedf62bd33dc76d769dcec27f526e6df34280c43c9b3f979a",
+        "source_vocabulary_file_sha256": "aafe78de25dce55341c9822e4f05f60f3c4d7bc0267b2a7047135ae73122d49c",
+        "repack_local_to_canonical": "identity; every exact semantic pair and raw param2 checked",
+        "ids_in_range": true,
+        "injective": true,
+        "param2_preserved": true,
+        "split_patch_bytes_match_published": true,
+        "original_training_roots_mapping_checks": [
+          {
+            "root": "/user-data/txj/VoxWM/outputs/vae_100k_clip1",
+            "local_K": 1538,
+            "mapping_count": 1538,
+            "ids_in_range": true,
+            "injective": true,
+            "identity_mapping": false,
+            "recorded_local_vocabulary_sha256": "205c9ebf4d53888fd84afd28e7351cc44f17380482b5143b859fbfc5da0aa4e9",
+            "recorded_dataset_manifest_sha256": "bc38033eeac782f13715d4ae6252fc2ea2f47da16161f0b255b479b7a9591838",
+            "actual_original_local_vocabulary_verified": false,
+            "semantic_check_boundary": "original local vocabulary files not supplied; structural LUT checks only"
+          },
+          {
+            "root": "/user-data/txj/VoxWM/outputs/vae_100k_clip2",
+            "local_K": 1537,
+            "mapping_count": 1537,
+            "ids_in_range": true,
+            "injective": true,
+            "identity_mapping": false,
+            "recorded_local_vocabulary_sha256": "021e952508fa34ff5c1c46bc6666c567c9b52c7effa8647557f5868f9cdf8056",
+            "recorded_dataset_manifest_sha256": "bc38033eeac782f13715d4ae6252fc2ea2f47da16161f0b255b479b7a9591838",
+            "actual_original_local_vocabulary_verified": false,
+            "semantic_check_boundary": "original local vocabulary files not supplied; structural LUT checks only"
+          }
+        ],
+        "original_dataset_index": {
+          "status": "not supplied",
+          "locations": [],
+          "original_index_identity_verified": false
+        },
+        "dataset_index_search": {
+          "status": "not supplied",
+          "locations": [],
+          "original_index_identity_verified": false
+        }
+      },
+      {
+        "archive": "/Users/tianxj/Desktop/VoxWM-Dataset/VAE/data/vae_200k_by_category/vae_100k_dynamic.tar.zst",
+        "root_name": "vae_100k_dynamic",
+        "category": "Dynamic",
+        "canonical_K": 1580,
+        "canonical_semantic_sha256": "25af338d8200eaceedf62bd33dc76d769dcec27f526e6df34280c43c9b3f979a",
+        "source_vocabulary_file_sha256": "aafe78de25dce55341c9822e4f05f60f3c4d7bc0267b2a7047135ae73122d49c",
+        "repack_local_to_canonical": "identity; every exact semantic pair and raw param2 checked",
+        "ids_in_range": true,
+        "injective": true,
+        "param2_preserved": true,
+        "split_patch_bytes_match_published": true,
+        "original_training_roots_mapping_checks": [
+          {
+            "root": "/user-data/txj/VoxWM/outputs/vae_100k_clip1",
+            "local_K": 1538,
+            "mapping_count": 1538,
+            "ids_in_range": true,
+            "injective": true,
+            "identity_mapping": false,
+            "recorded_local_vocabulary_sha256": "205c9ebf4d53888fd84afd28e7351cc44f17380482b5143b859fbfc5da0aa4e9",
+            "recorded_dataset_manifest_sha256": "bc38033eeac782f13715d4ae6252fc2ea2f47da16161f0b255b479b7a9591838",
+            "actual_original_local_vocabulary_verified": false,
+            "semantic_check_boundary": "original local vocabulary files not supplied; structural LUT checks only"
+          },
+          {
+            "root": "/user-data/txj/VoxWM/outputs/vae_100k_clip2",
+            "local_K": 1537,
+            "mapping_count": 1537,
+            "ids_in_range": true,
+            "injective": true,
+            "identity_mapping": false,
+            "recorded_local_vocabulary_sha256": "021e952508fa34ff5c1c46bc6666c567c9b52c7effa8647557f5868f9cdf8056",
+            "recorded_dataset_manifest_sha256": "bc38033eeac782f13715d4ae6252fc2ea2f47da16161f0b255b479b7a9591838",
+            "actual_original_local_vocabulary_verified": false,
+            "semantic_check_boundary": "original local vocabulary files not supplied; structural LUT checks only"
+          }
+        ],
+        "original_dataset_index": {
+          "status": "not supplied",
+          "locations": [],
+          "original_index_identity_verified": false
+        },
+        "dataset_index_search": {
+          "status": "not supplied",
+          "locations": [],
+          "original_index_identity_verified": false
+        }
+      }
+    ],
+    "actual_split_counts": {
+      "train": 160000,
+      "validation": 20000,
+      "test": 20000
+    },
+    "center16_all_token_counts_match_baseline": true,
+    "all_snapshot_shapes_and_token_ranges_pass": true,
+    "all_chain_anchor_links_pass": true,
+    "all_occurrence_denominators_pass": true,
+    "original_source_snapshots_unique": true,
+    "world_seed_split_consistency_pass": true,
+    "old_dataset_index_rebuilt": false
+  },
+  "anchors": {
+    "total": 5000,
+    "containing_U0": 54,
+    "unseen_unique": 35,
+    "exclusive_unique": 1,
+    "exclusive_voxel_occurrences": 1,
+    "exclusive_tokens": [
+      {
+        "canonical_token_id": 1142,
+        "node_name": "mcl_ocean:fire_coral",
+        "raw_param2": 0,
+        "exclusive_voxel_count": 1
+      }
+    ]
+  },
+  "unseen_train_full48": {
+    "static": 204,
+    "dynamic": 120,
+    "intersection": 63,
+    "static_only": 141,
+    "dynamic_only": 57,
+    "absent_from_train_full48": 13,
+    "dynamic_only_tokens": [
+      {
+        "canonical_token_id": 5,
+        "node_name": "mcl_amethyst:large_amethyst_bud",
+        "raw_param2": 0,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 1,
+        "D1": 0,
+        "D2": 0,
+        "D3": 0,
+        "D4": 1
+      },
+      {
+        "canonical_token_id": 6,
+        "node_name": "mcl_amethyst:large_amethyst_bud",
+        "raw_param2": 1,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 3,
+        "D1": 0,
+        "D2": 0,
+        "D3": 0,
+        "D4": 3
+      },
+      {
+        "canonical_token_id": 7,
+        "node_name": "mcl_amethyst:large_amethyst_bud",
+        "raw_param2": 2,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 4,
+        "D1": 0,
+        "D2": 0,
+        "D3": 0,
+        "D4": 4
+      },
+      {
+        "canonical_token_id": 8,
+        "node_name": "mcl_amethyst:large_amethyst_bud",
+        "raw_param2": 5,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 4,
+        "D1": 0,
+        "D2": 0,
+        "D3": 0,
+        "D4": 4
+      },
+      {
+        "canonical_token_id": 9,
+        "node_name": "mcl_amethyst:medium_amethyst_bud",
+        "raw_param2": 0,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 42,
+        "D1": 0,
+        "D2": 2,
+        "D3": 0,
+        "D4": 40
+      },
+      {
+        "canonical_token_id": 10,
+        "node_name": "mcl_amethyst:medium_amethyst_bud",
+        "raw_param2": 1,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 36,
+        "D1": 0,
+        "D2": 6,
+        "D3": 0,
+        "D4": 30
+      },
+      {
+        "canonical_token_id": 11,
+        "node_name": "mcl_amethyst:medium_amethyst_bud",
+        "raw_param2": 2,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 49,
+        "D1": 0,
+        "D2": 20,
+        "D3": 0,
+        "D4": 29
+      },
+      {
+        "canonical_token_id": 233,
+        "node_name": "mcl_core:grass_path",
+        "raw_param2": 0,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 66,
+        "D1": 66,
+        "D2": 0,
+        "D3": 0,
+        "D4": 0
+      },
+      {
+        "canonical_token_id": 318,
+        "node_name": "mcl_core:jungleleaves",
+        "raw_param2": 0,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 10,
+        "D1": 0,
+        "D2": 0,
+        "D3": 10,
+        "D4": 0
+      },
+      {
+        "canonical_token_id": 324,
+        "node_name": "mcl_core:jungleleaves",
+        "raw_param2": 8,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 990,
+        "D1": 790,
+        "D2": 0,
+        "D3": 200,
+        "D4": 0
+      },
+      {
+        "canonical_token_id": 382,
+        "node_name": "mcl_core:leaves_orphan",
+        "raw_param2": 4,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 18,
+        "D1": 0,
+        "D2": 18,
+        "D3": 0,
+        "D4": 0
+      },
+      {
+        "canonical_token_id": 627,
+        "node_name": "mcl_core:vine",
+        "raw_param2": 130,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 5,
+        "D1": 0,
+        "D2": 0,
+        "D3": 0,
+        "D4": 5
+      },
+      {
+        "canonical_token_id": 628,
+        "node_name": "mcl_core:vine",
+        "raw_param2": 131,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 20,
+        "D1": 0,
+        "D2": 0,
+        "D3": 0,
+        "D4": 20
+      },
+      {
+        "canonical_token_id": 636,
+        "node_name": "mcl_core:void",
+        "raw_param2": 1,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 46895,
+        "D1": 0,
+        "D2": 14690,
+        "D3": 0,
+        "D4": 32205
+      },
+      {
+        "canonical_token_id": 644,
+        "node_name": "mcl_core:void",
+        "raw_param2": 9,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 20,
+        "D1": 0,
+        "D2": 0,
+        "D3": 0,
+        "D4": 20
+      },
+      {
+        "canonical_token_id": 645,
+        "node_name": "mcl_core:void",
+        "raw_param2": 10,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 35,
+        "D1": 0,
+        "D2": 0,
+        "D3": 0,
+        "D4": 35
+      },
+      {
+        "canonical_token_id": 646,
+        "node_name": "mcl_core:void",
+        "raw_param2": 11,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 5,
+        "D1": 0,
+        "D2": 0,
+        "D3": 0,
+        "D4": 5
+      },
+      {
+        "canonical_token_id": 647,
+        "node_name": "mcl_core:void",
+        "raw_param2": 12,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 5,
+        "D1": 0,
+        "D2": 0,
+        "D3": 0,
+        "D4": 5
+      },
+      {
+        "canonical_token_id": 648,
+        "node_name": "mcl_core:void",
+        "raw_param2": 13,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 25,
+        "D1": 0,
+        "D2": 0,
+        "D3": 0,
+        "D4": 25
+      },
+      {
+        "canonical_token_id": 757,
+        "node_name": "mcl_doors:wooden_door_b_1",
+        "raw_param2": 1,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 3,
+        "D1": 3,
+        "D2": 0,
+        "D3": 0,
+        "D4": 0
+      },
+      {
+        "canonical_token_id": 758,
+        "node_name": "mcl_doors:wooden_door_t_1",
+        "raw_param2": 1,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 3,
+        "D1": 3,
+        "D2": 0,
+        "D3": 0,
+        "D4": 0
+      },
+      {
+        "canonical_token_id": 777,
+        "node_name": "mcl_fire:eternal_fire",
+        "raw_param2": 0,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 18,
+        "D1": 14,
+        "D2": 1,
+        "D3": 3,
+        "D4": 0
+      },
+      {
+        "canonical_token_id": 778,
+        "node_name": "mcl_fire:eternal_fire",
+        "raw_param2": 5,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 1,
+        "D1": 0,
+        "D2": 0,
+        "D3": 0,
+        "D4": 1
+      },
+      {
+        "canonical_token_id": 779,
+        "node_name": "mcl_fire:eternal_fire",
+        "raw_param2": 10,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 1,
+        "D1": 1,
+        "D2": 0,
+        "D3": 0,
+        "D4": 0
+      },
+      {
+        "canonical_token_id": 854,
+        "node_name": "mcl_fire:fire",
+        "raw_param2": 74,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 3,
+        "D1": 0,
+        "D2": 0,
+        "D3": 1,
+        "D4": 2
+      },
+      {
+        "canonical_token_id": 857,
+        "node_name": "mcl_fire:fire",
+        "raw_param2": 77,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 2,
+        "D1": 0,
+        "D2": 0,
+        "D3": 2,
+        "D4": 0
+      },
+      {
+        "canonical_token_id": 863,
+        "node_name": "mcl_fire:fire",
+        "raw_param2": 84,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 2,
+        "D1": 0,
+        "D2": 0,
+        "D3": 2,
+        "D4": 0
+      },
+      {
+        "canonical_token_id": 864,
+        "node_name": "mcl_fire:fire",
+        "raw_param2": 85,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 1,
+        "D1": 0,
+        "D2": 0,
+        "D3": 1,
+        "D4": 0
+      },
+      {
+        "canonical_token_id": 865,
+        "node_name": "mcl_fire:fire",
+        "raw_param2": 86,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 1,
+        "D1": 0,
+        "D2": 0,
+        "D3": 1,
+        "D4": 0
+      },
+      {
+        "canonical_token_id": 866,
+        "node_name": "mcl_fire:fire",
+        "raw_param2": 87,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 1,
+        "D1": 0,
+        "D2": 0,
+        "D3": 1,
+        "D4": 0
+      },
+      {
+        "canonical_token_id": 1031,
+        "node_name": "mcl_loom:loom",
+        "raw_param2": 3,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 3,
+        "D1": 3,
+        "D2": 0,
+        "D3": 0,
+        "D4": 0
+      },
+      {
+        "canonical_token_id": 1125,
+        "node_name": "mcl_ocean:dead_brain_coral",
+        "raw_param2": 1,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 103,
+        "D1": 9,
+        "D2": 7,
+        "D3": 15,
+        "D4": 72
+      },
+      {
+        "canonical_token_id": 1126,
+        "node_name": "mcl_ocean:dead_brain_coral",
+        "raw_param2": 9,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 72,
+        "D1": 23,
+        "D2": 9,
+        "D3": 4,
+        "D4": 36
+      },
+      {
+        "canonical_token_id": 1128,
+        "node_name": "mcl_ocean:dead_bubble_coral",
+        "raw_param2": 1,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 152,
+        "D1": 16,
+        "D2": 17,
+        "D3": 26,
+        "D4": 93
+      },
+      {
+        "canonical_token_id": 1129,
+        "node_name": "mcl_ocean:dead_bubble_coral",
+        "raw_param2": 9,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 72,
+        "D1": 6,
+        "D2": 13,
+        "D3": 28,
+        "D4": 25
+      },
+      {
+        "canonical_token_id": 1130,
+        "node_name": "mcl_ocean:dead_bubble_coral_block",
+        "raw_param2": 0,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 800,
+        "D1": 66,
+        "D2": 37,
+        "D3": 80,
+        "D4": 617
+      },
+      {
+        "canonical_token_id": 1131,
+        "node_name": "mcl_ocean:dead_fire_coral",
+        "raw_param2": 0,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 5,
+        "D1": 0,
+        "D2": 0,
+        "D3": 0,
+        "D4": 5
+      },
+      {
+        "canonical_token_id": 1132,
+        "node_name": "mcl_ocean:dead_fire_coral",
+        "raw_param2": 1,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 34,
+        "D1": 9,
+        "D2": 0,
+        "D3": 5,
+        "D4": 20
+      },
+      {
+        "canonical_token_id": 1133,
+        "node_name": "mcl_ocean:dead_fire_coral",
+        "raw_param2": 9,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 239,
+        "D1": 55,
+        "D2": 13,
+        "D3": 33,
+        "D4": 138
+      },
+      {
+        "canonical_token_id": 1134,
+        "node_name": "mcl_ocean:dead_fire_coral_block",
+        "raw_param2": 0,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 910,
+        "D1": 72,
+        "D2": 71,
+        "D3": 67,
+        "D4": 700
+      },
+      {
+        "canonical_token_id": 1135,
+        "node_name": "mcl_ocean:dead_horn_coral",
+        "raw_param2": 0,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 4,
+        "D1": 0,
+        "D2": 0,
+        "D3": 4,
+        "D4": 0
+      },
+      {
+        "canonical_token_id": 1136,
+        "node_name": "mcl_ocean:dead_horn_coral",
+        "raw_param2": 1,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 222,
+        "D1": 14,
+        "D2": 34,
+        "D3": 45,
+        "D4": 129
+      },
+      {
+        "canonical_token_id": 1137,
+        "node_name": "mcl_ocean:dead_horn_coral",
+        "raw_param2": 9,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 120,
+        "D1": 10,
+        "D2": 16,
+        "D3": 30,
+        "D4": 64
+      },
+      {
+        "canonical_token_id": 1138,
+        "node_name": "mcl_ocean:dead_horn_coral_block",
+        "raw_param2": 0,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 803,
+        "D1": 40,
+        "D2": 62,
+        "D3": 134,
+        "D4": 567
+      },
+      {
+        "canonical_token_id": 1139,
+        "node_name": "mcl_ocean:dead_tube_coral",
+        "raw_param2": 1,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 24,
+        "D1": 5,
+        "D2": 0,
+        "D3": 4,
+        "D4": 15
+      },
+      {
+        "canonical_token_id": 1140,
+        "node_name": "mcl_ocean:dead_tube_coral",
+        "raw_param2": 9,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 146,
+        "D1": 37,
+        "D2": 11,
+        "D3": 25,
+        "D4": 73
+      },
+      {
+        "canonical_token_id": 1141,
+        "node_name": "mcl_ocean:dead_tube_coral_block",
+        "raw_param2": 0,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 828,
+        "D1": 81,
+        "D2": 49,
+        "D3": 111,
+        "D4": 587
+      },
+      {
+        "canonical_token_id": 1156,
+        "node_name": "mcl_ocean:kelp_dirt",
+        "raw_param2": 28,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 5,
+        "D1": 5,
+        "D2": 0,
+        "D3": 0,
+        "D4": 0
+      },
+      {
+        "canonical_token_id": 1157,
+        "node_name": "mcl_ocean:kelp_dirt",
+        "raw_param2": 32,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 5,
+        "D1": 5,
+        "D2": 0,
+        "D3": 0,
+        "D4": 0
+      },
+      {
+        "canonical_token_id": 1159,
+        "node_name": "mcl_ocean:kelp_dirt",
+        "raw_param2": 41,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 5,
+        "D1": 5,
+        "D2": 0,
+        "D3": 0,
+        "D4": 0
+      },
+      {
+        "canonical_token_id": 1163,
+        "node_name": "mcl_ocean:kelp_dirt",
+        "raw_param2": 69,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 5,
+        "D1": 5,
+        "D2": 0,
+        "D3": 0,
+        "D4": 0
+      },
+      {
+        "canonical_token_id": 1249,
+        "node_name": "mcl_ocean:kelp_gravel",
+        "raw_param2": 112,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 5,
+        "D1": 0,
+        "D2": 5,
+        "D3": 0,
+        "D4": 0
+      },
+      {
+        "canonical_token_id": 1331,
+        "node_name": "mcl_ocean:kelp_sand",
+        "raw_param2": 112,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 67,
+        "D1": 6,
+        "D2": 4,
+        "D3": 0,
+        "D4": 57
+      },
+      {
+        "canonical_token_id": 1357,
+        "node_name": "mcl_portals:end_portal_frame_eye",
+        "raw_param2": 0,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 5,
+        "D1": 0,
+        "D2": 5,
+        "D3": 0,
+        "D4": 0
+      },
+      {
+        "canonical_token_id": 1358,
+        "node_name": "mcl_portals:end_portal_frame_eye",
+        "raw_param2": 1,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 5,
+        "D1": 0,
+        "D2": 5,
+        "D3": 0,
+        "D4": 0
+      },
+      {
+        "canonical_token_id": 1375,
+        "node_name": "mcl_stairs:slab_wood",
+        "raw_param2": 0,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 92,
+        "D1": 92,
+        "D2": 0,
+        "D3": 0,
+        "D4": 0
+      },
+      {
+        "canonical_token_id": 1376,
+        "node_name": "mcl_stairs:slab_wood_top",
+        "raw_param2": 0,
+        "static_voxel_count": 0,
+        "dynamic_voxel_count": 10,
+        "D1": 10,
+        "D2": 0,
+        "D3": 0,
+        "D4": 0
+      }
+    ],
+    "dynamic_only_by_category": {
+      "D1": {
+        "unique": 28,
+        "token_ids": [
+          233,
+          324,
+          757,
+          758,
+          777,
+          779,
+          1031,
+          1125,
+          1126,
+          1128,
+          1129,
+          1130,
+          1132,
+          1133,
+          1134,
+          1136,
+          1137,
+          1138,
+          1139,
+          1140,
+          1141,
+          1156,
+          1157,
+          1159,
+          1163,
+          1331,
+          1375,
+          1376
+        ]
+      },
+      "D2": {
+        "unique": 22,
+        "token_ids": [
+          9,
+          10,
+          11,
+          382,
+          636,
+          777,
+          1125,
+          1126,
+          1128,
+          1129,
+          1130,
+          1133,
+          1134,
+          1136,
+          1137,
+          1138,
+          1140,
+          1141,
+          1249,
+          1331,
+          1357,
+          1358
+        ]
+      },
+      "D3": {
+        "unique": 24,
+        "token_ids": [
+          318,
+          324,
+          777,
+          854,
+          857,
+          863,
+          864,
+          865,
+          866,
+          1125,
+          1126,
+          1128,
+          1129,
+          1130,
+          1132,
+          1133,
+          1134,
+          1135,
+          1136,
+          1137,
+          1138,
+          1139,
+          1140,
+          1141
+        ]
+      },
+      "D4": {
+        "unique": 33,
+        "token_ids": [
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          627,
+          628,
+          636,
+          644,
+          645,
+          646,
+          647,
+          648,
+          778,
+          854,
+          1125,
+          1126,
+          1128,
+          1129,
+          1130,
+          1131,
+          1132,
+          1133,
+          1134,
+          1136,
+          1137,
+          1138,
+          1139,
+          1140,
+          1141,
+          1331
+        ]
+      }
+    }
+  },
+  "wall_seconds": 228.720448249951,
+  "unseen_full48_all_splits": {
+    "static": 213,
+    "dynamic": 125,
+    "ordinary_union": 272,
+    "absent_from_all_ordinary": 2,
+    "absent_tokens": [
+      {
+        "canonical_token_id": 1115,
+        "node_name": "mcl_ocean:brain_coral_fan",
+        "raw_param2": 0
+      },
+      {
+        "canonical_token_id": 1161,
+        "node_name": "mcl_ocean:kelp_dirt",
+        "raw_param2": 55
+      }
+    ]
+  }
+}
