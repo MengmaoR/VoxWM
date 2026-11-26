@@ -188,3 +188,49 @@ import `normalize_latent` and `denormalize_latent` from
 `outputs/voxel_vae/e00/` retains the Plain and Masked implementation sanity runs.
 E00-Masked used the 160-state E00-B training subset. Its checkpoint and
 curves belong to that separate experiment.
+
+## Token-anchored split for three-block training
+
+Freeze the three eligible 16³ blocks per saved 48³ snapshot before splitting.
+The original Static maps use center plus two rare blocks. The original Dynamic
+maps use center, one motion-ranked block and one rarity-ranked block. A planned
+Static replacement supplies its own three block indices.
+
+For every observed `(node_name, raw param2)`, draw one ordinal uniformly from
+all matching voxels in the frozen blocks. The anchor records the snapshot and
+block, then the matching voxel's zero-based ordinal within that block in ENU
+C-order. The entire anchor world seed goes into Train. The remaining worlds
+are assigned randomly under exact 80/10/10 quotas for each Static biome and
+height cell and each Dynamic category. Each five-frame chain shares its split.
+The final pass checks the actual token sets in the frozen Train, Validation and
+Test blocks.
+
+Run the read-only analysis from the repository root on the original category
+packs. The optional overlay projects the planned replacements from saved
+Vox2Pix voxel counts.
+
+```bash
+PACKS=/Users/tianxj/Desktop/VoxWM-Dataset/VAE/data/vae_200k_by_category
+PLAN=outputs/vae_static_replacement_20_20261127
+SOURCE=outputs/vox2pix_substitution_20261126
+.venv/bin/python -m voxel_vae.freeze_split_chunks \
+  "$PACKS/vae_100k_static.tar.zst" "$PACKS/vae_100k_dynamic.tar.zst" \
+  --replacement-plan "$PLAN/recapture_manifest.json" \
+  --map-inventory "$SOURCE/maps.json" --static-catalog "$SOURCE/static.jsonl.gz" \
+  --output "$PLAN/frozen_chunks_for_token_split"
+.venv/bin/python -m voxel_vae.token_anchored_split \
+  "$PLAN/frozen_chunks_for_token_split/frozen_chunks.json" \
+  --output "$PLAN/token_anchored_dry_run" --seed 42
+```
+
+The split tool reads a frozen index with semantic token pairs and a block
+histogram catalog. Its outputs include `token_anchors.csv`,
+`world_seed_splits.csv.gz`, `quota_counts.csv` and
+`token_voxel_counts_by_split.csv`. Use the actual recaptured states for the
+final split. The E01 training commands above still consume their original
+center-only index.
+
+The 2026-11-27 replacement dry-run selected 600,000 blocks and reserved one
+anchor for each of the 1,668 observed tokens. The anchors covered 1,358 world
+seeds. The 480,000 Train blocks contained every observed token. The 60,000
+Validation blocks and 60,000 Test blocks each had zero tokens absent from Train.
