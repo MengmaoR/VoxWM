@@ -59,3 +59,23 @@ def select_frame(frame_blocks, global_counts, motion=None):
                 m = sum(1 for _ in identical)
                 stats["pairs_tied_after_id"] += m * (m - 1) // 2
     return [entry[-1] for entry in ranked[:8]], stats
+
+
+def mixed_outer_indices(frame_blocks, global_counts, motion=None, limits=(2, 3, 4)):
+    """Select K rare static blocks or K-1 dynamic blocks and the rarest remaining block."""
+    entries = sorted(_rank_entry(block, global_counts, 0, index)
+                     for index, block in enumerate(frame_blocks) if index != CENTER_INDEX)
+    rarity_order = [entry[-1] for entry in entries]
+    if any(k < 1 or k > len(rarity_order) for k in limits):
+        raise ValueError("Peripheral block count must be between 1 and 26")
+    if motion is None:
+        return {k: rarity_order[:k] for k in limits}
+
+    # The stable sort preserves the complete rarity order for equal motion scores.
+    dynamic_order = sorted(rarity_order, key=lambda i: int(motion[i]), reverse=True)
+    selected = {}
+    for k in limits:
+        dynamic_blocks = dynamic_order[:k - 1]
+        rare_block = next(i for i in rarity_order if i not in dynamic_blocks)
+        selected[k] = [*dynamic_blocks, rare_block]
+    return selected

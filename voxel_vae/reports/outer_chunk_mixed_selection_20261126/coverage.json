@@ -1,0 +1,2282 @@
+{
+  "seconds": 101.59,
+  "vocabulary_size": 1580,
+  "ordinary_snapshots": {
+    "Static": 100000,
+    "Dynamic": 100000
+  },
+  "five_frame_chains": 20000,
+  "globally_absent_ids": [
+    1115,
+    1161
+  ],
+  "selection": {
+    "0": {
+      "selected_chunks": 200000,
+      "unique": 1333,
+      "missing": 247,
+      "recovered_outer_only": 0,
+      "static_unique": 1176,
+      "dynamic_unique": 1053,
+      "present_but_missed": [
+        {
+          "id": 6,
+          "node": "mcl_amethyst:large_amethyst_bud",
+          "raw_param2": 1,
+          "full48_voxels": 3,
+          "full48_category": "dynamic_only",
+          "static_voxels": 0,
+          "dynamic_voxels": 3
+        },
+        {
+          "id": 7,
+          "node": "mcl_amethyst:large_amethyst_bud",
+          "raw_param2": 2,
+          "full48_voxels": 4,
+          "full48_category": "dynamic_only",
+          "static_voxels": 0,
+          "dynamic_voxels": 4
+        },
+        {
+          "id": 8,
+          "node": "mcl_amethyst:large_amethyst_bud",
+          "raw_param2": 5,
+          "full48_voxels": 4,
+          "full48_category": "dynamic_only",
+          "static_voxels": 0,
+          "dynamic_voxels": 4
+        },
+        {
+          "id": 11,
+          "node": "mcl_amethyst:medium_amethyst_bud",
+          "raw_param2": 2,
+          "full48_voxels": 56,
+          "full48_category": "dynamic_only",
+          "static_voxels": 0,
+          "dynamic_voxels": 56
+        },
+        {
+          "id": 26,
+          "node": "mcl_banners:hanging_banner",
+          "raw_param2": 2,
+          "full48_voxels": 11,
+          "full48_category": "static_only",
+          "static_voxels": 11,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 27,
+          "node": "mcl_banners:hanging_banner",
+          "raw_param2": 3,
+          "full48_voxels": 8,
+          "full48_category": "static_only",
+          "static_voxels": 8,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 28,
+          "node": "mcl_banners:hanging_banner",
+          "raw_param2": 4,
+          "full48_voxels": 16,
+          "full48_category": "static_only",
+          "static_voxels": 16,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 29,
+          "node": "mcl_banners:hanging_banner",
+          "raw_param2": 5,
+          "full48_voxels": 11,
+          "full48_category": "static_only",
+          "static_voxels": 11,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 30,
+          "node": "mcl_barrels:barrel_closed",
+          "raw_param2": 0,
+          "full48_voxels": 16,
+          "full48_category": "static_only",
+          "static_voxels": 16,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 31,
+          "node": "mcl_barrels:barrel_closed",
+          "raw_param2": 1,
+          "full48_voxels": 10,
+          "full48_category": "static_only",
+          "static_voxels": 10,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 32,
+          "node": "mcl_barrels:barrel_closed",
+          "raw_param2": 2,
+          "full48_voxels": 7,
+          "full48_category": "static_only",
+          "static_voxels": 7,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 33,
+          "node": "mcl_barrels:barrel_closed",
+          "raw_param2": 3,
+          "full48_voxels": 14,
+          "full48_category": "static_only",
+          "static_voxels": 14,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 34,
+          "node": "mcl_barrels:barrel_closed",
+          "raw_param2": 7,
+          "full48_voxels": 102,
+          "full48_category": "shared",
+          "static_voxels": 97,
+          "dynamic_voxels": 5
+        },
+        {
+          "id": 36,
+          "node": "mcl_barrels:barrel_closed",
+          "raw_param2": 12,
+          "full48_voxels": 88,
+          "full48_category": "static_only",
+          "static_voxels": 88,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 37,
+          "node": "mcl_barrels:barrel_closed",
+          "raw_param2": 18,
+          "full48_voxels": 87,
+          "full48_category": "static_only",
+          "static_voxels": 87,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 56,
+          "node": "mcl_brewing:stand_000",
+          "raw_param2": 0,
+          "full48_voxels": 42,
+          "full48_category": "shared",
+          "static_voxels": 27,
+          "dynamic_voxels": 15
+        },
+        {
+          "id": 57,
+          "node": "mcl_brewing:stand_000",
+          "raw_param2": 1,
+          "full48_voxels": 32,
+          "full48_category": "shared",
+          "static_voxels": 22,
+          "dynamic_voxels": 10
+        },
+        {
+          "id": 58,
+          "node": "mcl_brewing:stand_000",
+          "raw_param2": 2,
+          "full48_voxels": 38,
+          "full48_category": "shared",
+          "static_voxels": 23,
+          "dynamic_voxels": 15
+        },
+        {
+          "id": 59,
+          "node": "mcl_brewing:stand_000",
+          "raw_param2": 3,
+          "full48_voxels": 39,
+          "full48_category": "shared",
+          "static_voxels": 34,
+          "dynamic_voxels": 5
+        },
+        {
+          "id": 61,
+          "node": "mcl_cauldrons:cauldron_2",
+          "raw_param2": 0,
+          "full48_voxels": 142,
+          "full48_category": "shared",
+          "static_voxels": 102,
+          "dynamic_voxels": 40
+        },
+        {
+          "id": 92,
+          "node": "mcl_colorblocks:glazed_terracotta_purple",
+          "raw_param2": 2,
+          "full48_voxels": 113,
+          "full48_category": "shared",
+          "static_voxels": 83,
+          "dynamic_voxels": 30
+        },
+        {
+          "id": 108,
+          "node": "mcl_core:acacialeaves_orphan",
+          "raw_param2": 3,
+          "full48_voxels": 61,
+          "full48_category": "shared",
+          "static_voxels": 9,
+          "dynamic_voxels": 52
+        },
+        {
+          "id": 128,
+          "node": "mcl_core:bedrock",
+          "raw_param2": 6,
+          "full48_voxels": 75,
+          "full48_category": "shared",
+          "static_voxels": 5,
+          "dynamic_voxels": 70
+        },
+        {
+          "id": 133,
+          "node": "mcl_core:bedrock",
+          "raw_param2": 11,
+          "full48_voxels": 195,
+          "full48_category": "shared",
+          "static_voxels": 40,
+          "dynamic_voxels": 155
+        },
+        {
+          "id": 140,
+          "node": "mcl_core:birchleaves_orphan",
+          "raw_param2": 8,
+          "full48_voxels": 17,
+          "full48_category": "static_only",
+          "static_voxels": 17,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 149,
+          "node": "mcl_core:bone_block",
+          "raw_param2": 2,
+          "full48_voxels": 22,
+          "full48_category": "static_only",
+          "static_voxels": 22,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 150,
+          "node": "mcl_core:bone_block",
+          "raw_param2": 3,
+          "full48_voxels": 58,
+          "full48_category": "shared",
+          "static_voxels": 18,
+          "dynamic_voxels": 40
+        },
+        {
+          "id": 151,
+          "node": "mcl_core:bone_block",
+          "raw_param2": 7,
+          "full48_voxels": 125,
+          "full48_category": "shared",
+          "static_voxels": 10,
+          "dynamic_voxels": 115
+        },
+        {
+          "id": 152,
+          "node": "mcl_core:bone_block",
+          "raw_param2": 8,
+          "full48_voxels": 14,
+          "full48_category": "static_only",
+          "static_voxels": 14,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 155,
+          "node": "mcl_core:bone_block",
+          "raw_param2": 17,
+          "full48_voxels": 72,
+          "full48_category": "shared",
+          "static_voxels": 32,
+          "dynamic_voxels": 40
+        },
+        {
+          "id": 156,
+          "node": "mcl_core:bone_block",
+          "raw_param2": 18,
+          "full48_voxels": 4,
+          "full48_category": "static_only",
+          "static_voxels": 4,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 162,
+          "node": "mcl_core:cobweb",
+          "raw_param2": 60,
+          "full48_voxels": 154,
+          "full48_category": "shared",
+          "static_voxels": 134,
+          "dynamic_voxels": 20
+        },
+        {
+          "id": 164,
+          "node": "mcl_core:cobweb",
+          "raw_param2": 180,
+          "full48_voxels": 49,
+          "full48_category": "static_only",
+          "static_voxels": 49,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 174,
+          "node": "mcl_core:darkleaves_orphan",
+          "raw_param2": 8,
+          "full48_voxels": 3,
+          "full48_category": "static_only",
+          "static_voxels": 3,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 198,
+          "node": "mcl_core:dirt_with_grass",
+          "raw_param2": 7,
+          "full48_voxels": 8,
+          "full48_category": "static_only",
+          "static_voxels": 8,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 223,
+          "node": "mcl_core:dirt_with_grass_snow",
+          "raw_param2": 7,
+          "full48_voxels": 21,
+          "full48_category": "static_only",
+          "static_voxels": 21,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 233,
+          "node": "mcl_core:grass_path",
+          "raw_param2": 0,
+          "full48_voxels": 66,
+          "full48_category": "dynamic_only",
+          "static_voxels": 0,
+          "dynamic_voxels": 66
+        },
+        {
+          "id": 236,
+          "node": "mcl_core:gravel",
+          "raw_param2": 17,
+          "full48_voxels": 11,
+          "full48_category": "static_only",
+          "static_voxels": 11,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 239,
+          "node": "mcl_core:gravel",
+          "raw_param2": 20,
+          "full48_voxels": 15,
+          "full48_category": "static_only",
+          "static_voxels": 15,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 240,
+          "node": "mcl_core:gravel",
+          "raw_param2": 21,
+          "full48_voxels": 21,
+          "full48_category": "static_only",
+          "static_voxels": 21,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 241,
+          "node": "mcl_core:gravel",
+          "raw_param2": 22,
+          "full48_voxels": 10,
+          "full48_category": "static_only",
+          "static_voxels": 10,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 242,
+          "node": "mcl_core:gravel",
+          "raw_param2": 23,
+          "full48_voxels": 18,
+          "full48_category": "static_only",
+          "static_voxels": 18,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 243,
+          "node": "mcl_core:gravel",
+          "raw_param2": 24,
+          "full48_voxels": 13,
+          "full48_category": "static_only",
+          "static_voxels": 13,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 244,
+          "node": "mcl_core:gravel",
+          "raw_param2": 25,
+          "full48_voxels": 17,
+          "full48_category": "static_only",
+          "static_voxels": 17,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 246,
+          "node": "mcl_core:gravel",
+          "raw_param2": 27,
+          "full48_voxels": 29,
+          "full48_category": "shared",
+          "static_voxels": 24,
+          "dynamic_voxels": 5
+        },
+        {
+          "id": 250,
+          "node": "mcl_core:gravel",
+          "raw_param2": 31,
+          "full48_voxels": 14,
+          "full48_category": "static_only",
+          "static_voxels": 14,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 252,
+          "node": "mcl_core:gravel",
+          "raw_param2": 33,
+          "full48_voxels": 15,
+          "full48_category": "static_only",
+          "static_voxels": 15,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 254,
+          "node": "mcl_core:gravel",
+          "raw_param2": 35,
+          "full48_voxels": 15,
+          "full48_category": "static_only",
+          "static_voxels": 15,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 255,
+          "node": "mcl_core:gravel",
+          "raw_param2": 36,
+          "full48_voxels": 16,
+          "full48_category": "static_only",
+          "static_voxels": 16,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 258,
+          "node": "mcl_core:gravel",
+          "raw_param2": 39,
+          "full48_voxels": 20,
+          "full48_category": "static_only",
+          "static_voxels": 20,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 260,
+          "node": "mcl_core:gravel",
+          "raw_param2": 41,
+          "full48_voxels": 21,
+          "full48_category": "static_only",
+          "static_voxels": 21,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 261,
+          "node": "mcl_core:gravel",
+          "raw_param2": 42,
+          "full48_voxels": 13,
+          "full48_category": "static_only",
+          "static_voxels": 13,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 263,
+          "node": "mcl_core:gravel",
+          "raw_param2": 44,
+          "full48_voxels": 18,
+          "full48_category": "static_only",
+          "static_voxels": 18,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 264,
+          "node": "mcl_core:gravel",
+          "raw_param2": 45,
+          "full48_voxels": 13,
+          "full48_category": "static_only",
+          "static_voxels": 13,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 265,
+          "node": "mcl_core:gravel",
+          "raw_param2": 46,
+          "full48_voxels": 10,
+          "full48_category": "static_only",
+          "static_voxels": 10,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 266,
+          "node": "mcl_core:gravel",
+          "raw_param2": 47,
+          "full48_voxels": 19,
+          "full48_category": "static_only",
+          "static_voxels": 19,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 268,
+          "node": "mcl_core:gravel",
+          "raw_param2": 49,
+          "full48_voxels": 12,
+          "full48_category": "static_only",
+          "static_voxels": 12,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 270,
+          "node": "mcl_core:gravel",
+          "raw_param2": 51,
+          "full48_voxels": 10,
+          "full48_category": "static_only",
+          "static_voxels": 10,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 271,
+          "node": "mcl_core:gravel",
+          "raw_param2": 52,
+          "full48_voxels": 11,
+          "full48_category": "static_only",
+          "static_voxels": 11,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 273,
+          "node": "mcl_core:gravel",
+          "raw_param2": 54,
+          "full48_voxels": 8,
+          "full48_category": "static_only",
+          "static_voxels": 8,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 274,
+          "node": "mcl_core:gravel",
+          "raw_param2": 55,
+          "full48_voxels": 22,
+          "full48_category": "static_only",
+          "static_voxels": 22,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 278,
+          "node": "mcl_core:gravel",
+          "raw_param2": 59,
+          "full48_voxels": 11,
+          "full48_category": "static_only",
+          "static_voxels": 11,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 279,
+          "node": "mcl_core:gravel",
+          "raw_param2": 60,
+          "full48_voxels": 11,
+          "full48_category": "static_only",
+          "static_voxels": 11,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 280,
+          "node": "mcl_core:gravel",
+          "raw_param2": 61,
+          "full48_voxels": 18,
+          "full48_category": "static_only",
+          "static_voxels": 18,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 281,
+          "node": "mcl_core:gravel",
+          "raw_param2": 62,
+          "full48_voxels": 21,
+          "full48_category": "static_only",
+          "static_voxels": 21,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 282,
+          "node": "mcl_core:gravel",
+          "raw_param2": 63,
+          "full48_voxels": 17,
+          "full48_category": "static_only",
+          "static_voxels": 17,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 283,
+          "node": "mcl_core:gravel",
+          "raw_param2": 64,
+          "full48_voxels": 12,
+          "full48_category": "static_only",
+          "static_voxels": 12,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 285,
+          "node": "mcl_core:gravel",
+          "raw_param2": 66,
+          "full48_voxels": 11,
+          "full48_category": "static_only",
+          "static_voxels": 11,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 288,
+          "node": "mcl_core:gravel",
+          "raw_param2": 69,
+          "full48_voxels": 11,
+          "full48_category": "static_only",
+          "static_voxels": 11,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 291,
+          "node": "mcl_core:gravel",
+          "raw_param2": 72,
+          "full48_voxels": 13,
+          "full48_category": "static_only",
+          "static_voxels": 13,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 292,
+          "node": "mcl_core:gravel",
+          "raw_param2": 73,
+          "full48_voxels": 11,
+          "full48_category": "static_only",
+          "static_voxels": 11,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 293,
+          "node": "mcl_core:gravel",
+          "raw_param2": 74,
+          "full48_voxels": 14,
+          "full48_category": "static_only",
+          "static_voxels": 14,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 295,
+          "node": "mcl_core:gravel",
+          "raw_param2": 76,
+          "full48_voxels": 21,
+          "full48_category": "static_only",
+          "static_voxels": 21,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 296,
+          "node": "mcl_core:gravel",
+          "raw_param2": 77,
+          "full48_voxels": 10,
+          "full48_category": "static_only",
+          "static_voxels": 10,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 298,
+          "node": "mcl_core:gravel",
+          "raw_param2": 79,
+          "full48_voxels": 16,
+          "full48_category": "static_only",
+          "static_voxels": 16,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 299,
+          "node": "mcl_core:gravel",
+          "raw_param2": 80,
+          "full48_voxels": 11,
+          "full48_category": "static_only",
+          "static_voxels": 11,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 300,
+          "node": "mcl_core:gravel",
+          "raw_param2": 81,
+          "full48_voxels": 6,
+          "full48_category": "static_only",
+          "static_voxels": 6,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 301,
+          "node": "mcl_core:gravel",
+          "raw_param2": 82,
+          "full48_voxels": 13,
+          "full48_category": "static_only",
+          "static_voxels": 13,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 302,
+          "node": "mcl_core:gravel",
+          "raw_param2": 83,
+          "full48_voxels": 27,
+          "full48_category": "static_only",
+          "static_voxels": 27,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 303,
+          "node": "mcl_core:gravel",
+          "raw_param2": 84,
+          "full48_voxels": 20,
+          "full48_category": "static_only",
+          "static_voxels": 20,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 304,
+          "node": "mcl_core:gravel",
+          "raw_param2": 85,
+          "full48_voxels": 19,
+          "full48_category": "static_only",
+          "static_voxels": 19,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 305,
+          "node": "mcl_core:gravel",
+          "raw_param2": 86,
+          "full48_voxels": 18,
+          "full48_category": "static_only",
+          "static_voxels": 18,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 306,
+          "node": "mcl_core:gravel",
+          "raw_param2": 87,
+          "full48_voxels": 17,
+          "full48_category": "static_only",
+          "static_voxels": 17,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 307,
+          "node": "mcl_core:gravel",
+          "raw_param2": 88,
+          "full48_voxels": 15,
+          "full48_category": "static_only",
+          "static_voxels": 15,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 308,
+          "node": "mcl_core:gravel",
+          "raw_param2": 89,
+          "full48_voxels": 18,
+          "full48_category": "static_only",
+          "static_voxels": 18,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 309,
+          "node": "mcl_core:gravel",
+          "raw_param2": 90,
+          "full48_voxels": 18,
+          "full48_category": "static_only",
+          "static_voxels": 18,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 310,
+          "node": "mcl_core:gravel",
+          "raw_param2": 91,
+          "full48_voxels": 13,
+          "full48_category": "static_only",
+          "static_voxels": 13,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 311,
+          "node": "mcl_core:gravel",
+          "raw_param2": 92,
+          "full48_voxels": 13,
+          "full48_category": "static_only",
+          "static_voxels": 13,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 313,
+          "node": "mcl_core:gravel",
+          "raw_param2": 94,
+          "full48_voxels": 12,
+          "full48_category": "static_only",
+          "static_voxels": 12,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 314,
+          "node": "mcl_core:gravel",
+          "raw_param2": 95,
+          "full48_voxels": 11,
+          "full48_category": "static_only",
+          "static_voxels": 11,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 315,
+          "node": "mcl_core:gravel",
+          "raw_param2": 96,
+          "full48_voxels": 20,
+          "full48_category": "static_only",
+          "static_voxels": 20,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 318,
+          "node": "mcl_core:jungleleaves",
+          "raw_param2": 0,
+          "full48_voxels": 20,
+          "full48_category": "dynamic_only",
+          "static_voxels": 0,
+          "dynamic_voxels": 20
+        },
+        {
+          "id": 324,
+          "node": "mcl_core:jungleleaves",
+          "raw_param2": 8,
+          "full48_voxels": 1710,
+          "full48_category": "dynamic_only",
+          "static_voxels": 0,
+          "dynamic_voxels": 1710
+        },
+        {
+          "id": 328,
+          "node": "mcl_core:jungleleaves_orphan",
+          "raw_param2": 3,
+          "full48_voxels": 8,
+          "full48_category": "static_only",
+          "static_voxels": 8,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 329,
+          "node": "mcl_core:jungleleaves_orphan",
+          "raw_param2": 12,
+          "full48_voxels": 228,
+          "full48_category": "shared",
+          "static_voxels": 203,
+          "dynamic_voxels": 25
+        },
+        {
+          "id": 330,
+          "node": "mcl_core:jungleleaves_orphan",
+          "raw_param2": 13,
+          "full48_voxels": 14,
+          "full48_category": "static_only",
+          "static_voxels": 14,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 379,
+          "node": "mcl_core:leaves_orphan",
+          "raw_param2": 1,
+          "full48_voxels": 19,
+          "full48_category": "static_only",
+          "static_voxels": 19,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 380,
+          "node": "mcl_core:leaves_orphan",
+          "raw_param2": 2,
+          "full48_voxels": 2,
+          "full48_category": "static_only",
+          "static_voxels": 2,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 381,
+          "node": "mcl_core:leaves_orphan",
+          "raw_param2": 3,
+          "full48_voxels": 21,
+          "full48_category": "static_only",
+          "static_voxels": 21,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 382,
+          "node": "mcl_core:leaves_orphan",
+          "raw_param2": 4,
+          "full48_voxels": 18,
+          "full48_category": "dynamic_only",
+          "static_voxels": 0,
+          "dynamic_voxels": 18
+        },
+        {
+          "id": 383,
+          "node": "mcl_core:leaves_orphan",
+          "raw_param2": 7,
+          "full48_voxels": 119,
+          "full48_category": "static_only",
+          "static_voxels": 119,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 384,
+          "node": "mcl_core:leaves_orphan",
+          "raw_param2": 11,
+          "full48_voxels": 13,
+          "full48_category": "static_only",
+          "static_voxels": 13,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 399,
+          "node": "mcl_core:reeds",
+          "raw_param2": 7,
+          "full48_voxels": 1,
+          "full48_category": "static_only",
+          "static_voxels": 1,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 401,
+          "node": "mcl_core:reeds",
+          "raw_param2": 9,
+          "full48_voxels": 10,
+          "full48_category": "static_only",
+          "static_voxels": 10,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 426,
+          "node": "mcl_core:sand",
+          "raw_param2": 21,
+          "full48_voxels": 99,
+          "full48_category": "shared",
+          "static_voxels": 69,
+          "dynamic_voxels": 30
+        },
+        {
+          "id": 427,
+          "node": "mcl_core:sand",
+          "raw_param2": 22,
+          "full48_voxels": 89,
+          "full48_category": "shared",
+          "static_voxels": 64,
+          "dynamic_voxels": 25
+        },
+        {
+          "id": 439,
+          "node": "mcl_core:sand",
+          "raw_param2": 34,
+          "full48_voxels": 87,
+          "full48_category": "shared",
+          "static_voxels": 57,
+          "dynamic_voxels": 30
+        },
+        {
+          "id": 442,
+          "node": "mcl_core:sand",
+          "raw_param2": 37,
+          "full48_voxels": 96,
+          "full48_category": "shared",
+          "static_voxels": 66,
+          "dynamic_voxels": 30
+        },
+        {
+          "id": 455,
+          "node": "mcl_core:sand",
+          "raw_param2": 50,
+          "full48_voxels": 82,
+          "full48_category": "shared",
+          "static_voxels": 57,
+          "dynamic_voxels": 25
+        },
+        {
+          "id": 482,
+          "node": "mcl_core:sand",
+          "raw_param2": 77,
+          "full48_voxels": 113,
+          "full48_category": "shared",
+          "static_voxels": 78,
+          "dynamic_voxels": 35
+        },
+        {
+          "id": 488,
+          "node": "mcl_core:sand",
+          "raw_param2": 83,
+          "full48_voxels": 71,
+          "full48_category": "shared",
+          "static_voxels": 51,
+          "dynamic_voxels": 20
+        },
+        {
+          "id": 509,
+          "node": "mcl_core:spruceleaves_orphan",
+          "raw_param2": 7,
+          "full48_voxels": 2,
+          "full48_category": "static_only",
+          "static_voxels": 2,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 510,
+          "node": "mcl_core:spruceleaves_orphan",
+          "raw_param2": 9,
+          "full48_voxels": 12,
+          "full48_category": "static_only",
+          "static_voxels": 12,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 512,
+          "node": "mcl_core:spruceleaves_orphan",
+          "raw_param2": 11,
+          "full48_voxels": 46,
+          "full48_category": "static_only",
+          "static_voxels": 46,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 535,
+          "node": "mcl_core:stripped_dark_oak",
+          "raw_param2": 7,
+          "full48_voxels": 14,
+          "full48_category": "shared",
+          "static_voxels": 9,
+          "dynamic_voxels": 5
+        },
+        {
+          "id": 536,
+          "node": "mcl_core:stripped_dark_oak",
+          "raw_param2": 9,
+          "full48_voxels": 4,
+          "full48_category": "static_only",
+          "static_voxels": 4,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 538,
+          "node": "mcl_core:stripped_dark_oak",
+          "raw_param2": 18,
+          "full48_voxels": 12,
+          "full48_category": "shared",
+          "static_voxels": 7,
+          "dynamic_voxels": 5
+        },
+        {
+          "id": 540,
+          "node": "mcl_core:stripped_oak",
+          "raw_param2": 7,
+          "full48_voxels": 30,
+          "full48_category": "shared",
+          "static_voxels": 15,
+          "dynamic_voxels": 15
+        },
+        {
+          "id": 542,
+          "node": "mcl_core:stripped_oak",
+          "raw_param2": 9,
+          "full48_voxels": 12,
+          "full48_category": "static_only",
+          "static_voxels": 12,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 543,
+          "node": "mcl_core:stripped_oak",
+          "raw_param2": 12,
+          "full48_voxels": 27,
+          "full48_category": "shared",
+          "static_voxels": 12,
+          "dynamic_voxels": 15
+        },
+        {
+          "id": 546,
+          "node": "mcl_core:stripped_oak",
+          "raw_param2": 18,
+          "full48_voxels": 40,
+          "full48_category": "shared",
+          "static_voxels": 25,
+          "dynamic_voxels": 15
+        },
+        {
+          "id": 558,
+          "node": "mcl_core:stripped_spruce_bark",
+          "raw_param2": 3,
+          "full48_voxels": 39,
+          "full48_category": "shared",
+          "static_voxels": 14,
+          "dynamic_voxels": 25
+        },
+        {
+          "id": 579,
+          "node": "mcl_core:vine",
+          "raw_param2": 18,
+          "full48_voxels": 3,
+          "full48_category": "static_only",
+          "static_voxels": 3,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 581,
+          "node": "mcl_core:vine",
+          "raw_param2": 20,
+          "full48_voxels": 6,
+          "full48_category": "static_only",
+          "static_voxels": 6,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 582,
+          "node": "mcl_core:vine",
+          "raw_param2": 21,
+          "full48_voxels": 3,
+          "full48_category": "static_only",
+          "static_voxels": 3,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 627,
+          "node": "mcl_core:vine",
+          "raw_param2": 130,
+          "full48_voxels": 5,
+          "full48_category": "dynamic_only",
+          "static_voxels": 0,
+          "dynamic_voxels": 5
+        },
+        {
+          "id": 628,
+          "node": "mcl_core:vine",
+          "raw_param2": 131,
+          "full48_voxels": 20,
+          "full48_category": "dynamic_only",
+          "static_voxels": 0,
+          "dynamic_voxels": 20
+        },
+        {
+          "id": 629,
+          "node": "mcl_core:vine",
+          "raw_param2": 132,
+          "full48_voxels": 5,
+          "full48_category": "static_only",
+          "static_voxels": 5,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 630,
+          "node": "mcl_core:vine",
+          "raw_param2": 133,
+          "full48_voxels": 6,
+          "full48_category": "static_only",
+          "static_voxels": 6,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 644,
+          "node": "mcl_core:void",
+          "raw_param2": 9,
+          "full48_voxels": 25,
+          "full48_category": "dynamic_only",
+          "static_voxels": 0,
+          "dynamic_voxels": 25
+        },
+        {
+          "id": 645,
+          "node": "mcl_core:void",
+          "raw_param2": 10,
+          "full48_voxels": 35,
+          "full48_category": "dynamic_only",
+          "static_voxels": 0,
+          "dynamic_voxels": 35
+        },
+        {
+          "id": 646,
+          "node": "mcl_core:void",
+          "raw_param2": 11,
+          "full48_voxels": 5,
+          "full48_category": "dynamic_only",
+          "static_voxels": 0,
+          "dynamic_voxels": 5
+        },
+        {
+          "id": 647,
+          "node": "mcl_core:void",
+          "raw_param2": 12,
+          "full48_voxels": 5,
+          "full48_category": "dynamic_only",
+          "static_voxels": 0,
+          "dynamic_voxels": 5
+        },
+        {
+          "id": 648,
+          "node": "mcl_core:void",
+          "raw_param2": 13,
+          "full48_voxels": 25,
+          "full48_category": "dynamic_only",
+          "static_voxels": 0,
+          "dynamic_voxels": 25
+        },
+        {
+          "id": 680,
+          "node": "mcl_deepslate:deepslate",
+          "raw_param2": 2,
+          "full48_voxels": 581,
+          "full48_category": "static_only",
+          "static_voxels": 581,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 681,
+          "node": "mcl_deepslate:deepslate",
+          "raw_param2": 3,
+          "full48_voxels": 355,
+          "full48_category": "static_only",
+          "static_voxels": 355,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 682,
+          "node": "mcl_deepslate:deepslate",
+          "raw_param2": 6,
+          "full48_voxels": 129,
+          "full48_category": "static_only",
+          "static_voxels": 129,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 683,
+          "node": "mcl_deepslate:deepslate",
+          "raw_param2": 7,
+          "full48_voxels": 146,
+          "full48_category": "static_only",
+          "static_voxels": 146,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 684,
+          "node": "mcl_deepslate:deepslate",
+          "raw_param2": 8,
+          "full48_voxels": 84,
+          "full48_category": "static_only",
+          "static_voxels": 84,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 686,
+          "node": "mcl_deepslate:deepslate",
+          "raw_param2": 12,
+          "full48_voxels": 302,
+          "full48_category": "static_only",
+          "static_voxels": 302,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 688,
+          "node": "mcl_deepslate:deepslate",
+          "raw_param2": 17,
+          "full48_voxels": 55,
+          "full48_category": "static_only",
+          "static_voxels": 55,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 689,
+          "node": "mcl_deepslate:deepslate",
+          "raw_param2": 18,
+          "full48_voxels": 215,
+          "full48_category": "static_only",
+          "static_voxels": 215,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 718,
+          "node": "mcl_doors:dark_oak_door_b_1",
+          "raw_param2": 1,
+          "full48_voxels": 3,
+          "full48_category": "static_only",
+          "static_voxels": 3,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 719,
+          "node": "mcl_doors:dark_oak_door_b_1",
+          "raw_param2": 2,
+          "full48_voxels": 13,
+          "full48_category": "shared",
+          "static_voxels": 8,
+          "dynamic_voxels": 5
+        },
+        {
+          "id": 720,
+          "node": "mcl_doors:dark_oak_door_b_1",
+          "raw_param2": 3,
+          "full48_voxels": 8,
+          "full48_category": "static_only",
+          "static_voxels": 8,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 722,
+          "node": "mcl_doors:dark_oak_door_t_1",
+          "raw_param2": 1,
+          "full48_voxels": 3,
+          "full48_category": "static_only",
+          "static_voxels": 3,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 723,
+          "node": "mcl_doors:dark_oak_door_t_1",
+          "raw_param2": 2,
+          "full48_voxels": 13,
+          "full48_category": "shared",
+          "static_voxels": 8,
+          "dynamic_voxels": 5
+        },
+        {
+          "id": 724,
+          "node": "mcl_doors:dark_oak_door_t_1",
+          "raw_param2": 3,
+          "full48_voxels": 8,
+          "full48_category": "static_only",
+          "static_voxels": 8,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 725,
+          "node": "mcl_doors:dark_oak_trapdoor_open",
+          "raw_param2": 0,
+          "full48_voxels": 108,
+          "full48_category": "shared",
+          "static_voxels": 93,
+          "dynamic_voxels": 15
+        },
+        {
+          "id": 727,
+          "node": "mcl_doors:dark_oak_trapdoor_open",
+          "raw_param2": 2,
+          "full48_voxels": 105,
+          "full48_category": "shared",
+          "static_voxels": 90,
+          "dynamic_voxels": 15
+        },
+        {
+          "id": 730,
+          "node": "mcl_doors:dark_oak_trapdoor_open",
+          "raw_param2": 21,
+          "full48_voxels": 33,
+          "full48_category": "shared",
+          "static_voxels": 23,
+          "dynamic_voxels": 10
+        },
+        {
+          "id": 732,
+          "node": "mcl_doors:dark_oak_trapdoor_open",
+          "raw_param2": 23,
+          "full48_voxels": 23,
+          "full48_category": "static_only",
+          "static_voxels": 23,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 736,
+          "node": "mcl_doors:spruce_door_b_2",
+          "raw_param2": 3,
+          "full48_voxels": 51,
+          "full48_category": "shared",
+          "static_voxels": 36,
+          "dynamic_voxels": 15
+        },
+        {
+          "id": 746,
+          "node": "mcl_doors:spruce_trapdoor_open",
+          "raw_param2": 1,
+          "full48_voxels": 83,
+          "full48_category": "static_only",
+          "static_voxels": 83,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 748,
+          "node": "mcl_doors:spruce_trapdoor_open",
+          "raw_param2": 3,
+          "full48_voxels": 42,
+          "full48_category": "static_only",
+          "static_voxels": 42,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 757,
+          "node": "mcl_doors:wooden_door_b_1",
+          "raw_param2": 1,
+          "full48_voxels": 3,
+          "full48_category": "dynamic_only",
+          "static_voxels": 0,
+          "dynamic_voxels": 3
+        },
+        {
+          "id": 758,
+          "node": "mcl_doors:wooden_door_t_1",
+          "raw_param2": 1,
+          "full48_voxels": 3,
+          "full48_category": "dynamic_only",
+          "static_voxels": 0,
+          "dynamic_voxels": 3
+        },
+        {
+          "id": 777,
+          "node": "mcl_fire:eternal_fire",
+          "raw_param2": 0,
+          "full48_voxels": 18,
+          "full48_category": "dynamic_only",
+          "static_voxels": 0,
+          "dynamic_voxels": 18
+        },
+        {
+          "id": 778,
+          "node": "mcl_fire:eternal_fire",
+          "raw_param2": 5,
+          "full48_voxels": 1,
+          "full48_category": "dynamic_only",
+          "static_voxels": 0,
+          "dynamic_voxels": 1
+        },
+        {
+          "id": 779,
+          "node": "mcl_fire:eternal_fire",
+          "raw_param2": 10,
+          "full48_voxels": 1,
+          "full48_category": "dynamic_only",
+          "static_voxels": 0,
+          "dynamic_voxels": 1
+        },
+        {
+          "id": 863,
+          "node": "mcl_fire:fire",
+          "raw_param2": 84,
+          "full48_voxels": 2,
+          "full48_category": "dynamic_only",
+          "static_voxels": 0,
+          "dynamic_voxels": 2
+        },
+        {
+          "id": 865,
+          "node": "mcl_fire:fire",
+          "raw_param2": 86,
+          "full48_voxels": 1,
+          "full48_category": "dynamic_only",
+          "static_voxels": 0,
+          "dynamic_voxels": 1
+        },
+        {
+          "id": 877,
+          "node": "mcl_flowerpots:flower_pot_cactus",
+          "raw_param2": 0,
+          "full48_voxels": 145,
+          "full48_category": "shared",
+          "static_voxels": 100,
+          "dynamic_voxels": 45
+        },
+        {
+          "id": 887,
+          "node": "mcl_flowers:clover",
+          "raw_param2": 3,
+          "full48_voxels": 2,
+          "full48_category": "static_only",
+          "static_voxels": 2,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 954,
+          "node": "mcl_flowers:fourleaf_clover",
+          "raw_param2": 7,
+          "full48_voxels": 3,
+          "full48_category": "static_only",
+          "static_voxels": 3,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 998,
+          "node": "mcl_flowers:tallgrass",
+          "raw_param2": 29,
+          "full48_voxels": 2,
+          "full48_category": "static_only",
+          "static_voxels": 2,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 1012,
+          "node": "mcl_heads:wither_skeleton",
+          "raw_param2": 3,
+          "full48_voxels": 10,
+          "full48_category": "static_only",
+          "static_voxels": 10,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 1013,
+          "node": "mcl_heads:wither_skeleton",
+          "raw_param2": 62,
+          "full48_voxels": 3,
+          "full48_category": "static_only",
+          "static_voxels": 3,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 1015,
+          "node": "mcl_heads:wither_skeleton",
+          "raw_param2": 122,
+          "full48_voxels": 13,
+          "full48_category": "shared",
+          "static_voxels": 8,
+          "dynamic_voxels": 5
+        },
+        {
+          "id": 1016,
+          "node": "mcl_heads:wither_skeleton",
+          "raw_param2": 123,
+          "full48_voxels": 5,
+          "full48_category": "static_only",
+          "static_voxels": 5,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 1017,
+          "node": "mcl_heads:wither_skeleton",
+          "raw_param2": 182,
+          "full48_voxels": 8,
+          "full48_category": "static_only",
+          "static_voxels": 8,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 1018,
+          "node": "mcl_heads:wither_skeleton",
+          "raw_param2": 183,
+          "full48_voxels": 7,
+          "full48_category": "static_only",
+          "static_voxels": 7,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 1019,
+          "node": "mcl_itemframes:frame",
+          "raw_param2": 2,
+          "full48_voxels": 12,
+          "full48_category": "shared",
+          "static_voxels": 7,
+          "dynamic_voxels": 5
+        },
+        {
+          "id": 1021,
+          "node": "mcl_itemframes:frame",
+          "raw_param2": 4,
+          "full48_voxels": 3,
+          "full48_category": "static_only",
+          "static_voxels": 3,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 1022,
+          "node": "mcl_itemframes:frame",
+          "raw_param2": 5,
+          "full48_voxels": 7,
+          "full48_category": "static_only",
+          "static_voxels": 7,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 1023,
+          "node": "mcl_jukebox:jukebox",
+          "raw_param2": 0,
+          "full48_voxels": 149,
+          "full48_category": "shared",
+          "static_voxels": 104,
+          "dynamic_voxels": 45
+        },
+        {
+          "id": 1031,
+          "node": "mcl_loom:loom",
+          "raw_param2": 3,
+          "full48_voxels": 3,
+          "full48_category": "dynamic_only",
+          "static_voxels": 0,
+          "dynamic_voxels": 3
+        },
+        {
+          "id": 1111,
+          "node": "mcl_ocean:brain_coral",
+          "raw_param2": 0,
+          "full48_voxels": 14,
+          "full48_category": "shared",
+          "static_voxels": 9,
+          "dynamic_voxels": 5
+        },
+        {
+          "id": 1122,
+          "node": "mcl_ocean:bubble_coral_fan",
+          "raw_param2": 0,
+          "full48_voxels": 1,
+          "full48_category": "static_only",
+          "static_voxels": 1,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 1125,
+          "node": "mcl_ocean:dead_brain_coral",
+          "raw_param2": 1,
+          "full48_voxels": 115,
+          "full48_category": "dynamic_only",
+          "static_voxels": 0,
+          "dynamic_voxels": 115
+        },
+        {
+          "id": 1126,
+          "node": "mcl_ocean:dead_brain_coral",
+          "raw_param2": 9,
+          "full48_voxels": 72,
+          "full48_category": "dynamic_only",
+          "static_voxels": 0,
+          "dynamic_voxels": 72
+        },
+        {
+          "id": 1128,
+          "node": "mcl_ocean:dead_bubble_coral",
+          "raw_param2": 1,
+          "full48_voxels": 200,
+          "full48_category": "dynamic_only",
+          "static_voxels": 0,
+          "dynamic_voxels": 200
+        },
+        {
+          "id": 1129,
+          "node": "mcl_ocean:dead_bubble_coral",
+          "raw_param2": 9,
+          "full48_voxels": 89,
+          "full48_category": "dynamic_only",
+          "static_voxels": 0,
+          "dynamic_voxels": 89
+        },
+        {
+          "id": 1130,
+          "node": "mcl_ocean:dead_bubble_coral_block",
+          "raw_param2": 0,
+          "full48_voxels": 1037,
+          "full48_category": "dynamic_only",
+          "static_voxels": 0,
+          "dynamic_voxels": 1037
+        },
+        {
+          "id": 1131,
+          "node": "mcl_ocean:dead_fire_coral",
+          "raw_param2": 0,
+          "full48_voxels": 5,
+          "full48_category": "dynamic_only",
+          "static_voxels": 0,
+          "dynamic_voxels": 5
+        },
+        {
+          "id": 1132,
+          "node": "mcl_ocean:dead_fire_coral",
+          "raw_param2": 1,
+          "full48_voxels": 35,
+          "full48_category": "dynamic_only",
+          "static_voxels": 0,
+          "dynamic_voxels": 35
+        },
+        {
+          "id": 1133,
+          "node": "mcl_ocean:dead_fire_coral",
+          "raw_param2": 9,
+          "full48_voxels": 290,
+          "full48_category": "dynamic_only",
+          "static_voxels": 0,
+          "dynamic_voxels": 290
+        },
+        {
+          "id": 1134,
+          "node": "mcl_ocean:dead_fire_coral_block",
+          "raw_param2": 0,
+          "full48_voxels": 1132,
+          "full48_category": "dynamic_only",
+          "static_voxels": 0,
+          "dynamic_voxels": 1132
+        },
+        {
+          "id": 1135,
+          "node": "mcl_ocean:dead_horn_coral",
+          "raw_param2": 0,
+          "full48_voxels": 4,
+          "full48_category": "dynamic_only",
+          "static_voxels": 0,
+          "dynamic_voxels": 4
+        },
+        {
+          "id": 1136,
+          "node": "mcl_ocean:dead_horn_coral",
+          "raw_param2": 1,
+          "full48_voxels": 279,
+          "full48_category": "dynamic_only",
+          "static_voxels": 0,
+          "dynamic_voxels": 279
+        },
+        {
+          "id": 1137,
+          "node": "mcl_ocean:dead_horn_coral",
+          "raw_param2": 9,
+          "full48_voxels": 133,
+          "full48_category": "dynamic_only",
+          "static_voxels": 0,
+          "dynamic_voxels": 133
+        },
+        {
+          "id": 1138,
+          "node": "mcl_ocean:dead_horn_coral_block",
+          "raw_param2": 0,
+          "full48_voxels": 1006,
+          "full48_category": "dynamic_only",
+          "static_voxels": 0,
+          "dynamic_voxels": 1006
+        },
+        {
+          "id": 1139,
+          "node": "mcl_ocean:dead_tube_coral",
+          "raw_param2": 1,
+          "full48_voxels": 34,
+          "full48_category": "dynamic_only",
+          "static_voxels": 0,
+          "dynamic_voxels": 34
+        },
+        {
+          "id": 1140,
+          "node": "mcl_ocean:dead_tube_coral",
+          "raw_param2": 9,
+          "full48_voxels": 174,
+          "full48_category": "dynamic_only",
+          "static_voxels": 0,
+          "dynamic_voxels": 174
+        },
+        {
+          "id": 1141,
+          "node": "mcl_ocean:dead_tube_coral_block",
+          "raw_param2": 0,
+          "full48_voxels": 1067,
+          "full48_category": "dynamic_only",
+          "static_voxels": 0,
+          "dynamic_voxels": 1067
+        },
+        {
+          "id": 1142,
+          "node": "mcl_ocean:fire_coral",
+          "raw_param2": 0,
+          "full48_voxels": 14,
+          "full48_category": "shared",
+          "static_voxels": 9,
+          "dynamic_voxels": 5
+        },
+        {
+          "id": 1148,
+          "node": "mcl_ocean:horn_coral",
+          "raw_param2": 0,
+          "full48_voxels": 12,
+          "full48_category": "shared",
+          "static_voxels": 6,
+          "dynamic_voxels": 6
+        },
+        {
+          "id": 1154,
+          "node": "mcl_ocean:kelp_dirt",
+          "raw_param2": 16,
+          "full48_voxels": 1,
+          "full48_category": "static_only",
+          "static_voxels": 1,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 1155,
+          "node": "mcl_ocean:kelp_dirt",
+          "raw_param2": 27,
+          "full48_voxels": 1,
+          "full48_category": "static_only",
+          "static_voxels": 1,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 1156,
+          "node": "mcl_ocean:kelp_dirt",
+          "raw_param2": 28,
+          "full48_voxels": 5,
+          "full48_category": "dynamic_only",
+          "static_voxels": 0,
+          "dynamic_voxels": 5
+        },
+        {
+          "id": 1157,
+          "node": "mcl_ocean:kelp_dirt",
+          "raw_param2": 32,
+          "full48_voxels": 5,
+          "full48_category": "dynamic_only",
+          "static_voxels": 0,
+          "dynamic_voxels": 5
+        },
+        {
+          "id": 1158,
+          "node": "mcl_ocean:kelp_dirt",
+          "raw_param2": 36,
+          "full48_voxels": 1,
+          "full48_category": "static_only",
+          "static_voxels": 1,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 1159,
+          "node": "mcl_ocean:kelp_dirt",
+          "raw_param2": 41,
+          "full48_voxels": 5,
+          "full48_category": "dynamic_only",
+          "static_voxels": 0,
+          "dynamic_voxels": 5
+        },
+        {
+          "id": 1160,
+          "node": "mcl_ocean:kelp_dirt",
+          "raw_param2": 42,
+          "full48_voxels": 1,
+          "full48_category": "static_only",
+          "static_voxels": 1,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 1162,
+          "node": "mcl_ocean:kelp_dirt",
+          "raw_param2": 64,
+          "full48_voxels": 1,
+          "full48_category": "static_only",
+          "static_voxels": 1,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 1163,
+          "node": "mcl_ocean:kelp_dirt",
+          "raw_param2": 69,
+          "full48_voxels": 5,
+          "full48_category": "dynamic_only",
+          "static_voxels": 0,
+          "dynamic_voxels": 5
+        },
+        {
+          "id": 1164,
+          "node": "mcl_ocean:kelp_dirt",
+          "raw_param2": 78,
+          "full48_voxels": 1,
+          "full48_category": "static_only",
+          "static_voxels": 1,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 1165,
+          "node": "mcl_ocean:kelp_dirt",
+          "raw_param2": 83,
+          "full48_voxels": 1,
+          "full48_category": "static_only",
+          "static_voxels": 1,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 1166,
+          "node": "mcl_ocean:kelp_dirt",
+          "raw_param2": 86,
+          "full48_voxels": 6,
+          "full48_category": "shared",
+          "static_voxels": 1,
+          "dynamic_voxels": 5
+        },
+        {
+          "id": 1167,
+          "node": "mcl_ocean:kelp_dirt",
+          "raw_param2": 90,
+          "full48_voxels": 6,
+          "full48_category": "shared",
+          "static_voxels": 1,
+          "dynamic_voxels": 5
+        },
+        {
+          "id": 1249,
+          "node": "mcl_ocean:kelp_gravel",
+          "raw_param2": 112,
+          "full48_voxels": 13,
+          "full48_category": "dynamic_only",
+          "static_voxels": 0,
+          "dynamic_voxels": 13
+        },
+        {
+          "id": 1331,
+          "node": "mcl_ocean:kelp_sand",
+          "raw_param2": 112,
+          "full48_voxels": 75,
+          "full48_category": "dynamic_only",
+          "static_voxels": 0,
+          "dynamic_voxels": 75
+        },
+        {
+          "id": 1340,
+          "node": "mcl_ocean:sea_pickle_3_dead_brain_coral_block",
+          "raw_param2": 0,
+          "full48_voxels": 62,
+          "full48_category": "shared",
+          "static_voxels": 37,
+          "dynamic_voxels": 25
+        },
+        {
+          "id": 1341,
+          "node": "mcl_ocean:sea_pickle_4_dead_brain_coral_block",
+          "raw_param2": 0,
+          "full48_voxels": 4,
+          "full48_category": "static_only",
+          "static_voxels": 4,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 1346,
+          "node": "mcl_ocean:tube_coral",
+          "raw_param2": 0,
+          "full48_voxels": 24,
+          "full48_category": "shared",
+          "static_voxels": 4,
+          "dynamic_voxels": 20
+        },
+        {
+          "id": 1350,
+          "node": "mcl_ocean:tube_coral_fan",
+          "raw_param2": 0,
+          "full48_voxels": 1,
+          "full48_category": "static_only",
+          "static_voxels": 1,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 1353,
+          "node": "mcl_portals:end_portal_frame",
+          "raw_param2": 0,
+          "full48_voxels": 30,
+          "full48_category": "shared",
+          "static_voxels": 20,
+          "dynamic_voxels": 10
+        },
+        {
+          "id": 1354,
+          "node": "mcl_portals:end_portal_frame",
+          "raw_param2": 1,
+          "full48_voxels": 29,
+          "full48_category": "shared",
+          "static_voxels": 19,
+          "dynamic_voxels": 10
+        },
+        {
+          "id": 1355,
+          "node": "mcl_portals:end_portal_frame",
+          "raw_param2": 2,
+          "full48_voxels": 31,
+          "full48_category": "shared",
+          "static_voxels": 21,
+          "dynamic_voxels": 10
+        },
+        {
+          "id": 1356,
+          "node": "mcl_portals:end_portal_frame",
+          "raw_param2": 3,
+          "full48_voxels": 22,
+          "full48_category": "static_only",
+          "static_voxels": 22,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 1357,
+          "node": "mcl_portals:end_portal_frame_eye",
+          "raw_param2": 0,
+          "full48_voxels": 7,
+          "full48_category": "shared",
+          "static_voxels": 2,
+          "dynamic_voxels": 5
+        },
+        {
+          "id": 1358,
+          "node": "mcl_portals:end_portal_frame_eye",
+          "raw_param2": 1,
+          "full48_voxels": 7,
+          "full48_category": "shared",
+          "static_voxels": 2,
+          "dynamic_voxels": 5
+        },
+        {
+          "id": 1359,
+          "node": "mcl_portals:end_portal_frame_eye",
+          "raw_param2": 2,
+          "full48_voxels": 6,
+          "full48_category": "shared",
+          "static_voxels": 1,
+          "dynamic_voxels": 5
+        },
+        {
+          "id": 1360,
+          "node": "mcl_portals:end_portal_frame_eye",
+          "raw_param2": 3,
+          "full48_voxels": 2,
+          "full48_category": "static_only",
+          "static_voxels": 2,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 1375,
+          "node": "mcl_stairs:slab_wood",
+          "raw_param2": 0,
+          "full48_voxels": 92,
+          "full48_category": "dynamic_only",
+          "static_voxels": 0,
+          "dynamic_voxels": 92
+        },
+        {
+          "id": 1376,
+          "node": "mcl_stairs:slab_wood_top",
+          "raw_param2": 0,
+          "full48_voxels": 10,
+          "full48_category": "dynamic_only",
+          "static_voxels": 0,
+          "dynamic_voxels": 10
+        },
+        {
+          "id": 1397,
+          "node": "mcl_stairs:stair_cobble_outer",
+          "raw_param2": 20,
+          "full48_voxels": 34,
+          "full48_category": "static_only",
+          "static_voxels": 34,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 1477,
+          "node": "mcl_stairs:stair_stonebrick_outer",
+          "raw_param2": 0,
+          "full48_voxels": 3,
+          "full48_category": "static_only",
+          "static_voxels": 3,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 1478,
+          "node": "mcl_stairs:stair_stonebrick_outer",
+          "raw_param2": 1,
+          "full48_voxels": 9,
+          "full48_category": "shared",
+          "static_voxels": 4,
+          "dynamic_voxels": 5
+        },
+        {
+          "id": 1479,
+          "node": "mcl_stairs:stair_stonebrick_outer",
+          "raw_param2": 2,
+          "full48_voxels": 7,
+          "full48_category": "shared",
+          "static_voxels": 2,
+          "dynamic_voxels": 5
+        },
+        {
+          "id": 1480,
+          "node": "mcl_stairs:stair_stonebrick_outer",
+          "raw_param2": 3,
+          "full48_voxels": 2,
+          "full48_category": "static_only",
+          "static_voxels": 2,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 1489,
+          "node": "mcl_stairs:stair_stonebrickcracked_outer",
+          "raw_param2": 1,
+          "full48_voxels": 1,
+          "full48_category": "static_only",
+          "static_voxels": 1,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 1490,
+          "node": "mcl_stairs:stair_stonebrickcracked_outer",
+          "raw_param2": 2,
+          "full48_voxels": 3,
+          "full48_category": "static_only",
+          "static_voxels": 3,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 1491,
+          "node": "mcl_stairs:stair_stonebrickcracked_outer",
+          "raw_param2": 3,
+          "full48_voxels": 2,
+          "full48_category": "static_only",
+          "static_voxels": 2,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 1500,
+          "node": "mcl_stairs:stair_stonebrickmossy_outer",
+          "raw_param2": 0,
+          "full48_voxels": 2,
+          "full48_category": "static_only",
+          "static_voxels": 2,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 1501,
+          "node": "mcl_stairs:stair_stonebrickmossy_outer",
+          "raw_param2": 3,
+          "full48_voxels": 1,
+          "full48_category": "static_only",
+          "static_voxels": 1,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 1502,
+          "node": "mcl_stairs:stair_wood",
+          "raw_param2": 0,
+          "full48_voxels": 185,
+          "full48_category": "shared",
+          "static_voxels": 155,
+          "dynamic_voxels": 30
+        },
+        {
+          "id": 1505,
+          "node": "mcl_stairs:stair_wood",
+          "raw_param2": 3,
+          "full48_voxels": 264,
+          "full48_category": "shared",
+          "static_voxels": 151,
+          "dynamic_voxels": 113
+        },
+        {
+          "id": 1506,
+          "node": "mcl_stairs:stair_wood",
+          "raw_param2": 20,
+          "full48_voxels": 448,
+          "full48_category": "shared",
+          "static_voxels": 313,
+          "dynamic_voxels": 135
+        },
+        {
+          "id": 1507,
+          "node": "mcl_stairs:stair_wood",
+          "raw_param2": 21,
+          "full48_voxels": 440,
+          "full48_category": "shared",
+          "static_voxels": 255,
+          "dynamic_voxels": 185
+        },
+        {
+          "id": 1562,
+          "node": "vl_hollow_logs:mangrove_tree_hollow",
+          "raw_param2": 6,
+          "full48_voxels": 36,
+          "full48_category": "static_only",
+          "static_voxels": 36,
+          "dynamic_voxels": 0
+        },
+        {
+          "id": 1570,
+          "node": "xpanes:bar_flat",
+          "raw_param2": 2,
+          "full48_voxels": 217,
+          "full48_category": "shared",
+          "static_voxels": 167,
+          "dynamic_voxels": 50
+        },
+        {
+          "id": 1571,
+          "node": "xpanes:bar_flat",
+          "raw_param2": 3,
+          "full48_voxels": 196,
+          "full48_category": "shared",
+          "static_voxels": 166,
+          "dynamic_voxels": 30
+        },
+        {
+          "id": 1574,
+          "node": "xpanes:pane_black_flat",
+          "raw_param2": 2,
+          "full48_voxels": 1147,
+          "full48_category": "shared",
+          "static_voxels": 797,
+          "dynamic_voxels": 350
+        },
+        {
+          "id": 1578,
+          "node": "xpanes:pane_natural_flat",
+          "raw_param2": 2,
+          "full48_voxels": 154,
+          "full48_category": "shared",
+          "static_voxels": 129,
+          "dynamic_voxels": 25
+        }
+      ],
+      "missed_by_category": {
+        "static_only": 136,
+        "dynamic_only": 47,
+        "shared": 62
+      },
+      "selected_id6_voxels": 0
+    },
+    "2": {
+      "selected_chunks": 600000,
+      "unique": 1578,
+      "missing": 2,
+      "recovered_outer_only": 245,
+      "static_unique": 1407,
+      "dynamic_unique": 1388,
+      "present_but_missed": [],
+      "missed_by_category": {
+        "static_only": 0,
+        "dynamic_only": 0,
+        "shared": 0
+      },
+      "selected_id6_voxels": 3
+    },
+    "3": {
+      "selected_chunks": 800000,
+      "unique": 1578,
+      "missing": 2,
+      "recovered_outer_only": 245,
+      "static_unique": 1407,
+      "dynamic_unique": 1390,
+      "present_but_missed": [],
+      "missed_by_category": {
+        "static_only": 0,
+        "dynamic_only": 0,
+        "shared": 0
+      },
+      "selected_id6_voxels": 3
+    },
+    "4": {
+      "selected_chunks": 1000000,
+      "unique": 1578,
+      "missing": 2,
+      "recovered_outer_only": 245,
+      "static_unique": 1407,
+      "dynamic_unique": 1393,
+      "present_but_missed": [],
+      "missed_by_category": {
+        "static_only": 0,
+        "dynamic_only": 0,
+        "shared": 0
+      },
+      "selected_id6_voxels": 3
+    }
+  },
+  "policy": "Static rarity top K; Dynamic motion top K-1 plus rarest remaining; always include center"
+}

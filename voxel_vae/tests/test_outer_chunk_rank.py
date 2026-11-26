@@ -3,7 +3,7 @@ from unittest import TestCase
 
 import numpy as np
 
-from voxel_vae.outer_chunk_rank import blocks, motion_scores, select_frame
+from voxel_vae.outer_chunk_rank import blocks, mixed_outer_indices, motion_scores, select_frame
 
 
 class OuterChunkRankTests(TestCase):
@@ -57,3 +57,24 @@ class OuterChunkRankTests(TestCase):
             selected, _ = select_frame(frames[t], frequency, motion=motion)
             self.assertEqual(list(selected)[:4], expected)
             self.assertNotIn(13, selected)
+
+    def test_mixed_selection_reserves_rare_block_even_with_low_motion(self):
+        chunks = np.zeros((27, 16 ** 3), np.uint16)
+        chunks[20, 0] = 1
+        chunks[13, 0] = 2
+        frequency = np.array([10**8, 3, 1], np.int64)
+        motion = np.zeros(27, np.int64)
+        motion[[0, 1, 2, 3, 13, 20]] = [3, 3, 2, 2, 4, 1]
+        selected = mixed_outer_indices(chunks, frequency, motion)
+        self.assertEqual(selected, {2: [0, 20], 3: [0, 1, 20], 4: [0, 1, 2, 20]})
+        rare = mixed_outer_indices(chunks, frequency)
+        self.assertEqual(rare, {2: [20, 0], 3: [20, 0, 1], 4: [20, 0, 1, 2]})
+
+    def test_mixed_selection_resolves_slot_collisions_by_remaining_rarity(self):
+        chunks = np.zeros((27, 16 ** 3), np.uint16)
+        chunks[9, 0], chunks[8, 0], chunks[7, 0] = 1, 2, 3
+        frequency = np.array([10**8, 1, 2, 3], np.int64)
+        motion = np.zeros(27, np.int64)
+        motion[[9, 8, 0]] = [3, 2, 1]
+        selected = mixed_outer_indices(chunks, frequency, motion)
+        self.assertEqual(selected, {2: [9, 8], 3: [9, 8, 7], 4: [9, 8, 0, 7]})
