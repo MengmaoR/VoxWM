@@ -10,6 +10,7 @@ local cave_events, v3_cave_events = {}, {}
 local cave_hints_enabled = mt.settings:get_bool("vox2pix_cave_hints", false)
 local v3_scene = mt.settings:get_bool("vox2pix_v3", false)
 local replay_restore = v3_scene and mt.settings:get_bool("vox2pix_replay_restore", false)
+local static_recapture = mt.settings:get_bool("voxwm_static_recapture", false)
 local replay_held_foot = nil
 local replay_held_look = nil
 assert(voxwm_clock and voxwm_region and mt.get_node_boxes, "Build the VoxWM fixed24 engine")
@@ -270,6 +271,23 @@ local function surface_biome(pos)
     return data and mt.get_biome_name(data.biome) or "unresolved"
 end
 
+local function static_surface(r)
+    -- The VAE Static locator measures the sampled column, including native liquids.
+    local p = xyz(r.center_xyz)
+    for y = 191, -96, -1 do
+        p.y = y
+        local node = mt.get_node(p)
+        local def = mt.registered_nodes[node.name]
+        if def and node.name ~= "air" and node.name ~= "ignore"
+            and mt.get_item_group(node.name, "tree") == 0 and mt.get_item_group(node.name, "leaves") == 0
+            and (def.walkable or (def.liquidtype and def.liquidtype ~= "none")) then
+            reply(r, {status="located", surface_y=y, biome=surface_biome(p)})
+            return
+        end
+    end
+    reply(r, {status="no_surface"})
+end
+
 local function check_anchor(r)
     local foot = xyz(r.foot_xyz)
     local biome = surface_biome({x=foot.x, y=r.surface_y, z=foot.z})
@@ -375,8 +393,9 @@ local function snapshot(r, player)
     local ok, payload = pcall(voxwm_region, low)
     if not ok then reply(r, {status="snapshot_failed", reason=tostring(payload)}); return end
     local underwater = v3_scene and r.anchor_kind == "underwater_floor"
-    local support = underwater and resting_support(player)
-    if (underwater and not support) or (not underwater and not anchor_valid(foot, r.anchor_kind)) then
+    local support = underwater and not static_recapture and resting_support(player)
+    if not static_recapture and
+        ((underwater and not support) or (not underwater and not anchor_valid(foot, r.anchor_kind))) then
         reply(r, {status="snapshot_failed", reason="Native anchor changed"}); return
     end
     write("vox2pix_region.bin", payload)
@@ -461,7 +480,7 @@ mt.registered_voxwm_poststeps = {function()
     -- Native scene searches advance physics without drawing RGB. Rendering is
     -- restored before the usual camera settle ticks and every saved view.
     if r.kind ~= "snapshot" and r.kind ~= "emerge_capture" and r.kind ~= "restore_replay_nodes" then
-        mt.settings:set_bool("voxwm_skip_rgb", r.kind ~= "pose")
+        mt.settings:set_bool("voxwm_skip_rgb", static_recapture or r.kind ~= "pose")
     end
     if r.kind == "search" then
         reply(r, find_site(r))
@@ -473,6 +492,8 @@ mt.registered_voxwm_poststeps = {function()
         local names = {}
         for i, cell in ipairs(r.positions) do names[i] = surface_biome(xyz(cell)) end
         reply(r, {status="surface_biomes", names=names})
+    elseif static_recapture and r.kind == "static_surface" then
+        static_surface(r)
     elseif r.kind == "anchor" then
         check_anchor(r)
     elseif replay_restore and r.kind == "restore_replay_nodes" then
