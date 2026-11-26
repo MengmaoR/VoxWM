@@ -1,8 +1,9 @@
 """Count geometrically overlapping 48³ regions in the canonical VAE category packs."""
 import argparse
-from collections import defaultdict
+from collections import Counter, defaultdict
 from concurrent.futures import ProcessPoolExecutor
 from contextlib import closing
+import csv
 import json
 from pathlib import Path
 import sqlite3
@@ -64,16 +65,38 @@ def read_scenes(path):
     return category, scenes
 
 
+def seed_counts(static, dynamic, csv_path=None):
+    static_counts = Counter(scene[0] for scene in static)
+    dynamic_counts = Counter(scene[0] for scene in dynamic)
+    pooled = static_counts + dynamic_counts
+    if csv_path is not None:
+        csv_path.parent.mkdir(parents=True, exist_ok=True)
+        with csv_path.open('w', newline='') as stream:
+            writer = csv.writer(stream, lineterminator='\n')
+            writer.writerow(['world_seed', 'static_scenes', 'dynamic_chains', 'total_scenes', 'saved_frames'])
+            for seed in sorted(pooled):
+                n_static, n_dynamic = static_counts[seed], dynamic_counts[seed]
+                writer.writerow([seed, n_static, n_dynamic, pooled[seed], n_static + 5*n_dynamic])
+    counts = {'static': static_counts, 'dynamic': dynamic_counts, 'pooled': pooled}
+    return dict(
+        seeds_with_both=len(static_counts.keys() & dynamic_counts.keys()),
+        histogram={key: dict(sorted(Counter(c.values()).items())) for key, c in counts.items()},
+        mean={key: c.total()/len(c) for key, c in counts.items()},
+    )
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('archives', nargs=2, type=Path)
     parser.add_argument('--output', required=True, type=Path)
+    parser.add_argument('--seed-counts', type=Path, help='Optional per-world-seed CSV')
     args = parser.parse_args()
     with ProcessPoolExecutor(max_workers=2) as pool:
         packs = dict(pool.map(read_scenes, args.archives))
     static, dynamic = packs['Static'], packs['Dynamic']
     result = dict(center='region_origin + (24,24,24); integer axes east/north/up',
                   region_edge_voxels=48, dynamic_frames_per_scene=5,
+                  seed_counts=seed_counts(static, dynamic, args.seed_counts),
                   static=summarize(static), dynamic=summarize(dynamic),
                   static_dynamic=summarize(static + dynamic, cross=True))
     d = result['dynamic']

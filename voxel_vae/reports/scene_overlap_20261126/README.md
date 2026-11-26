@@ -45,6 +45,34 @@ Dynamic 的 20,000 条链有 16,460 个 seed。每链 5 帧在相同位置记录
 | Static × Static | vae_100k_clip1 | 2091152183 | (6648, -4616, 3) | (6648, -4600, -11) | (0, 16, 14) | 52,224 | 0 |
 | D3 × Static | vae_100k_clip2 | 957967010 | (-3624, -1144, 8) | (-3608, -1128, -1) | (16, 16, 9) | 39,936 | 0 |
 
+## 每个 seed 的场景数量
+
+每个 Static 快照计一个场景，每条五帧 Dynamic 链计一个场景。下表只计至少有一个相应类别场景的 seed。4,830 个 seed 同时贡献了两类数据。每个 seed 的 Static 数、Dynamic 链数、场景总数和保存帧数见 [逐 seed CSV（gzip）](scenes_per_seed.csv.gz)。
+
+| 每个 seed 的场景数 | Static 的 seed 数 | Dynamic 的 seed 数 | 两类合计的 seed 数 |
+|---:|---:|---:|---:|
+| 1 | 18,029 | 14,121 | 24,888 |
+| 2 | 9,990 | 1,534 | 12,717 |
+| 3 | 5,686 | 532 | 6,866 |
+| 4 | 3,339 | 186 | 3,821 |
+| 5 | 2,022 | 61 | 2,210 |
+| 6 | 1,249 | 16 | 1,365 |
+| 7 | 843 | 10 | 895 |
+| 8 | 1,009 | 0 | 1,029 |
+| 9 | 0 | 0 | 3 |
+| 10 | 0 | 0 | 1 |
+| 11 | 0 | 0 | 2 |
+
+超过 8 个场景的 6 个 seed 全部来自 Clip 1，并且同时出现在 Static、Dynamic 两类中。Clip 1 合并了替换后的 Static 和原有 Dynamic。配置中的每个世界 8 个采样地点用于一次世界实例，汇总计数横跨采集批次。
+
+## 替换重叠场景的成本
+
+若目标是让不同场景的 48³ 空间严格不相交，24 对分属 24 个不同 seed，至少要替换 24 个场景。只读模拟在 23 个 Static 对中各取较低稀有度的一侧，在 Static/D3 对中取 Static。比较范围为整幅 48³，按既有全库词频和块内次数的字典序；仅比较最稀有 token 时有 6 对并列，完整规则能区分全部 23 对。
+
+模拟剔除的 24 个场景的完整区域含 373 种 token，保留的 Static 仍覆盖全部 1,407 种。沿用此前中心+2 个外围块的选块结果，这 24 个场景贡献的 333 种 token 都还能在其余样本的中心找到，因此合并覆盖保持 1,578 种。新采样后若重算稀有度，选块结果须以新版数据为准。[逐对模拟结果](resampling_impact.json)
+
+此前 10 个不同群落的 Static 小测用了 107.29 秒。按相同吞吐线性估算，24 个约 4.3 分钟纯采集时间。正式替换还涉及匹配群落和高度、关注新位置与该 seed 下已有场景的距离、更新分片及选块。现有划分按整个 world seed 归组，建议保留本版数据。[小测实测](../../../vae_data/reports/static_ten_20261117/README.md)
+
 ## 本地复现
 
 在 VoxWM 仓库根目录执行。
@@ -53,5 +81,6 @@ Dynamic 的 20,000 条链有 16,460 个 seed。每链 5 帧在相同位置记录
 PACKS=/Users/tianxj/Desktop/VoxWM-Dataset/VAE/data/vae_200k_by_category
 .venv/bin/python -m voxel_vae.scene_overlap_audit \
   "$PACKS/vae_100k_static.tar.zst" "$PACKS/vae_100k_dynamic.tar.zst" \
+  --seed-counts outputs/voxel_vae/scene_overlap_20261126/scenes_per_seed.csv \
   --output outputs/voxel_vae/scene_overlap_20261126/summary.json
 ```
