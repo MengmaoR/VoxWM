@@ -1,8 +1,10 @@
 # VoxWM 当前状态
 
-**当前下一步：用户在 THU 部署独立 VoxWM 并手动运行单次自适应并行1K。** THU只读检查完成：76物理/152逻辑CPU，账号内存上限880GiB；原VoxEvolve所在分区约102GiB可用，可写ext4 `/data/disk2`约2.10TiB可用。原VoxEvolve属旧仓库且有本地改动，保持不动；AML停用。新调度按有效落盘吞吐逐档爬升，连续两窗口下降≥10%回退已观测最好档；保留已采与在途数据。21项本地合成/单测通过；没有远程安装、build或采集，THU Native/1K与速度仍待用户执行。[完整命令](vox2pix_data/THU_SERVER.md)。本次不启动100K或训练。
+**Vox2Pix 正式 100K 数据已采齐。** THU 的 `vox2pix_100k_rgb32` 包含 20,000 个 48³ 场景、100,000 个视角。Surface / Cave / Underwater 分别为 12,000 / 6,000 / 2,000 个场景。地图实测 1,514 种状态，其中 1,424 种出现在 VAE 完整数据中。[状态覆盖报告](vox2pix_data/reports/vae_coverage_20261126/README.md) · [部署与采集命令](vox2pix_data/THU_SERVER.md)
 
-**Vox2Pix RGB32 / 独立 Fog20–30 / Material Ambient0.35：VERIFIED WITH KNOWN NATIVE VISUAL LIMITATION。** 25 项 Python Unit、C++ 策略测试、原生 build、12 距离固定相机校准和原三个场景的 15 帧回放完成。实测 draw32、Fog20/30、Far Plane2000，Server send/generate 均为8 MapBlocks（128格）。48³ Voxel/Camera 与原记录匹配，White/Water/Face/BACKGROUND 数组不变。31–32格和34格标记实际提交；30–34格标记纹理被雾完全遮蔽，但天空/Fog 色差可留微弱均匀色块，水下原生表面边界仍可见。版本 `vox2pix-v3-local48-rgb32-absolute-fog20-30`。[本轮报告](vox2pix_data/reports/final_rendering_32/README.md) · [命令](vox2pix_data/README.md#final-native-rendering-rgb32)。正式50K采集和训练仍未开始，当前工作转入下述采集程序验证。
+**VAE 待选项：替换 24 个 Static 场景。** 若后续协议要求不同场景的 48³ 在同一 seed 内严格零重叠，可在 23 对 Static 中各替换较不稀有的一侧，再替换 1 对 Static/D3 中的 Static。当前保留原数据，待用户决定。[候选样本与覆盖模拟](voxel_vae/reports/scene_overlap_20261126/resampling_impact.json)
+
+**Vox2Pix RGB32 / 独立 Fog20–30 / Material Ambient0.35：VERIFIED WITH KNOWN NATIVE VISUAL LIMITATION。** 25 项 Python Unit、C++ 策略测试、原生 build、12 距离固定相机校准和原三个场景的 15 帧回放完成。实测 draw32、Fog20/30、Far Plane2000，Server send/generate 均为8 MapBlocks（128格）。48³ Voxel/Camera 与原记录匹配，White/Water/Face/BACKGROUND 数组不变。31–32格和34格标记实际提交；30–34格标记纹理被雾完全遮蔽，但天空/Fog 色差可留微弱均匀色块，水下原生表面边界仍可见。版本 `vox2pix-v3-local48-rgb32-absolute-fog20-30`。[本轮报告](vox2pix_data/reports/final_rendering_32/README.md) · [命令](vox2pix_data/README.md#final-native-rendering-rgb32)。该轮记录的是正式采集前的渲染验证。
 
 **Vox2Pix final32 1K采集及Mac并行短测已完成。** 2 workers完成200场景/1000视角，Surface/Cave/Underwater=120/60/20，有效采集约40分54秒（1467视角/小时）。数据：`outputs/vox2pix_pilot_1k_rgb32/`。用户授权的4/6/8短测每档同30场景/150视角，全部成功完成，端到端约1847/1675/1268视角/小时；该Mac当时负载下推荐4 workers，100K按短测线性约54.2小时，不能套用到THU。各档均有换页。100K逻辑payload约11.62GB，APFS小文件布局外推约35.8GB。原始数据和日志仅本地保留，[测量报告及资源序列](vox2pix_data/reports/parallel_mac_20261124/README.md)已记录。
 

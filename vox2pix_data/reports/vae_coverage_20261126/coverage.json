@@ -1,0 +1,112 @@
+{
+  "scenes": 20000,
+  "views": 100000,
+  "kinds": {
+    "surface": 12000,
+    "cave": 6000,
+    "underwater": 2000
+  },
+  "registered_node_names": 2517,
+  "surface_background": 7240786344,
+  "actual_vae_states": 1578,
+  "vae_vocab_K": 1580,
+  "vae_embedding_rows_trained": 1306,
+  "layers": {
+    "scene": {
+      "layer": "scene",
+      "observed_node_names": 422,
+      "vae_only": 154,
+      "union": 1668,
+      "groups": {
+        "all": {
+          "types": 1514,
+          "occurrences": 2211840000
+        },
+        "in_frozen_vocab": {
+          "types": 1424,
+          "occurrences": 2211839519
+        },
+        "present_in_vae": {
+          "types": 1424,
+          "occurrences": 2211839519
+        },
+        "trained_embedding": {
+          "types": 1241,
+          "occurrences": 2211821094
+        },
+        "in_vae_without_trained_embedding": {
+          "types": 183,
+          "occurrences": 18425
+        },
+        "frozen_vocab_but_absent_from_vae": {
+          "types": 0,
+          "occurrences": 0
+        },
+        "outside_vae": {
+          "types": 90,
+          "occurrences": 481
+        },
+        "outside_vae_vocab": {
+          "types": 90,
+          "occurrences": 481
+        },
+        "new_param2_on_vae_node": {
+          "types": 40,
+          "occurrences": 206
+        },
+        "node_absent_from_vae": {
+          "types": 50,
+          "occurrences": 275
+        }
+      }
+    },
+    "surface": {
+      "layer": "surface",
+      "observed_node_names": 337,
+      "vae_only": 527,
+      "union": 1602,
+      "groups": {
+        "all": {
+          "types": 1075,
+          "occurrences": 15799213656
+        },
+        "in_frozen_vocab": {
+          "types": 1051,
+          "occurrences": 15798994298
+        },
+        "present_in_vae": {
+          "types": 1051,
+          "occurrences": 15798994298
+        },
+        "trained_embedding": {
+          "types": 1002,
+          "occurrences": 15798454191
+        },
+        "in_vae_without_trained_embedding": {
+          "types": 49,
+          "occurrences": 540107
+        },
+        "frozen_vocab_but_absent_from_vae": {
+          "types": 0,
+          "occurrences": 0
+        },
+        "outside_vae": {
+          "types": 24,
+          "occurrences": 219358
+        },
+        "outside_vae_vocab": {
+          "types": 24,
+          "occurrences": 219358
+        },
+        "new_param2_on_vae_node": {
+          "types": 11,
+          "occurrences": 85773
+        },
+        "node_absent_from_vae": {
+          "types": 13,
+          "occurrences": 133585
+        }
+      }
+    }
+  }
+}
