@@ -1,0 +1,905 @@
+{
+  "center": "region_origin + (24,24,24); integer axes east/north/up",
+  "region_edge_voxels": 48,
+  "dynamic_frames_per_scene": 5,
+  "static": {
+    "scenes": 100000,
+    "seeds": 42167,
+    "eligible_pairs": 131992,
+    "overlap_pairs": 23,
+    "affected_scenes": 46,
+    "affected_seeds": 23,
+    "affected_by_category": {
+      "Static": 46
+    },
+    "identical_center_pairs": 0,
+    "partial_pairs": 23,
+    "center16_overlap_pairs": 1,
+    "pair_volume_sum": 685824,
+    "pair_volume_mean": 29818.434782608696,
+    "pair_volume_min": 1024,
+    "pair_volume_max": 89856,
+    "within_clip_pairs": 23,
+    "across_clip_pairs": 0,
+    "pairs_by_category": {
+      "Static/Static": 23
+    },
+    "overlaps": [
+      {
+        "seed": 2091152183,
+        "centers": [
+          [
+            6648,
+            -4616,
+            3
+          ],
+          [
+            6648,
+            -4600,
+            -11
+          ]
+        ],
+        "delta": [
+          0,
+          16,
+          14
+        ],
+        "ids": [
+          "shard_0051:188",
+          "shard_0051:186"
+        ],
+        "clips": [
+          "vae_100k_clip1",
+          "vae_100k_clip1"
+        ],
+        "categories": [
+          "Static",
+          "Static"
+        ],
+        "volume": 52224,
+        "center16_volume": 0
+      },
+      {
+        "seed": 1455825436,
+        "centers": [
+          [
+            -2760,
+            -6120,
+            9
+          ],
+          [
+            -2728,
+            -6104,
+            -2
+          ]
+        ],
+        "delta": [
+          32,
+          16,
+          11
+        ],
+        "ids": [
+          "shard_0059:257",
+          "shard_0059:260"
+        ],
+        "clips": [
+          "vae_100k_clip1",
+          "vae_100k_clip1"
+        ],
+        "categories": [
+          "Static",
+          "Static"
+        ],
+        "volume": 18944,
+        "center16_volume": 0
+      },
+      {
+        "seed": 1660106791,
+        "centers": [
+          [
+            2280,
+            1816,
+            54
+          ],
+          [
+            2296,
+            1832,
+            8
+          ]
+        ],
+        "delta": [
+          16,
+          16,
+          46
+        ],
+        "ids": [
+          "shard_0066:100",
+          "shard_0066:99"
+        ],
+        "clips": [
+          "vae_100k_clip1",
+          "vae_100k_clip1"
+        ],
+        "categories": [
+          "Static",
+          "Static"
+        ],
+        "volume": 2048,
+        "center16_volume": 0
+      },
+      {
+        "seed": 1509758767,
+        "centers": [
+          [
+            -8216,
+            5224,
+            1
+          ],
+          [
+            -8216,
+            5224,
+            20
+          ]
+        ],
+        "delta": [
+          0,
+          0,
+          19
+        ],
+        "ids": [
+          "shard_0003:337",
+          "shard_0003:336"
+        ],
+        "clips": [
+          "vae_100k_clip1",
+          "vae_100k_clip1"
+        ],
+        "categories": [
+          "Static",
+          "Static"
+        ],
+        "volume": 66816,
+        "center16_volume": 0
+      },
+      {
+        "seed": 1920178033,
+        "centers": [
+          [
+            -4312,
+            -1048,
+            -11
+          ],
+          [
+            -4296,
+            -1064,
+            14
+          ]
+        ],
+        "delta": [
+          16,
+          16,
+          25
+        ],
+        "ids": [
+          "shard_0176:453",
+          "shard_0176:454"
+        ],
+        "clips": [
+          "vae_100k_clip2",
+          "vae_100k_clip2"
+        ],
+        "categories": [
+          "Static",
+          "Static"
+        ],
+        "volume": 23552,
+        "center16_volume": 0
+      },
+      {
+        "seed": 2072972383,
+        "centers": [
+          [
+            2104,
+            3432,
+            -32
+          ],
+          [
+            2136,
+            3432,
+            9
+          ]
+        ],
+        "delta": [
+          32,
+          0,
+          41
+        ],
+        "ids": [
+          "shard_0123:404",
+          "shard_0123:406"
+        ],
+        "clips": [
+          "vae_100k_clip2",
+          "vae_100k_clip2"
+        ],
+        "categories": [
+          "Static",
+          "Static"
+        ],
+        "volume": 5376,
+        "center16_volume": 0
+      },
+      {
+        "seed": 296176130,
+        "centers": [
+          [
+            -2584,
+            3400,
+            21
+          ],
+          [
+            -2552,
+            3400,
+            3
+          ]
+        ],
+        "delta": [
+          32,
+          0,
+          18
+        ],
+        "ids": [
+          "shard_0155:457",
+          "shard_0155:456"
+        ],
+        "clips": [
+          "vae_100k_clip2",
+          "vae_100k_clip2"
+        ],
+        "categories": [
+          "Static",
+          "Static"
+        ],
+        "volume": 23040,
+        "center16_volume": 0
+      },
+      {
+        "seed": 1622675428,
+        "centers": [
+          [
+            456,
+            1928,
+            72
+          ],
+          [
+            456,
+            1960,
+            48
+          ]
+        ],
+        "delta": [
+          0,
+          32,
+          24
+        ],
+        "ids": [
+          "shard_0163:52",
+          "shard_0163:51"
+        ],
+        "clips": [
+          "vae_100k_clip2",
+          "vae_100k_clip2"
+        ],
+        "categories": [
+          "Static",
+          "Static"
+        ],
+        "volume": 18432,
+        "center16_volume": 0
+      },
+      {
+        "seed": 1474613415,
+        "centers": [
+          [
+            3992,
+            10136,
+            22
+          ],
+          [
+            4024,
+            10152,
+            14
+          ]
+        ],
+        "delta": [
+          32,
+          16,
+          8
+        ],
+        "ids": [
+          "shard_0019:190",
+          "shard_0019:188"
+        ],
+        "clips": [
+          "vae_100k_clip1",
+          "vae_100k_clip1"
+        ],
+        "categories": [
+          "Static",
+          "Static"
+        ],
+        "volume": 20480,
+        "center16_volume": 0
+      },
+      {
+        "seed": 403161361,
+        "centers": [
+          [
+            6056,
+            7784,
+            11
+          ],
+          [
+            6088,
+            7800,
+            29
+          ]
+        ],
+        "delta": [
+          32,
+          16,
+          18
+        ],
+        "ids": [
+          "shard_0021:158",
+          "shard_0021:153"
+        ],
+        "clips": [
+          "vae_100k_clip1",
+          "vae_100k_clip1"
+        ],
+        "categories": [
+          "Static",
+          "Static"
+        ],
+        "volume": 15360,
+        "center16_volume": 0
+      },
+      {
+        "seed": 1037561700,
+        "centers": [
+          [
+            3464,
+            -2536,
+            -21
+          ],
+          [
+            3464,
+            -2536,
+            -4
+          ]
+        ],
+        "delta": [
+          0,
+          0,
+          17
+        ],
+        "ids": [
+          "shard_0028:458",
+          "shard_0028:459"
+        ],
+        "clips": [
+          "vae_100k_clip1",
+          "vae_100k_clip1"
+        ],
+        "categories": [
+          "Static",
+          "Static"
+        ],
+        "volume": 71424,
+        "center16_volume": 0
+      },
+      {
+        "seed": 1883175900,
+        "centers": [
+          [
+            4488,
+            7144,
+            -7
+          ],
+          [
+            4504,
+            7128,
+            -37
+          ]
+        ],
+        "delta": [
+          16,
+          16,
+          30
+        ],
+        "ids": [
+          "shard_0074:4",
+          "shard_0074:0"
+        ],
+        "clips": [
+          "vae_100k_clip1",
+          "vae_100k_clip1"
+        ],
+        "categories": [
+          "Static",
+          "Static"
+        ],
+        "volume": 18432,
+        "center16_volume": 0
+      },
+      {
+        "seed": 924716513,
+        "centers": [
+          [
+            -7832,
+            2360,
+            17
+          ],
+          [
+            -7816,
+            2328,
+            -7
+          ]
+        ],
+        "delta": [
+          16,
+          32,
+          24
+        ],
+        "ids": [
+          "shard_0074:494",
+          "shard_0074:493"
+        ],
+        "clips": [
+          "vae_100k_clip1",
+          "vae_100k_clip1"
+        ],
+        "categories": [
+          "Static",
+          "Static"
+        ],
+        "volume": 12288,
+        "center16_volume": 0
+      },
+      {
+        "seed": 449118462,
+        "centers": [
+          [
+            -4648,
+            3320,
+            17
+          ],
+          [
+            -4648,
+            3352,
+            5
+          ]
+        ],
+        "delta": [
+          0,
+          32,
+          12
+        ],
+        "ids": [
+          "shard_0062:103",
+          "shard_0062:109"
+        ],
+        "clips": [
+          "vae_100k_clip1",
+          "vae_100k_clip1"
+        ],
+        "categories": [
+          "Static",
+          "Static"
+        ],
+        "volume": 27648,
+        "center16_volume": 0
+      },
+      {
+        "seed": 1122627682,
+        "centers": [
+          [
+            -2120,
+            1944,
+            -3
+          ],
+          [
+            -2120,
+            1944,
+            37
+          ]
+        ],
+        "delta": [
+          0,
+          0,
+          40
+        ],
+        "ids": [
+          "shard_0175:481",
+          "shard_0175:480"
+        ],
+        "clips": [
+          "vae_100k_clip2",
+          "vae_100k_clip2"
+        ],
+        "categories": [
+          "Static",
+          "Static"
+        ],
+        "volume": 18432,
+        "center16_volume": 0
+      },
+      {
+        "seed": 1794172063,
+        "centers": [
+          [
+            5032,
+            1432,
+            17
+          ],
+          [
+            5048,
+            1448,
+            -30
+          ]
+        ],
+        "delta": [
+          16,
+          16,
+          47
+        ],
+        "ids": [
+          "shard_0175:496",
+          "shard_0175:495"
+        ],
+        "clips": [
+          "vae_100k_clip2",
+          "vae_100k_clip2"
+        ],
+        "categories": [
+          "Static",
+          "Static"
+        ],
+        "volume": 1024,
+        "center16_volume": 0
+      },
+      {
+        "seed": 413968881,
+        "centers": [
+          [
+            -2072,
+            -1128,
+            13
+          ],
+          [
+            -2072,
+            -1096,
+            10
+          ]
+        ],
+        "delta": [
+          0,
+          32,
+          3
+        ],
+        "ids": [
+          "shard_0181:448",
+          "shard_0181:444"
+        ],
+        "clips": [
+          "vae_100k_clip2",
+          "vae_100k_clip2"
+        ],
+        "categories": [
+          "Static",
+          "Static"
+        ],
+        "volume": 34560,
+        "center16_volume": 0
+      },
+      {
+        "seed": 1583301211,
+        "centers": [
+          [
+            6840,
+            4808,
+            -15
+          ],
+          [
+            6872,
+            4808,
+            -37
+          ]
+        ],
+        "delta": [
+          32,
+          0,
+          22
+        ],
+        "ids": [
+          "shard_0120:244",
+          "shard_0120:241"
+        ],
+        "clips": [
+          "vae_100k_clip2",
+          "vae_100k_clip2"
+        ],
+        "categories": [
+          "Static",
+          "Static"
+        ],
+        "volume": 19968,
+        "center16_volume": 0
+      },
+      {
+        "seed": 143056292,
+        "centers": [
+          [
+            3944,
+            1448,
+            8
+          ],
+          [
+            3960,
+            1464,
+            33
+          ]
+        ],
+        "delta": [
+          16,
+          16,
+          25
+        ],
+        "ids": [
+          "shard_0111:487",
+          "shard_0111:486"
+        ],
+        "clips": [
+          "vae_100k_clip2",
+          "vae_100k_clip2"
+        ],
+        "categories": [
+          "Static",
+          "Static"
+        ],
+        "volume": 23552,
+        "center16_volume": 0
+      },
+      {
+        "seed": 1363317547,
+        "centers": [
+          [
+            5224,
+            616,
+            7
+          ],
+          [
+            5256,
+            632,
+            11
+          ]
+        ],
+        "delta": [
+          32,
+          16,
+          4
+        ],
+        "ids": [
+          "shard_0040:186",
+          "shard_0040:184"
+        ],
+        "clips": [
+          "vae_100k_clip1",
+          "vae_100k_clip1"
+        ],
+        "categories": [
+          "Static",
+          "Static"
+        ],
+        "volume": 22528,
+        "center16_volume": 0
+      },
+      {
+        "seed": 1460966410,
+        "centers": [
+          [
+            -1464,
+            -2216,
+            25
+          ],
+          [
+            -1448,
+            -2216,
+            6
+          ]
+        ],
+        "delta": [
+          16,
+          0,
+          19
+        ],
+        "ids": [
+          "shard_0082:361",
+          "shard_0082:357"
+        ],
+        "clips": [
+          "vae_100k_clip1",
+          "vae_100k_clip1"
+        ],
+        "categories": [
+          "Static",
+          "Static"
+        ],
+        "volume": 44544,
+        "center16_volume": 0
+      },
+      {
+        "seed": 1756636353,
+        "centers": [
+          [
+            -72,
+            2232,
+            -18
+          ],
+          [
+            -72,
+            2232,
+            6
+          ]
+        ],
+        "delta": [
+          0,
+          0,
+          24
+        ],
+        "ids": [
+          "shard_0079:407",
+          "shard_0079:404"
+        ],
+        "clips": [
+          "vae_100k_clip1",
+          "vae_100k_clip1"
+        ],
+        "categories": [
+          "Static",
+          "Static"
+        ],
+        "volume": 55296,
+        "center16_volume": 0
+      },
+      {
+        "seed": 582839462,
+        "centers": [
+          [
+            1368,
+            7688,
+            14
+          ],
+          [
+            1368,
+            7688,
+            23
+          ]
+        ],
+        "delta": [
+          0,
+          0,
+          9
+        ],
+        "ids": [
+          "shard_0015:84",
+          "shard_0015:80"
+        ],
+        "clips": [
+          "vae_100k_clip1",
+          "vae_100k_clip1"
+        ],
+        "categories": [
+          "Static",
+          "Static"
+        ],
+        "volume": 89856,
+        "center16_volume": 1792
+      }
+    ]
+  },
+  "dynamic": {
+    "scenes": 20000,
+    "seeds": 16460,
+    "eligible_pairs": 5306,
+    "overlap_pairs": 0,
+    "affected_scenes": 0,
+    "affected_seeds": 0,
+    "affected_by_category": {
+      "D1": 0,
+      "D2": 0,
+      "D3": 0,
+      "D4": 0
+    },
+    "identical_center_pairs": 0,
+    "partial_pairs": 0,
+    "center16_overlap_pairs": 0,
+    "pair_volume_sum": 0,
+    "pair_volume_mean": null,
+    "pair_volume_min": null,
+    "pair_volume_max": null,
+    "within_clip_pairs": 0,
+    "across_clip_pairs": 0,
+    "pairs_by_category": {},
+    "overlaps": []
+  },
+  "static_dynamic": {
+    "scenes": 120000,
+    "seeds": 53797,
+    "eligible_pairs": 9388,
+    "overlap_pairs": 1,
+    "affected_scenes": 2,
+    "affected_seeds": 1,
+    "affected_by_category": {
+      "D1": 0,
+      "D2": 0,
+      "D3": 1,
+      "D4": 0,
+      "Static": 1
+    },
+    "identical_center_pairs": 0,
+    "partial_pairs": 1,
+    "center16_overlap_pairs": 0,
+    "pair_volume_sum": 39936,
+    "pair_volume_mean": 39936.0,
+    "pair_volume_min": 39936,
+    "pair_volume_max": 39936,
+    "within_clip_pairs": 1,
+    "across_clip_pairs": 0,
+    "pairs_by_category": {
+      "D3/Static": 1
+    },
+    "overlaps": [
+      {
+        "seed": 957967010,
+        "centers": [
+          [
+            -3624,
+            -1144,
+            8
+          ],
+          [
+            -3608,
+            -1128,
+            -1
+          ]
+        ],
+        "delta": [
+          16,
+          16,
+          9
+        ],
+        "ids": [
+          "shard_0124:f6050c83e24f4841b24f6020c4afb08d/D3",
+          "shard_0124:61"
+        ],
+        "clips": [
+          "vae_100k_clip2",
+          "vae_100k_clip2"
+        ],
+        "categories": [
+          "D3",
+          "Static"
+        ],
+        "volume": 39936,
+        "center16_volume": 0
+      }
+    ]
+  },
+  "dynamic_snapshot_pairs": {
+    "within_chain": 200000,
+    "between_chains": 0,
+    "total_overlapping": 200000
+  }
+}

@@ -176,7 +176,7 @@ def _selected_shard_file(relative):
     return False
 
 
-def iter_archive_shards(path):
+def iter_archive_shards(path, *, select_file=_selected_shard_file):
     """Yield one shard's compressed Zarr chunks and SQLite image in bounded memory.
 
     Only regular selected files are cached. Directory headers do not start a
@@ -220,7 +220,7 @@ def iter_archive_shards(path):
                     header["shard_names"].append(shard)
                 if member.isdir():
                     continue
-                if not _selected_shard_file(filename):
+                if not select_file(filename):
                     continue
                 _require(member.isfile(), f"Selected archive member is not a regular file: {member.name}")
                 _require(HEADER_NAMES <= header["json"].keys(), "Required root metadata occurs after shard data")
