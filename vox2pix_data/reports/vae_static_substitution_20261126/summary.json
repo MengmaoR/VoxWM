@@ -1,0 +1,94 @@
+{
+  "total_vox2pix_maps": 20000,
+  "new_states": 90,
+  "new_voxel_occurrences": 481,
+  "maps": 93,
+  "seeds": 93,
+  "distinct_full_map_histograms": 93,
+  "eligible_surface_evidence": {
+    "survey_and_column_agree": 19,
+    "survey_surface_outside_crop": 22,
+    "qualifying_node_above_survey_surface": 5
+  },
+  "kinds": {
+    "surface": 11,
+    "underwater": 10,
+    "cave": 72
+  },
+  "groups": 23,
+  "center_y_range": [
+    -58,
+    47
+  ],
+  "survey_surface_y_range": [
+    -25,
+    72
+  ],
+  "stored_band_counts": {
+    "surface": 13,
+    "deep_cave": 56,
+    "shallow_underground": 16,
+    "gap": 8
+  },
+  "recorded_quota_status": {
+    "eligible": 46,
+    "outside_world_bounds": 40,
+    "height_gap": 7
+  },
+  "strata": {
+    "surface": 13,
+    "deep_cave": 19,
+    "shallow_underground": 14
+  },
+  "aligned": 0,
+  "unique_center_hits": 15,
+  "absolute_height_state_ceiling": 87,
+  "prior_static": 1407,
+  "prior_pooled": 1578,
+  "original_static_scenes": 100000,
+  "original_overlap_pairs": 24,
+  "simulations": {
+    "recorded_quota": {
+      "replacements": 46,
+      "overlap_first": 8,
+      "fallback": 38,
+      "overlap_pairs_left": 16,
+      "static_pairs_left": 16,
+      "cross_pairs_left": 0,
+      "introduced_overlaps": 0,
+      "lost_preexisting_states": [],
+      "lost_preexisting_static_states": [],
+      "gained_states": 87,
+      "gained_voxels": 398,
+      "center_gained_states": 13,
+      "center_plus_two_gained_states": 83,
+      "observed_static_after": 1527,
+      "observed_pooled_after": 1665,
+      "matched_cells": 34,
+      "removed_biome_transitions": 33,
+      "previous_shard_biome_cells_falling_below_soft_target_if_no_incoming_transition": 0,
+      "original_categories_preserved": true
+    },
+    "column_supported": {
+      "replacements": 19,
+      "overlap_first": 5,
+      "fallback": 14,
+      "overlap_pairs_left": 19,
+      "static_pairs_left": 19,
+      "cross_pairs_left": 0,
+      "introduced_overlaps": 0,
+      "lost_preexisting_states": [],
+      "lost_preexisting_static_states": [],
+      "gained_states": 78,
+      "gained_voxels": 325,
+      "center_gained_states": 8,
+      "center_plus_two_gained_states": 74,
+      "observed_static_after": 1511,
+      "observed_pooled_after": 1656,
+      "matched_cells": 17,
+      "removed_biome_transitions": 15,
+      "previous_shard_biome_cells_falling_below_soft_target_if_no_incoming_transition": 0,
+      "original_categories_preserved": true
+    }
+  }
+}

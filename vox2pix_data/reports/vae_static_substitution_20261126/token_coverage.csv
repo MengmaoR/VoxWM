@@ -1,0 +1,91 @@
+node_name,raw_param2,total_voxels,distinct_maps,maps,recorded_quota_full_voxels,recorded_quota_center_voxels,recorded_quota_center_plus_two_voxels,column_supported_full_voxels,column_supported_center_voxels,column_supported_center_plus_two_voxels
+mcl_amethyst:amethyst_cluster,0,20,12,scene_10128 scene_10991 scene_12301 scene_13875 scene_16588 scene_1765 scene_18738 scene_2725 scene_4375 scene_6701 scene_8395 scene_9225,11,0,10,0,0,0
+mcl_amethyst:amethyst_cluster,2,10,8,scene_10825 scene_12155 scene_13451 scene_15431 scene_2535 scene_6461 scene_7281 scene_9428,5,1,5,0,0,0
+mcl_amethyst:amethyst_cluster,3,19,17,scene_10128 scene_10621 scene_10991 scene_1238 scene_13171 scene_13853 scene_15431 scene_16588 scene_1681 scene_17601 scene_19385 scene_19828 scene_2788 scene_3748 scene_6101 scene_6861 scene_9225,9,2,9,0,0,0
+mcl_amethyst:amethyst_cluster,4,6,6,scene_10988 scene_12155 scene_1765 scene_18645 scene_4375 scene_6461,3,0,3,0,0,0
+mcl_amethyst:amethyst_cluster,5,14,11,scene_0985 scene_10128 scene_1155 scene_13853 scene_16588 scene_17601 scene_1765 scene_4283 scene_4375 scene_4741 scene_6701,8,0,8,0,0,0
+mcl_amethyst:large_amethyst_bud,3,39,29,scene_10988 scene_1191 scene_12155 scene_1238 scene_12391 scene_12681 scene_13171 scene_13243 scene_13391 scene_13678 scene_13875 scene_16588 scene_17198 scene_17601 scene_1765 scene_17781 scene_18365 scene_2725 scene_3121 scene_3181 scene_4375 scene_4578 scene_4741 scene_5438 scene_6098 scene_8395 scene_8581 scene_9225 scene_9521,18,2,18,2,0,2
+mcl_amethyst:large_amethyst_bud,4,29,24,scene_0801 scene_0875 scene_10825 scene_1108 scene_1193 scene_13451 scene_13678 scene_16588 scene_16628 scene_17601 scene_17781 scene_18365 scene_18738 scene_2351 scene_3181 scene_3661 scene_4153 scene_4375 scene_5308 scene_6701 scene_6861 scene_7281 scene_8395 scene_8625,13,5,12,2,0,2
+mcl_anvils:anvil,0,1,1,scene_7680,1,0,1,1,0,1
+mcl_anvils:anvil,2,1,1,scene_18602,1,0,1,1,0,1
+mcl_bells:bell,0,2,2,scene_5423 scene_7680,2,0,2,2,0,2
+mcl_blast_furnace:blast_furnace,1,1,1,scene_18602,1,0,1,1,0,1
+mcl_blast_furnace:blast_furnace,3,1,1,scene_7680,1,0,1,1,0,1
+mcl_cartography_table:cartography_table,2,1,1,scene_15656,1,0,1,1,0,0
+mcl_cartography_table:cartography_table,3,1,1,scene_7680,1,0,1,1,0,1
+mcl_core:brick_block,0,76,3,scene_0232 scene_18602 scene_7680,76,0,76,76,0,76
+mcl_core:sandstonesmooth2,0,8,2,scene_6987 scene_7528,8,0,8,5,0,5
+mcl_core:sprucetree,1,11,1,scene_18575,11,0,11,11,0,11
+mcl_core:stone_with_redstone_lit,0,4,4,scene_3403 scene_7363 scene_8505 scene_8973,0,0,0,0,0,0
+mcl_deepslate:deepslate_with_redstone_lit,0,3,3,scene_0793 scene_19098 scene_8968,0,0,0,0,0,0
+mcl_doors:iron_trapdoor_open,1,1,1,scene_18602,1,0,1,1,0,1
+mcl_doors:iron_trapdoor_open,3,1,1,scene_7680,1,0,1,1,0,1
+mcl_doors:jungle_trapdoor_open,22,1,1,scene_15656,1,0,1,1,0,1
+mcl_doors:trapdoor,0,1,1,scene_16254,1,0,1,1,0,1
+mcl_doors:trapdoor_open,20,3,2,scene_15656 scene_16254,3,0,3,3,0,1
+mcl_doors:trapdoor_open,21,1,1,scene_16254,1,0,1,1,0,1
+mcl_doors:trapdoor_open,22,1,1,scene_16254,1,0,1,1,0,1
+mcl_doors:trapdoor_open,23,3,2,scene_16254 scene_7680,3,0,3,3,0,3
+mcl_doors:wooden_door_b_1,0,5,3,scene_0232 scene_15656 scene_6675,5,1,5,5,1,4
+mcl_doors:wooden_door_b_1,2,3,2,scene_15656 scene_18575,3,0,3,3,0,3
+mcl_doors:wooden_door_b_1,3,3,2,scene_15656 scene_7680,3,1,2,3,1,2
+mcl_doors:wooden_door_t_1,0,5,3,scene_0232 scene_15656 scene_6675,5,1,5,5,1,4
+mcl_doors:wooden_door_t_1,2,3,2,scene_15656 scene_18575,3,0,3,3,0,3
+mcl_doors:wooden_door_t_1,3,3,2,scene_15656 scene_7680,3,1,2,3,1,2
+mcl_farming:carrot,3,5,3,scene_18575 scene_6675 scene_6987,5,0,2,5,0,2
+mcl_farming:potato,3,4,3,scene_18575 scene_6675 scene_6987,4,0,4,4,0,4
+mcl_farming:wheat,3,14,3,scene_18575 scene_6675 scene_6987,14,0,8,14,0,8
+mcl_fences:fence_gate,2,1,1,scene_18575,1,0,1,1,0,1
+mcl_fire:eternal_fire,16,1,1,scene_13704,1,0,1,1,0,1
+mcl_fire:eternal_fire,20,1,1,scene_13704,1,0,1,1,0,1
+mcl_fire:fire,90,1,1,scene_7795,0,0,0,0,0,0
+mcl_fire:fire,93,1,1,scene_15578,1,0,1,0,0,0
+mcl_fire:fire,96,1,1,scene_9264,1,0,1,1,0,1
+mcl_fire:fire,104,1,1,scene_9264,1,0,1,1,0,1
+mcl_fire:fire,107,1,1,scene_14552,1,1,1,1,1,1
+mcl_fire:fire,108,1,1,scene_14552,1,1,1,1,1,1
+mcl_fire:fire,121,1,1,scene_14552,1,1,1,1,1,1
+mcl_fire:fire,124,2,1,scene_15578,2,0,2,0,0,0
+mcl_fire:fire,129,1,1,scene_15578,1,0,1,0,0,0
+mcl_flowerpots:flower_pot_allium,0,6,2,scene_15656 scene_7680,6,1,6,6,1,3
+mcl_flowerpots:flower_pot_oxeye_daisy,0,2,2,scene_15656 scene_7680,2,0,2,2,0,1
+mcl_flowerpots:flower_pot_tulip_white,0,2,2,scene_15656 scene_7680,2,0,2,2,0,1
+mcl_loom:loom,0,1,1,scene_18575,1,0,1,1,0,1
+mcl_loom:loom,1,1,1,scene_7680,1,0,0,1,0,0
+mcl_ocean:kelp_dirt,17,1,1,scene_16134,1,0,1,1,0,1
+mcl_ocean:kelp_sand,128,2,2,scene_0072 scene_17661,1,0,1,1,0,1
+mcl_ocean:sea_pickle_1_off_dead_brain_coral_block,0,1,1,scene_2515,1,0,1,1,0,1
+mcl_smoker:smoker,1,1,1,scene_15656,1,0,1,1,0,1
+mcl_stairs:slab_stone,0,13,3,scene_15656 scene_18602 scene_7680,13,0,2,13,0,13
+mcl_stairs:slab_stone_double,0,8,2,scene_18602 scene_7680,8,0,8,8,0,8
+mcl_stairs:slab_stone_top,0,6,3,scene_18602 scene_4148 scene_7680,4,0,4,4,0,4
+mcl_stairs:slab_wood,1,2,2,scene_15656 scene_7528,2,0,1,1,0,1
+mcl_stairs:slab_wood,2,2,2,scene_15656 scene_7528,2,0,1,1,0,1
+mcl_stairs:slab_wood,3,1,1,scene_15656,1,0,0,1,0,1
+mcl_stairs:stair_cobble_outer,0,2,2,scene_18602 scene_7680,2,0,1,2,0,1
+mcl_stairs:stair_cobble_outer,1,2,2,scene_18602 scene_7680,2,0,1,2,0,1
+mcl_stairs:stair_cobble_outer,2,3,3,scene_18575 scene_18602 scene_7680,3,0,2,3,0,2
+mcl_stairs:stair_cobble_outer,3,3,3,scene_18575 scene_18602 scene_7680,3,0,2,3,0,2
+mcl_stairs:stair_stonebrickcracked_outer,0,1,1,scene_16878,1,1,1,0,0,0
+mcl_stairs:stair_stonebrickmossy_outer,1,1,1,scene_18165,1,0,1,1,0,1
+mcl_stairs:stair_stonebrickmossy_outer,2,1,1,scene_18165,1,0,1,1,0,1
+mcl_stairs:stair_wood_inner,1,1,1,scene_7680,1,0,1,1,0,1
+mcl_stairs:stair_wood_inner,3,1,1,scene_18602,1,0,1,1,0,1
+mcl_walls:cobble_1,0,14,3,scene_15656 scene_4148 scene_7680,12,0,12,12,0,6
+mcl_walls:stonebrick_0,0,30,5,scene_15656 scene_16254 scene_18602 scene_5423 scene_7680,30,0,24,30,0,24
+mcl_walls:stonebrick_1,0,2,1,scene_18575,2,0,2,2,0,2
+mcl_walls:stonebrick_12,0,1,1,scene_16254,1,0,1,1,0,1
+mcl_walls:stonebrick_3,0,1,1,scene_16254,1,0,1,1,0,1
+mcl_walls:stonebrick_6,0,1,1,scene_16254,1,0,1,1,0,1
+mcl_walls:stonebrick_9,0,4,3,scene_16254 scene_18602 scene_7680,4,0,4,4,0,4
+mcl_wool:light_blue_carpet,0,8,2,scene_15656 scene_7680,8,0,8,8,0,4
+mcl_wool:purple_carpet,0,9,1,scene_18602,9,0,9,9,0,9
+mcl_wool:silver_carpet,0,12,1,scene_18602,12,0,12,12,0,12
+mesecons_walllever:wall_lever_on,1,1,1,scene_18602,1,0,1,1,0,1
+mesecons_walllever:wall_lever_on,3,1,1,scene_7680,1,0,1,1,0,1
+xpanes:pane_brown_flat,0,1,1,scene_18602,1,0,1,1,0,1
+xpanes:pane_brown_flat,2,1,1,scene_18602,1,0,1,1,0,1
+xpanes:pane_magenta_flat,0,7,1,scene_18602,7,0,4,7,0,4
+xpanes:pane_magenta_flat,2,3,1,scene_18602,3,0,2,3,0,2
+xpanes:pane_orange_flat,0,2,1,scene_18602,2,0,0,2,0,0
+xpanes:pane_orange_flat,2,2,1,scene_18602,2,0,0,2,0,0
