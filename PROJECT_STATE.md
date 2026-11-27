@@ -1,10 +1,10 @@
 # VoxWM 当前状态
 
-**Vox2Pix 正式 100K 数据已采齐。** THU 的 `vox2pix_100k_rgb32` 包含 20,000 个 48³ 场景、100,000 个视角。Surface / Cave / Underwater 分别为 12,000 / 6,000 / 2,000 个场景。地图实测 1,514 种状态，其中 1,424 种出现在 VAE 完整数据中。[状态覆盖报告](vox2pix_data/reports/vae_coverage_20261126/README.md) · [部署与采集命令](vox2pix_data/THU_SERVER.md)
+**Vox2Pix 正式 100K 数据已采齐。** THU 的 `vox2pix_100k_rgb32` 包含 20,000 个 48³ 场景、100,000 个视角。Surface / Cave / Underwater 分别为 12,000 / 6,000 / 2,000 个场景。地图实测 1,514 种状态，其中 1,424 种出现在替换前的 VAE 完整数据中。[状态覆盖报告](vox2pix_data/reports/vae_coverage_20261126/README.md) · [部署与采集命令](vox2pix_data/THU_SERVER.md)
 
 **VAE 待选项：替换 24 个 Static 场景。** 若后续协议要求不同场景的 48³ 在同一 seed 内严格零重叠，可在 23 对 Static 中各替换较不稀有的一侧，再替换 1 对 Static/D3 中的 Static。当前保留原数据，待用户决定。[候选样本与覆盖模拟](voxel_vae/reports/scene_overlap_20261126/resampling_impact.json)
 
-**Vox2Pix → VAE Static 替换包已在本地生成。** 用保存的 20 张原始地图和三块选样导入全部 90 种目标状态。逐体素核对 Node Name 和原始 `param2`，光照字段用 `uint8(0)` 占位。Train 覆盖 1,668 种观察到的 VAE 状态，以及 Vox2Pix 地图的全部 1,514 种状态。按 world seed 划分后，两个 VAE 留出集均完整覆盖。替换包保留原样本的归档引用，仍有 18 对 Static 48³ 重叠。`scene_7680` 与 `scene_18165` 的原始 Vox2Pix Test 地图进入了 VAE Train。[导入命令](voxel_vae/README.md#import-the-original-vox2pix-maps)
+**Vox2Pix → VAE Static 替换包已按新词频重选三块。** 20 张原始地图保留原始 Node Name 和 `param2`，光照字段用 `uint8(0)` 占位。全量 200,000 个快照均重新选块。Train 的 480,000 个 16³ 块实际含 1,664 种状态，覆盖 Validation 的 1,368 种、Test 的 1,304 种、Vox2Pix 地图的 1,510／1,514 种及白模的 1,075／1,075 种。4 种状态只在未选块中出现。替换包仍有 18 对 Static 48³ 重叠。`scene_7680` 与 `scene_18165` 的原始 Vox2Pix Test 地图进入了 VAE Train。[导入命令](voxel_vae/README.md#import-the-original-vox2pix-maps)
 
 **Vox2Pix RGB32 / 独立 Fog20–30 / Material Ambient0.35：VERIFIED WITH KNOWN NATIVE VISUAL LIMITATION。** 25 项 Python Unit、C++ 策略测试、原生 build、12 距离固定相机校准和原三个场景的 15 帧回放完成。实测 draw32、Fog20/30、Far Plane2000，Server send/generate 均为8 MapBlocks（128格）。48³ Voxel/Camera 与原记录匹配，White/Water/Face/BACKGROUND 数组不变。31–32格和34格标记实际提交；30–34格标记纹理被雾完全遮蔽，但天空/Fog 色差可留微弱均匀色块，水下原生表面边界仍可见。版本 `vox2pix-v3-local48-rgb32-absolute-fog20-30`。[本轮报告](vox2pix_data/reports/final_rendering_32/README.md) · [命令](vox2pix_data/README.md#final-native-rendering-rgb32)。该轮记录的是正式采集前的渲染验证。
 

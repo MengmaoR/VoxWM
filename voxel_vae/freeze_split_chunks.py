@@ -32,17 +32,22 @@ def write_row(stream, scene, seed, cell, origin, selected):
     )
 
 
+def write_ranked_row(stream, scene, seed, cell, origin, frame, frequency, motion=None):
+    picked = sorted([CENTER_INDEX, *mixed_outer_indices(frame, frequency, motion, limits=(2,))[2]])
+    selected = []
+    for slot in picked:
+        counts = np.bincount(frame[slot])
+        ids = np.flatnonzero(counts)
+        selected.append((slot, list(zip(ids.tolist(), counts[ids].tolist(), strict=True))))
+    write_row(stream, scene, seed, cell, origin, selected)
+    return picked
+
+
 def write_archive_row(stream, prefix, sample, frame, frequency, motion=None):
     index, category, metadata = sample
     seed, group, stratum, origin = json.loads(metadata)
     cell = [category, group, stratum] if category == "Static" else [category]
-    picked = [CENTER_INDEX, *mixed_outer_indices(frame, frequency, motion, limits=(2,))[2]]
-    selected = []
-    for slot in sorted(picked):
-        counts = np.bincount(frame[slot])
-        ids = np.flatnonzero(counts)
-        selected.append((slot, list(zip(ids.tolist(), counts[ids].tolist(), strict=True))))
-    write_row(stream, f"{prefix}:{index}", seed, cell, origin, selected)
+    write_ranked_row(stream, f"{prefix}:{index}", seed, cell, origin, frame, frequency, motion)
 
 
 def freeze_archive(archive, label, path, frequency, retired):

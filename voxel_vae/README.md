@@ -192,9 +192,8 @@ curves belong to that separate experiment.
 ## Token-anchored split for three-block training
 
 Freeze the three eligible 16³ blocks per saved 48³ snapshot before splitting.
-The original Static maps use center plus two rare blocks. The original Dynamic
-maps use center, one motion-ranked block and one rarity-ranked block. A planned
-Static replacement supplies its own three block indices.
+Static maps use center plus two rare blocks. Dynamic maps use center, one
+motion-ranked block and one rarity-ranked block.
 
 For every observed `(node_name, raw param2)`, draw one ordinal uniformly from
 all matching voxels in the frozen blocks. The anchor records the snapshot and
@@ -206,8 +205,8 @@ The final pass checks the actual token sets in the frozen Train, Validation and
 Test blocks.
 
 Run the read-only analysis from the repository root on the original category
-packs. The optional overlay projects the planned replacements from saved
-Vox2Pix voxel counts.
+packs. This historical dry run uses the saved Vox2Pix counts and the three
+block indices in the proposed replacement plan.
 
 ```bash
 PACKS=/Users/tianxj/Desktop/VoxWM-Dataset/VAE/data/vae_200k_by_category
@@ -238,15 +237,19 @@ Validation blocks and 60,000 Test blocks each had zero tokens absent from Train.
 
 The saved maps contain the original node names and raw `param2`. Import them
 as 48³ VAE Static snapshots with `uint16` tokens. The `uint8` light field is
-zero-filled and marked as unobserved in the overlay manifest. The freeze and
-split steps read only tokens. Each imported map keeps its recorded world seed,
-origin and planned three blocks.
+zero-filled and marked as unobserved in the overlay manifest. The importer
+updates the full 48³ frequency by subtracting each archived original and adding
+its replacement. It then reranks every Static and Dynamic snapshot with the
+updated frequency, including the imported maps. Coverage uses the positive
+Train counts from `split/token_voxel_counts_by_split.csv`.
 
 ```bash
+PACKS=/Users/tianxj/Desktop/VoxWM-Dataset/VAE/data/vae_200k_by_category
 .venv/bin/python -m voxel_vae.import_archived_static \
   --plan-root outputs/vae_static_replacement_20_20261127 \
   --map-inventory outputs/vox2pix_substitution_20261126/maps.json \
-  --output /Users/tianxj/Desktop/VoxWM-Dataset/VAE/data/vae_vox2pix_archive_overlay_20261127
+  --base-archives "$PACKS/vae_100k_static.tar.zst" "$PACKS/vae_100k_dynamic.tar.zst" \
+  --output /Users/tianxj/Desktop/VoxWM-Dataset/VAE/data/vae_vox2pix_reranked_20261127
 ```
 
 `dataset_overlay.json` links the original packs, the original samples held in
