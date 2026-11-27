@@ -16,6 +16,7 @@ Vox2Pix 当前采用 [v3 数据协议](VOX2PIX_DATA_COLLECTION_PROTOCOL.md)。�
 - 当前范围为 E01-Masked 的全训练集入口、固定 3D ResNet VAE、balanced sampler、训练和诊断。用户手动执行 E01。架构/beta/latent sweep、alpha=0.75 消融、Dynamics 训练及新数据采集均需要另行授权。
 - 正式训练数据为`vae_100k_clip1`与`vae_100k_clip2`两个独立100K roots。不同root的uint16 ID没有跨root语义；训练必须按真实`(Node Name,raw param2)`构建确定性canonical vocabulary并在线remap，不得改原Zarr或设置UNK/静默丢token。
 - VAE只输入中心`tokens[16:32,16:32,16:32]`的canonical离散ID，经随机32D `nn.Embedding`进入网络。light、biome/category/time/chain/Δt均不输入；D4 anchor不算训练sample；五个动态状态是独立reconstruction sample。
+- 后续三块训练以 `chunk_selection.jsonl.gz` 为选块和划分的依据。按每条记录的 `snapshot_id`、`split` 和 `chunk_indices` 读取指定的三个 16³ 块。当前清单只对三个已审核的 Static 场景采用外围三块，其他快照均包含中心块。
 - E01 复用 96/192/192 3D ResNet Encoder、`mu/logvar:[B,16,4,4,4]`、nearest-upsample Decoder 和 K 类 logits，无 skip/attention/Transformer/dropout/BatchNorm。按步模式的 batch 为 32 Static + D1–D4 各 8。`--epochs` 模式每个完整 epoch 遍历 train split 恰好一次，按各类实际数量分配各 batch，batch 最大为 64。AdamW 1e-4，clip 1.0，无 scheduler。
 - Masked 目标为 `0.5 L_static + 0.25 L_dynamic_unchanged + 0.25 L_dynamic_changed + 1e-6 raw KL`。Changed Mask 来自同一完整五状态链的 canonical 中心 16³，只用于 loss。microbatch=2 使用完整 effective batch 的全局样本分母。
 - E01 用两个 100K Clip 的完整 `train` split，默认 bf16、20,000 步上限。每 1,000 步在固定的 1,280 条独立验证状态上选最优 checkpoint。160 条训练诊断状态只用于评估。Test split 留出。E01 从 seed 42 初始化，续跑使用 E01 自己的 checkpoint、准备索引和验证子集。

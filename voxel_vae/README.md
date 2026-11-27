@@ -255,3 +255,28 @@ PACKS=/Users/tianxj/Desktop/VoxWM-Dataset/VAE/data/vae_200k_by_category
 `dataset_overlay.json` links the original packs, the original samples held in
 archive and the replacement files. `frozen_chunks.json` records the three-block
 index and `split/` contains the new whole-seed assignments and token counts.
+
+### Published chunk selection for training
+
+`chunk_selection.jsonl.gz` is the source of truth for the three-block training
+dataset. Each snapshot row records `snapshot_id`, `split` and three `chunk_indices`.
+The header locates the source archives, imported maps and vocabulary relative to
+the selection file. Original snapshot IDs follow `archive_name:shard_name:row`.
+Index 13 is the center in the 0-based ENU block order.
+
+The approved selection changes only three Static Train snapshots. Publish it
+from the reranked bundle with this command.
+
+```bash
+BUNDLE=/Users/tianxj/Desktop/VoxWM-Dataset/VAE/data/vae_vox2pix_reranked_20261127
+.venv/bin/python -m voxel_vae.chunk_selection \
+  --bundle "$BUNDLE" --output "$BUNDLE/chunk_selection.jsonl.gz" \
+  --override Vox2Pix:scene_7680 16 22 25 \
+  --override Vox2Pix:scene_15656 16 22 23 \
+  --override Vox2Pix:scene_18602 22 25 26
+```
+
+Use `iter_chunk_selections(path, split="train")` to enumerate training snapshots
+and `extract_selected_chunks(snapshot, row)` to extract their three blocks.
+The published split contains 480,000 Train blocks and 60,000 blocks in each
+held-out split.
