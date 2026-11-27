@@ -226,11 +226,29 @@ SOURCE=outputs/vox2pix_substitution_20261126
 The split tool reads a frozen index with semantic token pairs and a block
 histogram catalog. Its outputs include `token_anchors.csv`,
 `world_seed_splits.csv.gz`, `quota_counts.csv` and
-`token_voxel_counts_by_split.csv`. Use the actual recaptured states for the
-final split. The E01 training commands above still consume their original
-center-only index.
+`token_voxel_counts_by_split.csv`. The E01 training commands above use
+their original center-only index.
 
 The 2026-11-27 replacement dry-run selected 600,000 blocks and reserved one
 anchor for each of the 1,668 observed tokens. The anchors covered 1,358 world
 seeds. The 480,000 Train blocks contained every observed token. The 60,000
 Validation blocks and 60,000 Test blocks each had zero tokens absent from Train.
+
+### Import the original Vox2Pix maps
+
+The saved maps contain the original node names and raw `param2`. Import them
+as 48³ VAE Static snapshots with `uint16` tokens. The `uint8` light field is
+zero-filled and marked as unobserved in the overlay manifest. The freeze and
+split steps read only tokens. Each imported map keeps its recorded world seed,
+origin and planned three blocks.
+
+```bash
+.venv/bin/python -m voxel_vae.import_archived_static \
+  --plan-root outputs/vae_static_replacement_20_20261127 \
+  --map-inventory outputs/vox2pix_substitution_20261126/maps.json \
+  --output /Users/tianxj/Desktop/VoxWM-Dataset/VAE/data/vae_vox2pix_archive_overlay_20261127
+```
+
+`dataset_overlay.json` links the original packs, the original samples held in
+archive and the replacement files. `frozen_chunks.json` records the three-block
+index and `split/` contains the new whole-seed assignments and token counts.
