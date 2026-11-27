@@ -258,14 +258,19 @@ index and `split/` contains the new whole-seed assignments and token counts.
 
 ### Published chunk selection for training
 
+Use the selection in `vae_vox2pix_overlap_free_20261127` for the current
+three-block dataset. It includes 18 native Static replacements with separate
+fresh world seeds. The eight Static split swaps match biome group, height
+stratum and biome transition. The published rows carry their own split.
+
 `chunk_selection.jsonl.gz` is the source of truth for the three-block training
 dataset. Each snapshot row records `snapshot_id`, `split` and three `chunk_indices`.
 The header locates the source archives, imported maps and vocabulary relative to
 the selection file. Original snapshot IDs follow `archive_name:shard_name:row`.
 Index 13 is the center in the 0-based ENU block order.
 
-The approved selection changes only three Static Train snapshots. Publish it
-from the reranked bundle with this command.
+The pre-repair selection changes only three Static Train snapshots. Reproduce
+that input from the reranked bundle with this command.
 
 ```bash
 BUNDLE=/Users/tianxj/Desktop/VoxWM-Dataset/VAE/data/vae_vox2pix_reranked_20261127
@@ -280,3 +285,9 @@ Use `iter_chunk_selections(path, split="train")` to enumerate training snapshots
 and `extract_selected_chunks(snapshot, row)` to extract their three blocks.
 The published split contains 480,000 Train blocks and 60,000 blocks in each
 held-out split.
+
+`voxel_vae.static_overlap_repair plan` prepares the split swaps and capture
+targets. `vae_data.sharded.resample_static` captures the matching Static maps.
+Archive the displaced maps with `voxel_vae.archive_static_replacements`, then
+use `voxel_vae.static_overlap_repair publish` to write the new bundle and
+verify spatial overlap and token coverage.

@@ -2,9 +2,9 @@
 
 **Vox2Pix 正式 100K 数据已采齐。** THU 的 `vox2pix_100k_rgb32` 包含 20,000 个 48³ 场景、100,000 个视角。Surface / Cave / Underwater 分别为 12,000 / 6,000 / 2,000 个场景。地图实测 1,514 种状态，其中 1,424 种出现在替换前的 VAE 完整数据中。[状态覆盖报告](vox2pix_data/reports/vae_coverage_20261126/README.md) · [部署与采集命令](vox2pix_data/THU_SERVER.md)
 
-**VAE 待选项：替换 24 个 Static 场景。** 若后续协议要求不同场景的 48³ 在同一 seed 内严格零重叠，可在 23 对 Static 中各替换较不稀有的一侧，再替换 1 对 Static/D3 中的 Static。当前保留原数据，待用户决定。[候选样本与覆盖模拟](voxel_vae/reports/scene_overlap_20261126/resampling_impact.json)
+原始 VAE 包内有 24 对重叠。首轮 Vox2Pix 替换消除了 6 对。[原始重叠审计](voxel_vae/reports/scene_overlap_20261126/resampling_impact.json)
 
-**VAE 三块训练清单已冻结。** `chunk_selection.jsonl.gz` 保存 200,000 个快照的划分和选块。仅三个 Static Train 快照采用外围三块，其余快照包含中心块。Train 的 480,000 块包含 1,668 种状态，覆盖 Valid 的 1,368 种、Test 的 1,304 种、Vox2Pix 地图的 1,514 种和白模的 1,075 种。20 张导入图保留原始节点名和 `param2`，光照用 `uint8(0)` 占位。替换包仍有 18 对 Static 48³ 重叠。`scene_7680` 与 `scene_18165` 的原始 Vox2Pix Test 地图进入了 VAE Train。[固定清单](voxel_vae/README.md#published-chunk-selection-for-training)
+**VAE 三块训练清单已冻结，48³ 场景重叠为零。** 6 个 Valid 和 2 个 Test 的 Static 快照移入 Train，由同群落、高度与 biome transition 的最低稀有度 Train 样本补足。剩余 18 对各替换较不稀有的一侧，使用 18 个不同的新 seed 在 Mac 上原生采集，并归档旧样本。`vae_vox2pix_overlap_free_20261127/chunk_selection.jsonl.gz` 保存全部 200,000 个快照的划分和选块。Train 的 480,000 块仍覆盖 1,668 种状态，以及 Valid 的 1,368 种、Test 的 1,304 种、Vox2Pix 地图的 1,514 种和白模的 1,075 种。`scene_7680` 与 `scene_18165` 的原始 Vox2Pix Test 地图仍在 VAE Train。[固定清单](voxel_vae/README.md#published-chunk-selection-for-training)
 
 **Vox2Pix RGB32 / 独立 Fog20–30 / Material Ambient0.35：VERIFIED WITH KNOWN NATIVE VISUAL LIMITATION。** 25 项 Python Unit、C++ 策略测试、原生 build、12 距离固定相机校准和原三个场景的 15 帧回放完成。实测 draw32、Fog20/30、Far Plane2000，Server send/generate 均为8 MapBlocks（128格）。48³ Voxel/Camera 与原记录匹配，White/Water/Face/BACKGROUND 数组不变。31–32格和34格标记实际提交；30–34格标记纹理被雾完全遮蔽，但天空/Fog 色差可留微弱均匀色块，水下原生表面边界仍可见。版本 `vox2pix-v3-local48-rgb32-absolute-fog20-30`。[本轮报告](vox2pix_data/reports/final_rendering_32/README.md) · [命令](vox2pix_data/README.md#final-native-rendering-rgb32)。该轮记录的是正式采集前的渲染验证。
 
