@@ -4,7 +4,7 @@
 
 原始 VAE 包内有 24 对重叠。首轮 Vox2Pix 替换消除了 6 对。[原始重叠审计](voxel_vae/reports/scene_overlap_20261126/resampling_impact.json)
 
-**VAE 三块训练清单已冻结，48³ 场景重叠为零。** 6 个 Valid 和 2 个 Test 的 Static 快照移入 Train，由同群落、高度与 biome transition 的最低稀有度 Train 样本补足。剩余 18 对各替换较不稀有的一侧，使用 18 个不同的新 seed 在 Mac 上原生采集，并归档旧样本。`vae_vox2pix_overlap_free_20261127/chunk_selection.jsonl.gz` 保存全部 200,000 个快照的划分和选块。Train 的 480,000 块仍覆盖 1,668 种状态，以及 Valid 的 1,368 种、Test 的 1,304 种、Vox2Pix 地图的 1,514 种和白模的 1,075 种。`scene_7680` 与 `scene_18165` 的原始 Vox2Pix Test 地图仍在 VAE Train。[固定清单](voxel_vae/README.md#published-chunk-selection-for-training)
+**VAE 三块训练清单已冻结，48³ 场景重叠为零。** `vae_vox2pix_chain_selection_20261127/chunk_selection.jsonl.gz` 保存全部划分和选块。100,000 个 Static 场景贡献 300,000 个块帧，20,000 条 Dynamic 轨迹各有三个固定坐标，共贡献 300,000 个块帧。Train 的 480,000 块帧覆盖全部 1,668 种实见状态，包括 Valid 的 1,368 种、Test 的 1,303 种、Vox2Pix 地图的 1,514 种和白模的 1,075 种。18 张重叠场景已用不同的新 seed 原生补采，旧样本已归档。`scene_7680` 与 `scene_18165` 的原始 Vox2Pix Test 地图仍在 VAE Train。[固定清单](voxel_vae/README.md#published-chunk-selection-for-training)
 
 **Vox2Pix RGB32 / 独立 Fog20–30 / Material Ambient0.35：VERIFIED WITH KNOWN NATIVE VISUAL LIMITATION。** 25 项 Python Unit、C++ 策略测试、原生 build、12 距离固定相机校准和原三个场景的 15 帧回放完成。实测 draw32、Fog20/30、Far Plane2000，Server send/generate 均为8 MapBlocks（128格）。48³ Voxel/Camera 与原记录匹配，White/Water/Face/BACKGROUND 数组不变。31–32格和34格标记实际提交；30–34格标记纹理被雾完全遮蔽，但天空/Fog 色差可留微弱均匀色块，水下原生表面边界仍可见。版本 `vox2pix-v3-local48-rgb32-absolute-fog20-30`。[本轮报告](vox2pix_data/reports/final_rendering_32/README.md) · [命令](vox2pix_data/README.md#final-native-rendering-rgb32)。该轮记录的是正式采集前的渲染验证。
 

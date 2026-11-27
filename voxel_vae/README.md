@@ -193,7 +193,10 @@ curves belong to that separate experiment.
 
 Freeze the three eligible 16³ blocks per saved 48³ snapshot before splitting.
 Static maps use center plus two rare blocks. Dynamic maps use center, one
-motion-ranked block and one rarity-ranked block.
+motion-ranked block and one rarity-ranked block. The five frames share the
+same positions. Each position's rarest frame defines its rarity. Motion ranks
+positions by the number of adjacent states with a voxel change and uses rarity
+to break ties.
 
 For every observed `(node_name, raw param2)`, draw one ordinal uniformly from
 all matching voxels in the frozen blocks. The anchor records the snapshot and
@@ -258,9 +261,10 @@ index and `split/` contains the new whole-seed assignments and token counts.
 
 ### Published chunk selection for training
 
-Use the selection in `vae_vox2pix_overlap_free_20261127` for the current
-three-block dataset. It includes 18 native Static replacements with separate
-fresh world seeds. The eight Static split swaps match biome group, height
+Use the selection in `vae_vox2pix_chain_selection_20261127` for the current
+three-block dataset. It contains 300,000 Static blocks and 60,000 Dynamic
+positions observed in five frames. It includes 18 native Static replacements
+with fresh world seeds. The eight Static split swaps match biome group, height
 stratum and biome transition. The published rows carry their own split.
 
 `chunk_selection.jsonl.gz` is the source of truth for the three-block training
@@ -291,3 +295,6 @@ targets. `vae_data.sharded.resample_static` captures the matching Static maps.
 Archive the displaced maps with `voxel_vae.archive_static_replacements`, then
 use `voxel_vae.static_overlap_repair publish` to write the new bundle and
 verify spatial overlap and token coverage.
+
+Run `voxel_vae.rerank_dynamic_chunks` on the overlap-repaired bundle to freeze
+one selection per Dynamic trajectory and recheck Train coverage.

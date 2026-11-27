@@ -13,7 +13,7 @@ import numpy as np
 
 from .full48_scan import _tokens_array
 from .full48_source import REPORTS, iter_archive_shards, load_reference, validate_source_header
-from .outer_chunk_rank import blocks, mixed_outer_indices, motion_scores, select_frame
+from .outer_chunk_rank import blocks, mixed_chain_outer_indices, mixed_outer_indices, motion_scores, select_frame
 
 LIMITS = (0, 4, 6, 8)
 MIXED_LIMITS = (0, 2, 3, 4)
@@ -40,8 +40,7 @@ def pooled_counts(path, ref):
     return sum(full_counts_by_category(path, ref).values())
 
 
-def record_mixed_frame(frame, motion, frequency, increments, _ties):
-    selected = mixed_outer_indices(frame, frequency, motion, limits=MIXED_LIMITS[1:])
+def record_mixed_frame(frame, frequency, increments, selected):
     previous = set()
     increments[0] += np.bincount(frame[13], minlength=len(frequency))
     for target, limit in zip(increments[1:], MIXED_LIMITS[1:]):
@@ -71,7 +70,6 @@ def chain_indices(files, n):
 
 
 def scan(archive, frequency, mixed=False):
-    record = record_mixed_frame if mixed else record_frame
     limits = MIXED_LIMITS if mixed else LIMITS
     ref = load_reference()
     increments = np.zeros((len(limits), len(frequency)), dtype=np.int64)
@@ -85,13 +83,23 @@ def scan(archive, frequency, mixed=False):
         snapshots = _tokens_array(item.files, 'snapshots', n, item.shard_name)
         if category == 'Static':
             for i in range(n):
-                record(blocks(snapshots[i]), None, frequency, increments, ties)
+                frame = blocks(snapshots[i])
+                if mixed:
+                    selected = mixed_outer_indices(frame, frequency, limits=MIXED_LIMITS[1:])
+                    record_mixed_frame(frame, frequency, increments, selected)
+                else:
+                    record_frame(frame, None, frequency, increments, ties)
         else:
             for indices in chain_indices(item.files, n):
                 chain = np.stack([blocks(snapshots[i]) for i in indices])
-                motion = motion_scores(chain)
-                for frame in chain:
-                    record(frame, motion, frequency, increments, ties)
+                if mixed:
+                    selected = mixed_chain_outer_indices(chain, frequency, limits=MIXED_LIMITS[1:])
+                    for frame in chain:
+                        record_mixed_frame(frame, frequency, increments, selected)
+                else:
+                    motion = motion_scores(chain)
+                    for frame in chain:
+                        record_frame(frame, motion, frequency, increments, ties)
                 n_chains += 1
         frames += n
         n_shards += 1
@@ -140,7 +148,8 @@ def add_mixed_details(summary, full, results):
               'dynamic_only': (full['Dynamic'] > 0) & (full['Static'] == 0),
               'shared': (full['Dynamic'] > 0) & (full['Static'] > 0)}
     del summary['ties']  # Tie statistics belong to the original audit.
-    summary['policy'] = 'Static rarity top K; Dynamic motion top K-1 plus rarest remaining; always include center'
+    summary['policy'] = ('Static rarity top K. Dynamic motion top K-1 plus rarest remaining, '
+                         'using the rarest frame at each position and one selection per chain. Always include center.')
     for index, limit in enumerate(MIXED_LIMITS):
         selection = summary['selection'][limit]
         misses = selection['present_but_missed']

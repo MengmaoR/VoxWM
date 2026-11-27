@@ -65,7 +65,20 @@ def mixed_outer_indices(frame_blocks, global_counts, motion=None, limits=(2, 3, 
     """Select K rare static blocks or K-1 dynamic blocks and the rarest remaining block."""
     entries = sorted(_rank_entry(block, global_counts, 0, index)
                      for index, block in enumerate(frame_blocks) if index != CENTER_INDEX)
-    rarity_order = [entry[-1] for entry in entries]
+    return _mixed_indices([entry[-1] for entry in entries], motion, limits)
+
+
+def mixed_chain_outer_indices(frames, global_counts, limits=(2, 3, 4)):
+    """Rank each position across the chain using its single rarest frame."""
+    motion = motion_scores(frames)
+    entries = sorted(
+        min(_rank_entry(frame[index], global_counts, 0, index) for frame in frames)
+        for index in range(27) if index != CENTER_INDEX
+    )
+    return _mixed_indices([entry[-1] for entry in entries], motion, limits)
+
+
+def _mixed_indices(rarity_order, motion, limits):
     if any(k < 1 or k > len(rarity_order) for k in limits):
         raise ValueError("Peripheral block count must be between 1 and 26")
     if motion is None:

@@ -3,7 +3,7 @@ from unittest import TestCase
 
 import numpy as np
 
-from voxel_vae.outer_chunk_rank import blocks, mixed_outer_indices, motion_scores, select_frame
+from voxel_vae.outer_chunk_rank import blocks, mixed_chain_outer_indices, mixed_outer_indices, motion_scores, select_frame
 
 
 class OuterChunkRankTests(TestCase):
@@ -78,3 +78,21 @@ class OuterChunkRankTests(TestCase):
         motion[[9, 8, 0]] = [3, 2, 1]
         selected = mixed_outer_indices(chunks, frequency, motion)
         self.assertEqual(selected, {2: [9, 8], 3: [9, 8, 7], 4: [9, 8, 0, 7]})
+
+    def test_chain_uses_its_rarest_frame_and_motion_score_for_each_position(self):
+        frames = np.zeros((5, 27, 16 ** 3), np.uint16)
+        frames[:, 2, 0] = [2, 3, 2, 3, 2]
+        frames[:, 3, 0] = [3, 3, 4, 3, 4]
+        frames[3, 9, 0] = 1
+        frames[:, 13, 0] = 1
+        frequency = np.array([1000, 1, 5, 10, 20], np.int64)
+        selected = mixed_chain_outer_indices(frames, frequency)
+        self.assertEqual(selected[2], [2, 9])
+        self.assertEqual(selected[3], [2, 3, 9])
+
+    def test_chain_breaks_motion_ties_using_the_rarest_frame(self):
+        frames = np.zeros((5, 27, 16 ** 3), np.uint16)
+        frames[:, 5, 0] = [0, 2, 2, 2, 0]
+        frames[:, 6, 0] = [0, 0, 0, 1, 0]
+        frequency = np.array([1000, 1, 10], np.int64)
+        self.assertEqual(mixed_chain_outer_indices(frames, frequency, limits=(2,))[2], [6, 5])

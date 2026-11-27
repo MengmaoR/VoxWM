@@ -13,7 +13,7 @@ import numpy as np
 from .full48_scan import _tokens_array
 from .full48_source import iter_archive_shards, load_reference, validate_source_header
 from .outer_chunk_audit import FREQUENCY, chain_indices, pooled_counts
-from .outer_chunk_rank import CENTER_INDEX, blocks, mixed_outer_indices, motion_scores
+from .outer_chunk_rank import CENTER_INDEX, blocks, mixed_chain_outer_indices, mixed_outer_indices
 
 
 def write_row(stream, scene, seed, cell, origin, selected):
@@ -34,20 +34,27 @@ def write_row(stream, scene, seed, cell, origin, selected):
 
 def write_ranked_row(stream, scene, seed, cell, origin, frame, frequency, motion=None):
     picked = sorted([CENTER_INDEX, *mixed_outer_indices(frame, frequency, motion, limits=(2,))[2]])
+    write_selected_row(stream, scene, seed, cell, origin, frame, picked)
+    return picked
+
+
+def write_selected_row(stream, scene, seed, cell, origin, frame, picked):
     selected = []
     for slot in picked:
         counts = np.bincount(frame[slot])
         ids = np.flatnonzero(counts)
         selected.append((slot, list(zip(ids.tolist(), counts[ids].tolist(), strict=True))))
     write_row(stream, scene, seed, cell, origin, selected)
-    return picked
 
 
-def write_archive_row(stream, prefix, sample, frame, frequency, motion=None):
+def write_archive_row(stream, prefix, sample, frame, frequency, picked=None):
     index, category, metadata = sample
     seed, group, stratum, origin = json.loads(metadata)
     cell = [category, group, stratum] if category == "Static" else [category]
-    write_ranked_row(stream, f"{prefix}:{index}", seed, cell, origin, frame, frequency, motion)
+    if picked is None:
+        write_ranked_row(stream, f"{prefix}:{index}", seed, cell, origin, frame, frequency)
+    else:
+        write_selected_row(stream, f"{prefix}:{index}", seed, cell, origin, frame, picked)
 
 
 def freeze_archive(archive, label, path, frequency, retired):
@@ -81,9 +88,9 @@ def freeze_archive(archive, label, path, frequency, retired):
             else:
                 for indices in chain_indices(part.files, size):
                     chain = np.stack([blocks(snapshots[index]) for index in indices])
-                    motion = motion_scores(chain)
+                    picked = sorted([CENTER_INDEX, *mixed_chain_outer_indices(chain, frequency, limits=(2,))[2]])
                     for index, frame in zip(indices, chain, strict=True):
-                        write_archive_row(stream, prefix, rows[index], frame, frequency, motion)
+                        write_archive_row(stream, prefix, rows[index], frame, frequency, picked)
                         emitted += 1
             if number % 25 == 0:
                 print(f"{label}: {number} shards, {emitted:,} selected snapshots", flush=True)
