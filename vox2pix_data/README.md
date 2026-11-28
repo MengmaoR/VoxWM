@@ -571,3 +571,28 @@ Node Name, raw param2, and signed face code at the selected pixel. Empty hits ar
 marked separately. The 3D view uses simplified blocks colored by Node Name.
 Scene 0134, view 5 is an example with a black native RGB frame and valid
 white-model hits.
+
+## Export white-model embeddings
+
+Use the shared 32D embedding lookup saved for the matching Vox2Pix node
+vocabulary. Start the CPU converter from the repository root. Add
+`--max-scenes 6` for a small first pass, then run the same command without
+that option to finish.
+
+```bash
+.venv/bin/python -m vox2pix_data.white_embeddings \
+  --dataset /data/disk2/txj/vox2pix/vox2pix_100k_rgb32 \
+  --table /data/disk2/txj/vae/vox2pix_embedding_lookup_step15000.npz \
+  --output /data/disk2/txj/vox2pix/white_embeddings_step15000
+```
+
+The converter reads one view of `surface_node_id` and `surface_param2` at
+a time. The output is a separate directory with a manifest and
+`scenes/scene_NNNN.zarr` groups. Each group contains channels-last
+`embedding[view, y, x, 32]` in losslessly compressed FP32 and a Boolean
+`valid[view, y, x]` mask. Background pixels have zero vectors and
+`valid=False`. View indices match the original RGB and white-model indices.
+
+Each completed group is published atomically. Re-running the command in the
+same output directory skips those groups. Read a single view with
+`zarr.open_group(path, mode="r")["embedding"][view]`.
