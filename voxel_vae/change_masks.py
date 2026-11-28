@@ -11,8 +11,8 @@ from .dataset import VoxelSnapshotDataset
 DYNAMIC_CATEGORIES = ("D1", "D2", "D3", "D4")
 
 
-def compute_chain_masks(states, chain_indices=range(5)):
-    """Return endpoint/neighbor-union masks for canonical center-token states."""
+def compute_chain_masks(states, chain_indices=range(5), *, allow_stagnant=False):
+    """Return endpoint/neighbor-union masks for one canonical chunk trajectory."""
     states = np.asarray(states)
     indices = list(map(int, chain_indices))
     if states.shape != (5, 16, 16, 16):
@@ -20,14 +20,14 @@ def compute_chain_masks(states, chain_indices=range(5)):
     if indices != list(range(5)):
         raise ValueError(f"Dynamic chain_index must be exactly 0..4, got {indices}")
     adjacent = [states[index] != states[index + 1] for index in range(4)]
-    if any(not difference.any() for difference in adjacent):
+    if not allow_stagnant and any(not difference.any() for difference in adjacent):
         raise ValueError("Every adjacent dynamic state pair must differ")
     masks = np.empty(states.shape, dtype=bool)
     masks[0] = adjacent[0]
     masks[4] = adjacent[3]
     for index in range(1, 4):
         masks[index] = adjacent[index - 1] | adjacent[index]
-    if any(not mask.any() for mask in masks):
+    if not allow_stagnant and any(not mask.any() for mask in masks):
         raise ValueError("Every dynamic state must have a non-empty changed mask")
     return masks
 

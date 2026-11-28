@@ -6,6 +6,7 @@ import math
 import random
 import time
 from contextlib import nullcontext
+from functools import partial
 from pathlib import Path
 
 import numpy as np
@@ -286,7 +287,8 @@ def fit(model, index, vocabulary, train_indices, evaluation_indices, output_dir,
 def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
                validation_indices, change_masks, output_dir, config,
                resume=None, run_metadata=None, *, phase="E00-Masked", group=None, epochs=None,
-               previous_prepared_data=None, no_early_stop=False):
+               previous_prepared_data=None, no_early_stop=False, dataset=None,
+               allow_empty_changes=False):
     """Joint Static/Dynamic masked training with exact batch denominators."""
     output_dir = Path(output_dir)
     primary = group is None or group.primary
@@ -297,7 +299,7 @@ def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
     seed = int(config["seed"])
     set_seed(seed + rank)
     device = resolve_device(config.get("device", "auto")) if group is None else group.device
-    scoped_rng = phase == "E01-Masked"
+    scoped_rng = phase == "E01-Masked" or dataset is not None
     precision = config.get("precision", "fp32")
     if precision not in ("fp32", "bf16"):
         raise ValueError("precision must be fp32 or bf16")
@@ -323,7 +325,7 @@ def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
     if resume:
         # Keep CPU RNG state on CPU, including when the model/optimizer are on CUDA.
         expected_config = None
-        if phase == "E01-Masked":
+        if scoped_rng:
             expected_config = {key: value for key, value in config.items() if key != "device"}
         payload = load_checkpoint(
             resume, model, optimizer, vocabulary, index,
@@ -335,7 +337,9 @@ def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
         if split_changed and epochs is None:
             raise ValueError("Use --epochs to start a new epoch schedule after rebalancing E01")
 
-    dataset = VoxelSnapshotDataset(index, vocabulary)
+    evaluation_dataset = dataset
+    if dataset is None:
+        dataset = VoxelSnapshotDataset(index, vocabulary)
     max_steps = int(config["max_steps"])
     saved_plan = payload.get("epoch_plan") if payload is not None and not split_changed else None
     epoch_plan = None
@@ -367,6 +371,10 @@ def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
     log_every = int(config.get("log_every", 25))
     validate_every = int(config.get("validate_every", 500))
     evaluation_batch = int(config.get("evaluation_batch_size", micro_batch))
+    evaluate = partial(evaluate_indices, model, index, vocabulary, device=device,
+                       precision=precision, batch_size=evaluation_batch,
+                       change_masks=change_masks, masked_loss_config=loss_config,
+                       dataset=evaluation_dataset, allow_empty_changes=allow_empty_changes)
     metrics_path = output_dir / "metrics.jsonl"
     early_path = output_dir / "early_stopping.json"
     early_state = EarlyStoppingState()
@@ -421,14 +429,8 @@ def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
                   f"resuming at step {global_step:,}, target step {max_steps:,}.", flush=True)
 
         if global_step == 0:
-            initial = evaluate_indices(
-                model, index, vocabulary, evaluation_indices, device,
-                precision=precision, batch_size=evaluation_batch,
-                change_masks=change_masks, masked_loss_config=loss_config)
-            initial_validation = evaluate_indices(
-                model, index, vocabulary, validation_indices, device,
-                precision=precision, batch_size=evaluation_batch,
-                change_masks=change_masks, masked_loss_config=loss_config)
+            initial = evaluate(evaluation_indices)
+            initial_validation = evaluate(validation_indices)
             write_json(output_dir / "initial_metrics.json", {
                 "overfit": initial, "validation": initial_validation})
         else:
@@ -463,7 +465,8 @@ def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
         categories = [index.records[item].category for item in effective]
         normalization = masked_batch_normalization(
             effective, categories, change_masks,
-            sum_counts=None if group is None else group.sum_counts)
+            sum_counts=None if group is None else group.sum_counts,
+            allow_empty_changes=allow_empty_changes)
         optimizer.zero_grad(set_to_none=True)
         scalar_keys = (
             "loss_static", "loss_dynamic_unchanged", "loss_dynamic_changed",
@@ -541,20 +544,19 @@ def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
             }
             if epoch_plan is not None:
                 row["completed_epochs"] = (global_step - epoch_start) // epoch_steps
+            if allow_empty_changes:
+                for kind in ("changed", "unchanged"):
+                    for category, count in normalization[kind].items():
+                        if not count:
+                            row[f"dynamic_{kind}_by_category"][category] = None
             _append_jsonl(metrics_path, row)
 
         if validate_now and primary:
-            evaluation = evaluate_indices(
-                model, index, vocabulary, evaluation_indices, device,
-                precision=precision, batch_size=evaluation_batch,
-                change_masks=change_masks, masked_loss_config=loss_config)
+            evaluation = evaluate(evaluation_indices)
             _append_jsonl(metrics_path, {
                 "phase": phase, "global_step": global_step,
                 "event": "overfit_evaluation", **evaluation})
-            last_validation = evaluate_indices(
-                model, index, vocabulary, validation_indices, device,
-                precision=precision, batch_size=evaluation_batch,
-                change_masks=change_masks, masked_loss_config=loss_config)
+            last_validation = evaluate(validation_indices)
             _append_jsonl(metrics_path, {
                 "phase": phase, "global_step": global_step,
                 "event": "validation", **last_validation})
@@ -592,15 +594,8 @@ def fit_masked(model, index, vocabulary, train_indices, evaluation_indices,
 
     if not primary:
         return None
-    final = evaluate_indices(
-        model, index, vocabulary, evaluation_indices, device,
-        precision=precision, batch_size=evaluation_batch,
-        save_examples=output_dir / "recon_examples.npz",
-        change_masks=change_masks, masked_loss_config=loss_config)
-    final_validation = last_validation or evaluate_indices(
-        model, index, vocabulary, validation_indices, device,
-        precision=precision, batch_size=evaluation_batch,
-        change_masks=change_masks, masked_loss_config=loss_config)
+    final = evaluate(evaluation_indices, save_examples=output_dir / "recon_examples.npz")
+    final_validation = last_validation or evaluate(validation_indices)
     write_json(output_dir / "latent_statistics.json", final["latent"])
     loss_statistics.update({
         "final_train": final["loss_components"],

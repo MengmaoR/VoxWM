@@ -298,3 +298,85 @@ verify spatial overlap and token coverage.
 
 Run `voxel_vae.rerank_dynamic_chunks` on the overlap-repaired bundle to freeze
 one selection per Dynamic trajectory and recheck Train coverage.
+
+### Train the curated three-chunk VAE on THU
+
+The verified package and the E01 step-27,000 best checkpoint are under
+`/data/disk2/txj/vae`. The CPU preparation reads the published selections and
+writes memory-mapped token arrays and bit-packed change masks. The five frames
+of a trajectory share the same three spatial positions. An unchanged position
+contributes to Unchanged CE. The fixed split yields 480,000 Train, 60,000
+Validation, and 60,000 Test chunk frames.
+
+Use this CPU command if the prepared directory needs to be built again.
+
+```bash
+cd /home/user/WORK/txj/VoxWM
+base=/data/disk2/txj/vae
+pack="$base/vae_200k_600kchunks_20261127"
+.venv/bin/python -m voxel_vae.curated_vae prepare \
+  --selection "$pack/vae_vox2pix_chain_selection_20261127/chunk_selection.jsonl.gz" \
+  --output "$pack/prepared_chunks"
+```
+
+Use a Python environment with CUDA-enabled PyTorch and
+`voxel_vae/requirements.txt`. The launcher defaults to `.venv-vae/bin/python`.
+Set `VAE_PYTHON` to use an existing training environment. To create a fresh
+environment with a CUDA 12.6 PyTorch build when the server driver supports it:
+
+```bash
+.venv/bin/python -m venv .venv-vae
+.venv-vae/bin/python -m pip install torch==2.8.0 --index-url https://download.pytorch.org/whl/cu126
+.venv-vae/bin/python -m pip install -r voxel_vae/requirements.txt
+```
+
+Start training with the GPU IDs assigned to your run. A single ID starts one
+process. A comma-separated list starts one DDP rank per ID.
+
+```bash
+base=/data/disk2/txj/vae
+pack="$base/vae_200k_600kchunks_20261127"
+run="$base/runs/curated_masked_20261127"
+CUDA_VISIBLE_DEVICES=2,3 bash scripts/train_vae_curated.sh \
+  --prepared "$pack/prepared_chunks" --output-dir "$run" \
+  --init-from "$base/e01_masked_step27000_best.pt"
+```
+
+The warm start copies the original 1,580 semantic rows and initializes 90
+appended rows in the embedding and decoder. AdamW starts at step zero. With
+global batch 64, one epoch uses every Train chunk frame once in 7,500 steps.
+The default limit is ten epochs. Validation runs every 1,000 steps and at
+epoch ends on a fixed 1,280-frame Validation subset. Early stopping checks
+five validations without a 0.001 improvement and stops at an epoch boundary.
+The Test split remains held out. Metrics, loss curves and
+`checkpoint_best.pt` are written into the selected run directory.
+
+For an interrupted run, use the same command with `--resume` in place of
+`--init-from ...`. It reads the run's `checkpoint_last.pt` and saved epoch target.
+
+Start the read-only monitor in a separate THU terminal. In a local terminal
+forward port 8780, then open [the monitor](http://127.0.0.1:8780).
+
+```bash
+# THU
+cd /home/user/WORK/txj/VoxWM
+bash scripts/monitor_vae_curated.sh /data/disk2/txj/vae/runs/curated_masked_20261127 --port 8780
+
+# Local
+ssh -N -L 8780:127.0.0.1:8780 THU
+```
+
+After training, export a compact Vox2Pix lookup next to the checkpoint.
+It maps observed `(node_id, raw param2)` to canonical IDs and the learned 32D
+vectors. Use `vox2pix_data.vae_embeddings.embed` to apply the lookup when
+reading arrays. White-model BACKGROUND carries a separate validity mask.
+
+```bash
+base=/data/disk2/txj/vae
+pack="$base/vae_200k_600kchunks_20261127"
+run="$base/runs/curated_masked_20261127"
+.venv-vae/bin/python -m vox2pix_data.vae_embeddings export \
+  --dataset /data/disk2/txj/vox2pix/vox2pix_100k_rgb32 \
+  --prepared "$pack/prepared_chunks" --checkpoint "$run/checkpoint_best.pt" \
+  --output "$run/vox2pix_embedding_lookup.npz"
+```

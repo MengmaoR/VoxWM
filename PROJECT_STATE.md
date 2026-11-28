@@ -6,6 +6,8 @@
 
 **VAE 三块训练清单已冻结，48³ 场景重叠为零。** `vae_vox2pix_chain_selection_20261127/chunk_selection.jsonl.gz` 保存全部划分和选块。100,000 个 Static 场景贡献 300,000 个块帧，20,000 条 Dynamic 轨迹各有三个固定坐标，共贡献 300,000 个块帧。Train 的 480,000 块帧覆盖全部 1,668 种实见状态，包括 Valid 的 1,368 种、Test 的 1,303 种、Vox2Pix 地图的 1,514 种和白模的 1,075 种。18 张重叠场景已用不同的新 seed 原生补采，旧样本已归档。`scene_7680` 与 `scene_18165` 的原始 Vox2Pix Test 地图仍在 VAE Train。[固定清单](voxel_vae/README.md#published-chunk-selection-for-training)
 
+**三块 Masked VAE 入口已就绪。** 校验后的数据包及 27,000 步 best 已部署至 THU 的 `/data/disk2/txj/vae`。新入口从旧 best 热启动，词表扩至 1,670 行。用户手动执行训练，随后从本轮 best 导出 Vox2Pix 的 32D embedding 查询表。[训练、监控与导出命令](voxel_vae/README.md#train-the-curated-three-chunk-vae-on-thu)
+
 **Vox2Pix RGB32 / 独立 Fog20–30 / Material Ambient0.35：VERIFIED WITH KNOWN NATIVE VISUAL LIMITATION。** 25 项 Python Unit、C++ 策略测试、原生 build、12 距离固定相机校准和原三个场景的 15 帧回放完成。实测 draw32、Fog20/30、Far Plane2000，Server send/generate 均为8 MapBlocks（128格）。48³ Voxel/Camera 与原记录匹配，White/Water/Face/BACKGROUND 数组不变。31–32格和34格标记实际提交；30–34格标记纹理被雾完全遮蔽，但天空/Fog 色差可留微弱均匀色块，水下原生表面边界仍可见。版本 `vox2pix-v3-local48-rgb32-absolute-fog20-30`。[本轮报告](vox2pix_data/reports/final_rendering_32/README.md) · [命令](vox2pix_data/README.md#final-native-rendering-rgb32)。该轮记录的是正式采集前的渲染验证。
 
 **Vox2Pix final32 1K采集及Mac并行短测已完成。** 2 workers完成200场景/1000视角，Surface/Cave/Underwater=120/60/20，有效采集约40分54秒（1467视角/小时）。数据：`outputs/vox2pix_pilot_1k_rgb32/`。用户授权的4/6/8短测每档同30场景/150视角，全部成功完成，端到端约1847/1675/1268视角/小时；该Mac当时负载下推荐4 workers，100K按短测线性约54.2小时，不能套用到THU。各档均有换页。100K逻辑payload约11.62GB，APFS小文件布局外推约35.8GB。原始数据和日志仅本地保留，[测量报告及资源序列](vox2pix_data/reports/parallel_mac_20261124/README.md)已记录。

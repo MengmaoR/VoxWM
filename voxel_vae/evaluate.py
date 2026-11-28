@@ -41,9 +41,13 @@ def _dynamic_metrics(values, complete_chains):
 
 def evaluate_indices(model, index, vocabulary, indices, device, precision="fp32",
                      batch_size=2, save_examples=None, change_masks=None,
-                     masked_loss_config=None):
+                     masked_loss_config=None, *, dataset=None, allow_empty_changes=False):
     indices = list(map(int, indices))
-    dataset = VoxelSnapshotDataset(index, vocabulary, indices)
+    if dataset is None:
+        dataset = VoxelSnapshotDataset(index, vocabulary, indices)
+        dataset_items = range(len(indices))
+    else:
+        dataset_items = indices
     air_ids = set(vocabulary.air_ids)
     predictions = {}
     ground_truth = {}
@@ -69,7 +73,7 @@ def evaluate_indices(model, index, vocabulary, indices, device, precision="fp32"
     if masked_config is not None:
         categories = [index.records[item].category for item in indices]
         normalization = masked_batch_normalization(
-            indices, categories, change_masks)
+            indices, categories, change_masks, allow_empty_changes=allow_empty_changes)
         masked_totals = {
             key: 0.0 for key in (
                 "loss_static", "loss_dynamic_unchanged", "loss_dynamic_changed",
@@ -80,9 +84,8 @@ def evaluate_indices(model, index, vocabulary, indices, device, precision="fp32"
             category: 0.0 for category in DYNAMIC_CATEGORIES}
     model.eval()
     with torch.no_grad():
-        for start in range(0, len(dataset), int(batch_size)):
-            batch_rows = [dataset.read_numpy(item)
-                          for item in range(start, min(len(dataset), start + batch_size))]
+        for start in range(0, len(dataset_items), int(batch_size)):
+            batch_rows = [dataset.read_numpy(item) for item in dataset_items[start:start + batch_size]]
             target = torch.from_numpy(np.stack([row[0] for row in batch_rows])).to(device)
             sample_ids = [row[1] for row in batch_rows]
             sample_categories = [index.records[item].category for item in sample_ids]
@@ -253,6 +256,11 @@ def evaluate_indices(model, index, vocabulary, indices, device, precision="fp32"
             "max": None if not latent_distances else float(np.max(latent_distances)),
         },
     }
+    if allow_empty_changes and masked_totals is not None:
+        for kind in ("changed", "unchanged"):
+            for category, count in normalization[kind].items():
+                if not count:
+                    masked_totals[f"dynamic_{kind}_by_category"][category] = None
     result = {
         "samples": len(indices),
         "cross_entropy": ce_sum / (len(indices) * 16 ** 3),

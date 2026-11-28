@@ -36,7 +36,8 @@ def validate_masked_loss_config(config):
             for key, value in config.items() if key in required}
 
 
-def masked_batch_normalization(sample_indices, categories, changed_masks, *, sum_counts=None):
+def masked_batch_normalization(sample_indices, categories, changed_masks, *, sum_counts=None,
+                               allow_empty_changes=False):
     """Compute full-effective-batch denominators before micro-batching."""
     sample_indices = list(map(int, sample_indices))
     categories = list(categories)
@@ -51,9 +52,10 @@ def masked_batch_normalization(sample_indices, categories, changed_masks, *, sum
         if category not in changed:
             raise ValueError(f"Unknown masked-loss category: {category}")
         mask = torch.as_tensor(changed_masks[sample_index], dtype=torch.bool)
-        if tuple(mask.shape) != (16, 16, 16) or not bool(mask.any()):
+        has_changes = bool(mask.any())
+        if tuple(mask.shape) != (16, 16, 16) or (not allow_empty_changes and not has_changes):
             raise ValueError(f"Invalid/empty changed mask for sample {sample_index}")
-        changed[category] += 1
+        changed[category] += int(has_changes)
         if bool((~mask).any()):
             unchanged[category] += 1
     counts = {"batch_size": len(sample_indices), "static": static,
@@ -62,10 +64,11 @@ def masked_batch_normalization(sample_indices, categories, changed_masks, *, sum
         counts = sum_counts(counts)
     if counts["static"] <= 0:
         raise ValueError("Masked loss effective batch has no Static samples")
-    if any(counts["changed"][category] <= 0 for category in DYNAMIC_CATEGORIES):
+    if not allow_empty_changes and any(n <= 0 for n in counts["changed"].values()):
         raise ValueError("Masked loss requires D1-D4 in every effective batch")
-    if any(counts["unchanged"][category] <= 0 for category in DYNAMIC_CATEGORIES):
+    if not allow_empty_changes and any(n <= 0 for n in counts["unchanged"].values()):
         raise ValueError("A dynamic category has no valid Unchanged sample")
+    counts["allow_empty_changes"] = allow_empty_changes
     return counts
 
 
@@ -92,18 +95,21 @@ def masked_vae_loss(logits, target, mu, logvar, sample_indices, categories,
             raise ValueError(f"Unknown masked-loss category: {category}")
         mask = torch.as_tensor(changed_masks[sample_index], dtype=torch.bool,
                                device=per_voxel.device).flatten()
-        if not bool(mask.any()):
+        if bool(mask.any()):
+            changed_by_category[category] = (
+                changed_by_category[category]
+                + per_voxel[offset][mask].mean() / normalization["changed"][category])
+        elif not normalization.get("allow_empty_changes"):
             raise ValueError(f"Empty Changed mask for sample {sample_index}")
-        changed_by_category[category] = (
-            changed_by_category[category]
-            + per_voxel[offset][mask].mean() / normalization["changed"][category])
         if bool((~mask).any()):
             unchanged_by_category[category] = (
                 unchanged_by_category[category]
                 + per_voxel[offset][~mask].mean() / normalization["unchanged"][category])
 
-    loss_dynamic_unchanged = sum(unchanged_by_category.values(), zero) / 4.0
-    loss_dynamic_changed = sum(changed_by_category.values(), zero) / 4.0
+    unchanged_categories = max(1, sum(n > 0 for n in normalization["unchanged"].values()))
+    changed_categories = max(1, sum(n > 0 for n in normalization["changed"].values()))
+    loss_dynamic_unchanged = sum(unchanged_by_category.values(), zero) / unchanged_categories
+    loss_dynamic_changed = sum(changed_by_category.values(), zero) / changed_categories
     loss_reconstruction = (
         config["lambda_static"] * loss_static
         + config["lambda_dynamic"] * (

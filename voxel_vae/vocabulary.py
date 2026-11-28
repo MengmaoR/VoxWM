@@ -52,13 +52,13 @@ class RootVocabulary:
 
 
 class CanonicalVocabulary:
-    """Sorted union of exact ``(Node Name, raw param2)`` pairs, without UNK."""
+    """Exact ``(Node Name, raw param2)`` pairs, with optional published ID order."""
 
     VERSION = 1
 
-    def __init__(self, pairs, roots=()):
+    def __init__(self, pairs, roots=(), *, preserve_ids=False):
         self.pairs = tuple((str(name), int(param2)) for name, param2 in pairs)
-        if tuple(sorted(self.pairs)) != self.pairs:
+        if not preserve_ids and tuple(sorted(self.pairs)) != self.pairs:
             raise ValueError("Canonical vocabulary must be sorted by (node_name, param2)")
         if len(self.pairs) != len(set(self.pairs)):
             raise ValueError("Canonical vocabulary contains duplicates")
@@ -66,6 +66,7 @@ class CanonicalVocabulary:
             raise ValueError("Canonical vocabulary does not fit uint16")
         self.index = {pair: token for token, pair in enumerate(self.pairs)}
         self.roots = tuple(roots)
+        self.preserve_ids = preserve_ids
         self.sha256 = hashlib.sha256(_json_bytes(self.semantic_payload())).hexdigest()
 
     @property
@@ -87,6 +88,7 @@ class CanonicalVocabulary:
             "K": self.K,
             "sha256": self.sha256,
             "tokens": self.semantic_payload(),
+            **({"id_order": "explicit"} if self.preserve_ids else {}),
             "roots": [{
                 "root": root.root,
                 "local_K": root.local_k,
@@ -117,8 +119,9 @@ class CanonicalVocabulary:
             local_to_canonical=tuple(map(int, row["local_to_canonical"])),
             identity_mapping=bool(row["identity_mapping"]),
         ) for row in raw.get("roots", []))
-        result = cls(pairs, roots)
-        if raw.get("K") != result.K or raw.get("sha256") != result.sha256:
+        result = cls(pairs, roots, preserve_ids=raw.get("id_order") == "explicit")
+        if (raw.get("K") != result.K or raw.get("sha256") != result.sha256
+                or raw["tokens"] != result.semantic_payload()):
             raise ValueError("Canonical vocabulary K/hash mismatch")
         return result
 
